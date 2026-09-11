@@ -152,14 +152,44 @@ SCENARIO_SNAPSHOT = {
             "materialId": "hcl-0.1",
             "sourceDefinition": "0.1000 mol/L HCl",
             "density": {"value": 1.002, "unit": "kg/L"},
-            "composition": [{"soluteId": "HCl", "molPerLitre": 0.1}],
-            "molarMasses": [{"soluteId": "HCl", "kilogramsPerMol": 0.0364609}],
+            "composition": [
+                {
+                    "soluteId": "HCl",
+                    "amountConcentration": {"value": 0.1, "unit": "mol/L"},
+                }
+            ],
+            "molarMasses": [
+                {
+                    "soluteId": "HCl",
+                    "molarMass": {"value": 0.0364609, "unit": "kg/mol"},
+                }
+            ],
             "resolvedInventoryPerLitre": {
                 "waterMass": {"value": 0.998, "unit": "kg"},
                 "soluteAmounts": [
                     {"soluteId": "HCl", "amount": {"value": 0.1, "unit": "mol"}}
                 ],
             },
+            "provenance": [
+                {
+                    "appliesTo": ["density"],
+                    "source": "CRC Handbook",
+                    "reference": "aqueous HCl density table",
+                    "category": "evaluated",
+                },
+                {
+                    "appliesTo": ["composition"],
+                    "source": "Scenario record",
+                    "reference": "hcl-0.1 composition label",
+                    "category": "evaluated",
+                },
+                {
+                    "appliesTo": ["molarMass"],
+                    "source": "IUPAC standard atomic weights",
+                    "reference": "HCl molar mass calculation",
+                    "category": "calculated",
+                },
+            ],
         }
     ],
     "vessels": [
@@ -369,6 +399,86 @@ class TestScenario:
             "fullyDissociated": True,
         }
         assert is_valid("scenario", variant)
+
+    def test_accepts_multiple_molarity_basis_solutes(self):
+        variant = copy.deepcopy(VALID_SCENARIO)
+        variant["materials"][0]["solutes"].append(
+            {
+                "soluteId": "NaCl",
+                "basis": "molarity",
+                "amountConcentration": {"value": 0.1, "unit": "mol/L"},
+                "molarMass": {"value": 58.44, "unit": "g/mol"},
+                "fullyDissociated": True,
+            }
+        )
+        assert is_valid("scenario", variant)
+
+    def test_REJECTS_multiple_molality_basis_solutes_until_joint_resolution_exists(self):
+        variant = copy.deepcopy(VALID_SCENARIO)
+        variant["materials"][0]["solutes"] = [
+            {
+                "soluteId": "HCl",
+                "basis": "molality",
+                "molality": {"value": 0.1, "unit": "mol/kg"},
+                "molarMass": {"value": 36.4609, "unit": "g/mol"},
+                "fullyDissociated": True,
+            },
+            {
+                "soluteId": "NaCl",
+                "basis": "molality",
+                "molality": {"value": 0.1, "unit": "mol/kg"},
+                "molarMass": {"value": 58.44, "unit": "g/mol"},
+                "fullyDissociated": True,
+            },
+        ]
+        assert not is_valid("scenario", variant)
+
+    def test_REJECTS_mixed_molarity_and_molality_basis_until_joint_resolution_exists(self):
+        variant = copy.deepcopy(VALID_SCENARIO)
+        variant["materials"][0]["solutes"].append(
+            {
+                "soluteId": "NaCl",
+                "basis": "molality",
+                "molality": {"value": 0.1, "unit": "mol/kg"},
+                "molarMass": {"value": 58.44, "unit": "g/mol"},
+                "fullyDissociated": True,
+            }
+        )
+        assert not is_valid("scenario", variant)
+
+
+class TestWorldGenesisSnapshot:
+    def test_accepts_a_snapshot_with_tagged_scientific_inputs_and_data_provenance(self):
+        assert is_valid("domain-event", WORLD_CREATED_EVENT)
+
+    def test_REJECTS_bare_snapshot_composition_and_molar_mass(self):
+        broken = copy.deepcopy(WORLD_CREATED_EVENT)
+        material = broken["payload"]["scenarioSnapshot"]["materials"][0]
+        material["composition"] = [{"soluteId": "HCl", "molPerLitre": 0.1}]
+        material["molarMasses"] = [{"soluteId": "HCl", "kilogramsPerMol": 0.0364609}]
+        assert not is_valid("domain-event", broken)
+
+    def test_artifact_contains_no_bare_legacy_snapshot_fields(self):
+        for name in ("world-state", "domain-event", "event-log", "export-bundle"):
+            text = (ARTIFACT_DIR / f"{name}.schema.json").read_text(encoding="utf-8")
+            assert '"molPerLitre"' not in text
+            assert '"kilogramsPerMol"' not in text
+        world_text = (ARTIFACT_DIR / "world-state.schema.json").read_text(encoding="utf-8")
+        assert '"amountConcentration"' in world_text
+        assert '"molarMass"' in world_text
+
+    def test_REJECTS_solver_provenance_in_place_of_material_data_provenance(self):
+        broken = copy.deepcopy(WORLD_CREATED_EVENT)
+        broken["payload"]["scenarioSnapshot"]["materials"][0]["provenance"] = [
+            {
+                "modelId": "acidbase-monoprotic-davies",
+                "modelVersion": "1.0.0",
+                "activityModel": "davies",
+                "category": "calculated",
+                "parameters": {},
+            }
+        ]
+        assert not is_valid("domain-event", broken)
 
 
 class TestExportBundle:

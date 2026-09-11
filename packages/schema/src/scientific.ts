@@ -20,9 +20,10 @@
  *                                 bare `number` and cannot be confused with a
  *                                 quantity of another dimension.
  *
- * The bridge is a parse function per contract, and it goes through the
- * constructors — so a value that could not have been constructed cannot enter
- * the domain even if a caller hand-builds a DTO.
+ * The bridge is a parse function per contract. It validates dimensions at the
+ * DTO boundary, canonicalizes the tagged value with `toCanonical()`, and then
+ * goes through the constructors — so a value that could not have been
+ * constructed cannot enter the domain even if a caller hand-builds a DTO.
  *
  * WHAT THIS CONTAINS, AND WHAT IT MUST NOT
  * ----------------------------------------
@@ -42,7 +43,7 @@
 
 import { z } from "zod";
 
-import { quantityOfDimension } from "./quantity.js";
+import { quantityOfDimension, toCanonical } from "./quantity.js";
 import {
   activity,
   activityCoefficient,
@@ -128,6 +129,34 @@ export function parseProvenance(dto: ProvenanceDto): Provenance {
   return ProvenanceSchema.parse(dto);
 }
 
+/**
+ * Provenance for a scientific DATA INPUT, not for a solver/model run.
+ *
+ * `Provenance` above answers "which model produced this state?". This type
+ * answers "where did the density, composition, or molar mass come from?". The
+ * two are intentionally separate because a solver identity is not a citation
+ * for an input value (`GOAL.md` §12, `SPEC-0001` genesis contract).
+ */
+export const DataProvenanceSchema = z.strictObject({
+  source: z.string().min(1),
+  reference: z.string().min(1),
+  edition: z.string().min(1).optional(),
+  version: z.string().min(1).optional(),
+  category: ProvenanceCategorySchema,
+  /** Source notation for an uncertainty; not a parsed quantity. */
+  uncertainty: z.string().min(1).optional(),
+  /** Conditions are quantities, so they retain their tagged wire form. */
+  temperature: quantityOfDimension("temperature").optional(),
+  pressure: quantityOfDimension("pressure").optional(),
+  lastVerified: z.string().min(1).optional(),
+});
+export type DataProvenanceDto = z.infer<typeof DataProvenanceSchema>;
+export type DataProvenance = DataProvenanceDto;
+
+export function parseDataProvenance(dto: DataProvenanceDto): DataProvenance {
+  return DataProvenanceSchema.parse(dto);
+}
+
 // ---------------------------------------------------------------------------
 // Model descriptor
 // ---------------------------------------------------------------------------
@@ -165,6 +194,27 @@ export interface ModelDescriptor {
   version: string;
   description: string;
   validity: ModelValidity;
+}
+
+/** DTO → domain. Canonicalizes all quantity fields before branded construction. */
+export function parseModelDescriptor(dto: ModelDescriptorDto): ModelDescriptor {
+  return {
+    id: dto.id,
+    version: dto.version,
+    description: dto.description,
+    validity: {
+      temperature: {
+        min: kelvin(toCanonical(dto.validity.temperature.min).value),
+        max: kelvin(toCanonical(dto.validity.temperature.max).value),
+      },
+      ionicStrengthMolalMax: ionicStrengthMolal(
+        toCanonical(dto.validity.ionicStrengthMolalMax).value,
+      ),
+      species: dto.validity.species,
+      solvent: dto.validity.solvent,
+      phase: dto.validity.phase,
+    },
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -206,11 +256,13 @@ export interface SpeciesState {
 export function parseSpeciesState(dto: SpeciesStateDto): SpeciesState {
   return {
     symbol: dto.symbol,
-    reducedMolality: reducedMolality(dto.reducedMolality.value),
-    molality: molPerKilogram(dto.molality.value),
-    amount: mol(dto.amount.value),
-    activityCoefficient: activityCoefficient(dto.activityCoefficient.value),
-    activity: activity(dto.activity.value),
+    reducedMolality: reducedMolality(toCanonical(dto.reducedMolality).value),
+    molality: molPerKilogram(toCanonical(dto.molality).value),
+    amount: mol(toCanonical(dto.amount).value),
+    activityCoefficient: activityCoefficient(
+      toCanonical(dto.activityCoefficient).value,
+    ),
+    activity: activity(toCanonical(dto.activity).value),
   };
 }
 
@@ -293,9 +345,13 @@ export interface ScientificState {
 export function parseScientificState(dto: ScientificStateDto): ScientificState {
   return {
     species: dto.species.map(parseSpeciesState),
-    ionicStrengthMolal: ionicStrengthMolal(dto.ionicStrengthMolal.value),
-    ionicStrengthReduced: reducedIonicStrength(dto.ionicStrengthReduced.value),
-    modelPh: ph(dto.modelPh.value),
+    ionicStrengthMolal: ionicStrengthMolal(
+      toCanonical(dto.ionicStrengthMolal).value,
+    ),
+    ionicStrengthReduced: reducedIonicStrength(
+      toCanonical(dto.ionicStrengthReduced).value,
+    ),
+    modelPh: ph(toCanonical(dto.modelPh).value),
     indicators: dto.indicators.map((i) => ({
       indicatorId: i.indicatorId,
       protonationRatio: i.protonationRatio,
@@ -369,18 +425,21 @@ export interface SolveRequest {
 
 export function parseSolveRequest(dto: SolveRequestDto): SolveRequest {
   return {
-    waterMass: kilogram(dto.waterMass.value),
-    liquidVolume: litre(dto.liquidVolume.value),
+    waterMass: kilogram(toCanonical(dto.waterMass).value),
+    liquidVolume: litre(toCanonical(dto.liquidVolume).value),
     solutes: dto.solutes.map((s) => ({
       soluteId: s.soluteId,
-      amount: mol(s.amount.value),
-      ka: s.ka === undefined ? undefined : thermodynamicConstant(s.ka.value),
+      amount: mol(toCanonical(s.amount).value),
+      ka:
+        s.ka === undefined
+          ? undefined
+          : thermodynamicConstant(toCanonical(s.ka).value),
       fullyDissociated: s.fullyDissociated,
     })),
-    temperature: kelvin(dto.temperature.value),
+    temperature: kelvin(toCanonical(dto.temperature).value),
     indicators: dto.indicators.map((i) => ({
       indicatorId: i.indicatorId,
-      kaIn: thermodynamicConstant(i.kaIn.value),
+      kaIn: thermodynamicConstant(toCanonical(i.kaIn).value),
     })),
   };
 }
@@ -457,23 +516,9 @@ export function parseSolveResult(dto: SolveResultDto): SolveResult {
       return {
         status: "MODEL_OUT_OF_DOMAIN",
         reason: dto.reason,
-        nearestSupported: dto.nearestSupported && {
-          id: dto.nearestSupported.id,
-          version: dto.nearestSupported.version,
-          description: dto.nearestSupported.description,
-          validity: {
-            temperature: {
-              min: kelvin(dto.nearestSupported.validity.temperature.min.value),
-              max: kelvin(dto.nearestSupported.validity.temperature.max.value),
-            },
-            ionicStrengthMolalMax: ionicStrengthMolal(
-              dto.nearestSupported.validity.ionicStrengthMolalMax.value,
-            ),
-            species: dto.nearestSupported.validity.species,
-            solvent: dto.nearestSupported.validity.solvent,
-            phase: dto.nearestSupported.validity.phase,
-          },
-        },
+        nearestSupported: dto.nearestSupported
+          ? parseModelDescriptor(dto.nearestSupported)
+          : undefined,
       };
     case "NOT_CONVERGED":
       return {

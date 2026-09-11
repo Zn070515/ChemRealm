@@ -6,9 +6,10 @@
  * M4 — validates its fixtures against the same contract the runtime enforces,
  * instead of hand-mirroring TypeScript types and drifting.
  *
- * The emitted files are BUILD ARTIFACTS under `dist/json-schema/`, not
- * committed sources. `pnpm verify:schema-artifacts` regenerates them and fails
- * if the working copy differs, so drift is caught rather than discovered.
+ * The emitted files are COMMITTED artifacts under `packages/schema/json-schema/`.
+ * `pnpm verify:schema-artifacts` regenerates them and fails if the working copy
+ * differs, so drift is caught rather than discovered and Python can consume the
+ * contract without a Node toolchain.
  */
 
 import { z } from "zod";

@@ -2,11 +2,9 @@
 
 - **Status:** **Accepted** — S1 passed. Owner, 2026-09-11.
 - **Accepted baseline:** commit `8310c685`, `SPEC-0001` revision 6
-- **Current revision:** **7** — amended after acceptance with owner approval
-  during the M1 contract remediation. See "Amendments since acceptance" below.
-  Revision 6 is what was accepted; revision 7 is what the implementation is
-  built against, and the difference is listed here rather than left for a
-  reader to reconstruct with `git diff`.
+- **Current revision:** **8** — M1 Contract Closure R2 candidate. Revision 7 was
+  the last owner-approved amendment; revision 8 records the closure needed for
+  owner review before M1 can pass S3. See "Amendments since acceptance" below.
 - **Acceptance scope:** the specification and its acceptance criteria. Deferred
   items listed under Open questions remain open and must be resolved before the
   milestone that names them. Acceptance does **not** assert that any criterion
@@ -25,12 +23,13 @@
 | Revision | Date | Change | Approval |
 |---|---|---|---|
 | 7 | 2026-09-11 | `CanonicalContents` conserves **components**, not materials (M1 contract remediation item 1). `AC-R21` added to carry that contract; `AC-S3` and `AC-R14` wording aligned to it. Round 6's claim at §"Round 6" that this file was "unchanged at revision 6" corrected. | Owner, 2026-09-11 |
+| 8 | 2026-09-11 | M1 Contract Closure R2 candidate: all persisted `MaterialSnapshot` scientific inputs are tagged quantities; source-data provenance is distinct from solver/model provenance; v0 material definitions reject mixed bases and more than one molality solute until the joint resolver is implemented. | Pending owner review |
 
 A revision bump is recorded here rather than only in the body because the header
 is what a reader checks before deciding whether the file they are reading is the
 file that was accepted. Leaving "accepted at revision 6" in place while the body
 had changed made `git diff` the only way to find out.
-- **Related ADRs:** 0001, 0002, 0003, 0004 (rev), 0005, 0006, 0007 (rev), 0008, 0009 — **all `Accepted`, 2026-09-11**, all load-bearing here
+- **Related ADRs:** 0001, 0002, 0003, 0004 (rev), 0005, 0006, 0007 (rev), 0008, 0009 — **all `Accepted`, 2026-09-11**, plus ADR-0010 (**Proposed — M1 R2 candidate**) for the v0 genesis basis boundary
 - **Related evidence:** `spikes/activity-equilibrium/` (scientific formulation),
   `spikes/numeric-policy/` (determinism + branded types),
   `spikes/solver-validation/` (SUPERSEDED — concentration-only formulation)
@@ -597,7 +596,7 @@ shows a number computed outside the domain.**
 
    The approximation is acceptable at the supported concentrations and is
    labelled as such. M4 measures the bound over the supported domain, and
-   `AC-R14` checks that volume, water mass and solute amounts are conserved
+   `AC-R14` checks that volume, water mass and component amounts are conserved
    across transfers — which bounds the *error*, not the approximation away.
 
    **This is the general principle:** an approximation may be accepted, but its
@@ -933,16 +932,25 @@ Therefore:
   MaterialSnapshot {
     materialId
     sourceDefinition                    // what the scenario author wrote
-    density: Kilogram                   // sourced
-    composition: { soluteId, molPerLitre }[]   // sourced
-    molarMasses: { soluteId, KilogramsPerMol }[]  // sourced
+    density: Quantity<density>          // sourced
+    composition: { soluteId, amountConcentration: Quantity<molarity> }[]
+                                         // sourced, canonical unit mol/L
+    molarMasses: { soluteId, molarMass: Quantity<molarMass> }[]
+                                         // sourced, canonical unit kg/mol
     resolvedInventoryPerLitre: {        // FROZEN at genesis
       waterMass:        Kilogram
       soluteAmounts:    { soluteId, Mol }[]
     }
-    provenance: Provenance
+    provenance: MaterialDataProvenance[]
   }
   ```
+
+  `MaterialDataProvenance` is source-data provenance, not solver provenance. Each
+  record carries `appliesTo: density | composition | molarMass` plus `source`,
+  `reference`, confidence `category`, optional edition/version, optional tagged
+  temperature/pressure conditions, uncertainty notation, and `lastVerified`.
+  The solver's model identity and parameter set remain the separate
+  `ScientificState.provenance` record.
 
   Plus vessel geometry references and their `V(h)` profiles, apparatus defaults,
   and the scenario's **model requirements** — together with a **content hash**
@@ -966,6 +974,32 @@ Therefore:
 
   Molar masses therefore join the `AC-S7` provenance list alongside densities —
   both are scientific inputs, not implementation detail.
+
+### Genesis composition-basis boundary
+
+The content contract is deliberately narrower than the future resolver. In v0 a
+material may contain multiple molarity-basis solutes, or at most one
+molality-basis solute. A material may not mix molarity and molality bases, and a
+material with two molality-basis solutes is rejected before genesis. This is a
+structural schema rule, not a runtime refinement, so the JSON artifact and the
+TypeScript validator agree.
+
+The contract may be widened only when the Scientific Reality Core implements and
+validates the joint conversion. For a solution density `ρ`, molarity-basis
+concentrations `c_j`, molality-basis values `m_i`, and molar masses `M`, the
+resolver must solve:
+
+```
+W = (ρ − Σ_j c_j M_j) / (1 + Σ_i m_i M_i)   // kg water per L solution
+n_i = m_i W                                // molality-basis solute amount/L
+n_j = c_j                                  // molarity-basis solute amount/L
+```
+
+Applying the single-solute formula independently to multiple molality solutes is
+forbidden because each solute contributes to the shared solution-mass
+denominator. The schema restriction remains until this joint formula has a
+Scientific Reality Core owner, reference tests, conservation checks, and
+out-of-domain behavior.
 
 **The snapshot does NOT contain the resolved `solverConfig`** (round 4, finding
 P1-2b). The two are different things and storing both would recreate the

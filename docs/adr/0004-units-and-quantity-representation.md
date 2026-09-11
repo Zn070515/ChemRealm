@@ -226,8 +226,11 @@ compile tests are acceptance criteria (M1), not optional.
 { "value": 0.05, "unit": "L" }
 ```
 
-Never a bare `0.05`. Ingest converts to canonical units and **rejects an unknown
-or missing unit** — a missing unit is a validation error, not a default.
+Never a bare `0.05`. Ingest first validates the dimension, then converts to the
+canonical unit before constructing a domain quantity, and **rejects an unknown
+or missing unit** — a missing unit is a validation error, not a default. Every
+current DTO→domain bridge uses this order; validating a unit and then discarding
+it is a contract bug.
 
 **One written exception: a vector block declares its unit once** (formalized
 2026-09-11). `Position` is

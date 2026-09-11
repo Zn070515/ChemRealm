@@ -1,8 +1,10 @@
 # ADR-0001: Repository and workspace strategy
 
-- **Status:** **Accepted** — owner, 2026-09-11 (baseline `8310c685`)
-- **Deferred decisions:** see the ADR's own `## Open questions` / `## Open decisions`;
-  acceptance covers the decision, not the deferred sub-questions.
+- **Status:** **Accepted baseline; amendment proposed** — M1 R2, owner review
+  pending
+- **Deferred decisions:** the M1 R2 artifact-location amendment below is pending
+  owner review. Any later format decision gets a new ADR or an explicit
+  amendment rather than an unresolved question in an accepted record.
 - **Date:** 2026-09-11
 - **Deciders:** Project owner
 - **Related:** `GOAL.md` §19, `CLAUDE.md` §13, `AGENTS.md` §19, `SPEC-0001`
@@ -44,7 +46,7 @@ ChemRealm/
   .venv/                     # project environment (gitignored)
   packages/schema/           # SINGLE SOURCE OF TRUTH for contracts (TypeScript + zod)
     src/                     # zod schemas, branded quantity types
-    dist/json-schema/        # GENERATED - consumed by Python
+    json-schema/             # GENERATED + COMMITTED - consumed by Python
   packages/world/            # World Runtime: state, events, reducers, replay, branch
   packages/sci/              # Scientific Reality Core: SolverAdapter + v0 solver
   packages/render/           # Representation Engine: observable model + PixiJS renderer
@@ -66,8 +68,9 @@ Rules that make this more than a directory listing:
 
 1. **`packages/schema` owns every cross-boundary contract.** No other package
    defines a persisted or wire shape. zod schemas are authored here; a build step
-   emits JSON Schema into `dist/json-schema/`. The Python oracle validates its
-   fixtures against those emitted artifacts — it does not hand-mirror types.
+   emits JSON Schema into the committed `packages/schema/json-schema/` directory.
+   The Python oracle validates its fixtures against those emitted artifacts — it
+   does not hand-mirror types. `pnpm verify:schema-artifacts` is the drift gate.
 2. **`apps/web` is the only composition root.** Core packages must not import each
    other except along the declared direction: `world → schema`, `sci → schema`,
    `render → schema`, `ace → schema`. Forbidden, and enforced by the build:
@@ -176,10 +179,16 @@ Changing the TypeScript package manager is trivial. Changing the schema
 source-of-truth language would be a meaningful migration, which is why it is
 recorded above as the identified alternative rather than left implicit.
 
-## Open questions
+## Proposed amendment — M1 R2 (owner review pending)
 
-1. Should `packages/schema` emit JSON Schema as a build artifact committed to the
-   repository, or generated on demand? Committing makes the Python check
-   runnable without a Node toolchain; generating keeps the repo clean but couples
-   the oracle to Node. **Leaning: generate on demand, with a CI check that the
-   generated artifact is in sync.** Owner confirmation wanted at M0.
+1. **Candidate decision: JSON Schema artifacts are committed at
+   `packages/schema/json-schema/`.** The build/emitter regenerates them, and
+   `pnpm verify:schema-artifacts` fails on stale, missing, or orphaned files.
+   This keeps the Python oracle runnable without a Node toolchain while retaining
+   a deterministic drift check. The old `dist/json-schema/` path and the
+   "generate on demand" leaning would be superseded if this amendment is
+   accepted.
+
+The implementation, generated artifacts, and evidence packet use this candidate
+path so the proposal is testable. They do not turn it into an accepted decision;
+M1 S3 owner review is still required.

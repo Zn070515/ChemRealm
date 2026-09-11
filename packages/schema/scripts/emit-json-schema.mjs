@@ -24,8 +24,9 @@ const DIST = resolve(HERE, "..", "dist");
  * it lets the Python side validate against the contract without a Node
  * toolchain — which is the point of emitting them at all.
  *
- * This deviates from `PLAN-0001` M1's `dist/json-schema/` path. Recorded here
- * rather than changed silently.
+ * This is the committed path chosen by ADR-0001 and PLAN-0001 M1. The emitter
+ * and the plan deliberately name the same path so the Python consumer and the
+ * drift check cannot follow different contracts.
  */
 const OUT = resolve(HERE, "..", "json-schema");
 

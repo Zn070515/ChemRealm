@@ -260,6 +260,21 @@ different — it needs the world's solution volume — which is why
 
 Serialized forms always carry `{value, unit}`; never a bare number.
 
+### Two provenance ontologies
+
+Scientific input data and derived solver state have different provenance
+questions and use different contracts:
+
+| Contract | Answers | Example |
+|---|---|---|
+| `DataProvenance` | Where did an input value come from? | evaluated density table, IUPAC molar mass |
+| solver `Provenance` | Which model produced this state? | Davies model version and pinned parameters |
+
+The genesis `MaterialSnapshot` uses field-associated `DataProvenance` records for
+density, composition, and molar mass. It must not reuse solver provenance as a
+generic citation bucket. Measurement conditions such as temperature and pressure
+remain tagged quantities at the wire boundary.
+
 ## Anti-patterns this document forbids
 
 1. Naming a variable `concentration` when it holds a molality.

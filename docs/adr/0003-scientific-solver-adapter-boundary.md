@@ -1,8 +1,11 @@
 # ADR-0003: Scientific solver adapter boundary
 
-- **Status:** **Accepted** — owner, 2026-09-11 (baseline `8310c685`)
-- **Deferred decisions:** see the ADR's own `## Open questions` / `## Open decisions`;
-  acceptance covers the decision, not the deferred sub-questions.
+- **Status:** **Accepted baseline; amendment proposed** — M1 R2, owner review
+  pending
+- **Deferred decisions:** the M1 R2 source-data provenance amendment below is
+  pending owner review. Otherwise see the ADR's own `## Open questions` /
+  `## Open decisions`; acceptance covers the decision, not deferred
+  sub-questions.
 - **Date:** 2026-09-11
 - **Deciders:** Project owner
 - **Related:** `GOAL.md` §5.1, §5.2, §6.1, §14; `CLAUDE.md` §4.5, §8; `AGENTS.md` §2, §9
@@ -82,6 +85,17 @@ This is also why no `getPh(): number` shortcut exists (see below): every
 shortcut that flattens a result into a bare value is a place provenance is lost.
 
 Three properties make this load-bearing rather than decorative:
+
+### Proposed amendment — solver provenance is not source-data provenance
+
+`Provenance` belongs to a solver result and answers which model, version,
+activity model, and pinned parameters produced the state. It is not a citation
+for an input such as density or molar mass. Genesis snapshots therefore use the
+separate `DataProvenance` contract, with an explicit field association, source
+reference, confidence category, and optional tagged measurement conditions.
+Neither type may be substituted for the other merely because both contain a
+`category` field. This distinction is the M1 R2 amendment proposed for owner
+review; until accepted, it is not a new runtime milestone authorization.
 
 ### What `ScientificState` contains — and what it does not
 

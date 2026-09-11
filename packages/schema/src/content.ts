@@ -24,27 +24,33 @@ import { CURRENT_SCHEMA_VERSION } from "./world.js";
  * had a single field called `concentration` that accepted either mol/L or
  * mol/kg — which is anti-pattern 1 of `docs/science/quantity-ontology.md`:
  * "naming a variable `concentration` when it holds a molality". Both scales are
- * still supported; neither is anonymous.
+ * still supported; neither is anonymous. At the material level, v0 permits
+ * multiple molarity solutes or one molality solute, but not a mixed basis; the
+ * joint mixed-basis resolver is a Scientific Reality Core prerequisite.
  */
+const MolaritySoluteDefinitionSchema = z.strictObject({
+  soluteId: z.string().min(1),
+  basis: z.literal("molarity"),
+  /** `c`, mol per litre of SOLUTION. The reagent-label and volumetric convention. */
+  amountConcentration: quantityOfDimension("molarity"),
+  /** Sourced. Feeds `waterMass`, so it is a scientific input. */
+  molarMass: quantityOfDimension("molarMass"),
+  /** Whether the solute is fully dissociated at these concentrations. */
+  fullyDissociated: z.boolean(),
+});
+
+const MolalitySoluteDefinitionSchema = z.strictObject({
+  soluteId: z.string().min(1),
+  basis: z.literal("molality"),
+  /** `m`, mol per kilogram of WATER. */
+  molality: quantityOfDimension("molality"),
+  molarMass: quantityOfDimension("molarMass"),
+  fullyDissociated: z.boolean(),
+});
+
 export const SoluteDefinitionSchema = z.discriminatedUnion("basis", [
-  z.strictObject({
-    soluteId: z.string().min(1),
-    basis: z.literal("molarity"),
-    /** `c`, mol per litre of SOLUTION. The reagent-label and volumetric convention. */
-    amountConcentration: quantityOfDimension("molarity"),
-    /** Sourced. Feeds `waterMass`, so it is a scientific input. */
-    molarMass: quantityOfDimension("molarMass"),
-    /** Whether the solute is fully dissociated at these concentrations. */
-    fullyDissociated: z.boolean(),
-  }),
-  z.strictObject({
-    soluteId: z.string().min(1),
-    basis: z.literal("molality"),
-    /** `m`, mol per kilogram of WATER. */
-    molality: quantityOfDimension("molality"),
-    molarMass: quantityOfDimension("molarMass"),
-    fullyDissociated: z.boolean(),
-  }),
+  MolaritySoluteDefinitionSchema,
+  MolalitySoluteDefinitionSchema,
 ]);
 export type SoluteDefinition = z.infer<typeof SoluteDefinitionSchema>;
 
@@ -63,7 +69,16 @@ export const MaterialDefinitionSchema = z.strictObject({
   label: z.string().min(1),
   /** Aqueous solution or pure solvent; solids are out of scope for v0. */
   phase: z.literal("aqueous"),
-  solutes: z.array(SoluteDefinitionSchema),
+  /**
+   * v0 resolver boundary: multiple molarity solutes are supported, but a
+   * material may contain at most one molality solute and may not mix bases.
+   * The general mixed-basis formula belongs to the Scientific Reality Core and
+   * must land before this contract is widened (SPEC-0001 genesis design).
+   */
+  solutes: z.union([
+    z.array(MolaritySoluteDefinitionSchema),
+    z.array(MolalitySoluteDefinitionSchema).max(1),
+  ]),
   /**
    * Sourced. Feeds `waterMass` via the resolved inventory — and, when a solute
    * is declared on the molality scale, is what converts it to the snapshot's

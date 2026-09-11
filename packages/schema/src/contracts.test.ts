@@ -11,11 +11,14 @@ import {
   SolveResultSchema,
   SolverConfigSchema,
   SpeciesStateSchema,
+  parseScientificState,
   parseSolveRequest,
+  parseSolveResult,
 } from "./scientific.js";
 import {
   CURRENT_SCHEMA_VERSION,
   CanonicalContentsSchema,
+  MaterialSnapshotSchema,
   PositionSchema,
   ScenarioSnapshotSchema,
   VesselSchema,
@@ -540,6 +543,83 @@ describe("the conserved inventory is components, not materials", () => {
   });
 });
 
+describe("persisted material snapshots tag every scientific input", () => {
+  const snapshot = {
+    materialId: "hcl-0.1",
+    sourceDefinition: "0.1000 mol/L HCl",
+    density: { value: 1.002, unit: "kg/L" },
+    composition: [
+      { soluteId: "HCl", amountConcentration: { value: 0.1, unit: "mol/L" } },
+    ],
+    molarMasses: [
+      { soluteId: "HCl", molarMass: { value: 0.0364609, unit: "kg/mol" } },
+    ],
+    resolvedInventoryPerLitre: {
+      waterMass: { value: 0.998, unit: "kg" },
+      soluteAmounts: [{ soluteId: "HCl", amount: { value: 0.1, unit: "mol" } }],
+    },
+    provenance: [
+      {
+        appliesTo: ["density"],
+        source: "CRC Handbook",
+        reference: "aqueous HCl density table",
+        category: "evaluated",
+      },
+      {
+        appliesTo: ["composition"],
+        source: "Scenario record",
+        reference: "hcl-0.1 composition label",
+        category: "evaluated",
+      },
+      {
+        appliesTo: ["molarMass"],
+        source: "IUPAC standard atomic weights",
+        reference: "HCl molar mass calculation",
+        category: "calculated",
+      },
+    ],
+  };
+
+  it("accepts tagged composition and molar-mass quantities", () => {
+    expect(MaterialSnapshotSchema.safeParse(snapshot).success).toBe(true);
+  });
+
+  it("rejects the old bare composition and molar-mass fields", () => {
+    const broken = structuredClone(snapshot) as Record<string, unknown>;
+    (broken.composition as Array<Record<string, unknown>>)[0] = {
+      soluteId: "HCl",
+      molPerLitre: 0.1,
+    };
+    (broken.molarMasses as Array<Record<string, unknown>>)[0] = {
+      soluteId: "HCl",
+      kilogramsPerMol: 0.0364609,
+    };
+    expect(MaterialSnapshotSchema.safeParse(broken).success).toBe(false);
+  });
+
+  it("emits no bare legacy physical fields in persisted artifacts", () => {
+    const json = JSON.stringify(generateJsonSchemas());
+    expect(json).not.toContain('"molPerLitre"');
+    expect(json).not.toContain('"kilogramsPerMol"');
+    expect(json).toContain('"amountConcentration"');
+    expect(json).toContain('"molarMass"');
+  });
+
+  it("does not accept solver provenance as a material-data citation", () => {
+    const broken = structuredClone(snapshot) as Record<string, unknown>;
+    broken.provenance = [
+      {
+        modelId: "acidbase-monoprotic-davies",
+        modelVersion: "1.0.0",
+        activityModel: "davies",
+        category: "calculated",
+        parameters: {},
+      },
+    ];
+    expect(MaterialSnapshotSchema.safeParse(broken).success).toBe(false);
+  });
+});
+
 describe("the export bundle cannot carry learner identity", () => {
   const bundle = (over: Record<string, unknown>) => ({
     format: "chemrealm.export",
@@ -633,6 +713,79 @@ describe("DTOs parse into domain quantities, not bare numbers", () => {
     // become a zero that a later reader mistakes for a real constant.
     expect(req.solutes[0]!.ka).toBeUndefined();
   });
+
+  it("canonicalizes non-canonical wire units before constructing the domain", () => {
+    const nonCanonical = structuredClone(requestDto);
+    nonCanonical.waterMass = { value: 1000, unit: "g" };
+    nonCanonical.liquidVolume = { value: 50, unit: "mL" };
+    nonCanonical.solutes[0]!.amount = { value: 5, unit: "mmol" };
+    nonCanonical.temperature = { value: 25, unit: "degC" };
+
+    const req = parseSolveRequest(SolveRequestSchema.parse(nonCanonical));
+    expect(req.waterMass).toBeCloseTo(1, 15);
+    expect(req.liquidVolume).toBeCloseTo(0.05, 15);
+    expect(req.solutes[0]!.amount).toBeCloseTo(0.005, 15);
+    expect(req.temperature).toBeCloseTo(298.15, 12);
+  });
+
+  it("canonicalizes the nested scientific state and nearest-supported descriptor", () => {
+    const state = parseScientificState(
+      ScientificStateSchema.parse({
+        schemaVersion: 1,
+        species: [
+          {
+            symbol: "H+",
+            reducedMolality: { value: 0.1, unit: "1" },
+            molality: { value: 0.1, unit: "mol/kg" },
+            amount: { value: 5, unit: "mmol" },
+            activityCoefficient: { value: 0.9, unit: "1" },
+            activity: { value: 0.09, unit: "1" },
+          },
+        ],
+        ionicStrengthMolal: { value: 0.1, unit: "mol/kg" },
+        ionicStrengthReduced: { value: 0.1, unit: "1" },
+        modelPh: { value: 1.05, unit: "1" },
+        indicators: [],
+        validity: { inDomain: true, withinProposedAccuracyEnvelope: true },
+        provenance: {
+          modelId: "acidbase-monoprotic-davies",
+          modelVersion: "1.0.0",
+          activityModel: "davies",
+          category: "calculated",
+          parameters: {},
+        },
+      }),
+    );
+    expect(state.species[0]!.amount).toBeCloseTo(0.005, 15);
+
+    const result = parseSolveResult(
+      SolveResultSchema.parse({
+        schemaVersion: 1,
+        status: "MODEL_OUT_OF_DOMAIN",
+        reason: "temperature outside the model range",
+        nearestSupported: {
+          id: "acidbase-monoprotic-davies",
+          version: "1.0.0",
+          description: "test model",
+          validity: {
+            temperature: {
+              min: { value: 0, unit: "degC" },
+              max: { value: 100, unit: "degC" },
+            },
+            ionicStrengthMolalMax: { value: 0.5, unit: "mol/kg" },
+            species: ["H+"],
+            solvent: "water",
+            phase: "aqueous",
+          },
+        },
+      }),
+    );
+    if (result.status !== "MODEL_OUT_OF_DOMAIN" || !result.nearestSupported) {
+      throw new Error("expected an out-of-domain result with a descriptor");
+    }
+    expect(result.nearestSupported.validity.temperature.min).toBeCloseTo(273.15, 12);
+    expect(result.nearestSupported.validity.temperature.max).toBeCloseTo(373.15, 12);
+  });
 });
 
 describe("a solute declares its composition scale by name", () => {
@@ -682,6 +835,49 @@ describe("a solute declares its composition scale by name", () => {
         ...base,
         basis: "molarity",
         amountConcentration: { value: 0.1, unit: "mol/kg" },
+      }).success,
+    ).toBe(false);
+  });
+
+  it("rejects multiple molality solutes until the joint resolver exists", () => {
+    const hcl = {
+      ...base,
+      basis: "molality" as const,
+      molality: { value: 0.1, unit: "mol/kg" as const },
+    };
+    const nacl = {
+      soluteId: "NaCl",
+      basis: "molality" as const,
+      molality: { value: 0.1, unit: "mol/kg" as const },
+      molarMass: { value: 58.44, unit: "g/mol" as const },
+      fullyDissociated: true,
+    };
+    expect(
+      MaterialDefinitionSchema.safeParse({
+        materialId: "mixed",
+        label: "mixed molality",
+        phase: "aqueous",
+        solutes: [hcl, nacl],
+        density: { value: 1, unit: "kg/L" },
+      }).success,
+    ).toBe(false);
+  });
+
+  it("rejects mixed molarity and molality bases until the joint resolver exists", () => {
+    const molality = {
+      soluteId: "NaCl",
+      basis: "molality" as const,
+      molality: { value: 0.1, unit: "mol/kg" as const },
+      molarMass: { value: 58.44, unit: "g/mol" as const },
+      fullyDissociated: true,
+    };
+    expect(
+      MaterialDefinitionSchema.safeParse({
+        materialId: "mixed",
+        label: "mixed basis",
+        phase: "aqueous",
+        solutes: [base, molality],
+        density: { value: 1, unit: "kg/L" },
       }).success,
     ).toBe(false);
   });

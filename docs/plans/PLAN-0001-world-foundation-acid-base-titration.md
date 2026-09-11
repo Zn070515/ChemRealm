@@ -1,20 +1,22 @@
 # PLAN-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** **Approved to execute** — owner, 2026-09-11, at `SPEC-0001` revision 6
+- **Status:** **M1 R2 candidate for owner review** — the original plan was
+  approved on 2026-09-11 at `SPEC-0001` revision 6; the current contract
+  candidate is revision 8.
 - **Completed:** `M0 — Repository foundation` reached **S3 — Verified** on
   2026-09-11. Evidence: `docs/evidence/M0.md`, commits `1f3dfee`/`565a2e8`,
   CI run `34595967023` (13/13 gate steps on a clean `ubuntu-latest` checkout).
-- **Authorized next:** `M1 — Schema and Units`. Completing M1's code is **S2**;
-  it reaches **S3** only when its own evidence packet exists. **M2 does not
-  start on the strength of M1 being written** — the owner reviews the
-  implementation first.
+- **Authorized next:** `M1 — Contract Closure R2`. The implementation is **S2**;
+  it reaches **S3** only when the owner accepts the R2 contract and its evidence
+  packet. **M2 is not authorized** on the strength of M1 being written.
 - **Coverage check:** `uv run python tools/check_acceptance_coverage.py` — every `AC-*` in
   `SPEC-0001` is required to appear in at least one milestone here. Run it after
   editing either document.
-- **Date:** 2026-09-11 (revised after owner review remediation)
+- **Date:** 2026-09-11 (revised for M1 Contract Closure R2)
 - **Implements:** `docs/specs/SPEC-0001-world-foundation-acid-base-titration.md`
-- **Related ADRs:** 0001–0009, **all `Accepted`, 2026-09-11**. Load-bearing here:
-  0004 (revised), 0007 (revised), 0008, 0009.
+- **Related ADRs:** 0001–0009, **all `Accepted`, 2026-09-11**, plus ADR-0010
+  (**Proposed — M1 R2 candidate**). Load-bearing here: 0004 (revised), 0007
+  (revised), 0008, 0009, and 0010's M2 basis-boundary gate.
 - **Audience:** an agent that did not participate in the design. Nothing below
   assumes prior context beyond the repository documents.
 
@@ -24,6 +26,12 @@
 > the model needs and ships deterministic implementations of them; canonical
 > state stores independent amounts rather than species. **An agent executing an
 > earlier copy of this plan would build the wrong thing.**
+
+> **R2 closure note.** DTO→domain bridges canonicalize units before construction;
+> `MaterialSnapshot` uses tagged scientific inputs with field-associated
+> `DataProvenance`; and v0 rejects mixed composition bases until the Scientific
+> Reality Core owns the joint resolver. The R2 candidate remains S2 pending owner
+> review.
 
 ## How to read this plan
 
@@ -223,7 +231,7 @@ packages/schema/src/quantity.ts       {value, unit} tuple parse/serialize
 packages/schema/src/world.ts          WorldState, Vessel, Apparatus, Attachment
 packages/schema/src/events.ts         the six v0 events + event envelope
 packages/schema/src/commands.ts       the Command union
-packages/schema/src/scientific.ts     ScientificState, Provenance, ModelDescriptor
+packages/schema/src/scientific.ts     ScientificState, solver/data provenance, ModelDescriptor
 packages/schema/src/content.ts        scenario definition schema
 packages/schema/src/export.ts         chemrealm.export v1
 packages/schema/src/json-schema.ts    emits JSON Schema into
@@ -279,6 +287,10 @@ this milestone defines their representation.
 4. **One** conversion module. No `* 1000` elsewhere. Round-trip conversions for
    every unit, including the molality↔molarity path, which needs a **sourced
    solution density from the scenario** — never an invented model.
+   Every DTO→domain bridge calls `toCanonical()` after schema dimension
+   validation; it never discards the wire unit and passes the numeric value
+   directly to a branded constructor. This includes request fields, species
+   state fields, and `nearestSupported` model descriptors.
 5. zod schemas for every contract, with `schemaVersion`.
 6. `parseQuantity` rejects a missing **and** an unknown unit. No defaults
    (`SPEC-0001` AC-U3).
@@ -303,6 +315,9 @@ this milestone defines their representation.
 | Schema test: `CanonicalContents` carries `componentAmounts`, carries **no** material identifier, and the recipe-level `soluteId` is absent from it; the emitted artifact is checked too | AC-R21 |
 | Compile fixture: `amount: state.modelPh` does not typecheck, and neither does an `Activity` standing in for an `ActivityCoefficient` | The domain types at the Scientific API boundary are quantities, not bare numbers — the guarantee the DTO/domain split exists to provide |
 | `parseSolveRequest` / `parseScientificState` go through the constructors, and a DTO with `{value, unit:"mol/kg"}` where a dimensionless quantity belongs is REJECTED | A dimensionless quantity is not interchangeable with a dimensioned one across the wire |
+| DTO bridge cases `g→kg`, `mL→L`, `mmol→mol`, and `degC→K` produce canonical domain values; the nested scientific state and nearest-supported descriptor are covered too | Wire units are validated **and converted**, not merely validated then discarded |
+| `MaterialSnapshot` accepts tagged `amountConcentration`/`molarMass` fields, rejects `molPerLitre`/`kilogramsPerMol`, and carries field-associated `DataProvenance` | AC-U3 applies to the persisted world contract, not only the standalone quantity parser |
+| Content artifact accepts multiple molarity solutes but rejects mixed bases and more than one molality solute | v0 does not express a state the resolver cannot safely resolve; the future joint formula is a Scientific Reality Core prerequisite |
 | Meta-test: every object that declares `properties` in **every** emitted artifact also sets `additionalProperties: false`; the runtime rejects the same nested unknown key | TypeScript and Python agree on unknown fields, in both directions |
 | Compile fixture: summing ionic strength across bases does not compile | AC-U2 — one generic `sumIonicStrength` would have accepted `I_m + I_c` silently |
 | `activityCoefficient(0)` and `thermodynamicConstant(0)` throw | γ > 0 and `Ka > 0` are physical invariants, not defaults |
@@ -374,10 +389,9 @@ M4 can supply the real one without touching this package.
 1. **`CanonicalContents` is per-vessel, and contains exactly three things:**
    **`waterMass`, `liquidVolume`, and component `amount`s.** Nothing else.
 
-   **`amount`s are COMPONENTS, not materials** (`AC-R21`, spec revision 7). An
-   earlier revision of this step said "material amounts"; a material is a
-   reagent recipe and is not a conserved quantity, so it cannot be what a vessel
-   conserves. A material identifier must not appear in conserved world state.
+   **`amount`s are COMPONENTS** (`AC-R21`, spec revision 7). Material identity
+   belongs only to the genesis recipe snapshot; it is not a conserved field and
+   must not appear in conserved world state.
 
    **`scenarioSnapshot` is NOT part of it.** It is world-level genesis state and
    lives on `WorldState` (`WorldCreated` writes it). Putting it in
@@ -392,7 +406,7 @@ M4 can supply the real one without touching this package.
      canonical: {
        byVessel: {
          vesselA: { waterMass, liquidVolume, componentAmounts }
-         vesselB: { waterMass, liquidVolume, materials }
+          vesselB: { waterMass, liquidVolume, componentAmounts }
        }
      }
    }
@@ -434,7 +448,7 @@ M4 can supply the real one without touching this package.
 | `canonicalJson` order-independence | Hash is structural, not incidental |
 | **Replay completeness: move `content/` aside entirely, replay a serialized world, `replayHash` unchanged** | AC-R12 — the log is self-contained |
 | `liquidVolume` is updated only by transfer; changing it changes `replayHash` | AC-R13 |
-| Volume, water mass and solute amounts conserved over 100 transfers | AC-R14 |
+| Volume, water mass and component amounts conserved over 100 transfers | AC-R14 |
 | Transfer deltas computed from the **pre-transfer** snapshot; an implementation that interleaves read/write produces a different result and fails | AC-R18 |
 | `WorldCreated` carries `worldId`; `WorldBranched` carries `childWorldId`, `parentWorldId`, `forkSequence`, `forkStateHash`; replay reconstructs the final `worldId` and lineage from the log alone | AC-R19 |
 | Schema test: contents exist only under `canonical.byVessel`; the reducer never writes a `Vessel.contents` | AC-R15 |
@@ -479,8 +493,11 @@ packages/sci/src/registry.ts         adapter registry, id+version lookup
 2. Async from the start, per ADR-0003 open question 2: a future PHREEQC adapter
    may be out-of-process, and retrofitting async later is a breaking change
    across every call site.
-3. `Provenance` carries `{ modelId, solverId, solverVersion, parameters, activityModel, uncertainty, validityRange, category }`
-   where `category ∈ { measured, evaluated, calculated, empirical, pedagogicalApproximation }`
+3. Solver `Provenance` carries `{ modelId, modelVersion, activityModel, parameters,
+   uncertainty, source, category }`. It records the model run, not citations for
+   material inputs. Genesis `MaterialSnapshot` uses field-associated
+   `DataProvenance` instead.
+   Its `category ∈ { measured, evaluated, calculated, empirical, pedagogicalApproximation }`
    (`GOAL.md` §12). The indicator colour model will use `empirical`.
 4. `registry.ts` resolves by id **and** version, and refuses to return a
    different version. This is what makes AC-R6 enforceable.

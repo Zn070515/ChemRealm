@@ -56,9 +56,25 @@
                           "items": {
                             "additionalProperties": false,
                             "properties": {
-                              "molPerLitre": {
-                                "minimum": 0,
-                                "type": "number"
+                              "amountConcentration": {
+                                "additionalProperties": false,
+                                "properties": {
+                                  "unit": {
+                                    "enum": [
+                                      "mol/L",
+                                      "mmol/L"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  "value": {
+                                    "type": "number"
+                                  }
+                                },
+                                "required": [
+                                  "value",
+                                  "unit"
+                                ],
+                                "type": "object"
                               },
                               "soluteId": {
                                 "minLength": 1,
@@ -67,7 +83,7 @@
                             },
                             "required": [
                               "soluteId",
-                              "molPerLitre"
+                              "amountConcentration"
                             ],
                             "type": "object"
                           },
@@ -101,9 +117,25 @@
                           "items": {
                             "additionalProperties": false,
                             "properties": {
-                              "kilogramsPerMol": {
-                                "exclusiveMinimum": 0,
-                                "type": "number"
+                              "molarMass": {
+                                "additionalProperties": false,
+                                "properties": {
+                                  "unit": {
+                                    "enum": [
+                                      "kg/mol",
+                                      "g/mol"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  "value": {
+                                    "type": "number"
+                                  }
+                                },
+                                "required": [
+                                  "value",
+                                  "unit"
+                                ],
+                                "type": "object"
                               },
                               "soluteId": {
                                 "minLength": 1,
@@ -112,10 +144,113 @@
                             },
                             "required": [
                               "soluteId",
-                              "kilogramsPerMol"
+                              "molarMass"
                             ],
                             "type": "object"
                           },
+                          "type": "array"
+                        },
+                        "provenance": {
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "appliesTo": {
+                                "items": {
+                                  "enum": [
+                                    "density",
+                                    "composition",
+                                    "molarMass"
+                                  ],
+                                  "type": "string"
+                                },
+                                "minItems": 1,
+                                "type": "array"
+                              },
+                              "category": {
+                                "enum": [
+                                  "measured",
+                                  "evaluated",
+                                  "calculated",
+                                  "empirical",
+                                  "pedagogicalApproximation"
+                                ],
+                                "type": "string"
+                              },
+                              "edition": {
+                                "minLength": 1,
+                                "type": "string"
+                              },
+                              "lastVerified": {
+                                "minLength": 1,
+                                "type": "string"
+                              },
+                              "pressure": {
+                                "additionalProperties": false,
+                                "properties": {
+                                  "unit": {
+                                    "enum": [
+                                      "kPa",
+                                      "Pa",
+                                      "atm"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  "value": {
+                                    "type": "number"
+                                  }
+                                },
+                                "required": [
+                                  "value",
+                                  "unit"
+                                ],
+                                "type": "object"
+                              },
+                              "reference": {
+                                "minLength": 1,
+                                "type": "string"
+                              },
+                              "source": {
+                                "minLength": 1,
+                                "type": "string"
+                              },
+                              "temperature": {
+                                "additionalProperties": false,
+                                "properties": {
+                                  "unit": {
+                                    "enum": [
+                                      "K",
+                                      "degC"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  "value": {
+                                    "type": "number"
+                                  }
+                                },
+                                "required": [
+                                  "value",
+                                  "unit"
+                                ],
+                                "type": "object"
+                              },
+                              "uncertainty": {
+                                "minLength": 1,
+                                "type": "string"
+                              },
+                              "version": {
+                                "minLength": 1,
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "source",
+                              "reference",
+                              "category",
+                              "appliesTo"
+                            ],
+                            "type": "object"
+                          },
+                          "minItems": 1,
                           "type": "array"
                         },
                         "resolvedInventoryPerLitre": {
@@ -196,7 +331,8 @@
                         "density",
                         "composition",
                         "molarMasses",
-                        "resolvedInventoryPerLitre"
+                        "resolvedInventoryPerLitre",
+                        "provenance"
                       ],
                       "type": "object"
                     },
