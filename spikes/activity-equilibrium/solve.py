@@ -1,25 +1,29 @@
 """SPIKE - self-consistent activity equilibrium, with molarity and molality kept
 as genuinely distinct quantities.
 
-Revision 3 (owner review round 2). Fixes:
+Revision 4 (owner review round 3). Fixes carried in:
 
-  P1-1  The taught quantity -lg c(H+) was computed as -log10(m_H), i.e. from
-        MOLALITY, and then labelled and displayed as a concentration. For
-        0.1000 mol/L HCl that produced 0.9993. The correct value is 1.0000,
-        because the solution is DEFINED as 0.1000 mol/L and HCl is fully
-        dissociated. Molarity is now derived from a real solution volume; the
-        scientific core stays molality-only and the presentation layer converts.
+  Round 2:
+  P1-1  -lg c(H+) was computed as -log10(m_H) -- a MOLALITY labelled as a
+        concentration. For 0.1000 mol/L HCl that gave 0.9993; correct is 1.0000.
+        Molarity is now derived from a real solution volume.
+  P1-2  "thermodynamic pH" -> "activity-based model pH". IUPAC's pH is a
+        notional definition and depends on an chosen activity model.
+  P1-3  Computational domain separated from the accuracy envelope.
 
-  P1-2  The activity-based quantity is named "activity-based model pH", not
-        "thermodynamic pH". IUPAC's pH is a notional definition: single-ion
-        activity is not independently measurable and requires an
-        extrathermodynamic convention or model. Calling one number "the true pH"
-        is as unscientific as ignoring activity.
-
-  P1-3  The computational domain (I_m <= 0.5 mol/kg, Davies's approximate range)
-        is now separated from the validated accuracy envelope
-        (I_m <= 0.12 mol/kg, anchored by the IUPAC buffer standards). +/-0.02 pH
-        is claimed ONLY inside the envelope.
+  Round 3:
+  P1-C  Indicator equilibrium MOVED INTO THE SCIENTIFIC CORE. The ratio
+        m(In-)/m(HIn) = Ka_in/(a_H * gamma_In) contains Ka, an activity and an
+        activity coefficient; it is chemistry, not a perceptual mapping. The
+        observable layer receives the ratio and owns only ratio -> colour.
+  P1-D  Molarity and -lg c(H+) are produced by a named ScientificProjection
+        layer (function `project`), not by an unnamed "presentation layer".
+  P1-E  The envelope is PROPOSED, not validated. +/-0.02 pH is evidenced only at
+        the two IUPAC anchors; equal ionic strength does not imply equal error.
+  P1-F  Davies takes the REDUCED (dimensionless) ionic strength I_hat = I_m/m°,
+        so `1 + sqrt(I)` is dimensionally legal.
+  P1-A  Transfer semantics demonstrated: liquidVolume is tracked state, and a
+        transfer moves water and solutes by volume fraction.
 
 Run:
     py -3.12 solve.py
@@ -32,19 +36,37 @@ KW = 1.0e-14
 """Thermodynamic ion product of water, molality basis, dimensionless, 25 C."""
 
 A_DAVIES = 0.509
-"""Debye-Huckel A on the MOLALITY scale, (kg/mol)^0.5, water at 25 C."""
+"""Debye-Huckel A for water at 25 C, on the REDUCED ionic-strength convention.
+
+Dimensionless, because its argument I_hat is dimensionless (P1-F). On a
+dimensioned-I convention this coefficient would carry (kg/mol)^0.5 -- which is
+precisely why the reduced convention is used."""
 
 DAVIES_B = 0.3
-"""Davies empirical extension term, kg/mol."""
+"""Davies empirical extension term. Dimensionless on the reduced-I convention."""
+
+M_STANDARD_MOLALITY = 1.0
+"""Standard molality m°, mol/kg. Defines the reduced ionic strength I_hat = I_m/m°.
+
+Davies contains `1 + sqrt(I)`, which is only defined if I is a pure number.
+Working with the reduced (dimensionless) ionic strength is the standard
+molality-scale resolution. Numerically I_hat == I_m because m° = 1 mol/kg; the
+point is that it is written down, so the equation is dimensionally legal
+(finding P1-F)."""
 
 I_COMPUTATIONAL_MAX = 0.5
 """Upper end of the Davies model's approximate range, mol/kg. The solver may
-compute here, but the result is flagged as outside the validated envelope."""
+compute here, but the result is flagged as outside the proposed envelope."""
 
-I_VALIDATED_MAX = 0.12
-"""Upper end of the range in which +/-0.02 pH is actually demonstrated against
-an external standard. Anchored by IUPAC buffer points at I = 0.01 and I = 0.10.
-This is a CLAIM BOUNDARY, not a model parameter."""
+I_PROPOSED_ENVELOPE_MAX = 0.12
+"""The PROPOSED validation envelope, mol/kg. A target, not an achievement.
+
++/-0.02 pH has been demonstrated only at two IUPAC acetate-buffer anchors
+(I = 0.01 and I = 0.10). Equal ionic strength does NOT imply equal model error:
+buffer, strong-acid excess, and weak-acid equivalence are different composition
+regimes. So this boundary is proposed here and is promoted to "validated" only
+when M4's AC-S6 passes across the full swept curve including equivalence
+(finding P1-E)."""
 
 MOLAR_MASS = {"HCl": 36.4609, "NaOH": 39.9971, "NaOAc": 82.0343, "HOAc": 60.0520}
 
@@ -55,16 +77,35 @@ CHECKS = []
 
 
 # ------------------------------------------------------------- activity
-def log10_gamma(z, i):
-    """Davies equation, molality basis."""
-    if i <= 0.0:
+def reduced_ionic_strength(i_molal):
+    """I_hat = I_m / m°, dimensionless. Argument of Davies must be a pure number."""
+    return i_molal / M_STANDARD_MOLALITY
+
+
+def log10_gamma(z, i_reduced):
+    """Davies equation. Takes the REDUCED (dimensionless) ionic strength."""
+    if i_reduced <= 0.0:
         return 0.0
-    r = math.sqrt(i)
-    return -A_DAVIES * z * z * (r / (1.0 + r) - DAVIES_B * i)
+    r = math.sqrt(i_reduced)
+    return -A_DAVIES * z * z * (r / (1.0 + r) - DAVIES_B * i_reduced)
 
 
-def gamma(z, i):
-    return 10.0 ** log10_gamma(z, i)
+def gamma(z, i_molal):
+    """Convenience wrapper: call sites hold I_m in mol/kg, Davies needs I_hat."""
+    return 10.0 ** log10_gamma(z, reduced_ionic_strength(i_molal))
+
+
+def indicator_ratio(a_h, i_molal, ka_in):
+    """Indicator protonation ratio m(In-)/m(HIn). SCIENTIFIC CORE OUTPUT.
+
+    This is equilibrium chemistry -- Ka_in, an activity, and an activity
+    coefficient -- and belongs here, not in the renderer (ADR-0006, P1-C).
+    The observable layer receives the ratio and owns only the mapping
+    ratio -> colour.
+    """
+    g_in = gamma(-1, i_molal)   # In- is charged
+    g_hin = 1.0                 # HIn is neutral (stated approximation)
+    return ka_in * g_hin / (a_h * g_in)
 
 
 # ---------------------------------------------------- solution / mixture:
@@ -211,17 +252,22 @@ def solve(m_na, m_cl, m_ha_tot, ka):
     m_oh, m_a, m_ha, kw_c, ka_c = speciate(m_h, i, m_ha_tot, ka)
 
     return {
-        "m_H": m_h, "m_OH": m_oh, "m_A": m_a, "m_HA": m_ha, "I": i,
+        "m_H": m_h, "m_OH": m_oh, "m_A": m_a, "m_HA": m_ha,
+        "I_m": i,                                   # mol/kg
+        "I_hat": reduced_ionic_strength(i),         # dimensionless
         "gamma_H": gamma(1, i),
+        "a_H": gamma(1, i) * m_h,
         "residual": m_na + m_h - m_oh - m_a - m_cl,
-        "in_validated_envelope": i <= I_VALIDATED_MAX,
+        "in_proposed_envelope": i <= I_PROPOSED_ENVELOPE_MAX,
     }
 
 
-# --------------------------------------------------------- presentation
-# The ONLY place molarity and pH are produced. Both derive from the converged
-# molality state plus the mixture's conserved quantities.
-def present(result, mixture):
+# ---------------------------------------------------- ScientificProjection
+# The ONLY place molarity and the taught quantity are produced. Both need the
+# converged scientific state AND the world's physical state (water mass,
+# liquid volume). This is a named layer, not "the presentation layer"
+# (ADR-0003, finding P1-D).
+def project(result, mixture):
     m_h = result["m_H"]                       # mol/kg water
     n_h = m_h * mixture.water_mass_kg         # mol
     c_h = n_h / mixture.volume_l              # mol/L  <- genuine molarity
@@ -269,7 +315,7 @@ def main():
 
     print("=" * 78)
     print("SPIKE rev3: molality-basis thermodynamics, molarity as presentation")
-    print(f"  I validated envelope <= {I_VALIDATED_MAX} mol/kg | "
+    print(f"  I validated envelope <= {I_PROPOSED_ENVELOPE_MAX} mol/kg | "
           f"I computational domain <= {I_COMPUTATIONAL_MAX} mol/kg")
     print(f"  acetic acid pKa = {pka}")
     print("=" * 78)
@@ -280,8 +326,8 @@ def main():
     for c, ref in ((0.1, 4.644), (0.01, 4.713)):
         m_na, m_ha_tot = c, 2.0 * c
         r = solve(m_na, 0.0, m_ha_tot, ka)
-        print(f"\n   {c} mol/kg HOAc+NaOAc   I = {r['I']:.4f}"
-              f"   g_H = {r['gamma_H']:.4f}   in envelope: {r['in_validated_envelope']}")
+        print(f"\n   {c} mol/kg HOAc+NaOAc   I = {r['I_m']:.4f}"
+              f"   g_H = {r['gamma_H']:.4f}   in envelope: {r['in_proposed_envelope']}")
         report(f"acetate buffer {c} mol/kg vs IUPAC",
                -math.log10(r["gamma_H"] * r["m_H"]), ref, 0.02)
 
@@ -292,7 +338,7 @@ def main():
     hcl = reagent("0.1000 M HCl", 1.0, "HCl", 0.1000, 1.0020)
     mix_b = mix("0.1000 M HCl", hcl)
     r, (m_na, m_cl, m_ha_tot) = solve_mixture(mix_b, ka)
-    p = present(r, mix_b)
+    p = project(r, mix_b)
     print(f"   m(H+) = {p['m_H']:.6f} mol/kg water")
     print(f"   c(H+) = {p['c_H']:.6f} mol/L solution")
     print(f"   a(H+) = {p['a_H']:.6f}  (gamma_H = {r['gamma_H']:.4f})")
@@ -320,7 +366,7 @@ def main():
                 analytic = -math.log10(excess) - math.log10(r["gamma_H"])
                 note = "acid excess: g_H"
             else:
-                analytic = 14.0 + math.log10(-excess) + math.log10(gamma(-1, r["I"]))
+                analytic = 14.0 + math.log10(-excess) + math.log10(gamma(-1, r["I_m"]))
                 note = "base excess: g_OH"
             report(f"f={f:.1f} eq vs analytic relation",
                    -math.log10(r["gamma_H"] * r["m_H"]), analytic, 1e-9, note)
@@ -330,7 +376,7 @@ def main():
     mx = mix("half-eq", reagent("HOAc", 1.0, "HOAc", 0.1, 1.0010),
              reagent("NaOH", 0.5, "NaOH", 0.1, 1.0040))
     r, _ = solve_mixture(mx, ka)
-    expected = pka + math.log10(gamma(-1, r["I"]))
+    expected = pka + math.log10(gamma(-1, r["I_m"]))
     report("half-equivalence activity identity",
            -math.log10(r["gamma_H"] * r["m_H"]), expected, 5e-3,
            "the naive 'pH = pKa' is WRONG under activity")
@@ -339,7 +385,7 @@ def main():
     print("\n-- E. Dilute strong acid --")
     mx = mix("1e-8 M HCl", reagent("HCl", 1.0, "HCl", 1.0e-8, 0.9971))
     r, _ = solve_mixture(mx, ka)
-    p = present(r, mx)
+    p = project(r, mx)
     print(f"   -lg c(H+) = {p['pC_H']:.4f}   model pH = {p['pH_model']:.4f}")
     print("   A naive concentration formula would report 8.00 and call an acid basic.")
     report("1e-8 M HCl near neutral", p["pH_model"], 6.978, 0.02)
@@ -350,7 +396,7 @@ def main():
     for c in (0.001, 0.01, 0.05, 0.1, 0.2):
         mx = mix("s", reagent("HCl", 1.0, "HCl", c, 1.0020))
         r, _ = solve_mixture(mx, ka)
-        p = present(r, mx)
+        p = project(r, mx)
         d_c = abs(p["pC_H"] - (-math.log10(c)))
         worst_c = max(worst_c, d_c)
         print(f"     c = {c:<6} mol/L   c(H+) = {p['c_H']:.6f}   "
@@ -420,18 +466,18 @@ def main():
     print("   Both inside +/-0.02, so this is not the dominant residual. Recorded.")
 
     # ---------------------------------------------------------------- J
-    print("\n-- J. Two-tier refusal (FIX for P1-3) --")
-    print("   The computational domain and the validated accuracy envelope are")
+    print("\n-- J. Two-tier refusal (FIX for P1-3; envelope PROPOSED per P1-E) --")
+    print("   The computational domain and the PROPOSED accuracy envelope are")
     print("   DIFFERENT things. This is the distinction the previous revision missed.\n")
     for c in (0.05, 0.10, 0.15, 0.30, 0.60):
         mx = mix("s", reagent("HCl", 1.0, "HCl", c, 1.02))
         r, _ = solve_mixture(mx, ka)
         if r is None:
             verdict = "MODEL_OUT_OF_DOMAIN (refused)"
-        elif r["in_validated_envelope"]:
-            verdict = f"computed, I={r['I']:.3f} -- INSIDE validated envelope (+/-0.02 claimed)"
+        elif r["in_proposed_envelope"]:
+            verdict = f"computed, I={r['I_m']:.3f} -- INSIDE validated envelope (+/-0.02 claimed)"
         else:
-            verdict = f"computed, I={r['I']:.3f} -- OUTSIDE envelope (accuracy NOT claimed)"
+            verdict = f"computed, I={r['I_m']:.3f} -- OUTSIDE envelope (accuracy NOT claimed)"
         print(f"     c = {c:<5} mol/L  {verdict}")
     check("0.60 mol/L refused as out of domain",
           solve_mixture(mix("s", reagent("HCl", 1.0, "HCl", 0.6, 1.02)), ka)[0] is None)
@@ -444,16 +490,87 @@ def main():
                  reagent("NaOH", f, "NaOH", 0.1, 1.0040))
         r, _ = solve_mixture(mx, ka)
         if r:
-            worst_i = max(worst_i, r["I"])
+            worst_i = max(worst_i, r["I_m"])
         mx2 = mix("t2", reagent("HOAc", 1.0, "HOAc", 0.1, 1.0010),
                   reagent("NaOH", f, "NaOH", 0.1, 1.0040))
         r2, _ = solve_mixture(mx2, ka)
         if r2:
-            worst_i = max(worst_i, r2["I"])
+            worst_i = max(worst_i, r2["I_m"])
     print(f"   max I_m over 0.1 mol/L HCl/NaOH and HOAc/NaOH titrations = {worst_i:.4f} mol/kg")
-    print(f"   validated envelope {I_VALIDATED_MAX} mol/kg covers this with margin.")
-    check("v0 scenarios fall inside the validated envelope",
-          worst_i <= I_VALIDATED_MAX, f"max I_m = {worst_i:.4f}")
+    print(f"   proposed envelope {I_PROPOSED_ENVELOPE_MAX} mol/kg covers this with margin.")
+    check("v0 scenarios fall inside the proposed envelope",
+          worst_i <= I_PROPOSED_ENVELOPE_MAX, f"max I_m = {worst_i:.4f}")
+
+    # ---------------------------------------------------------------- L
+    print("\n-- L. Reduced ionic strength: Davies is dimensionally legal (P1-F) --")
+    r = solve(0.1, 0.0, 0.2, ka)
+    print(f"   I_m   = {r['I_m']:.6f} mol/kg          (physical quantity)")
+    print(f"   I_hat = {r['I_hat']:.6f}  dimensionless (= I_m / m°)")
+    print("   Davies evaluates sqrt(I_hat)/(1+sqrt(I_hat)). Every term is a pure")
+    print("   number, so `1 + sqrt(...)` is a legal sum and A and b carry no units.")
+    check("I_hat equals I_m / m° with m° = 1 mol/kg",
+          abs(r["I_hat"] - r["I_m"] / M_STANDARD_MOLALITY) < 1e-15)
+
+    # ---------------------------------------------------------------- M
+    print("\n-- M. Indicator equilibrium belongs to the SCIENTIFIC CORE (P1-C) --")
+    print("   The renderer receives a ratio; it never computes one.\n")
+    ka_in = 10.0 ** -9.4                       # phenolphthalein, provisional
+    r = solve(0.05, 0.0, 0.1, ka)
+    print(f"   solution I_m = {r['I_m']:.4f}   gamma_In = {gamma(-1, r['I_m']):.4f}")
+    prev, crossed, mono = None, False, True
+    for d in (-2.0, -1.0, -0.5, -0.1, 0.0, 0.5, 1.0, 2.0):
+        ratio = indicator_ratio(10.0 ** -(9.4 + d), r["I_m"], ka_in)
+        flag = ""
+        if prev is not None:
+            if ratio < prev:
+                mono = False
+            if prev < 1.0 <= ratio:
+                flag, crossed = "   <-- crosses 1", True
+        print(f"     pA_H = {9.4 + d:5.2f}   m(In-)/m(HIn) = {ratio:10.4f}{flag}")
+        prev = ratio
+    check("indicator ratio increases monotonically as a_H falls", mono)
+    check("indicator ratio crosses 1 near the indicator pKa", crossed)
+    print("   The ratio is chemistry (Ka_in, gamma_In, a_H) -> scientific core.")
+    print("   The observable layer owns only the mapping ratio -> colour.")
+
+    # ---------------------------------------------------------------- N
+    print("\n-- N. Transfer semantics: volume is tracked state (P1-A) --")
+
+    def contents(mx):
+        return {"waterMass": mx.water_mass_kg, "liquidVolume": mx.volume_l,
+                "amounts": dict(mx.amounts)}
+
+    def transfer(src, dst, dv):
+        f = dv / src["liquidVolume"]                 # homogeneous mixture
+        src["liquidVolume"] -= dv
+        dst["liquidVolume"] += dv
+        mw = f * src["waterMass"]
+        src["waterMass"] -= mw
+        dst["waterMass"] += mw
+        for k in list(src["amounts"]):
+            moved = f * src["amounts"][k]
+            src["amounts"][k] -= moved
+            dst["amounts"][k] = dst["amounts"].get(k, 0.0) + moved
+
+    src = contents(mix("burette", reagent("NaOH", 1.0, "NaOH", 0.1, 1.0040)))
+    dst = contents(mix("flask", reagent("HCl", 1.0, "HCl", 0.1, 1.0020)))
+    v0 = src["liquidVolume"] + dst["liquidVolume"]
+    w0 = src["waterMass"] + dst["waterMass"]
+    n0 = sum(src["amounts"].values()) + sum(dst["amounts"].values())
+    for _ in range(100):
+        transfer(src, dst, 0.005)
+    v1 = src["liquidVolume"] + dst["liquidVolume"]
+    w1 = src["waterMass"] + dst["waterMass"]
+    n1 = sum(src["amounts"].values()) + sum(dst["amounts"].values())
+    print("   100 transfers x 5.00 mL under the homogeneous-mixture assumption:")
+    print(f"     liquidVolume  {v0:.6f} -> {v1:.6f}   drift {abs(v1 - v0) / v0:.2e}")
+    print(f"     waterMass     {w0:.6f} -> {w1:.6f}   drift {abs(w1 - w0) / w0:.2e}")
+    print(f"     total amount  {n0:.6f} -> {n1:.6f}   drift {abs(n1 - n0) / n0:.2e}")
+    check("liquid volume conserved across transfers", abs(v1 - v0) / v0 < 1e-12)
+    check("water mass conserved across transfers", abs(w1 - w0) / w0 < 1e-12)
+    check("solute amount conserved across transfers", abs(n1 - n0) / n0 < 1e-12)
+    print("   Volume is updated by transfer, never recomputed from mass -- which is")
+    print("   why it is canonical state and must enter replayHash.")
 
     print("\n" + "=" * 78)
     passed = sum(1 for _, ok in CHECKS if ok)

@@ -1,7 +1,7 @@
 # SPIKE — self-consistent activity equilibrium
 
-> **Status: spike complete (revision 3). Not a production path.**
-> Supersedes revision 2 of this file and `spikes/solver-validation`.
+> **Status: spike complete (revision 4). Not a production path.**
+> Supersedes revisions 1–3 of this file and `spikes/solver-validation`.
 
 ## Revision history
 
@@ -9,7 +9,8 @@
 |---|---|
 | 1 | `spikes/solver-validation` — concentration-only solve, activity applied post-hoc. **Superseded.** |
 | 2 | Activity moved *inside* the equilibrium; molality basis; `(m_H, I)` coupled. |
-| 3 | **Round-2 fixes.** `−lg c(H⁺)` was being computed from a molality (P1-1); "thermodynamic pH" renamed to activity-based model pH (P1-2); computational domain separated from validated accuracy envelope (P1-3). |
+| 3 | **Round-2 fixes.** `−lg c(H⁺)` was being computed from a molality (P1-1); "thermodynamic pH" renamed to activity-based model pH (P1-2); computational domain separated from a proposed validation envelope (P1-3). |
+| 4 | **Round-3 fixes.** Indicator equilibrium moved into the scientific layer (P1-C); `present()` renamed `project()` as a named `ScientificProjection` (P1-D); envelope downgraded to **proposed** (P1-E); **reduced** ionic strength `Î = I_m/m°` so Davies is dimensionally legal (P1-F); transfer semantics — `liquidVolume` as tracked state, homogeneous-fraction mixing — demonstrated (P1-A). |
 
 ## P1-1 — the defect this revision fixes
 
@@ -25,10 +26,18 @@ HCl that produced **0.9993**. The correct value is **1.0000**, because the
 solution is *defined* as 0.1000 mol/L and HCl is fully dissociated. The spec then
 carried both 0.9993 (in the prose) and 1.0000 (in the reference table).
 
-**The fix is structural, not a corrected constant.** The scientific core is now
-molality-only and returns no pH-like number at all. Molarity and both pH-like
-quantities are produced in a `present()` step from the converged molality state
-plus the mixture's conserved amounts and volume:
+**The fix is structural, not a corrected constant.** The scientific core solves
+on the molality basis and does **not** return `c(H⁺)` or `−lg c(H⁺)`. Those
+require the world's solution volume, and they are produced by a named
+**`ScientificProjection`** step (`project()`) from the converged state plus the
+mixture's conserved amounts and volume:
+
+> **Round-3 correction (P1-D).** Revision 3 of this file said the core "returns
+> no pH-like number at all". That was wrong in the other direction: `a_H`,
+> activity, `I`, **model pH**, and indicator speciation are all scientific
+> outputs and belong to the core. Only molarity-dependent quantities are
+> projected. See `SPEC-0001` §Who owns which quantity.
+
 
 ```
 m(H⁺) = 0.100165 mol/kg water     ← solver output
@@ -49,18 +58,23 @@ realising it operationally requires an extrathermodynamic convention
 (Bates–Guggenheim for primary standards; Davies here). Presenting one number as
 "the true pH" is the same category of error as ignoring activity altogether.
 
-## P1-3 — computational domain ≠ validated accuracy envelope
+## P1-3 / P1-E — computational domain, proposed envelope, validated envelope
 
-| | Value | Meaning |
+| | Value | Status |
 |---|---|---|
 | Computational domain | `I_m ≤ 0.5 mol/kg` | Davies's approximate range. Outside: `MODEL_OUT_OF_DOMAIN`. |
-| **Validated accuracy envelope** | `I_m ≤ 0.12 mol/kg` | ±0.02 pH is claimed and evidenced **here only**. |
+| **Proposed validation envelope** | `I_m ≤ 0.12 mol/kg` | **The target, not yet earned.** |
+| **Validated envelope** | — | **Does not exist yet.** M4's AC-S6 creates it, or does not. |
 
 `I ≤ 0.5` is a rule of thumb about where Davies is roughly usable, not an error
 bound. ±0.02 pH has been demonstrated at two IUPAC anchors (`I = 0.01` and
-`I = 0.10`); extrapolating it to 0.5 would be an unsupported claim. Between the
-envelope and the domain limit the solver computes and the result carries
-`accuracyStatus: "outside-validated-envelope"`.
+`I = 0.10`) — **and nowhere else**. Extrapolating it across the whole 0.12
+envelope would repeat the round-2 mistake in a smaller window: equal ionic
+strength does not imply equal model error, and the weak-acid equivalence region
+is a different composition regime from an acetate buffer.
+
+Between the proposed envelope and the domain limit the solver computes and the
+result carries `accuracyStatus: "outside-proposed-envelope"`.
 
 ## Method
 
@@ -83,7 +97,7 @@ molarity and never the thermodynamics.
 
 ## Results
 
-Run: `py -3.12 solve.py`. Python 3.12.0, **18/18 checks pass**.
+Run: `py -3.12 solve.py`. Python 3.12.0, **24/24 checks pass**.
 
 | Check | Computed | Reference | Δ | Tol |
 |---|---|---|---|---|
@@ -100,7 +114,13 @@ Run: `py -3.12 solve.py`. Python 3.12.0, **18/18 checks pass**.
 | Element (A-group) conservation | 0.00e+00 mol/kg | 0 | — | <1e-15 |
 | Outer residual monotone (sampled) | 0/6 non-monotone | — | — | 0 |
 | 0.60 mol/L refused | `MODEL_OUT_OF_DOMAIN` | — | — | — |
-| v0 scenario max `I_m` | 0.1002 mol/kg | ≤ 0.12 envelope | — | — |
+| v0 scenario max `I_m` | 0.1002 mol/kg | ≤ 0.12 proposed | — | — |
+| **§L** `Î = I_m/m°` | 0.100029 = 0.100029 | identity | — | <1e-15 |
+| **§M** indicator ratio monotone in `a_H` | yes | — | — | — |
+| **§M** ratio crosses 1 near indicator `pKa` | 0.9669 → 1.2173 | at pA_H 9.3→9.4 | — | — |
+| **§N** volume conserved, 100 × 5 mL transfers | drift 5.55e-15 | — | — | <1e-12 |
+| **§N** water mass conserved | drift 1.11e-16 | — | — | <1e-12 |
+| **§N** solute amount conserved | drift 0.00e+00 | — | — | <1e-12 |
 
 ## Findings carried into `SPEC-0001`
 
@@ -129,8 +149,32 @@ to merge them, since the margin is a property of these concentrations.
 **F7 — The outer residual is monotone on all six sampled regimes.**
 **Numerically verified, not analytically proven.**
 
-**F8 — The v0 scenarios reach `I_m = 0.1002 mol/kg`**, inside the 0.12 envelope
-with margin. The envelope is measured against the scenarios, not guessed.
+**F8 — The v0 scenarios reach `I_m = 0.1002 mol/kg`**, inside the 0.12 proposed
+envelope with margin. The envelope is measured against the scenarios, not guessed.
+
+**F9 — Davies needs a dimensionless argument, and writing that down costs
+nothing.** `Î = I_m/m°` is numerically identical to `I_m` because `m° = 1 mol/kg`,
+so the correction is pure semantics — which is the point. `1 + √(mol/kg)` is not
+a legal sum, and this document set elsewhere insists that activity and every
+equilibrium constant be dimensionless.
+
+**F10 — The indicator ratio crosses 1 at `pA_H ≈ 9.35`, i.e. at `pKa_in` shifted
+by `log₁₀ γ_In`.** Measured at `I_m = 0.05` (`γ_In = 0.8215`): the ratio runs
+0.9669 → 1.2173 across pA_H 9.3 → 9.4. So even the *transition point* of a
+colour indicator is activity-dependent — which is why the ratio must be computed
+in the scientific core and not in the renderer.
+
+**F11 — `m(In⁻)/m(HIn)` spans ~5 orders of magnitude across the visible
+transition** (0.012 at pA_H 7.4 to 122 at 11.4). A renderer handed a raw ratio
+must therefore map it on a log-like scale to produce a sane perceptual ramp —
+but that mapping is the *observable* layer's business, and it receives a ratio,
+not a `Ka`.
+
+**F12 — Transfer semantics conserve to machine precision under the
+homogeneous-mixture assumption.** 100 × 5.00 mL transfers: volume drifts
+5.6e-15, water mass 1.1e-16, solute amount exactly 0. This is what justifies
+tracking `liquidVolume` as updated state rather than recomputing it: recomputing
+would need a density model, and the quantity is conserved anyway.
 
 ## Reproduce
 
