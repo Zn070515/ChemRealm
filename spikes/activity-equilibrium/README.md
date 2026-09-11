@@ -1,7 +1,7 @@
 # SPIKE — self-consistent activity equilibrium
 
-> **Status: spike complete (revision 4). Not a production path.**
-> Supersedes revisions 1–3 of this file and `spikes/solver-validation`.
+> **Status: spike complete (revision 5). Not a production path.**
+> Supersedes revisions 1–4 of this file and `spikes/solver-validation`.
 
 ## Revision history
 
@@ -11,6 +11,7 @@
 | 2 | Activity moved *inside* the equilibrium; molality basis; `(m_H, I)` coupled. |
 | 3 | **Round-2 fixes.** `−lg c(H⁺)` was being computed from a molality (P1-1); "thermodynamic pH" renamed to activity-based model pH (P1-2); computational domain separated from a proposed validation envelope (P1-3). |
 | 4 | **Round-3 fixes.** Indicator equilibrium moved into the scientific layer (P1-C); `present()` renamed `project()` as a named `ScientificProjection` (P1-D); envelope downgraded to **proposed** (P1-E); **reduced** ionic strength `Î = I_m/m°` so Davies is dimensionally legal (P1-F); transfer semantics — `liquidVolume` as tracked state, homogeneous-fraction mixing — demonstrated (P1-A). |
+| 5 | **Round-4 fix.** The whole algebra now runs in **reduced molality** `m̂ = m/m°`. Previously `m_OH = Kw_c/m_H` divided a dimensionless constant by a *physical* molality — `dimensionless / (mol/kg)` — correct only because `m° = 1 mol/kg` numerically (P1-1). |
 
 ## P1-1 — the defect this revision fixes
 
@@ -97,7 +98,7 @@ molarity and never the thermodynamics.
 
 ## Results
 
-Run: `py -3.12 solve.py`. Python 3.12.0, **24/24 checks pass**.
+Run: `py -3.12 solve.py`. Python 3.12.0, **27/27 checks pass**.
 
 | Check | Computed | Reference | Δ | Tol |
 |---|---|---|---|---|
@@ -116,6 +117,9 @@ Run: `py -3.12 solve.py`. Python 3.12.0, **24/24 checks pass**.
 | 0.60 mol/L refused | `MODEL_OUT_OF_DOMAIN` | — | — | — |
 | v0 scenario max `I_m` | 0.1002 mol/kg | ≤ 0.12 proposed | — | — |
 | **§L** `Î = I_m/m°` | 0.100029 = 0.100029 | identity | — | <1e-15 |
+| **§L2** `m̂_OH = Kw_c/m̂_H` | 5.558477e-10 (both sides) | dimensionless identity | <1e-20 | — |
+| **§L2** `m̂_A` in dimensionless form | 1.000295e-01 (both sides) | dimensionless identity | <1e-20 | — |
+| **§L2** `m_H = m̂_H · m°` | exact | boundary conversion | <1e-20 | — |
 | **§M** indicator ratio monotone in `a_H` | yes | — | — | — |
 | **§M** ratio crosses 1 near indicator `pKa` | 0.9669 → 1.2173 | at pA_H 9.3→9.4 | — | — |
 | **§N** volume conserved, 100 × 5 mL transfers | drift 5.55e-15 | — | — | <1e-12 |
@@ -175,6 +179,19 @@ homogeneous-mixture assumption.** 100 × 5.00 mL transfers: volume drifts
 5.6e-15, water mass 1.1e-16, solute amount exactly 0. This is what justifies
 tracking `liquidVolume` as updated state rather than recomputing it: recomputing
 would need a density model, and the quantity is conserved anyway.
+
+**F13 — `Kw_c / m_H` divided a pure number by a dimensioned concentration.**
+Found in round 4. `Kw_c` is dimensionless, so the quotient is not mol/kg; it
+produced correct numbers only because `m° = 1 mol/kg` numerically. The whole
+algebra now runs in reduced molality `m̂ = m/m°` and converts once, at the
+boundary. §L2 verifies the identities hold in dimensionless form.
+
+This is the **second instance of the same failure mode** — `1 + √I` (round 3)
+and now `Kw_c/m_H` (round 4). Both were invisible because the standard-state
+factor happens to be 1. Neither was caught by checking whether the *number*
+looked right; both were caught by asking what the *units* of each term are.
+The lesson recorded for M4: for every equation ported from the literature, write
+the units beside each term before writing the code.
 
 ## Reproduce
 

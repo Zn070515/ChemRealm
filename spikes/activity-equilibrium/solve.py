@@ -1,6 +1,15 @@
 """SPIKE - self-consistent activity equilibrium, with molarity and molality kept
 as genuinely distinct quantities.
 
+Revision 5 (owner review round 4). Round-4 fix:
+
+  P1-1r4  Ka/Kw CONDITIONAL CONSTANTS ARE DIMENSIONLESS and the algebra is now
+          carried in REDUCED molality m_hat = m/m°. Previously `m_OH =
+          Kw_cond/m_H` divided a dimensionless constant by a PHYSICAL molality
+          -- `dimensionless / (mol/kg)` -- which is not mol/kg. It looked right
+          only because m° = 1 mol/kg numerically. Physical molalities are now
+          produced once, at the boundary, by multiplying by m°.
+
 Revision 4 (owner review round 3). Fixes carried in:
 
   Round 2:
@@ -161,33 +170,55 @@ def reagent(label, volume_l, solute, conc_mol_per_l, density_kg_per_l):
 
 
 # ---------------------------------------------------------- speciation
-def speciate(m_h, i, m_ha_tot, ka):
-    g_h = gamma(1, i)
-    g_oh = gamma(-1, i)
-    g_a = gamma(-1, i)
+# ALL thermodynamic algebra runs in REDUCED molality, m_hat = m / m°, which is
+# dimensionless (finding P1-1, round 4).
+#
+# This is not pedantry. Kw is a DIMENSIONLESS thermodynamic constant, so
+# `Kw / (gamma_H * gamma_OH * m_H)` is only meaningful if m_H is reduced.
+# Written with a physical molality it reads `dimensionless / (mol/kg)`, which
+# is not mol/kg -- it merely LOOKS right because m° = 1 mol/kg numerically.
+# The previous revision did exactly that. Physical molalities are produced at
+# the boundary by multiplying by m°.
+def reduce_molality(m_physical):
+    """m_hat = m / m°, dimensionless."""
+    return m_physical / M_STANDARD_MOLALITY
+
+
+def physical_molality(m_reduced):
+    """m = m_hat * m°, mol/kg."""
+    return m_reduced * M_STANDARD_MOLALITY
+
+
+def speciate(mh, i_molal, mh_tot, ka):
+    """Reduced molalities in, reduced molalities out. i_molal is physical."""
+    g_h = gamma(1, i_molal)
+    g_oh = gamma(-1, i_molal)
+    g_a = gamma(-1, i_molal)
     g_ha = 1.0  # stated approximation: neutral species, Setchenow neglected
 
+    # conditional constants: DIMENSIONLESS, as they must be
     kw_c = KW / (g_h * g_oh)
     ka_c = ka * g_ha / (g_h * g_a) if ka is not STRONG else STRONG
 
-    m_oh = kw_c / m_h
+    mh_oh = kw_c / mh                          # dimensionless / dimensionless
     if ka is STRONG:
-        m_a, m_ha = m_ha_tot, 0.0
+        mh_a, mh_ha = mh_tot, 0.0
     else:
-        m_a = m_ha_tot * ka_c / (ka_c + m_h)
-        m_ha = m_ha_tot - m_a
-    return m_oh, m_a, m_ha, kw_c, ka_c
+        mh_a = mh_tot * ka_c / (ka_c + mh)     # dimensionless / dimensionless
+        mh_ha = mh_tot - mh_a
+    return mh_oh, mh_a, mh_ha, kw_c, ka_c
 
 
-def ionic_strength(m_h, i, m_na, m_cl, m_ha_tot, ka):
-    m_oh, m_a, _, _, _ = speciate(m_h, i, m_ha_tot, ka)
-    return 0.5 * (m_na + m_h + m_oh + m_a + m_cl)
+def ionic_strength_molal(mh, i_molal, mh_na, mh_cl, mh_tot, ka):
+    """Returns I_m in mol/kg from reduced inputs. The m° factor is explicit."""
+    mh_oh, mh_a, _, _, _ = speciate(mh, i_molal, mh_tot, ka)
+    return 0.5 * M_STANDARD_MOLALITY * (mh_na + mh + mh_oh + mh_a + mh_cl)
 
 
-def solve_i(m_h, m_na, m_cl, m_ha_tot, ka, iters=500, tol=1e-17):
-    i = 0.5 * (m_na + m_cl + m_ha_tot)
+def solve_i(mh, mh_na, mh_cl, mh_tot, ka, iters=500, tol=1e-17):
+    i = 0.5 * M_STANDARD_MOLALITY * (mh_na + mh_cl + mh_tot)
     for _ in range(iters):
-        i_new = ionic_strength(m_h, i, m_na, m_cl, m_ha_tot, ka)
+        i_new = ionic_strength_molal(mh, i, mh_na, mh_cl, mh_tot, ka)
         if not (0.0 <= i_new <= 1.0):
             return None
         step = i_new - i
@@ -197,18 +228,20 @@ def solve_i(m_h, m_na, m_cl, m_ha_tot, ka, iters=500, tol=1e-17):
     return i
 
 
-def charge_residual(m_h, m_na, m_cl, m_ha_tot, ka):
-    i = solve_i(m_h, m_na, m_cl, m_ha_tot, ka)
+def charge_residual(mh, mh_na, mh_cl, mh_tot, ka):
+    """Reduced charge balance: every term is dimensionless."""
+    i = solve_i(mh, mh_na, mh_cl, mh_tot, ka)
     if i is None:
         return None, None
-    m_oh, m_a, _, _, _ = speciate(m_h, i, m_ha_tot, ka)
-    return (m_na + m_h - m_oh - m_a - m_cl), i
+    mh_oh, mh_a, _, _, _ = speciate(mh, i, mh_tot, ka)
+    return (mh_na + mh - mh_oh - mh_a - mh_cl), i
 
 
-def ideal_root(m_na, m_cl, m_ha_tot, ka):
-    def f(m_h):
-        a = m_ha_tot if ka is STRONG else m_ha_tot * ka / (ka + m_h)
-        return m_na + m_h - KW / m_h - a - m_cl
+def ideal_root(mh_na, mh_cl, mh_tot, ka):
+    """Concentration-only root in REDUCED molality (gamma = 1). Bracketing only."""
+    def f(mh):
+        a = mh_tot if ka is STRONG else mh_tot * ka / (ka + mh)
+        return mh_na + mh - KW / mh - a - mh_cl    # KW is dimensionless
 
     lo, hi = 1e-16, 1.0
     for _ in range(400):
@@ -221,14 +254,15 @@ def ideal_root(m_na, m_cl, m_ha_tot, ka):
 
 
 # ------------------------------------------------------------ the solve
-# Returns MOLALITIES ONLY. No pH, no molarity: those are presentation.
-def solve(m_na, m_cl, m_ha_tot, ka):
-    m0 = ideal_root(m_na, m_cl, m_ha_tot, ka)
+# Solved entirely in REDUCED molality. Physical molalities are produced at the
+# boundary. No pH and no molarity here: those are the projection layer's job.
+def solve(mh_na, mh_cl, mh_tot, ka):
+    m0 = ideal_root(mh_na, mh_cl, mh_tot, ka)
     lo = hi = None
     for span in (3.0, 10.0, 100.0, 1000.0):
         c_lo, c_hi = m0 / span, m0 * span
-        f_lo = charge_residual(c_lo, m_na, m_cl, m_ha_tot, ka)[0]
-        f_hi = charge_residual(c_hi, m_na, m_cl, m_ha_tot, ka)[0]
+        f_lo = charge_residual(c_lo, mh_na, mh_cl, mh_tot, ka)[0]
+        f_hi = charge_residual(c_hi, mh_na, mh_cl, mh_tot, ka)[0]
         if f_lo is not None and f_hi is not None and f_lo < 0.0 < f_hi:
             lo, hi = c_lo, c_hi
             break
@@ -237,27 +271,33 @@ def solve(m_na, m_cl, m_ha_tot, ka):
 
     for _ in range(200):
         mid = lo + 0.5 * (hi - lo)
-        f_mid = charge_residual(mid, m_na, m_cl, m_ha_tot, ka)[0]
+        f_mid = charge_residual(mid, mh_na, mh_cl, mh_tot, ka)[0]
         if f_mid is None:
             return None
         if f_mid < 0.0:
             lo = mid
         else:
             hi = mid
-    m_h = lo + 0.5 * (hi - lo)
+    mh_h = lo + 0.5 * (hi - lo)
 
-    i = solve_i(m_h, m_na, m_cl, m_ha_tot, ka)
+    i = solve_i(mh_h, mh_na, mh_cl, mh_tot, ka)
     if i is None or i > I_COMPUTATIONAL_MAX:
         return None
-    m_oh, m_a, m_ha, kw_c, ka_c = speciate(m_h, i, m_ha_tot, ka)
+    mh_oh, mh_a, mh_ha, kw_c, ka_c = speciate(mh_h, i, mh_tot, ka)
+    g_h = gamma(1, i)
 
     return {
-        "m_H": m_h, "m_OH": m_oh, "m_A": m_a, "m_HA": m_ha,
+        # reduced (dimensionless) -- the algebra's native variables
+        "mh_H": mh_h, "mh_OH": mh_oh, "mh_A": mh_a, "mh_HA": mh_ha,
+        "Ka_cond": ka_c, "Kw_cond": kw_c,
+        # physical (mol/kg) -- produced at the boundary
+        "m_H": physical_molality(mh_h), "m_OH": physical_molality(mh_oh),
+        "m_A": physical_molality(mh_a), "m_HA": physical_molality(mh_ha),
         "I_m": i,                                   # mol/kg
         "I_hat": reduced_ionic_strength(i),         # dimensionless
-        "gamma_H": gamma(1, i),
-        "a_H": gamma(1, i) * m_h,
-        "residual": m_na + m_h - m_oh - m_a - m_cl,
+        "gamma_H": g_h,
+        "a_H": g_h * mh_h,                          # gamma * REDUCED molality
+        "residual": (mh_na + mh_h - mh_oh - mh_a - mh_cl),   # reduced
         "in_proposed_envelope": i <= I_PROPOSED_ENVELOPE_MAX,
     }
 
@@ -271,7 +311,7 @@ def project(result, mixture):
     m_h = result["m_H"]                       # mol/kg water
     n_h = m_h * mixture.water_mass_kg         # mol
     c_h = n_h / mixture.volume_l              # mol/L  <- genuine molarity
-    a_h = result["gamma_H"] * m_h             # dimensionless activity
+    a_h = result["a_H"]                       # gamma * reduced molality
     return {
         "m_H": m_h,
         "c_H": c_h,
@@ -288,7 +328,9 @@ def solve_mixture(mixture, ka):
             + mixture.amounts.get("NaOAc", 0.0)) / m_w
     m_ha_tot = (mixture.amounts.get("HOAc", 0.0)
                 + mixture.amounts.get("NaOAc", 0.0)) / m_w
-    r = solve(m_na, m_cl, m_ha_tot, ka)
+    # the core works in REDUCED molality; physical values are returned alongside
+    r = solve(reduce_molality(m_na), reduce_molality(m_cl),
+              reduce_molality(m_ha_tot), ka)
     return r, (m_na, m_cl, m_ha_tot)
 
 
@@ -315,7 +357,7 @@ def main():
 
     print("=" * 78)
     print("SPIKE rev3: molality-basis thermodynamics, molarity as presentation")
-    print(f"  I validated envelope <= {I_PROPOSED_ENVELOPE_MAX} mol/kg | "
+    print(f"  I PROPOSED envelope <= {I_PROPOSED_ENVELOPE_MAX} mol/kg | "
           f"I computational domain <= {I_COMPUTATIONAL_MAX} mol/kg")
     print(f"  acetic acid pKa = {pka}")
     print("=" * 78)
@@ -329,7 +371,7 @@ def main():
         print(f"\n   {c} mol/kg HOAc+NaOAc   I = {r['I_m']:.4f}"
               f"   g_H = {r['gamma_H']:.4f}   in envelope: {r['in_proposed_envelope']}")
         report(f"acetate buffer {c} mol/kg vs IUPAC",
-               -math.log10(r["gamma_H"] * r["m_H"]), ref, 0.02)
+               -math.log10(r["a_H"]), ref, 0.02)
 
     # ---------------------------------------------------------------- B
     print("\n-- B. 0.1000 mol/L HCl: the two quantities, computed separately --")
@@ -369,7 +411,7 @@ def main():
                 analytic = 14.0 + math.log10(-excess) + math.log10(gamma(-1, r["I_m"]))
                 note = "base excess: g_OH"
             report(f"f={f:.1f} eq vs analytic relation",
-                   -math.log10(r["gamma_H"] * r["m_H"]), analytic, 1e-9, note)
+                   -math.log10(r["a_H"]), analytic, 1e-9, note)
 
     # ---------------------------------------------------------------- D
     print("\n-- D. Half-equivalence: pH = pKa + log10(g_A) --")
@@ -378,7 +420,7 @@ def main():
     r, _ = solve_mixture(mx, ka)
     expected = pka + math.log10(gamma(-1, r["I_m"]))
     report("half-equivalence activity identity",
-           -math.log10(r["gamma_H"] * r["m_H"]), expected, 5e-3,
+           -math.log10(r["a_H"]), expected, 5e-3,
            "the naive 'pH = pKa' is WRONG under activity")
 
     # ---------------------------------------------------------------- E
@@ -412,15 +454,15 @@ def main():
     for c in (0.001, 0.01, 0.05, 0.1, 0.12):
         mx = mix("s", reagent("HCl", 1.0, "HCl", c, 1.0020))
         r_true, _ = solve_mixture(mx, ka)
-        ph_true = -math.log10(r_true["gamma_H"] * r_true["m_H"])
+        ph_true = -math.log10(r_true["a_H"])
         # deliberately wrong: treat the molarity as if it were a molality
         # (HCl alone: sodium is zero, chloride carries the acid)
         r_wrong = solve(0.0, c, 0.0, STRONG)
-        ph_wrong = -math.log10(r_wrong["gamma_H"] * r_wrong["m_H"])
+        ph_wrong = -math.log10(r_wrong["a_H"])
         d = abs(ph_wrong - ph_true)
         worst_sens = max(worst_sens, d)
         print(f"     c = {c:<6} mol/L   dpH(model) = {d:.6f}")
-    print(f"   worst over the validated envelope = {worst_sens:.6f} pH")
+    print(f"   worst over the proposed envelope = {worst_sens:.6f} pH")
     check("scale-choice sensitivity is far below the +/-0.02 tolerance",
           worst_sens < 0.002, f"worst = {worst_sens:.6f}")
 
@@ -460,7 +502,7 @@ def main():
     # ---------------------------------------------------------------- I
     print("\n-- I. Sensitivity to the g_HA = 1 approximation --")
     r = solve(0.1, 0.0, 0.2, ka)
-    ph = -math.log10(r["gamma_H"] * r["m_H"])
+    ph = -math.log10(r["a_H"])
     print(f"     log10(g_HA) = 0    : pH_model = {ph:.4f}  (IUPAC 4.644, d {ph - 4.644:+.4f})")
     print(f"     log10(g_HA) = +0.02: pH_model = {ph + 0.02:.4f}  (d {ph + 0.02 - 4.644:+.4f})")
     print("   Both inside +/-0.02, so this is not the dominant residual. Recorded.")
@@ -475,9 +517,9 @@ def main():
         if r is None:
             verdict = "MODEL_OUT_OF_DOMAIN (refused)"
         elif r["in_proposed_envelope"]:
-            verdict = f"computed, I={r['I_m']:.3f} -- INSIDE validated envelope (+/-0.02 claimed)"
+            verdict = f"computed, I={r['I_m']:.3f} -- INSIDE proposed envelope (+/-0.02 claimed at M4)"
         else:
-            verdict = f"computed, I={r['I_m']:.3f} -- OUTSIDE envelope (accuracy NOT claimed)"
+            verdict = f"computed, I={r['I_m']:.3f} -- OUTSIDE proposed envelope (accuracy NOT claimed)"
         print(f"     c = {c:<5} mol/L  {verdict}")
     check("0.60 mol/L refused as out of domain",
           solve_mixture(mix("s", reagent("HCl", 1.0, "HCl", 0.6, 1.02)), ka)[0] is None)
@@ -510,6 +552,25 @@ def main():
     print("   number, so `1 + sqrt(...)` is a legal sum and A and b carry no units.")
     check("I_hat equals I_m / m° with m° = 1 mol/kg",
           abs(r["I_hat"] - r["I_m"] / M_STANDARD_MOLALITY) < 1e-15)
+
+    print("\n  -- L2. Ka/Kw conditional constants are dimensionless (P1-1 round 4) --")
+    r = solve(0.1, 0.0, 0.2, ka)
+    kw_c, ka_c = r["Kw_cond"], r["Ka_cond"]
+    mh_h, mh_oh, mh_a, mh_tot = r["mh_H"], r["mh_OH"], r["mh_A"], 0.2
+    print(f"   Kw_cond = {kw_c:.6e}   Ka_cond = {ka_c:.6e}   (pure numbers)")
+    print(f"   mh(OH) = Kw_cond/mh(H)          : {mh_oh:.6e} vs {kw_c / mh_h:.6e}")
+    print(f"   mh(A)  = mh_tot*Ka_cond/(Ka+mh) : {mh_a:.6e}"
+          f" vs {mh_tot * ka_c / (ka_c + mh_h):.6e}")
+    check("mh_OH = Kw_cond / mh_H  (dimensionless / dimensionless)",
+          abs(mh_oh - kw_c / mh_h) < 1e-20)
+    check("mh_A in the dimensionless Henderson-like form",
+          abs(mh_a - mh_tot * ka_c / (ka_c + mh_h)) < 1e-20)
+    check("physical molality = reduced molality x m0",
+          abs(r["m_H"] - r["mh_H"] * M_STANDARD_MOLALITY) < 1e-20)
+    print("   Before round 4 this read `m_OH = Kw_cond / m_H` with a PHYSICAL")
+    print("   m_H -- dimensionless / (mol/kg). It looked right only because")
+    print("   m0 = 1 mol/kg numerically. The algebra is now carried in the")
+    print("   reduced variables and converted once, at the boundary.")
 
     # ---------------------------------------------------------------- M
     print("\n-- M. Indicator equilibrium belongs to the SCIENTIFIC CORE (P1-C) --")
