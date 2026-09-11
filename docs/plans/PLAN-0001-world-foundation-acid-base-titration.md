@@ -1,6 +1,6 @@
 # PLAN-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** **M1 S3 Verified / Accepted; M2 authorized** — the original plan
+- **Status:** **M1 S3 Verified / Accepted; M2 S2 implementation candidate** — the original plan
   was approved on 2026-09-11 at `SPEC-0001` revision 6; the current contract
   is revision 9.
 - **Completed:** `M0 — Repository foundation` reached **S3 — Verified** on
@@ -11,7 +11,7 @@
 - **Coverage check:** `uv run python tools/check_acceptance_coverage.py` — every `AC-*` in
   `SPEC-0001` is required to appear in at least one milestone here. Run it after
   editing either document.
-- **Date:** 2026-09-11 (revised for M1 Final Closure)
+- **Date:** 2026-09-12 (revised for M2 implementation)
 - **Implements:** `docs/specs/SPEC-0001-world-foundation-acid-base-titration.md`
 - **Related ADRs:** 0001–0009 were accepted at the baseline; ADR-0001 and
   ADR-0003 M1 Final Closure amendments and ADR-0010 are accepted with M1 S3.
@@ -352,6 +352,8 @@ truth" claim rather than asserting it.
 
 ## M2 — Event runtime and replay
 
+**Status:** **S2 — Implemented Candidate / Owner Verification Pending** · evidence
+`docs/evidence/M2.md`
 **Target stage:** S3
 **Addresses:** ADR-0002, ADR-0007; `SPEC-0001` AC-R1..AC-R5, AC-R7, AC-R9..AC-R16, AC-R18..AC-R19
 

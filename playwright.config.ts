@@ -17,6 +17,13 @@ export default defineConfig({
 
   use: {
     baseURL: "http://127.0.0.1:4173",
+    // Some developer Chromium profiles route loopback through a system proxy,
+    // which returns a false 502 before the local preview server is reached.
+    // The test must observe the app directly; external app requests, if any,
+    // remain visible to the page request listener and fail the assertion.
+    launchOptions: {
+      args: ["--no-proxy-server", "--proxy-server=direct://", "--proxy-bypass-list=*"],
+    },
     trace: "off",
     video: "off",
     screenshot: "off",

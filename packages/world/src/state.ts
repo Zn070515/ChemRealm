@@ -1,0 +1,496 @@
+/**
+ * World Runtime state boundary.
+ *
+ * The schema package owns serialized shapes. This package owns the in-memory
+ * state used by reducers: every operational quantity is constructed as a
+ * branded canonical value before arithmetic can touch it. Serialization is an
+ * explicit boundary in both directions, so a reducer cannot accidentally use
+ * `.value` from a wire quantity and forget its unit.
+ */
+
+import {
+  ApparatusSchema,
+  DomainEventSchema,
+  ScenarioSnapshotSchema,
+  WorldCreatedSchema,
+  WorldStateSchema as SerializedWorldStateSchema,
+  kilogram,
+  kilogramsPerLitre,
+  kilogramsPerMol,
+  kelvin,
+  litre,
+  millimetre,
+  mol,
+  molPerLitre,
+  toCanonical,
+  type Apparatus,
+  type DataProvenanceDto,
+  type DomainEvent,
+  type MaterialSnapshot as SerializedMaterialSnapshot,
+  type ScenarioSnapshot as SerializedScenarioSnapshot,
+  type SolverConfigDto,
+  type WorldCreated as SchemaWorldCreated,
+  type WorldState as SchemaWorldState,
+} from "@chemrealm/schema";
+
+import { hashCanonical, quantizeTree } from "./hash.js";
+
+function compareIds(a: string, b: string): number {
+  return a < b ? -1 : a > b ? 1 : 0;
+}
+
+export type SerializedWorldCreated = SchemaWorldCreated;
+export type SerializedWorldState = SchemaWorldState;
+
+/** Content-address the self-contained genesis snapshot, including its units. */
+export function scenarioSnapshotHash(snapshot: SerializedScenarioSnapshot): string {
+  return `sha256:${hashCanonical(quantizeTree(snapshot))}`;
+}
+
+export type RuntimeDataProvenance = DataProvenanceDto;
+
+export interface RuntimeMaterialSnapshot {
+  readonly materialId: string;
+  readonly sourceDefinition: string;
+  readonly density: {
+    readonly value: ReturnType<typeof kilogramsPerLitre>;
+    readonly provenance: RuntimeDataProvenance;
+  };
+  readonly composition: readonly {
+    readonly soluteId: string;
+    readonly amountConcentration: ReturnType<typeof molPerLitre>;
+    readonly provenance: RuntimeDataProvenance;
+  }[];
+  readonly molarMasses: readonly {
+    readonly soluteId: string;
+    readonly molarMass: ReturnType<typeof kilogramsPerMol>;
+    readonly provenance: RuntimeDataProvenance;
+  }[];
+  readonly resolvedInventoryPerLitre: {
+    readonly waterMass: ReturnType<typeof kilogram>;
+    readonly soluteAmounts: readonly {
+      readonly soluteId: string;
+      readonly amount: ReturnType<typeof mol>;
+    }[];
+  };
+}
+
+export interface RuntimeVesselDefinition {
+  readonly vesselId: string;
+  readonly kind: string;
+  readonly capacity: ReturnType<typeof litre>;
+  readonly geometryRef: string;
+  readonly position: {
+    readonly unit: "mm";
+    readonly x: ReturnType<typeof millimetre>;
+    readonly y: ReturnType<typeof millimetre>;
+  };
+}
+
+export interface RuntimeScenarioSnapshot {
+  readonly scenarioRef: string;
+  readonly materials: readonly RuntimeMaterialSnapshot[];
+  readonly vessels: readonly RuntimeVesselDefinition[];
+  readonly apparatusDefaults: readonly {
+    readonly kind: string;
+    readonly state: Record<string, unknown>;
+  }[];
+  readonly modelRequirements: {
+    readonly temperature: ReturnType<typeof kelvin>;
+    readonly species: readonly string[];
+    readonly solvent: string;
+    readonly phase: string;
+    readonly activityCorrected: boolean;
+  };
+}
+
+export interface RuntimeVessel {
+  readonly id: string;
+  readonly kind: string;
+  readonly capacity: ReturnType<typeof litre>;
+  readonly geometryRef: string;
+  readonly position: RuntimeVesselDefinition["position"];
+}
+
+export interface RuntimeApparatus {
+  readonly id: string;
+  readonly kind: string;
+  readonly position: RuntimeVesselDefinition["position"];
+  readonly state: Record<string, unknown>;
+}
+
+export interface RuntimeAttachment {
+  readonly childId: string;
+  readonly parentId: string;
+  readonly portId: string;
+}
+
+export interface RuntimeComponentAmount {
+  readonly componentId: string;
+  readonly amount: ReturnType<typeof mol>;
+}
+
+export interface RuntimeCanonicalContents {
+  readonly waterMass: ReturnType<typeof kilogram>;
+  readonly liquidVolume: ReturnType<typeof litre>;
+  readonly componentAmounts: readonly RuntimeComponentAmount[];
+}
+
+export interface WorldState {
+  readonly schemaVersion: number;
+  readonly worldId: string;
+  readonly lineage: {
+    readonly parentWorldId: string | null;
+    readonly forkSequence: number | null;
+    readonly forkStateHash: string | null;
+  };
+  readonly sequence: number;
+  readonly solverConfig: SolverConfigDto;
+  readonly scenarioSnapshot: RuntimeScenarioSnapshot;
+  readonly vessels: readonly RuntimeVessel[];
+  readonly apparatus: readonly RuntimeApparatus[];
+  readonly attachments: readonly RuntimeAttachment[];
+  readonly canonical: {
+    readonly byVessel: Readonly<Record<string, RuntimeCanonicalContents>>;
+  };
+}
+
+function cloneDataProvenance(value: DataProvenanceDto): RuntimeDataProvenance {
+  const result: Record<string, unknown> = {
+    source: value.source,
+    reference: value.reference,
+    category: value.category,
+  };
+  for (const key of ["edition", "version", "uncertainty", "lastVerified"] as const) {
+    const optionalValue = value[key];
+    if (optionalValue !== undefined) result[key] = optionalValue;
+  }
+  if (value.temperature !== undefined) result.temperature = { ...value.temperature };
+  if (value.pressure !== undefined) result.pressure = { ...value.pressure };
+  return result as RuntimeDataProvenance;
+}
+
+function assertUnique(values: readonly string[], label: string): void {
+  if (new Set(values).size !== values.length) {
+    throw new Error(`DUPLICATE_ID: ${label} identifiers must be unique`);
+  }
+}
+
+function parseMaterialSnapshot(dto: SerializedMaterialSnapshot): RuntimeMaterialSnapshot {
+  const density = toCanonical(dto.density);
+  return {
+    materialId: dto.materialId,
+    sourceDefinition: dto.sourceDefinition,
+    density: {
+      value: kilogramsPerLitre(density.value),
+      provenance: cloneDataProvenance(dto.density.provenance),
+    },
+    composition: dto.composition.map((entry) => ({
+      soluteId: entry.soluteId,
+      amountConcentration: molPerLitre(toCanonical(entry.amountConcentration).value),
+      provenance: cloneDataProvenance(entry.provenance),
+    })),
+    molarMasses: dto.molarMasses.map((entry) => ({
+      soluteId: entry.soluteId,
+      molarMass: kilogramsPerMol(toCanonical(entry.molarMass).value),
+      provenance: cloneDataProvenance(entry.provenance),
+    })),
+    resolvedInventoryPerLitre: {
+      waterMass: kilogram(toCanonical(dto.resolvedInventoryPerLitre.waterMass).value),
+      soluteAmounts: dto.resolvedInventoryPerLitre.soluteAmounts.map((entry) => ({
+        soluteId: entry.soluteId,
+        amount: mol(toCanonical(entry.amount).value),
+      })),
+    },
+  };
+}
+
+function parseScenarioSnapshot(dto: SerializedScenarioSnapshot): RuntimeScenarioSnapshot {
+  const parsed = ScenarioSnapshotSchema.parse(dto);
+  assertUnique(parsed.materials.map((material) => material.materialId), "material");
+  assertUnique(parsed.vessels.map((vessel) => vessel.vesselId), "vessel");
+  return {
+    scenarioRef: parsed.scenarioRef,
+    materials: parsed.materials.map(parseMaterialSnapshot),
+    vessels: parsed.vessels.map((vessel) => ({
+      vesselId: vessel.vesselId,
+      kind: vessel.kind,
+      capacity: litre(toCanonical(vessel.capacity).value),
+      geometryRef: vessel.geometryRef,
+      position: {
+        unit: "mm",
+        x: millimetre(vessel.position.x),
+        y: millimetre(vessel.position.y),
+      },
+    })),
+    apparatusDefaults: parsed.apparatusDefaults.map((entry) => ({
+      kind: entry.kind,
+      state: { ...entry.state },
+    })),
+    modelRequirements: {
+      temperature: kelvin(toCanonical(parsed.modelRequirements.temperature).value),
+      species: [...parsed.modelRequirements.species],
+      solvent: parsed.modelRequirements.solvent,
+      phase: parsed.modelRequirements.phase,
+      activityCorrected: parsed.modelRequirements.activityCorrected,
+    },
+  };
+}
+
+function parseVessel(vessel: SchemaWorldState["vessels"][number]): RuntimeVessel {
+  return {
+    id: vessel.id,
+    kind: vessel.kind,
+    capacity: litre(toCanonical(vessel.capacity).value),
+    geometryRef: vessel.geometryRef,
+    position: {
+      unit: "mm",
+      x: millimetre(vessel.position.x),
+      y: millimetre(vessel.position.y),
+    },
+  };
+}
+
+function parseApparatus(apparatus: Apparatus): RuntimeApparatus {
+  const parsed = ApparatusSchema.parse(apparatus);
+  return {
+    id: parsed.id,
+    kind: parsed.kind,
+    position: {
+      unit: "mm",
+      x: millimetre(parsed.position.x),
+      y: millimetre(parsed.position.y),
+    },
+    state: { ...parsed.state },
+  };
+}
+
+function parseContents(
+  contents: SchemaWorldState["canonical"]["byVessel"][string],
+): RuntimeCanonicalContents {
+  return {
+    waterMass: kilogram(toCanonical(contents.waterMass).value),
+    liquidVolume: litre(toCanonical(contents.liquidVolume).value),
+    componentAmounts: contents.componentAmounts
+      .map((entry) => ({
+        componentId: entry.componentId,
+        amount: mol(toCanonical(entry.amount).value),
+      }))
+      .sort((a, b) => compareIds(a.componentId, b.componentId)),
+  };
+}
+
+function parseWorldStateUnchecked(dto: SchemaWorldState): WorldState {
+  assertUnique(dto.vessels.map((vessel) => vessel.id), "vessel");
+  assertUnique(dto.apparatus.map((apparatus) => apparatus.id), "apparatus");
+  const vesselIds = new Set(dto.vessels.map((vessel) => vessel.id));
+  const contentIds = Object.keys(dto.canonical.byVessel);
+  if (contentIds.length !== vesselIds.size || contentIds.some((id) => !vesselIds.has(id))) {
+    throw new Error("STATE_SHAPE_MISMATCH: canonical contents must have exactly one entry per vessel");
+  }
+  const byVessel: Record<string, RuntimeCanonicalContents> = {};
+  for (const [vesselId, contents] of Object.entries(dto.canonical.byVessel)) {
+    byVessel[vesselId] = parseContents(contents);
+  }
+  return deepFreeze({
+    schemaVersion: dto.schemaVersion,
+    worldId: dto.worldId,
+    lineage: { ...dto.lineage },
+    sequence: dto.sequence,
+    solverConfig: { id: dto.solverConfig.id, version: dto.solverConfig.version, parameters: { ...dto.solverConfig.parameters } },
+    scenarioSnapshot: parseScenarioSnapshot(dto.scenarioSnapshot),
+    vessels: dto.vessels.map(parseVessel),
+    apparatus: dto.apparatus.map(parseApparatus),
+    attachments: dto.attachments.map((attachment) => ({ ...attachment })),
+    canonical: { byVessel },
+  });
+}
+
+/** Parse a serialized state, canonicalizing every operational quantity. */
+export function parseWorldState(input: unknown): WorldState {
+  return parseWorldStateUnchecked(SerializedWorldStateSchema.parse(input));
+}
+
+/** Build the typed empty world at the only legal genesis event boundary. */
+export function createInitialState(input: unknown): WorldState {
+  const event = WorldCreatedSchema.parse(input);
+  if (event.seq !== 0) {
+    throw new RangeError(`WorldCreated must have seq 0, got ${event.seq}`);
+  }
+  if (event.payload.contentHash !== scenarioSnapshotHash(event.payload.scenarioSnapshot)) {
+    throw new Error("CONTENT_HASH_MISMATCH: WorldCreated snapshot checksum does not match its contents");
+  }
+  const snapshot = parseScenarioSnapshot(event.payload.scenarioSnapshot);
+  const byVessel: Record<string, RuntimeCanonicalContents> = {};
+  for (const vessel of snapshot.vessels) {
+    byVessel[vessel.vesselId] = {
+      waterMass: kilogram(0),
+      liquidVolume: litre(0),
+      componentAmounts: [],
+    };
+  }
+  return deepFreeze({
+    schemaVersion: event.schemaVersion,
+    worldId: event.payload.worldId,
+    lineage: { parentWorldId: null, forkSequence: null, forkStateHash: null },
+    sequence: 0,
+    solverConfig: {
+      id: event.payload.solverConfig.id,
+      version: event.payload.solverConfig.version,
+      parameters: { ...event.payload.solverConfig.parameters },
+    },
+    scenarioSnapshot: snapshot,
+    vessels: snapshot.vessels.map((vessel) => ({
+      id: vessel.vesselId,
+      kind: vessel.kind,
+      capacity: vessel.capacity,
+      geometryRef: vessel.geometryRef,
+      position: vessel.position,
+    })),
+    apparatus: [],
+    attachments: [],
+    canonical: { byVessel },
+  });
+}
+
+function serializeDataProvenance(value: RuntimeDataProvenance): DataProvenanceDto {
+  const result: Record<string, unknown> = {
+    source: value.source,
+    reference: value.reference,
+    category: value.category,
+  };
+  for (const key of ["edition", "version", "uncertainty", "lastVerified"] as const) {
+    const optionalValue = value[key];
+    if (optionalValue !== undefined) result[key] = optionalValue;
+  }
+  if (value.temperature !== undefined) result.temperature = { ...value.temperature };
+  if (value.pressure !== undefined) result.pressure = { ...value.pressure };
+  return result as DataProvenanceDto;
+}
+
+function serializeMaterialSnapshot(material: RuntimeMaterialSnapshot): SerializedMaterialSnapshot {
+  return {
+    materialId: material.materialId,
+    sourceDefinition: material.sourceDefinition,
+    density: {
+      value: material.density.value,
+      unit: "kg/L",
+      provenance: serializeDataProvenance(material.density.provenance),
+    },
+    composition: material.composition.map((entry) => ({
+      soluteId: entry.soluteId,
+      amountConcentration: { value: entry.amountConcentration, unit: "mol/L" },
+      provenance: serializeDataProvenance(entry.provenance),
+    })),
+    molarMasses: material.molarMasses.map((entry) => ({
+      soluteId: entry.soluteId,
+      molarMass: { value: entry.molarMass, unit: "kg/mol" },
+      provenance: serializeDataProvenance(entry.provenance),
+    })),
+    resolvedInventoryPerLitre: {
+      waterMass: { value: material.resolvedInventoryPerLitre.waterMass, unit: "kg" },
+      soluteAmounts: material.resolvedInventoryPerLitre.soluteAmounts.map((entry) => ({
+        soluteId: entry.soluteId,
+        amount: { value: entry.amount, unit: "mol" },
+      })),
+    },
+  };
+}
+
+function serializeScenarioSnapshot(snapshot: RuntimeScenarioSnapshot): SerializedScenarioSnapshot {
+  return {
+    scenarioRef: snapshot.scenarioRef,
+    materials: snapshot.materials.map(serializeMaterialSnapshot),
+    vessels: snapshot.vessels.map((vessel) => ({
+      vesselId: vessel.vesselId,
+      kind: vessel.kind,
+      capacity: { value: vessel.capacity, unit: "L" },
+      geometryRef: vessel.geometryRef,
+      position: { unit: "mm", x: vessel.position.x, y: vessel.position.y },
+    })),
+    apparatusDefaults: snapshot.apparatusDefaults.map((entry) => ({
+      kind: entry.kind,
+      state: { ...entry.state },
+    })),
+    modelRequirements: {
+      temperature: { value: snapshot.modelRequirements.temperature, unit: "K" },
+      species: [...snapshot.modelRequirements.species],
+      solvent: snapshot.modelRequirements.solvent,
+      phase: snapshot.modelRequirements.phase,
+      activityCorrected: snapshot.modelRequirements.activityCorrected,
+    },
+  };
+}
+
+/** Serialize typed state through the schema owned by `@chemrealm/schema`. */
+export function serializeWorldState(state: WorldState): SerializedWorldState {
+  const dto = {
+    schemaVersion: state.schemaVersion,
+    worldId: state.worldId,
+    lineage: { ...state.lineage },
+    sequence: state.sequence,
+    solverConfig: {
+      id: state.solverConfig.id,
+      version: state.solverConfig.version,
+      parameters: { ...state.solverConfig.parameters },
+    },
+    scenarioSnapshot: serializeScenarioSnapshot(state.scenarioSnapshot),
+    vessels: state.vessels.map((vessel) => ({
+      id: vessel.id,
+      kind: vessel.kind,
+      capacity: { value: vessel.capacity, unit: "L" },
+      geometryRef: vessel.geometryRef,
+      position: { unit: "mm", x: vessel.position.x, y: vessel.position.y },
+    })),
+    apparatus: state.apparatus.map((apparatus) => ({
+      id: apparatus.id,
+      kind: apparatus.kind,
+      position: { unit: "mm", x: apparatus.position.x, y: apparatus.position.y },
+      state: { ...apparatus.state },
+    })),
+    attachments: state.attachments.map((attachment) => ({ ...attachment })),
+    canonical: {
+      byVessel: Object.fromEntries(
+        Object.entries(state.canonical.byVessel).map(([vesselId, contents]) => [
+          vesselId,
+          {
+            waterMass: { value: contents.waterMass, unit: "kg" },
+            liquidVolume: { value: contents.liquidVolume, unit: "L" },
+            componentAmounts: [...contents.componentAmounts]
+              .sort((a, b) => compareIds(a.componentId, b.componentId))
+              .map((entry) => ({
+                componentId: entry.componentId,
+                amount: { value: entry.amount, unit: "mol" },
+              })),
+          },
+        ]),
+      ),
+    },
+  };
+  return SerializedWorldStateSchema.parse(dto);
+}
+
+/**
+ * Deep-freeze state at each reducer boundary. A child branch therefore cannot
+ * mutate an ancestor through a shared nested object, even in development.
+ */
+export function deepFreeze<T>(value: T): T {
+  if (value === null || typeof value !== "object" || Object.isFrozen(value)) return value;
+  Object.freeze(value);
+  for (const child of Object.values(value as Record<string, unknown>)) deepFreeze(child);
+  return value;
+}
+
+/** Hash only canonical state; the present cursor is a view and is excluded. */
+export function stateHash(state: WorldState): string {
+  const { sequence: _sequence, ...canonicalState } = serializeWorldState(state);
+  return hashCanonical(quantizeTree(canonicalState));
+}
+
+/** Kept as a named alias because replay diagnostics call this a replay hash. */
+export const replayHash = stateHash;
+
+/** Ensure a value advertised as an event is the schema's actual event shape. */
+export function parseDomainEvent(input: unknown): DomainEvent {
+  return DomainEventSchema.parse(input);
+}

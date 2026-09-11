@@ -13,6 +13,7 @@
     "test": "vitest run",
     "depcruise": "depcruise --config .dependency-cruiser.cjs packages apps",
     "guards": "node tools/check_dependency_rules.mjs",
+    "verify:world": "node tools/check_world_runtime_contract.mjs",
     "artifacts": "node tools/check_build_artifacts.mjs",
     "lint": "eslint .",
     "test:browser": "playwright test",

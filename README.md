@@ -4,8 +4,9 @@ A free, non-commercial, local-first interactive chemistry platform for Chinese
 high-school chemistry, built on one defensible Scientific Reality layer rather
 than on exam-keyword scripts.
 
-> **Status: M0 — Repository Foundation.** The repository builds and its
-> architectural rules are enforced, but there is no product yet. See
+> **Status: M2 — Event Runtime and Replay (S2 implementation candidate).** The
+> repository builds, its architectural rules are enforced, and the deterministic
+> World Runtime is implemented pending owner S3 verification. See
 > `docs/specs/SPEC-0001-...md` for what the first vertical slice will be and
 > `docs/plans/PLAN-0001-...md` for the milestone order.
 
@@ -16,8 +17,8 @@ than on exam-keyword scripts.
 | [`GOAL.md`](GOAL.md) | Project constitution. Where the project is allowed to go. |
 | [`CLAUDE.md`](CLAUDE.md) | Operating rules for coding agents, including the version-control workflow (§21). |
 | [`AGENTS.md`](AGENTS.md) | Cross-agent execution discipline; the S0–S4 stage gates. |
-| [`docs/adr/`](docs/adr/) | Nine accepted architecture decisions. |
-| [`docs/specs/`](docs/specs/) | `SPEC-0001`. Accepted at revision 6; at revision 7 after one owner-approved amendment, listed in its header. |
+| [`docs/adr/`](docs/adr/) | Accepted architecture decisions. |
+| [`docs/specs/`](docs/specs/) | `SPEC-0001`, including the accepted revision 8–9 M1 amendments. |
 | [`docs/plans/`](docs/plans/) | `PLAN-0001`, approved to execute. |
 | [`docs/science/quantity-ontology.md`](docs/science/quantity-ontology.md) | Authoritative definition of every scientific quantity. |
 
@@ -54,10 +55,11 @@ the GitHub Actions Ubuntu runner.
 ```bash
 # TypeScript
 pnpm typecheck          # tsc -b across project references
-pnpm build              # schema, then web
+pnpm build              # schema, world, then web
 pnpm test               # vitest
 pnpm depcruise          # architectural import rules
 pnpm guards             # proves those rules actually fail on a violation
+pnpm verify:world       # World Runtime determinism/browser contract guard
 pnpm artifacts          # no third-party origin (AC-P5), no API route (AC-P1)
 pnpm lint
 
@@ -77,6 +79,7 @@ fire is not evidence that the rule works.
 ```
 apps/web/            Composition root. The only place the four cores meet.
 packages/schema/     SINGLE SOURCE OF TRUTH for cross-boundary contracts.
+packages/world/      World Runtime: typed state, events, replay, snapshots, branches.
 tools/               Python: the acceptance-coverage checker, the node guards.
 tools/oracle/        Test-time scientific oracle (M4). Never deployed.
 docs/                ADRs, specs, plans, research, the visual standard.
