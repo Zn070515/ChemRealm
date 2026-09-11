@@ -292,9 +292,11 @@ export function scaleAmount(n: Mol, factor: number): Mol {
   return mol(n * factor);
 }
 
-export function negateMillimetre(v: Millimetre): Millimetre {
-  return millimetre(-v);
-}
+// `negateMillimetre` was removed here rather than kept "just in case". Nothing
+// consumed it and nothing conceptually needs it: a geometry coordinate may be
+// negative, but negating a length is not an operation the renderer or the world
+// asks for. Speculative API in a contract module is a liability — it has to be
+// understood, versioned and maintained whether or not it is ever correct.
 
 // ---------------------------------------------------------------------------
 // THE CONVERSION MODULE
