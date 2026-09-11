@@ -16,9 +16,18 @@
 >    activity (§1) moves the strong-acid figure, and one secondary source value
 >    (8.87) was wrong (§5).
 > 3. **A third reference case was added**: the taught `−lg c(H⁺)` and the
->    thermodynamic pH are different quantities for the same solution. This is now
->    the single most consequential scientific fact for the product, and the
->    original version of this document did not mention it at all.
+>    activity-based model pH are different quantities for the same solution. This
+>    is now the single most consequential scientific fact for the product, and
+>    the original version of this document did not mention it at all.
+> 4. **Round 2 correction.** Revision 2 of the spec then computed `−lg c(H⁺)`
+>    from a *molality*, producing 0.9993 instead of 1.0000. The term
+>    "thermodynamic pH" has also been dropped throughout: IUPAC's pH definition
+>    is **notional** (single-ion activity is not independently measurable and
+>    needs an extrathermodynamic convention), so "activity-based model pH" is the
+>    accurate name.
+> 5. **Round 2 addition: the validated accuracy envelope.** `I_m ≤ 0.5 mol/kg` is
+>    the Davies *computational domain*; it is not an error bound. ±0.02 pH is
+>    claimed only inside `I_m ≤ 0.12 mol/kg`, where the IUPAC anchors sit.
 
 ## Summary
 
@@ -161,7 +170,7 @@ merely adequate, it is *more* reproducible than the alternatives.
 | Strong acid/base, acid excess | `pH = −log₁₀ m_H − log₁₀ γ_H` | Analytic activity relation | Independent cross-check |
 | Strong acid/base, base excess | `pH = 14 + log₁₀ m_OH + log₁₀ γ_OH` | Analytic activity relation | Independent cross-check |
 | **0.1 M HCl — taught quantity** | **`−lg c(H⁺) = 1.0000`** | Definition of the taught quantity | Separate reference case |
-| **0.1 M HCl — thermodynamic pH** | **pH 1.1064** | `−log₁₀ a(H⁺)`, γ_H = 0.7815 | Separate reference case |
+| **0.1000 mol/L HCl — activity-based model pH** | **pH 1.1064** | `−log₁₀ a(H⁺)` under Davies, γ_H = 0.7815 | Separate reference case |
 | 0.1 M HOAc equivalence | pH 8.72 | Textbook closed form `7 + ½(pKa + log C)` | Cross-check only — see below |
 
 **The two 0.1 M HCl rows are not a mistake and not a rounding artifact.** They

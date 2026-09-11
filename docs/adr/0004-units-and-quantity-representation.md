@@ -82,26 +82,50 @@ in `docs/visual/apparatus-standard.md`.
 
 ### 2. Two representations, chosen by whether arithmetic is meaningful
 
-This is the corrected answer to P1-4.
+This is the corrected answer to P1-4, further corrected in round 2 (finding
+P2-1) for *how the split is drawn*.
 
-**Opaque types — arithmetic is a compile error.**
+**The criterion is not "is arithmetic allowed".** The first version of this
+section put activity, activity coefficient, mole fraction, and ionic strength in
+a "no arithmetic" bucket on the grounds that arithmetic on them is
+"conceptually wrong". That is false, and following it would have produced a type
+system that blocks legitimate physics:
+
+| Quantity | Legitimate operations | Undefined operations |
+|---|---|---|
+| activity | `×`, `÷`, ratio (`Ka = a_H·a_A/a_HA`) | `+` |
+| activity coefficient | `×`, `÷`, `log10` (`γ_H·γ_A`) | `+` |
+| mole fraction | `+` (Σx = 1), ratio | `×` |
+| ionic strength | `+`, `× scalar`, compare within one basis | compare across bases |
+| pH-like | compare, **difference** (ΔpH is meaningful) | average, sum, scale |
+
+The right question is **which operations have defined physical meaning**, and
+the representation should expose those and withhold the rest. That is a
+*controlled quantity algebra*, not a ban on arithmetic.
+
+**Two type mechanisms, chosen by which is cheaper to get right:**
+
+**Opaque types + named operations.** Raw operators are a compile error; the
+defined operations are supplied by name.
 
 ```ts
-declare const phBrand: unique symbol;
-export interface Ph {
-  readonly [phBrand]: true;
+declare const actBrand: unique symbol;
+export interface Activity {
+  readonly [actBrand]: true;
   readonly value: number;
 }
+export function multiplyActivity(a: Activity, b: Activity): Activity;
+export function ratioActivity(a: Activity, b: Activity): number;
 ```
 
 Used for: `Ph`, `Activity`, `ActivityCoefficient`, `IonicStrengthMolal`,
 `IonicStrengthMolar`, `MoleFraction`.
 
-These are quantities where arithmetic is **conceptually wrong** — averaging two
-pH values, adding two activities, or adding two activity coefficients — and where
-a mistake is subtle enough to survive review. Verified by compilation:
-`p1 + p2` and `p1 / 2` are both type errors. The value is reachable only through
-explicit unwrapping (`p.value`), which is visible at every site.
+Opaque is right here because the *set* of legal operations is small, specific, and
+easy to get wrong — `averagePh(p1, p2)` must not exist, while
+`differencePh(p1, p2)` must. Verified by compilation: `p1 + p2` and `p1 / 2` are
+both type errors, so an undefined operation cannot be written at all, and a
+defined one is visible by name at every call site.
 
 **Branded numbers — arithmetic is legal, and the guarantee is stated honestly.**
 
@@ -201,7 +225,10 @@ invisible to the compiler, which is what `CLAUDE.md` §8.2 prohibits.
 - Unit confusion is a compile error at the assignment boundary, and mixing
   molality with molarity or the two ionic-strength bases cannot be represented
   at all.
-- pH, activity, and activity coefficients cannot participate in arithmetic.
+- Undefined operations on pH, activity, activity coefficient, mole fraction, and
+  ionic strength cannot be written — while their **defined** operations
+  (`ratioActivity`, `differencePh`, `sumMoleFractions`) are available by name, so
+  the type system enforces physics rather than merely obstructing code.
 - Serialized worlds are self-describing: a file from six months ago is readable
   without the code that wrote it.
 - The gap in the branded guarantee is documented, bounded, and closed at the API

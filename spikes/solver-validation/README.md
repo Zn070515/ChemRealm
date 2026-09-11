@@ -18,8 +18,11 @@
 > What still stands from this spike: the 1e-8 M HCl adversarial case (a
 > concentration formula reports an acid as basic), and the Henderson–Hasselbalch
 > divergence at 1e-6 M. What does **not** stand: every activity-corrected pH
-> value, and the claim that "0.1 M HCl → pH 1.0000" is the thermodynamic pH — it
-> is `−lg c(H⁺)`, and the true pH is 1.106.
+> value, and the framing of "0.1 M HCl → pH 1.0000". That number is the taught
+> `−lg c(H⁺)`; the activity-based model pH under the Davies model is 1.1064. They
+> are different quantities, and neither is "the true pH" — IUPAC's definition is
+> notional and depends on an activity model
+> (`docs/science/quantity-ontology.md`).
 
 > **Status: spike complete, superseded. Not a production path.**
 > This directory exists to answer one question with evidence. It is not imported

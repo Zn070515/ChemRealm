@@ -110,34 +110,83 @@ They are derived quantities at a converged ionic strength, not stored constants.
 The tabulated `Ka` and `Kw` in the solver configuration are always the
 thermodynamic ones.
 
-### Hydrogen ion, and the two numbers that look alike
+### Hydrogen ion: three quantities, and two numbers that look alike
 
-This is the most consequential distinction in the document.
+This is the most consequential distinction in the document, and it is where
+revision 2 of the spec shipped a defect: it computed `−lg c(H⁺)` as
+`−log₁₀(m_H)` — the **molality** — and labelled it as a concentration.
 
 | Quantity | Symbol | Unit | Definition | Used by |
 |---|---|---|---|---|
-| Hydrogen ion molality | `m(H⁺)` | mol/kg | solver output | everything internal |
-| Hydrogen ion concentration | `c(H⁺)` | mol/L | `m(H⁺)` converted via solution volume | teaching layer |
+| Hydrogen ion molality | `m(H⁺)` | mol/kg water | **solver output** | everything internal |
+| Hydrogen ion concentration | `c(H⁺)` | mol/L solution | `n(H⁺) / V_solution` | teaching layer |
 | Hydrogen ion activity | `a(H⁺)` | dimensionless | `γ_H · m(H⁺)/m°` | thermodynamics |
-| **pH** | — | dimensionless | `−log₁₀ a(H⁺)` — **IUPAC definition** | scientific view |
-| **Taught quantity** | — | dimensionless | `−lg c(H⁺)` | high-school view |
+| **Taught quantity** | — | dimensionless | `−lg(c(H⁺)/c°)`, `c°` = 1 mol/L | high-school view |
+| **Activity-based model pH** | — | dimensionless | `−log₁₀ a(H⁺)` | scientific view |
 
-**These last two are not the same number and must never be silently identified.**
+**`c(H⁺)` is not `m(H⁺)` renamed.** It requires the solution volume, which is
+itself derived (through a labelled additivity approximation) from the conserved
+amounts and water mass. Deriving `−lg c(H⁺)` from a molality is a defect
+regardless of how close the two numbers are.
 
-Measured (`spikes/activity-equilibrium`, finding F2): for 0.1 M HCl,
+Measured for **0.1000 mol/L HCl** (`spikes/activity-equilibrium` §B):
 
 ```
-−lg c(H⁺) = 0.9993      ← the textbook "pH = 1"
-pH        = 1.1064      ← −log₁₀ a(H⁺), the IUPAC quantity
+m(H⁺) = 0.100165 mol/kg        c(H⁺)/m(H⁺) = 0.998354
+c(H⁺) = 0.100000 mol/L
+a(H⁺) = 0.078279               (γ_H = 0.7815)
+
+−lg c(H⁺) = 1.0000    ← the textbook "pH = 1"
+model pH  = 1.1064    ← −log₁₀ a(H⁺) under the Davies model
 ```
 
-A difference of 0.107 pH, entirely from `γ_H = 0.7815`.
+A difference of 0.107 pH, essentially all of it from `γ_H`.
 
-`GOAL.md` §5.1 permits a teaching view to prefer the school heuristic. It does
-not permit falsifying the underlying state. So v0 stores **both**, labels them
-distinctly, and exposes the difference as a teaching asset rather than hiding it
-— the gap between concentration and activity is a real concept the platform is
-well placed to make visible (`GOAL.md` §1 "Visible").
+**On the word "thermodynamic".** The activity-based quantity is called
+**activity-based model pH**, never "the thermodynamic pH". IUPAC defines pH as
+`−lg a(H⁺)`, but the same definition is **notional**: the activity of a single
+ion is not independently measurable, and realising it operationally requires an
+extrathermodynamic convention (Bates–Guggenheim for primary standards; here, the
+Davies model). Presenting `1.1064` as "the true pH" while the textbook's `1.0000`
+is "wrong" would be the same category of error as ignoring activity altogether.
+
+`GOAL.md` §5.1 permits a teaching view to prefer the school heuristic and does
+not permit falsifying the underlying state. v0 stores **both**, labels them
+distinctly, exposes the difference as a teaching asset, and states the convention
+its model pH depends on.
+
+### Which operations are defined on a quantity?
+
+**Added 2026-09-11 (round 2, finding P2-1).** An earlier version of `ADR-0004`
+classified quantities by *whether arithmetic is allowed at all*, putting
+activity, activity coefficient, mole fraction, and ionic strength in the
+"no arithmetic" bucket. That is wrong:
+
+- `Ka = a_H·a_A/a_HA` — activities are **multiplied and divided** by definition;
+- `γ_H·γ_A` appears in every conditional constant;
+- `Σ x_i = 1` is the definition of mole fraction;
+- ionic strengths are summed, scaled, and compared.
+
+The useful question is not "is arithmetic allowed" but **"which operations have
+defined physical meaning on this quantity"**. That is a *controlled quantity
+algebra*:
+
+| Quantity | Defined operations | Not defined |
+|---|---|---|
+| amount `n` | `+`, `−`, `× scalar`, `÷ scalar` | × amount, ÷ amount |
+| volume `V` | `+`, `−`, `× scalar` | × volume |
+| molality / molarity | `× volume → amount` | + concentration (without a mixing model) |
+| **activity** | `×`, `÷`, `ratio` | `+` (activities do not add) |
+| **activity coefficient** | `×`, `÷`, `log10` | `+` |
+| **mole fraction** | `+` (sums to 1), `ratio` | × mole fraction |
+| **ionic strength** | `+`, `× scalar`, compare **within one basis** | compare across `I_m`/`I_c` |
+| **pH-like** | compare, difference (a ΔpH is meaningful) | **average, sum, scale** |
+
+So `averagePh(p1, p2)` has no definition, while `ratioActivity(a, b)` does. The
+representation should expose the *defined* operations and withhold the
+undefined ones — not refuse arithmetic wholesale.
+
+See `ADR-0004` §2 for how this maps onto types.
 
 ### Geometry
 
@@ -160,7 +209,7 @@ see finding P2-1.
 | Scientific core (output) | both molality and molarity; activity; `I_m`; `pH` |
 | Observable model | whatever the view needs, converted explicitly |
 | Teaching view | molarity (`mol/L`), `−lg c(H⁺)` |
-| Scientific view | molality, activity, `pH` |
+| Scientific view | molality, activity, activity-based model pH |
 | Serialized forms | `{value, unit}` always; no bare numbers |
 
 ## Anti-patterns this document forbids
@@ -172,14 +221,21 @@ see finding P2-1.
 5. Storing a conditional constant as if it were a thermodynamic one.
 6. Giving an equilibrium constant units.
 7. Using a geometry axis to carry a volume.
+8. **Deriving `−lg c(H⁺)` from `−log₁₀ m(H⁺)`.** They differ by `γ`-scale
+   factors of order 0.2 % here, which is precisely why the substitution is easy
+   to make and hard to notice. This was defect P1-1 of owner review round 2.
+9. Averaging, summing, or scaling a pH-like number.
+10. Comparing an `I_m` with an `I_c`.
 
 ## Open questions
 
-1. Should `I_m` and `I_c` be **distinct opaque types** (`IonicStrengthMolal`,
-   `IonicStrengthMolar`) so mixing bases is a compile error rather than a
-   documented rule? Given that the numeric difference is under tolerance, the
-   mistake would be invisible at runtime. **Leaning: yes — this is precisely the
-   case where the compiler should carry the distinction, because no test will.**
+1. Resolved in favour of distinct types — see `ADR-0004` §2, which now uses the
+   *defined-operations* criterion rather than an "arithmetic allowed" criterion
+   (finding P2-1).
+   ~~Should `I_m` and `I_c` be distinct types so mixing bases is a compile error
+   rather than a documented rule?~~ **Yes** — the numeric difference is under
+   tolerance, so the mistake would be invisible at runtime, which is exactly
+   when the compiler should carry the distinction.
 2. Does the vessel need to track water *mass* explicitly, or can it be derived
    from volume and a density model? **Leaning: track the mass.** It is the
    conserved quantity, and deriving it would reintroduce a density model into the

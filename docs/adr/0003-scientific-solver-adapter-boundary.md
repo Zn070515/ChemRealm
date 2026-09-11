@@ -22,10 +22,11 @@ with solid phases and a curated log K database. Those are different problems.
 A technology investigation (2026-09-11, recorded in
 `docs/research/scientific-solver-landscape.md`) established:
 
-- The exact titration solve is a single scalar root-find on the charge balance.
-  A 200-line implementation reproduces an independent closed form to <0.0001 pH
-  and reproduces IUPAC acetate buffer standards to within 0.012 pH
-  (`spikes/activity-equilibrium`).
+- The exact titration solve is a **coupled two-unknown problem** — `(m_H, I)` —
+  solved by nested bisection, with activity coefficients participating inside
+  the equilibrium constraints and on the **molality** basis. A ~150-line
+  implementation reproduces analytic activity relations to <1e-9 pH and IUPAC
+  acetate buffer standards to within 0.012 pH (`spikes/activity-equilibrium`).
 - **PHREEQC** (USGS, public domain) is a legitimate long-term oracle and
   eventual adapter for multi-component speciation.
 - **Reaktoro** ships conda-only with no clean Windows pip wheel and adds

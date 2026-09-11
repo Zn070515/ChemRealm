@@ -1,9 +1,9 @@
 # SPEC-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** S1 — Specified (revision 2, for owner re-review)
-- **Date:** 2026-09-11 (revised after owner review remediation)
+- **Status:** S1 — Specified (**revision 3**, for owner re-review)
+- **Date:** 2026-09-11 (round 2: science semantics and consistency cleanup)
 - **Owner:** Project owner
-- **Supersedes:** revision 1 of this spec
+- **Supersedes:** revisions 1 and 2 of this spec
 - **Related ADRs:** 0001, 0002, 0003, 0004 (rev), 0005, 0006, 0007 (rev), 0008, 0009 — all `Proposed`, all load-bearing here
 - **Related evidence:** `spikes/activity-equilibrium/` (scientific formulation),
   `spikes/numeric-policy/` (determinism + branded types),
@@ -294,43 +294,124 @@ would contribute roughly `+0.02` to `log10 γ_HA` at I = 0.1, moving the buffer
 result from 4.6379 to 4.6579. Both lie inside the ±0.02 band. **Measured,
 bounded, and recorded — not an unexamined default** (spike finding F6).
 
-### Two hydrogen-ion numbers that must never be conflated
+### Three hydrogen-ion quantities that must never be conflated
 
-**This is the most consequential consequence of P1-1 for the product.**
+**Revised 2026-09-11 (round 2, findings P1-1 and P1-2).** The previous revision
+of this section was itself defective: it printed `−lg c(H⁺) = 0.9993` for
+0.1000 mol/L HCl, but that number was `−log₁₀(m_H)` — the **molality** — wearing
+the label of a concentration. The correct value is **1.0000**, because the
+solution is *defined* as 0.1000 mol/L and HCl is fully dissociated.
 
-| Quantity | Definition | Value for 0.1 M HCl | Used by |
-|---|---|---|---|
-| Taught quantity | `−lg c(H⁺)` | **0.9993** | high-school view |
-| Thermodynamic pH | `pH = −log₁₀ a(H⁺)` (IUPAC) | **1.1064** | scientific view |
+The three quantities are physically distinct and are computed from distinct
+inputs:
 
-Charge balance forces `m_H = m_Cl` for a pure strong acid, so the activity
-coefficient shifts the *activity* of the hydrogen ion by exactly
-`−log10(γ_H) = +0.107` at I = 0.10. The familiar "pH of 0.1 M HCl is 1.0000" is a
-statement about **concentration**, not about pH.
+| Quantity | Symbol | Unit | Definition | 0.1000 mol/L HCl |
+|---|---|---|---|---|
+| Hydrogen-ion **molality** | `m(H⁺)` | mol/kg water | solver output | 0.100165 |
+| Hydrogen-ion **molarity** | `c(H⁺)` | mol/L solution | `n_H / V_solution` | **0.100000** |
+| Hydrogen-ion **activity** | `a(H⁺)` | dimensionless | `γ_H · m(H⁺)/m°` | 0.078279 |
+| **Taught quantity** | — | dimensionless | `−lg(c(H⁺)/c°)`, `c°` = 1 mol/L | **1.0000** |
+| **Model pH** | — | dimensionless | `−log₁₀ a(H⁺)` | **1.1064** |
 
-`GOAL.md` §5.1 permits a teaching view to prefer the school heuristic. It does
-not permit falsifying the underlying state. Therefore:
+`c(H⁺)/m(H⁺) = 0.998354` for this solution. They differ by 0.16 %, and merging
+them is a defect regardless of how small the number appears
+(`docs/science/quantity-ontology.md`).
 
-- **v0 computes and stores both.** They are distinct types (`Ph` vs a taught
-  quantity) and are never silently identified (`ADR-0004`).
-- The taught view shows `−lg c(H⁺)`, **labelled as the textbook definition**.
-- The scientific view shows `pH = −log₁₀ a(H⁺)` and the activity coefficient.
-- The **difference is presented as a teaching asset**, not hidden — the gap
-  between concentration and activity is exactly the kind of thing `GOAL.md` §1
-  ("Visible") wants made inspectable, and it is a real step from high-school
-  heuristics toward the model underneath.
+**The scientific core computes molalities only.** Molarity and both pH-like
+numbers are produced by the presentation layer from the converged molality state
+plus the mixture's conserved amounts and volume. There is no code path that
+derives `−lg c(H⁺)` from a molality, and that is a structural guarantee, not a
+convention.
 
-**This is a product decision, not a technical one, and it is flagged for owner
-confirmation in Open questions.**
+#### Terminology: this is a *model* pH, not "the" pH
 
-### Validity domain and refusal
+**Revised per P1-2.** The previous revision called `−log₁₀ a(H⁺)` the
+"thermodynamic pH". That overstates what the number is.
 
-The solver **must refuse** rather than extrapolate. In scope:
+IUPAC's Gold Book does define pH as `−lg a(H⁺)`, but the *same entry* states that
+the activity of a single ion is not independently measurable, so the definition
+is **notional**, and operational primary standards such as Bates–Guggenheim are
+required to realise it. PHREEQC likewise defines pH via hydrogen-ion activity,
+with activity coefficients coming from whichever model and database is selected.
+
+Therefore:
+
+- The term used throughout is **activity-based model pH**, quantified as
+  *"pH under the Davies single-ion activity model"*.
+- The UI must **not** imply that `1.1064` is the uniquely true pH while the
+  textbook's `1.0000` is simply wrong. It is not.
+- The inspection view states the IUPAC notional definition **and** that
+  single-ion activity requires an extrathermodynamic convention.
+
+Calling one number "the true pH" would repeat, in the opposite direction, the
+same error as ignoring activity altogether.
+
+#### Display decision (owner, 2026-09-11)
+
+The owner selected the recommended option, with this labelling:
+
+- **Default view** shows `−lg c(H⁺)`, which is what the syllabus means by pH, and
+  **calls it pH**. Calling it anything else makes the product unusable for its
+  primary users.
+- A **`科学模型` / "scientific model"** affordance expands to show
+  **activity-based model pH**, `−log₁₀ a(H⁺)`, together with the note that
+  high-school treatment uses the concentration approximation and that a stricter
+  activity model shifts the value, and that single-ion activity itself depends on
+  a convention.
+
+`GOAL.md` §5.1 — a teaching view may simplify, and must not falsify the
+underlying state. Both quantities are stored; neither is presented as the
+other; the difference is exposed rather than hidden.
+
+**Binding constraints, unchanged and enforced:** both quantities exist in every
+state (REF-5, REF-6); they are distinct types, never assignable (AC-S9); every
+displayed number is labelled with which quantity it is; one convention per view;
+and the choice is a policy object swappable without touching `packages/sci` or
+the observable model (AC-V8).
+
+### Computational domain vs validated accuracy envelope
+
+**Revised 2026-09-11 (round 2, finding P1-3).** The previous revision ran these
+two concepts together: it permitted `I_m ≤ 0.5 mol/kg` and then attached a single
+"±0.02 pH" claim to the whole domain. That was wrong. `I ≤ 0.5` is where the
+Davies equation is *roughly* usable — an informed rule of thumb, not an error
+bound — whereas ±0.02 pH is a claim that has only been *demonstrated* at the two
+IUPAC buffer anchors (`I = 0.01` and `I = 0.10`).
+
+**They are two different things and are now stated separately.**
+
+| | Value | Meaning |
+|---|---|---|
+| **Computational domain** | `I_m ≤ 0.5 mol/kg` | Outside this the model is not physically meaningful; the solver **refuses** (`MODEL_OUT_OF_DOMAIN`). |
+| **Validated accuracy envelope** | `I_m ≤ 0.12 mol/kg` | Inside this, **±0.02 pH is claimed and evidenced**. Outside it, results are computed and displayed but **accuracy is explicitly not claimed**. |
+
+Anchored by: IUPAC-traceable acetate buffer standards at `I = 0.01` (Δ 0.0112)
+and `I = 0.10` (Δ 0.0061), plus analytic activity relations across the excess
+regimes. The envelope is set above the highest anchor with margin; it is **not**
+an extrapolation of the anchors to 0.5.
+
+**The envelope is not a guess about the scenarios — it is measured against
+them.** The v0 titration scenarios (0.1 mol/L HCl/NaOH and HOAc/NaOH, 0–2
+equivalents) reach a maximum `I_m` of **0.1002 mol/kg** over the full sweep
+(`spikes/activity-equilibrium` §K), comfortably inside the envelope.
+
+**Behaviour between the envelope and the domain limit** (e.g. a learner building
+a 0.3 mol/L system in the sandbox): the solver computes, and the result carries
+
+```
+accuracyStatus: "outside-validated-envelope"
+```
+
+The UI displays it with that qualification rather than suppressing it or
+presenting it as equally trustworthy. `GOAL.md` §5.2 — an explicitly labelled
+approximation, never a silent one.
+
+### Refusal conditions
 
 | Constraint | Supported | On violation |
 |---|---|---|
 | Temperature | 298.15 K exactly | `MODEL_OUT_OF_DOMAIN` |
-| Ionic strength (**molality basis**, `I_m`) | ≤ 0.5 mol/kg | `MODEL_OUT_OF_DOMAIN` |
+| Ionic strength (**molality basis**, `I_m`) | ≤ 0.5 mol/kg (computational domain) | `MODEL_OUT_OF_DOMAIN` |
 | Acid | monoprotic, strong (HCl) or weak (CH₃COOH) | `MODEL_OUT_OF_DOMAIN` |
 | Base | strong monoprotic (NaOH) | `MODEL_OUT_OF_DOMAIN` |
 | Solvent | water | `MODEL_OUT_OF_DOMAIN` |
@@ -456,19 +537,34 @@ replay identity (`ADR-0007` §8). A change to any of them is a new solver versio
 
 ### Expected precision and tolerance
 
-**Re-established against the self-consistent formulation** (2026-09-11). The
-previous table was measured against the concentration-only solve and is
-superseded. Reference values come from `spikes/activity-equilibrium`.
+**Re-established against the self-consistent formulation** (2026-09-11;
+round-2 revision adds the envelope, finding P1-3). Reference values come from
+`spikes/activity-equilibrium`.
 
-| Regime | Demonstrated agreement | Stated tolerance |
-|---|---|---|
-| Buffer region, 0.1 mol/kg and 0.01 mol/kg | 0.0061 and 0.0112 pH vs IUPAC | ±0.02 pH |
-| Strong acid / base, excess regimes | <1e-9 pH vs analytic activity relation | ±0.005 pH |
-| Half-equivalence vs `pKa + log10 γ_A` | 0.0005 pH | ±0.005 pH |
-| Dilute strong acid (1e-8 mol/kg) | 0.0003 pH vs full balance | ±0.005 pH |
-| Molality vs molarity scale choice | worst 0.00077 pH over the domain | (below tolerance) |
+| Regime | `I_m` | Demonstrated agreement | Stated tolerance |
+|---|---|---|---|
+| Buffer region, 0.01 mol/kg | 0.010 | 0.0112 pH vs IUPAC | ±0.02 pH |
+| Buffer region, 0.10 mol/kg | 0.100 | 0.0061 pH vs IUPAC | ±0.02 pH |
+| Strong acid/base, excess regimes | ≤0.10 | <1e-9 pH vs analytic activity relation | ±0.005 pH |
+| Half-equivalence vs `pKa + log10 γ_A` | ~0.06 | 0.0007 pH | ±0.005 pH |
+| Dilute strong acid (1e-8 mol/kg) | ~1e-8 | 0.0002 pH vs full balance | ±0.005 pH |
 
-**Stated model tolerance for v0: ±0.02 pH.**
+**Stated model tolerance: ±0.02 pH, inside the validated accuracy envelope
+`I_m ≤ 0.12 mol/kg` only.**
+
+The tolerance is **not** claimed across the whole computational domain. The two
+highest rows are the only *external* anchors in the table; everything else
+compares the solver against an analytic relation, which validates the arithmetic
+and not the model (see below). ±0.02 is set by those two anchors with margin, and
+extrapolating it to `I_m = 0.5` would be exactly the kind of unsupported claim
+this spec exists to prevent.
+
+**Molality vs molarity.** The scale choice moves the *model pH* by at most
+**0.00096 pH** over the validated envelope (measured, `spikes/activity-equilibrium`
+§F). This is why the two scales can coexist — one thermodynamic, one
+pedagogical — without the difference being visible to a learner. It is **not**
+why they may be merged: the margin is a property of these concentrations, not a
+licence to conflate the quantities.
 
 **Explicit gap (unchanged, and now more precisely stated).** The weak-acid
 **equivalence region** still has no *independent* reference. The spike's
@@ -511,8 +607,8 @@ routes in `spikes/activity-equilibrium/README.md`.
 | REF-2 | 0.01 mol/kg HOAc + 0.01 mol/kg NaOAc, 25 °C | pH 4.713 | same | ±0.02 |
 | REF-3 | Strong acid/base, **acid** excess (f = 0.0, 0.5, 0.9) | `−log10(m_H) − log10(γ_H)` | analytic activity relation | ±1e-9 |
 | REF-4 | Strong acid/base, **base** excess (f = 1.1, 1.5) | `14 + log10(m_OH) + log10(γ_OH)` | analytic activity relation | ±1e-9 |
-| REF-5 | 0.1 M HCl, no base — **taught quantity** | `−lg c(H⁺)` = 1.0000 | definition of the taught quantity | ±0.01 |
-| REF-6 | 0.1 M HCl, no base — **thermodynamic pH** | pH 1.1064 | `−log10 a(H⁺)` | ±0.02 |
+| REF-5 | 0.1000 mol/L HCl, no base — **taught quantity** | `−lg c(H⁺)` = 1.0000 | definition; `c(H⁺)` from solution volume | ±0.0005 |
+| REF-6 | 0.1000 mol/L HCl, no base — **activity-based model pH** | pH 1.1064 | `−log₁₀ a(H⁺)`, Davies | ±0.02 |
 | REF-7 | 1e-8 mol/kg HCl | pH 6.978 | Full balance incl. water | ±0.02 |
 | REF-8 | Half-equivalence, 0.05 / 0.1 mol/kg | pH = `pKa + log10(γ_A)` | analytic activity identity | ±0.005 |
 | REF-9 | Charge conservation across a sweep | max \|imbalance\| < 1e-14 mol/kg | Invariant | — |
@@ -999,7 +1095,7 @@ Enumerated with the detection that makes each one non-silent.
 
 | # | Failure | Detection |
 |---|---|---|
-| 1 | Scientifically plausible but numerically wrong (HH used outside range) | REF-1..REF-8; adversarial cases REF-6, and the 1e-6 M HH divergence test |
+| 1 | Scientifically plausible but numerically wrong (HH used outside range) | REF-1..REF-10; adversarial cases REF-7, and the 1e-6 mol/kg HH divergence test |
 | 2 | Converged solve with an invalid model (Davies at I = 1.0) | Domain check *before* solve; `MODEL_OUT_OF_DOMAIN` test at I = 0.6 |
 | 3 | Replay diverges across engines | Quantized state hash (`ADR-0007`); engine-matrix test |
 | 4 | Branch mutates the parent | Parent hash after child mutation (AC-R4) |
@@ -1016,7 +1112,10 @@ Enumerated with the detection that makes each one non-silent.
 | 15 | Volume unit confusion (mL/L, factor 1000) | Branded types (`ADR-0004`) make it a compile error; round-trip property test |
 | 16 | Activity applied **post-hoc** rather than inside the equilibrium — the defect this review found | The coupled solve is the only path; REF-3/REF-4 verify the coupling; a post-hoc implementation cannot reproduce both excess regimes |
 | 17 | Molarity/molality or the two ionic-strength bases silently mixed | Distinct opaque types (AC-U2); static check (AC-S8) |
-| 18 | Taught `−lg c(H⁺)` reported as thermodynamic pH, or vice versa | Distinct types (AC-S9); REF-5 and REF-6 sit side by side in the reference set |
+| 18 | Taught `−lg c(H⁺)` reported as model pH, or vice versa | Distinct types (AC-S9); REF-5 and REF-6 sit side by side in the reference set |
+| 19 | **`−lg c(H⁺)` derived from a molality** — the defect this review round found | `c(H⁺)` is produced only by the presentation layer from amounts and solution volume (AC-S8); REF-5 is exact at 1.0000 and a molality-derived value would give 0.9993 and fail it |
+| 20 | Model pH presented as "the true pH" rather than a model-dependent quantity | Display copy asserts the IUPAC notional definition and names the activity model (AC-S12) |
+| 21 | A result computed outside the validated accuracy envelope shown as equally trustworthy | `accuracyStatus` travels with the result; AC-S13 |
 | 19 | Cross-engine variation in a transcendental flips a hash | `detLog10`/`detExp10` replace the native calls (AC-S10); perturbed-path replay (AC-R3) |
 | 20 | Derived quantities quantized independently, breaking conservation | AC-R9 design guard, which **requires the wrong strategy to fail** |
 | 21 | An ACE tuning value becomes structural, so a guess cannot be corrected | AC-A7 replaces the whole policy object without touching the control loop |
@@ -1061,10 +1160,13 @@ Binary and verifiable. Every criterion maps to an evidence method.
 | AC-S5 | The 1e-6 mol/kg acetic acid case matches the exact solve, and the HH divergence (0.65 pH) is reproduced | adversarial test |
 | AC-S6 | The PHREEQC oracle agrees within ±0.02 pH over the swept curve, **including the equivalence region**, with constants **and the molality basis** aligned | oracle comparison report; see the caveat above |
 | AC-S7 | `Ka`, `Kw`, Davies `A` and `b`, `γ_HA`, `a_w`, and the indicator constants are traced to citable sources in `docs/research/constants-provenance.md` | provenance review; **currently open — see Open questions** |
-| AC-S8 | Every thermodynamic calculation runs on the **molality** basis; no `MolPerLitre` value reaches scientific-core internals | static check + type test on the `packages/sci` public surface |
-| AC-S9 | `−lg c(H⁺)` (taught) and `pH = −log₁₀ a(H⁺)` (thermodynamic) are distinct types, both computed, neither assignable to the other | compile fixture + named reference cases REF-5/REF-6 |
+| AC-S8 | Every thermodynamic calculation runs on the **molality** basis; no `MolPerLitre` value reaches scientific-core internals; **`m(H⁺)`, `c(H⁺)`, and `a(H⁺)` are produced by distinct code paths and none is derived from another by renaming** | static check + type test on the `packages/sci` public surface; `c(H⁺)` construction unit test |
+| AC-S9 | `−lg c(H⁺)` (taught) and activity-based model pH are distinct types, both computed, neither assignable to the other | compile fixture + named reference cases REF-5/REF-6 |
 | AC-S10 | `detLog10` and `detExp10` meet their stated accuracy (≤1.5 ulp in domain) against arbitrary-precision references, and refuse outside their validated domain | `spikes/numeric-policy` promoted to a package test |
 | AC-S11 | The outer residual is strictly increasing in `m_H` across a sweep **including the domain boundary**, machine-checked | monotonicity sweep test |
+| AC-S12 | Model pH is never labelled or described as "the true/thermodynamic pH"; the inspection view states the IUPAC notional definition and names the activity model it depends on | copy review + DOM assertion on the inspection view |
+| AC-S13 | A result computed beyond the validated accuracy envelope carries `accuracyStatus: "outside-validated-envelope"` and is displayed with that qualification | domain-matrix test at `I_m` = 0.15 and 0.30 mol/kg |
+| AC-S14 | The validated accuracy envelope is asserted, not assumed: the v0 scenario sweep's maximum `I_m` (0.1002 mol/kg) is checked against the envelope limit at test time | boundary test derived from `spikes/activity-equilibrium` §K |
 
 ### Runtime
 
@@ -1093,6 +1195,7 @@ Binary and verifiable. Every criterion maps to an evidence method.
 | AC-V5 | Screenshots at all four named viewports match the approved baseline | visual regression + owner review |
 | AC-V6 | pH is displayed to at most 2 decimal places | DOM assertion in Playwright |
 | AC-V7 | No geometry coordinate, stroke, or offset carries a volume; all are `Millimetre` | type check + `docs/visual/apparatus-standard.md` review checklist |
+| AC-V8 | **Presentation convention (owner-deferred choice).** Every displayed hydrogen-ion number is labelled with which quantity it is; no view mixes the two conventions; and the choice is a **policy object** swappable without changing `packages/sci`, the observable model, or any component | DOM assertions for labelling and single-convention; a test that swaps the policy and asserts zero non-presentation code changes |
 
 ### ACE
 
@@ -1175,23 +1278,40 @@ Only questions that genuinely need the owner.
    It is what the student is taught, and showing it labelled alongside the exact
    solve is unusually good teaching. Showing it unlabelled would be misinformation.
    **Recommendation: show it, labelled, with the exact solve adjacent.**
-5. **(New, from P1-1 — the most consequential product decision in this spec.)
-   How should the product present thermodynamic pH vs the taught `−lg c(H⁺)`?**
-   For 0.1 M HCl these are **1.1064** and **0.9993**. A Chinese high-school
-   student shown "pH = 1.11" for 0.1 M HCl will reasonably believe the software is
-   wrong, because the syllabus defines pH as `−lg c(H⁺)`. Three options:
-   - **(a) Show the taught quantity by default, with the thermodynamic pH one
-     click away and the difference explained.** Honest, syllabus-aligned, and
-     turns the gap into a teaching asset (`GOAL.md` §5.1, §1).
-   - **(b) Show both side by side always.** Maximally honest, but likely to
-     confuse a student who only needs the syllabus quantity.
-   - **(c) Show the thermodynamic pH as "the" pH.** Scientifically defensible and
-     pedagogically hostile; contradicts `GOAL.md` §3's obligation not to design
-     only for advanced students.
+5. ~~How should the product present activity-based model pH vs the taught
+   `−lg c(H⁺)`?~~ — **DECIDED by owner, 2026-09-11.**
 
-   **Recommendation: (a).** The display-precision rule and the labeling language
-   depend on this choice, so it must be settled before M5. This is a product
-   decision, not a technical one, and the spec does not make it unilaterally.
+   The owner chose **option (a)** with refined wording, recorded here verbatim
+   because it governs all user-facing copy:
+
+   > **Default view.** Display the textbook quantity, `−lg c(H⁺)`, and simply
+   > call it **pH**. Calling it anything else makes the product unusable for its
+   > primary users.
+   >
+   > **`科学模型` affordance.** Expands to show **activity-based model pH**,
+   > `−log₁₀ a(H⁺)`, with the explanation that high-school treatment uses the
+   > concentration approximation, that a stricter activity model shifts the
+   > value, and that single-ion activity itself depends on a convention or
+   > model.
+
+   The owner's reasoning is worth preserving: IUPAC itself treats its pH
+   definition as **notional**, so there is no scientific obligation to fight a
+   pointless war against the syllabus. What matters is that the underlying state
+   is not falsified and that the two are never conflated.
+
+   For 0.1000 mol/L HCl the two values are `1.0000` and `1.1064`.
+
+   **Binding regardless of configuration** (this is what "口径统一" means
+   operationally):
+
+   | # | Constraint | Enforced by |
+   |---|---|---|
+   | 1 | Both quantities are computed and available in every state | REF-5, REF-6 |
+   | 2 | They are distinct types, never assignable to each other | AC-S9 |
+   | 3 | Every on-screen number is labelled with **which** quantity it is; an unlabelled "pH" is a defect | AC-V8 |
+   | 4 | One convention per view — a view never mixes the two | AC-V8 |
+   | 5 | The choice is a **policy object**, swappable without touching `packages/sci` or the observable model | AC-V8 |
+   | 6 | `−lg c(H⁺)` is never derived from a molality | AC-S8, REF-5 |
 6. **(New, from P1-2.)** Should `detLog10`/`detExp10` be implemented in
    TypeScript as in the spike, or via a WASM/fdlibm build? The spike shows the
    TypeScript route is feasible at 1.5 ulp; WASM would be faster but adds a build
@@ -1227,3 +1347,21 @@ noted for later:
 **The equivalence-region gap is unchanged and is still open.** The revision did
 not close it; it made it more precisely stated. Only the M4 PHREEQC oracle can
 close it.
+
+### Round 2 (2026-09-11) — science semantics and consistency
+
+Owner review round 2 found that round 1 fixed the *ideas* but not the *document
+consistency*, and introduced one real scientific defect.
+
+| Finding | What was wrong | Where fixed |
+|---|---|---|
+| **P1-1** | `−lg c(H⁺)` was computed as `−log₁₀(m_H)` — a **molality** wearing a concentration's label. Gave 0.9993 for 0.1000 mol/L HCl, and the spec carried both 0.9993 and 1.0000 | Spike rev 3: `present()` derives `c(H⁺)` from amounts and solution volume, structurally separate from `m(H⁺)`. Correct value **1.0000**. §Three hydrogen-ion quantities |
+| **P1-2** | `−log₁₀ a(H⁺)` called the "thermodynamic pH", implying the textbook value is simply wrong | Renamed **activity-based model pH** throughout, with the IUPAC *notional definition* caveat and the activity model named. §Terminology |
+| **P1-3** | `I_m ≤ 0.5` (Davies's approximate range) and "±0.02 pH" were presented as one guarantee | Split into **computational domain** (0.5) and **validated accuracy envelope** (0.12), with `accuracyStatus` outside the envelope. §Computational domain vs validated accuracy envelope |
+| **P1-4** | Round 1's own instruction was to sweep stale statements; it did not. PLAN still carried "one millilitre" geometry, `Ka_in/[H⁺]`, a duplicate M4 stop condition, and `REF-1..REF-8` | Full repository sweep; every instance corrected. PLAN M4/M5/M6, `ADR-0003`, `ADR-0006` |
+| **P2-1** | Quantity types were split by "is arithmetic allowed", which is wrong — activity, `γ`, mole fraction, and ionic strength all need arithmetic | Re-split by **which operations have defined meaning**, as a controlled quantity algebra with named operations. `ADR-0004` §2, ontology |
+| **P2-2** | `ADR-0008` Tier C promised "previously recorded derived values" that may not exist, since derived science is never persisted | Tier C now guarantees the event log, canonical state, structure, provenance, and explicit exports — **not** an old curve. `ADR-0008` |
+
+**Round 2 did not touch the architecture.** Event sourcing, the solver adapter
+boundary, local-first persistence, the renderer layering, and the ACE
+abstractions were accepted by the owner and are unchanged.

@@ -76,7 +76,9 @@ table keyed on pH:
 1. The indicator is modelled as a weak acid with its own `Ka_in`, taken from
    literature with provenance (`SPEC-0001` carries the values and sources).
 2. The observable model computes the protonation ratio
-   `[In⁻]/[HIn] = Ka_in / [H⁺]` — **a ratio, not a log** (see `ADR-0007`).
+   `m(In⁻)/m(HIn) = Ka_in · γ_HIn / (a_H · γ_In)` — activity-coupled, and a
+   **ratio, not a log**. Note it depends on the hydrogen-ion *activity*
+   (`docs/science/quantity-ontology.md`), not on its molality or molarity.
 3. That ratio maps to a colour through a declared mixing model whose endpoints
    are measured/standard colours, with an explicitly stated transition range.
 

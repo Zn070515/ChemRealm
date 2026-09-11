@@ -1,48 +1,85 @@
-# SPIKE — self-consistent activity-based acid/base equilibrium
+# SPIKE — self-consistent activity equilibrium
 
-> **Status: spike complete. Not a production path.**
-> **Supersedes `spikes/solver-validation` for the scientific formulation.**
+> **Status: spike complete (revision 3). Not a production path.**
+> Supersedes revision 2 of this file and `spikes/solver-validation`.
 
-## Question
+## Revision history
 
-`SPEC-0001` claimed an activity-based mass-action model, then solved a
-**concentration-only** residual and applied the Davies equation afterwards as a
-display correction. Is the model actually what it says it is? And does making it
-self-consistent change the answers?
+| Rev | Change |
+|---|---|
+| 1 | `spikes/solver-validation` — concentration-only solve, activity applied post-hoc. **Superseded.** |
+| 2 | Activity moved *inside* the equilibrium; molality basis; `(m_H, I)` coupled. |
+| 3 | **Round-2 fixes.** `−lg c(H⁺)` was being computed from a molality (P1-1); "thermodynamic pH" renamed to activity-based model pH (P1-2); computational domain separated from validated accuracy envelope (P1-3). |
+
+## P1-1 — the defect this revision fixes
+
+Revision 2 returned
+
+```python
+"p_cH": -math.log10(m_h)          # "taught quantity: -lg c(H+)"
+```
+
+`m_h` is a **molality** (mol/kg water). It was printed and documented as
+`−lg c(H⁺)`, a quantity defined on **molarity** (mol/L solution). For 0.1000 mol/L
+HCl that produced **0.9993**. The correct value is **1.0000**, because the
+solution is *defined* as 0.1000 mol/L and HCl is fully dissociated. The spec then
+carried both 0.9993 (in the prose) and 1.0000 (in the reference table).
+
+**The fix is structural, not a corrected constant.** The scientific core is now
+molality-only and returns no pH-like number at all. Molarity and both pH-like
+quantities are produced in a `present()` step from the converged molality state
+plus the mixture's conserved amounts and volume:
+
+```
+m(H⁺) = 0.100165 mol/kg water     ← solver output
+c(H⁺) = n(H⁺) / V_solution        ← 0.100000 mol/L
+a(H⁺) = γ_H · m(H⁺)/m°            ← 0.078279
+−lg c(H⁺) = 1.0000                ← taught quantity
+model pH  = 1.1064                ← −log₁₀ a(H⁺)
+```
+
+`c(H⁺)/m(H⁺) = 0.998354`. There is no code path that derives one from the other.
+
+## P1-2 — terminology
+
+The activity-based quantity is called **activity-based model pH**, not
+"thermodynamic pH". IUPAC defines pH as `−lg a(H⁺)`, but the same definition is
+**notional**: the activity of a single ion is not independently measurable, and
+realising it operationally requires an extrathermodynamic convention
+(Bates–Guggenheim for primary standards; Davies here). Presenting one number as
+"the true pH" is the same category of error as ignoring activity altogether.
+
+## P1-3 — computational domain ≠ validated accuracy envelope
+
+| | Value | Meaning |
+|---|---|---|
+| Computational domain | `I_m ≤ 0.5 mol/kg` | Davies's approximate range. Outside: `MODEL_OUT_OF_DOMAIN`. |
+| **Validated accuracy envelope** | `I_m ≤ 0.12 mol/kg` | ±0.02 pH is claimed and evidenced **here only**. |
+
+`I ≤ 0.5` is a rule of thumb about where Davies is roughly usable, not an error
+bound. ±0.02 pH has been demonstrated at two IUPAC anchors (`I = 0.01` and
+`I = 0.10`); extrapolating it to 0.5 would be an unsupported claim. Between the
+envelope and the domain limit the solver computes and the result carries
+`accuracyStatus: "outside-validated-envelope"`.
 
 ## Method
 
-Activity coefficients participate **inside** the equilibrium constraints. The
-unknowns are `(m_H, I)` and they are solved simultaneously by nested bisection:
+The scientific core solves for `(m_H, I)` simultaneously. Given a trial `m_H`,
+the ionic strength is found by a damped fixed point; the outer residual is then
+bisected. Substituting the conditional constants
+`Kw_c = Kw/(γ_H γ_OH)`, `Ka_c = Ka·γ_HA/(γ_H γ_A)` into the charge balance gives
 
 ```
-charge balance   m_Na + m_H = m_OH + m_A + m_Cl
-mass balance     m_HA,tot  = m_HA + m_A
-Ka               Ka  = a_H a_A / a_HA  = g_H m_H g_A m_A / (g_HA m_HA)
-Kw               Kw  = a_H a_OH        = g_H m_H g_OH m_OH
-ionic strength   I   = 0.5 * sum(m_i z_i^2)
-Davies           log10 g_i = -A z_i^2 ( sqrt(I)/(1+sqrt(I)) - b I )
+m_Na + m_H − Kw_c/m_H − m_A,tot·Ka_c/(Ka_c + m_H) = 0
 ```
 
-**Scale: molality (mol/kg water)** — the basis on which thermodynamic `Ka` and
-`Kw` are defined, and the basis PHREEQC uses internally. Activities are
-dimensionless: `a_i = g_i * (m_i / m°)` with `m° = 1 mol/kg`.
+The scalar form is convenient; the point is that `Kw_c` and `Ka_c` depend on `I`,
+which depends on the speciation, which depends on them. Treating them as
+constants — what revision 1 did — solves a different, inconsistent model.
 
-The formulation is **not** a rejection of the earlier one. Substituting the
-conditional constants `Kw_c = Kw/(g_H g_OH)` and `Ka_c = Ka·g_HA/(g_H g_A)` into
-the charge balance recovers exactly the scalar form used before:
-
-```
-m_Na + m_H - Kw_c/m_H - m_A,tot * Ka_c/(Ka_c + m_H) = 0
-```
-
-The scalar structure was right. **What was wrong is that `Kw_c` and `Ka_c`
-depend on `I`, which depends on the speciation, which depends on them.** The
-earlier spike treated them as constants. This one closes the loop.
-
-`sqrt` is used here. In Python it is correctly rounded. In JavaScript it is
-also correctly rounded as of the July 2024 spec change — see
-`spikes/numeric-policy`.
+Mixing is on conserved quantities (water mass, amounts). Volume is additive,
+which is a labelled **presentation** approximation: it affects the reported
+molarity and never the thermodynamics.
 
 ## Results
 
@@ -52,83 +89,48 @@ Run: `py -3.12 solve.py`. Python 3.12.0, **18/18 checks pass**.
 |---|---|---|---|---|
 | Acetate buffer 0.1 mol/kg vs IUPAC | 4.6379 | 4.6440 | −0.0061 | ±0.02 |
 | Acetate buffer 0.01 mol/kg vs IUPAC | 4.7018 | 4.7130 | −0.0112 | ±0.02 |
-| Half-equivalence analytic identity | 4.6598 | 4.6593 | +0.0005 | ±0.005 |
-| Strong acid/base, acid excess (3 cases) | — | analytic | <1e-9 | ±1e-9 |
-| Strong acid/base, base excess (2 cases) | — | analytic | <1e-9 | ±1e-9 |
-| `−lg c(H⁺)` for 0.1 M HCl | 0.9993 | 1.0000 | −0.0007 | ±0.01 |
-| Thermodynamic pH for 0.1 M HCl | 1.1064 | 1.1061 | +0.0003 | ±0.02 |
-| 1e-8 mol/kg HCl | 6.9783 | 6.978 | +0.0003 | ±0.02 |
-| Molality vs molarity, worst over domain | 0.00077 pH | — | — | <0.005 |
+| **`−lg c(H⁺)` for 0.1000 mol/L HCl** | **1.0000** | 1.0000 | 0.0000 | ±0.0005 |
+| Activity-based model pH, same solution | 1.1064 | 1.1061 | +0.0003 | ±0.02 |
+| Strong acid/base excess regimes (5 cases) | — | analytic relation | <1e-9 | ±1e-9 |
+| Half-equivalence vs `pKa + log₁₀ γ_A` | 4.6717 | 4.6711 | +0.0007 | ±0.005 |
+| 1e-8 mol/kg HCl | 6.9782 | 6.978 | +0.0002 | ±0.02 |
+| `−lg c(H⁺)` vs input concentration, 5 concentrations | worst 0.00000 | exact | — | <1e-4 |
+| Molality/molarity model-pH sensitivity, envelope | worst 0.00096 | — | — | <0.002 |
 | Charge conservation | 1.39e-17 mol/kg | 0 | — | <1e-14 |
 | Element (A-group) conservation | 0.00e+00 mol/kg | 0 | — | <1e-15 |
-| Outer residual monotone (sampled) | 0/7 non-monotone | — | — | 0 |
-| 0.6 mol/kg HCl refused | `MODEL_OUT_OF_DOMAIN` | — | — | — |
+| Outer residual monotone (sampled) | 0/6 non-monotone | — | — | 0 |
+| 0.60 mol/L refused | `MODEL_OUT_OF_DOMAIN` | — | — | — |
+| v0 scenario max `I_m` | 0.1002 mol/kg | ≤ 0.12 envelope | — | — |
 
-## Findings
+## Findings carried into `SPEC-0001`
 
-**F1 — Self-consistency barely changes the buffer answer, and that is the point.**
-0.1 M acetate gives 4.6379 self-consistently and 4.6379 with the old post-hoc
-correction. The earlier spike was *numerically lucky* here, not correct. For the
-buffer the old method was right by accident; for other cases it is not, and it
-had no way to know the difference. Correctness now comes from the formulation
-rather than from the case being forgiving.
+**F1 — The taught quantity is exact for a fully dissociated strong acid.** For
+any nominal `c` mol/L HCl, `−lg c(H⁺) = −lg c` to 5 decimal places. This is now a
+test across five concentrations, and it is what makes REF-5 a genuine check:
+a molality-derived value fails it immediately.
 
-**F2 — The thermodynamic pH of 0.1 M HCl is 1.106, not 1.000.** This is the most
-consequential finding for the product. Charge balance forces `m_H = m_Cl` for a
-pure strong acid, so the activity coefficient shifts pH by exactly
-`−log10(g_H) = +0.107` at I = 0.10. The familiar "pH = 1" is `−lg c(H⁺)`, a
-statement about **concentration**, not about pH. `GOAL.md` §5.1 permits a
-teaching view to prefer the school heuristic — but only if it is labelled and the
-underlying scientific state is not falsified. `SPEC-0001` now carries **two
-distinct quantities**: `−lg c(H⁺)` for the taught view and `pH = −log10 a(H⁺)`
-for the scientific view. They must never be silently identified.
+**F2 — The two pH-like numbers differ by 0.107 at 0.1 M, from `γ_H` alone.**
 
-**F3 — The `pH = pKa` half-equivalence identity is wrong under activity.** The
-correct form is `pH = pKa + log10(g_A)`, which at I = 0.05 gives
-`4.7447 − 0.0853 = 4.6594`, matching the solver to 0.0005. This is a genuine
-correction to the earlier spike, which tested the activity-free identity.
+**F3 — `pH = pKa` at half-equivalence is wrong under activity.** The correct form
+is `pH = pKa + log₁₀ γ_A`; it matches to 0.0007.
 
-**F4 — Activity enters through whichever ion carries the excess.** Two checks in
-this spike initially failed because the analytic reference used `g_H` in the
-base-excess regime. The correct relation there is `pH = 14 + log10(m_OH) + log10(g_OH)`.
-Measured at f = 1.1: solver 11.5910 vs the corrected analytic 11.5910; the
-`g_H`-form gave 11.7646, wrong by 0.17 pH. Recorded because it is exactly the
+**F4 — Activity enters base-excess regimes through `γ_OH`, not `γ_H`.** Two
+checks initially failed because the analytic reference used the wrong ion. The
+solver was right; the reference was wrong. Recorded because it is exactly the
 kind of sign error that would otherwise ship as a "reference value".
 
-**F5 — The molality/molarity distinction is real but below our tolerance.**
-Measured over the supported domain, the worst difference is **0.00077 pH**,
-against a stated tolerance of ±0.02. So v0 can hold thermodynamics in molality
-(the correct basis) while the taught view speaks in mol/L, and the discrepancy is
-two orders of magnitude inside the noise. This is measured, not assumed.
+**F5 — Molality/molarity sensitivity is 0.00096 pH across the envelope.** Small
+enough that the two scales coexist without a learner noticing; **not** a licence
+to merge them, since the margin is a property of these concentrations.
 
-**F6 — `g_HA = 1` is not the dominant residual.** A Setchenow salting term would
-contribute roughly `+0.02` to `log10(g_HA)` at I = 0.1, moving the buffer result
-from 4.6379 to 4.6579. Both lie inside the ±0.02 band around 4.644. The residual
-is therefore dominated by Davies-vs-Bates–Guggenheim, not by neglecting the
-neutral-species term. The approximation is recorded and bounded rather than
-quietly dropped.
+**F6 — `γ_HA = 1` is not the dominant residual.** A Setchenow term of
+`+0.02 log₁₀` moves the buffer result from 4.6379 to 4.6579 — both inside ±0.02.
 
-**F7 — The outer residual is monotone on every case tested.** Bisection needs
-only a sign change, but a second root would silently return the wrong one. The
-bracket was sampled across seven regimes and found strictly increasing in all of
-them. This is **numerically verified, not analytically proven**, and is stated as
-such.
+**F7 — The outer residual is monotone on all six sampled regimes.**
+**Numerically verified, not analytically proven.**
 
-## Numerical structure (carried into M4)
-
-- Bracketing uses the ideal (γ = 1) root and expands by factors of 3, 10, 100,
-  1000. A wide fixed bracket does not work: far from the root, `m_OH = Kw_c/m_H`
-  becomes enormous and the implied `I` leaves the Davies domain, so the residual
-  cannot be evaluated at all. Activity shifts `m_H` by only a small factor, so the
-  narrow bracket always contains the root.
-- At bracket endpoints only the **sign** matters, and the sign is dominated by the
-  leading `±(m_H − m_Cl − m_A)` or `±m_OH` term, so a slightly out-of-domain γ
-  there cannot flip it.
-- The inner ionic-strength loop is a damped fixed point. It is a contraction with
-  a small slope in this domain.
-- **M4 improvement to make:** replace fixed-point with a bracketed inner solve so
-  convergence is guaranteed rather than observed, and use a two-part (Cody–Waite)
-  argument reduction in the deterministic `exp10`.
+**F8 — The v0 scenarios reach `I_m = 0.1002 mol/kg`**, inside the 0.12 envelope
+with margin. The envelope is measured against the scenarios, not guessed.
 
 ## Reproduce
 
@@ -138,3 +140,13 @@ py -3.12 solve.py
 ```
 
 Expected: `RESULT: 18/18 checks`.
+
+## Known limitations
+
+- The **weak-acid equivalence region** still has no independent reference. Only
+  the M4 PHREEQC oracle closes this.
+- The inner ionic-strength solve is a **damped fixed point**, not a bracketed
+  solve. M4 replaces it so convergence is guaranteed rather than observed.
+- Density values (1.0020 kg/L for 0.1 M HCl, 1.0040 for NaOH) are **provisional
+  scenario inputs**; they must be pinned to a citable source at M4.
+- Volume additivity is an unmeasured display approximation.

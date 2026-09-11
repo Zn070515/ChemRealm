@@ -40,7 +40,7 @@ Additionally, the owner must resolve before their milestones:
 |---|---|
 | M4 | `SPEC-0001` open question 1 — which acetic acid `Ka` is authoritative (enters replay identity) |
 | M4 | `SPEC-0001` open question 6 — TypeScript vs WASM for `detLog10`/`detExp10` |
-| M5 | `SPEC-0001` open question 5 — how the product presents thermodynamic pH vs the taught `−lg c(H⁺)` |
+| ~~M5~~ | ~~open question 5~~ — **DECIDED** by owner 2026-09-11: default shows `−lg c(H⁺)` labelled simply as pH; a `科学模型` affordance shows activity-based model pH with the convention caveat |
 | M8 | `ADR-0008`'s five open decisions, especially the solver version support window |
 
 ## Milestone map
@@ -373,7 +373,7 @@ without a caller ever holding a bare number lacking provenance.
 ## M4 — Acid-base reference engine and oracle validation
 
 **Target stage:** S3
-**Addresses:** ADR-0003, ADR-0007; `SPEC-0001` AC-S1..AC-S7
+**Addresses:** ADR-0003, ADR-0007; `SPEC-0001` AC-S1..AC-S11
 
 The scientific heart of the slice. Also the milestone that closes the
 equivalence-region gap the spike could not.
@@ -392,7 +392,7 @@ packages/sci/src/acidbase/activity.ts     Davies; sqrt permitted, log is NOT
 packages/sci/src/acidbase/species.ts      species inventory and mass balance
 packages/sci/src/acidbase/indicator.ts    ratio-based indicator model (empirical category)
 packages/sci/src/acidbase/index.ts        the adapter implementation
-packages/sci/test/reference/*.json        REF-1..REF-8 as data, not as literals in test code
+packages/sci/test/reference/*.json        REF-1..REF-10 as data, not as literals in test code
 tools/oracle/pyproject.toml               add PHREEQC invocation
 tools/oracle/phreeqc/run_batch.py         generate .pqi, run PHREEQC CLI, parse output
 tools/oracle/phreeqc/cases/*.pqi.in
@@ -485,20 +485,12 @@ If PHREEQC cannot be installed and driven in CI:
 3. The equivalence-region gap stays open and is reported in the M10 evidence
    packet as a known limitation. It does not become "covered" by a weaker check.
 
-### Stop condition
-
-AC-S1 through AC-S7 evaluated. **If PHREEQC disagrees with the TypeScript solver
-by more than ±0.02 pH in the equivalence region, stop and investigate before
-proceeding.** A disagreement is a finding, not an inconvenience. Proceeding with
-an unexplained discrepancy means every downstream milestone is built on an
-unknown.
-
 ---
 
 ## M5 — Observable state
 
 **Target stage:** S3
-**Addresses:** ADR-0006, ADR-0007; `SPEC-0001` AC-V1..AC-V4, AC-V6
+**Addresses:** ADR-0006, ADR-0007; `SPEC-0001` AC-V1..AC-V4, AC-V6, AC-V8
 
 ### Purpose
 
@@ -529,15 +521,31 @@ packages/render/src/state/scene.ts            ObservableModel → RenderState
 
 1. `level.ts` consumes a vessel's published interior volume profile
    (`docs/visual/apparatus-standard.md` §1). Fixture vessels provide profiles.
-2. `color.ts` consumes `Ka_in / [H⁺]` — **one division, no logarithm**
-   (`SPEC-0001` §Indicator model). Colour mixing between declared acid-form and base-form
-   endpoints. No threshold branch.
+2. `color.ts` consumes the **activity-coupled** indicator ratio
+   `m(In⁻)/m(HIn) = Ka_in · γ_HIn / (a_H · γ_In)` with `γ_HIn = 1`
+   (`SPEC-0001` §Indicator model). Note it depends on the hydrogen-ion
+   **activity**, not its molality or molarity. Colour mixing between declared
+   acid-form and base-form endpoints. No threshold branch.
 3. `burette.ts` derives `reading = initialVolume − Σ delivered`. Add the
    invariant test that it always equals that expression (failure mode 14).
 4. `curve.ts` takes the **state sequence**, not one state.
 5. `format.ts` enforces 2 decimal places for pH from the ±0.02 tolerance, and
    2 dp for burette volume from the instrument resolution. **This is where the
    `GOAL.md` §5.2 fake-precision rule is enforced**, so it needs a test.
+5a. **Presentation convention (AC-V8).** Owner-decided 2026-09-11: the default
+   view shows the taught quantity `−lg c(H⁺)` and **calls it pH**, because that
+   is what the syllabus means by pH. A `科学模型` / "scientific model" affordance
+   expands to show **activity-based model pH** (`−log₁₀ a(H⁺)`) with the note
+   that high-school treatment uses the concentration approximation and that
+   single-ion activity depends on a convention.
+
+   Implement it as a **policy object**, the same discipline `ADR-0009` applies
+   to ACE, so the default can be changed without touching anything outside the
+   presentation layer. Non-negotiable in every configuration: both quantities
+   present in every state; every displayed number labelled with which quantity
+   it is; one convention per view, never mixed; no unlabelled "pH" anywhere.
+   **The two must never be derived from each other** — `−lg c(H⁺)` comes from a
+   genuine `c(H⁺)`, not from `−log₁₀ m(H⁺)` (this was defect P1-1).
 6. `symbolic.ts` emits the equilibrium expressions **actually used**, with the
    neglected terms named. It may also emit the Henderson–Hasselbalch form
    **flagged `label: "shortcut"`** alongside the exact solve (SPEC open question 4).
@@ -594,10 +602,12 @@ is expected and is why M6 exists as a gate.
 ### Implementation
 
 1. Author assets against `docs/visual/apparatus-standard.md`. Orthographic, one
-   world unit = one millilitre of liquid volume. Self-host everything; any font
-   or texture is a bundled asset, never a runtime fetch (AC-P5).
-2. **Every volumetric asset publishes an interior volume profile.** Assets
-   without one are marked `non_volumetric` and accept approximate liquid level.
+   coordinates in **millimetres (a length)**. Self-host everything; any font or
+   texture is a bundled asset, never a runtime fetch (AC-P5).
+2. **Every volumetric asset publishes `V(h)` and its inverse `h(V)`.** Assets
+   without a profile are marked `non_volumetric` and accept approximate liquid
+   level. `ObservableModel` obtains the level by calling `h(V)` — never by
+   scaling a volume into a geometry axis.
 3. Renderer consumes `RenderState` only. Verify by inspection that no chemistry
    value (a `Ka`, a `pH` used as logic) crosses the boundary.
 4. Capture at `desktop-primary`, `desktop-compact`, `tablet`, `narrow`.

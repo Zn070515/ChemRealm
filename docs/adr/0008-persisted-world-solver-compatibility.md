@@ -52,7 +52,7 @@ the user which tier applies.
 |---|---|---|
 | **A — Exact replay** | The creating solver version is available | Full replay. `replayHash` must match. The world is exactly as it was. |
 | **B — Re-solve** | Solver unavailable, but the model is supported | Re-derive the science with the current solver. Produce a **new derived state**, explicitly marked `re-solved`, keeping **both** provenance records. Never overwrites the original. |
-| **C — Archive** | Neither possible | Open read-only: event log, structure, and any previously recorded derived values are viewable. No new simulation. The UI states why. |
+| **C — Archive** | Neither possible | Open read-only. **What is guaranteed viewable: the event log, the canonical state, the world structure, both provenance records, and anything the user explicitly exported or explicitly cached.** What is *not* guaranteed: a previously rendered pH curve or species view, because derived science is never persisted as truth (`ADR-0007` §3). No new simulation. The UI states why. |
 
 Rules that apply across all three:
 
