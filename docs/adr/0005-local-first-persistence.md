@@ -1,0 +1,182 @@
+# ADR-0005: Local-first persistence and export
+
+- **Status:** Proposed
+- **Date:** 2026-09-11
+- **Deciders:** Project owner
+- **Related:** `GOAL.md` §5.5, §9, §10; `CLAUDE.md` §12; `AGENTS.md` §13; `SPEC-0001`
+- **Blocks:** `PLAN-0001` M8
+
+## Context
+
+`GOAL.md` §5.5 and §9 set the policy: no accounts, no mandatory registration, no
+cloud-required progress, no public user uploads, learner state local by default,
+and export/import for learning state. `GOAL.md` §10 sets the deployment target:
+a free, non-commercial, ICP-filed site accessible in mainland China.
+
+The owner chose a hybrid scientific architecture on 2026-09-11: TypeScript
+solves in the browser, Python is test-time only. That choice has a persistence
+consequence worth stating plainly — **there is no server component in v0, so
+there is no server write path, and therefore no place for learner data to leak
+to by accident.** This ADR is about keeping that property as the codebase grows,
+not about achieving it.
+
+The risk is drift. A future feature adds a "sync progress" call, or a crash
+reporter, or an analytics ping. `AGENTS.md` §13 is explicit that telemetry is
+not free and that changing these assumptions requires spec-level owner approval.
+
+## Decision
+
+**IndexedDB is the only persistence layer. It is the only place learner or world
+data is written. There is no server write path in v0. Sharing happens only
+through explicit user-initiated export.**
+
+### Storage layout (indicative; `SPEC-0001` owns the schema)
+
+| Object store | Contents | Keyed by |
+|---|---|---|
+| `worlds` | World metadata, lineage, branch tree, current schema version | `worldId` |
+| `events` | Append-only domain event log | `[worldId, sequence]` |
+| `snapshots` | Periodic and fork-point state caches (`ADR-0002`) | `[worldId, sequence]` |
+| `learnerEvidence` | ACE evidence events, local only | `evidenceId` |
+| `aceState` | ACE model state, uncertainty included | `learnerId` (local only) |
+| `contentCache` | Parsed scenario/content definitions | `contentId@version` |
+
+Nothing in this table is transmitted.
+
+### Data classification
+
+Every feature must fill this in, and `SPEC-0001` carries the filled version:
+
+| Class | Definition |
+|---|---|
+| **Browser-local** | Written to IndexedDB, never leaves the device without an explicit user action. |
+| **Server-request** | Sent to a server. Must be enumerated individually, with a justification each. |
+| **Explicitly exportable** | Local data the user can choose to download as a file. |
+| **Never collected** | Data the system must not generate or retain at all. |
+
+For v0, **Server-request is empty except for static asset fetches.** That is a
+testable claim, verified by network inspection (`SPEC-0001` AC-P2), not an
+intention.
+
+### Export format
+
+Export produces a single self-describing, versioned bundle:
+
+```json
+{
+  "format": "chemrealm.export",
+  "formatVersion": 1,
+  "schemaVersion": "…",
+  "solverConfig": { "id": "acidbase-exact", "version": "…", "parameters": { } },
+  "world": { },
+  "events": [ ],
+  "learnerEvidence": [ ],
+  "createdAt": "…"
+}
+```
+
+Requirements:
+
+- **Self-describing.** Schema version and solver configuration travel with the
+  data, so a bundle is interpretable without the code that produced it.
+- **Complete or explicitly partial.** A bundle that omits learner evidence says
+  so in a field, rather than being silently narrower than the user expects.
+- **No identifiers.** No device id, no install id, no fingerprint. A bundle is
+  not attributable to a person by construction.
+- **Export is the only sharing path.** There is no upload endpoint to design,
+  secure, or file a privacy notice for.
+
+### Never collected
+
+Not generated, not stored, not derivable from stored data:
+
+- names, emails, phone numbers, school, class, student id;
+- precise geolocation, IP-derived identity, device fingerprints;
+- cross-session advertising or behavioural identifiers;
+- a server-side learner profile of any kind.
+
+### Schema versioning and migration
+
+- Every persisted record carries `schemaVersion`.
+- Migrations are explicit, versioned, and tested forward. `SPEC-0001` requires a
+  migration test for every version bump.
+- **Migration failure must be loud.** A world that cannot be migrated is
+  reported to the user and left untouched — never partially upgraded, never
+  silently reset to a default. Silent reset destroys the user's work and is a
+  P0-class defect.
+- Downgrade (older app opening newer data) must be detected and refused with a
+  clear message, not attempted.
+
+### Storage quota
+
+IndexedDB has no guaranteed quota. The runtime must:
+
+- estimate usage and warn before a write likely to fail;
+- degrade gracefully — a full store must not corrupt an existing world;
+- offer export as the escape hatch, since export is the only durable backup.
+
+## Alternatives considered
+
+**Server-side persistence with a database.** Rejected for v0. It contradicts
+`GOAL.md` §5.5 and §9, adds hosting cost and an ICP-visible data surface for a
+non-commercial project, and creates learner data that must then be protected,
+retained, and deleted on request. The owner's hybrid architecture removes the
+server anyway.
+
+**`localStorage` + periodic JSON blob.** Rejected. Synchronous, ~5 MB, blocks the
+main thread, and a single blob has no partial-write safety. A corrupt write loses
+everything.
+
+**Origin Private File System (OPFS).** Not rejected — deferred. Better for large
+binary assets (future molecular viewers, textures). IndexedDB is a fine
+structured-record store and is universally available. Revisit when binary
+payloads actually arrive.
+
+**Encrypt local data at rest with a user passphrase.** Rejected for v0 as
+security theatre in the current threat model: the threat is a shared classroom
+computer, and there is no account system to derive a key from without adding
+identity — which `GOAL.md` §9 forbids. Revisit if the product ever adds
+genuinely sensitive learner data. Recorded because "we didn't think about
+encryption" and "we considered it and it does not fit the threat model" are
+different statements.
+
+**Opt-in cloud sync.** Rejected — it is explicitly a non-goal for early
+development (`GOAL.md` §18), and any such feature changes the privacy posture and
+requires an owner-level amendment to `GOAL.md` §20.
+
+## Consequences
+
+### Positive
+- The privacy claim in `GOAL.md` §5.5 is enforced by architecture, not by policy
+  discipline. There is no server to misconfigure.
+- No account system means no authentication surface, no credential storage, no
+  breach exposure, and no minor-consent problem.
+- The deployment surface for mainland China is static files: no database, no
+  server-side personal information processing, no backend cost.
+
+### Negative
+- Clearing browser data destroys everything unless exported. Mitigated by an
+  export prompt at meaningful milestones, not by a nagging reminder.
+- No cross-device continuity. Accepted as a consequence of the no-account policy.
+- Quota is not guaranteed and must be handled rather than assumed.
+- IndexedDB's API is verbose; a thin typed wrapper is needed and must be tested.
+
+### Neutral
+- Export becomes the product's de facto data-portability story, which is a good
+  position for an educational tool with no commercial interest in lock-in.
+
+## Reversibility
+
+**Asymmetric, and that is the point.** Adding a server later is easy. Walking
+back a decision to *collect* data is not — the data exists, the obligation
+exists, and the privacy claim is broken. So the default is local, permanently,
+and any change requires an owner amendment per `GOAL.md` §20.
+
+## Open questions
+
+1. Should the export bundle be plain JSON (readable, diffable, larger) or a zip
+   containing JSON plus future binary assets? **Leaning: plain JSON at v0**, with
+   `formatVersion` allowing a future zip without breaking readers.
+2. Should learner evidence live in the same IndexedDB database as worlds, or a
+   separate one? Separate databases make "delete my learner data, keep my worlds"
+   a clean operation. **Leaning: separate**, decided at M8.

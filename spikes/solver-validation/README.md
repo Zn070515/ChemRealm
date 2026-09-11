@@ -1,0 +1,138 @@
+# SPIKE — acid-base solver vs authoritative references
+
+> **Status: spike complete. Not a production path.**
+> This directory exists to answer one question with evidence. It is not imported
+> by any application code, has no package manifest, and is excluded from stage
+> acceptance. `PLAN-0001` M0 records the decision to keep, quarantine, or delete it.
+
+## Question
+
+`SPEC-0001` claims that a hand-written exact equilibrium solver is a defensible
+Scientific Reality Core for acid/base titration, and that PHREEQC-scale software
+is not required for this bounded domain. Is that claim true, or is it hand-waving?
+
+Secondarily: what tolerance can we honestly promise against authoritative
+reference values?
+
+## Method
+
+`solve.py` solves the exact charge balance for a monoprotic acid plus strong base
+in pure water at 25 °C. Standard library only; no dependencies.
+
+For a monoprotic acid HA of analytical concentration `C_A` titrated with a strong
+base giving `C_B` sodium:
+
+```
+charge balance:   C_B + [H+] = [OH-] + [A-]
+mass balance:     C_A = [HA] + [A-]
+acid dissociation: Ka = [H+][A-] / [HA]
+water:            Kw = [H+][OH-]
+```
+
+Substituting the mass balance and Ka into the charge balance gives a single
+equation in `[H+]`:
+
+```
+f([H+]) = C_B + [H+] - Kw/[H+] - C_A*Ka/(Ka + [H+]) = 0
+```
+
+`f` is strictly increasing in `[H+]` (its derivative is `1 + Kw/[H+]^2 + C_A*Ka/(Ka+[H+])^2 > 0`),
+so the root is unique and a simple bracket guarantees convergence. The spike uses
+bisection, which needs only `+ - * /` and comparison — no transcendental
+functions. That matters for the determinism argument in `ADR-0007`.
+
+**References are derived by independent routes** (closed form, published IUPAC
+standards), never by re-running the method under test.
+
+## Results
+
+Run: `py -3.12 solve.py` from this directory. Python 3.12.0, 12/12 checks pass.
+
+| Check | Computed | Reference | Δ | Tol |
+|---|---|---|---|---|
+| Acetate buffer 0.1 M, activity-corrected | 4.6379 | 4.6440 | −0.0061 | ±0.02 |
+| Acetate buffer 0.01 M, activity-corrected | 4.7015 | 4.7130 | −0.0115 | ±0.02 |
+| Half-equivalence vs pKa | 4.7452 | 4.7447 | +0.0005 | ±0.01 |
+| Equivalence 0.1 M HOAc vs textbook closed form | 8.7219 | 8.7218 | +0.0001 | ±0.03 |
+| HCl/NaOH 0.0 eq vs closed form | 1.0000 | 1.0000 | −0.0000 | ±0.005 |
+| HCl/NaOH 0.5 eq vs closed form | 1.4771 | 1.4771 | −0.0000 | ±0.005 |
+| HCl/NaOH 0.9 eq vs closed form | 2.2788 | 2.2788 | −0.0000 | ±0.005 |
+| HCl/NaOH 1.0 eq (full balance) | 7.0000 | 7.0000 | +0.0000 | ±0.0005 |
+| HCl/NaOH 1.1 eq vs closed form | 11.6778 | 11.6778 | +0.0000 | ±0.005 |
+| HCl/NaOH 1.5 eq vs closed form | 12.3010 | 12.3010 | +0.0000 | ±0.005 |
+| 1e-8 M HCl, water included | 6.9783 | 6.9788 | −0.0005 | ±0.002 |
+| Charge conservation over sweep | max 6.9e-18 mol/L | 0 | — | <1e-15 |
+
+## Findings
+
+**F1 — The claim holds, with a stated accuracy.** The exact solve reproduces
+strong-acid/strong-base reference values to better than 0.0001 pH against an
+independently derived closed form, and reproduces IUPAC-traceable acetate buffer
+standards to within 0.012 pH. The residual in the buffer case is entirely the
+activity model (Davies), not the root-find. A `±0.02` pH model tolerance is
+defensible; `±0.003` would not be, because that figure is the *uncertainty of the
+standard itself*, not our accuracy against it.
+
+**F2 — An activity model is mandatory, not optional.** Concentration-only
+chemistry gives pH 4.7449 for the 0.1 M acetate buffer; the accepted value is
+4.644. The ~0.10 pH gap is the ion activity coefficient. Any spec that claims
+agreement with reference buffer values must include an activity model. The
+Davies equation closes most of the gap; the Bates–Guggenheim convention with
+ion-specific size parameters closes more.
+
+**F3 — The half-equivalence identity `pH = pKa` is approximate.** Measured
+divergence is +0.0005 pH at 0.1 M, from dilution asymmetry and `Kw`. It is an
+asymptotic identity. `SPEC-0001` must not assert it as exact.
+
+**F4 — Water autoionization cannot be dropped.** For 1e-8 M HCl, the naive
+`−log10(C)` returns 8.00, reporting an acid as basic. The exact solve returns
+6.978. This is a cheap, high-value adversarial reference case.
+
+**F5 — Henderson–Hasselbalch fails measurably inside the taught range.** At
+1e-6 M acetic acid, HH gives 5.37 and the exact solve gives 6.02 — a 0.65 pH
+error. This is exactly the "plausible but numerically wrong" failure mode
+`GOAL.md` §5.2 prohibits. A pedagogical view may *display* the HH shortcut; the
+scientific state must come from the exact solve.
+
+**F6 — The equivalence region has no closed form.** Every regime except the
+near-stoichiometric window has an independent closed-form check. At exact
+equivalence, only the full balance produces the answer. That is a coverage gap
+in the reference set, and it is precisely where students are taught the
+interesting chemistry — so it needs a second, independent oracle (PHREEQC) rather
+than another hand-derived formula.
+
+**F7 — The spike caught three errors in its own test harness.** The first run fed
+"1 L acid + 1 L base" as an acetate buffer; that is equivalence, and pH 8.72 was
+the *correct* answer to the wrong question. Several hand-computed reference values
+were also wrong (0.9 eq and 1.1 eq, both from omitting dilution volume). All were
+caught only because references were derived independently. This is the argument
+for `PLAN-0001` M4: reference values must never be generated by the code under
+test.
+
+**F8 — A secondary-source reference value was wrong, and the error is
+instructive.** The technology investigation quoted pH 8.87 for the equivalence
+point of 0.1 M acetic acid. The spike computes **8.7219**, and the textbook closed
+form `7 + ½(pKa + log C)` gives 8.7218 from the same inputs. The 8.87 figure comes
+from substituting `C = 0.1 M` into that formula; the correct analytical
+concentration at equivalence is **0.05 M**, because titrating 1 L of 0.1 M acid
+with 1 L of 0.1 M base doubles the volume. The dilution is the whole difference.
+
+Two consequences. First, 8.72 is the value `SPEC-0001` uses (REF-7). Second, and
+more importantly: this is a *secondary source* that looked authoritative and was
+off by 0.15 pH. It reinforces the rule that reference values must be traced to a
+primary source or re-derived, never copied from a summary.
+
+## Open item handed to SPEC-0001
+
+F6 means the `±0.02` tolerance is established for the buffer and strong-acid
+regimes but **not** for the equivalence-point region of a weak acid. `SPEC-0001`
+carries this as an explicit gap with PHREEQC named as the resolution path.
+
+## Reproduce
+
+```
+cd spikes/solver-validation
+py -3.12 solve.py
+```
+
+Expected: `RESULT: 12/12 checks within stated tolerance`.
