@@ -3,7 +3,33 @@
   "additionalProperties": false,
   "properties": {
     "unit": {
-      "minLength": 1,
+      "enum": [
+        "mol",
+        "mmol",
+        "kg",
+        "g",
+        "mg",
+        "L",
+        "mL",
+        "uL",
+        "mm",
+        "cm",
+        "m",
+        "mol/kg",
+        "mol/L",
+        "mmol/L",
+        "K",
+        "degC",
+        "kPa",
+        "Pa",
+        "atm",
+        "s",
+        "min",
+        "kg/mol",
+        "g/mol",
+        "kg/L",
+        "g/mL"
+      ],
       "type": "string"
     },
     "value": {

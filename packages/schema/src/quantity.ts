@@ -84,14 +84,18 @@ export const CANONICAL_UNIT: Record<Dimension, UnitSymbol> = {
 
 export const QuantitySchema = z.object({
   value: z.number().finite(),
-  // `.min(1)` is not enough: an empty string passes `z.string()` but is not a
-  // unit. The refinement below is what actually rejects an unknown symbol.
-  unit: z
-    .string()
-    .min(1)
-    .refine((u): u is UnitSymbol => (UNIT_SYMBOLS as string[]).includes(u), {
-      message: "unknown unit",
-    }),
+  /**
+   * `z.enum` of the registered symbols, NOT `.refine()`.
+   *
+   * The refinement version enforced the unit table at runtime but emitted
+   * `"unit": { "type": "string", "minLength": 1 }` — zod's JSON Schema emission
+   * does not encode refinements. The Python side validating against that
+   * artifact therefore accepted `{"value": 1, "unit": "furlong"}`, which the
+   * runtime rejects, so `ADR-0001` rule 1's "one source of truth" held only for
+   * the contracts that happened to use `enum`. An enum is the form that
+   * survives the language boundary.
+   */
+  unit: z.enum(UNIT_SYMBOLS as [UnitSymbol, ...UnitSymbol[]]),
 });
 
 export type Quantity = z.infer<typeof QuantitySchema>;
