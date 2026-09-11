@@ -1,18 +1,21 @@
 #!/usr/bin/env node
 /**
- * Prove that the architectural import rules actually bite.
+ * Prove that the architectural import rules actually bite — all of them.
  *
  * WHY THIS EXISTS
  * ---------------
  * `pnpm depcruise` passing on a clean tree proves only that nothing violates
- * the rules *today*. It does not prove the rules would catch a violation — and
- * at M0 most of them are inert, because only `packages/schema` and `apps/web`
- * exist. A rule nobody has ever seen fire is not evidence that the rule works;
- * it is evidence that nobody has tried it.
+ * the rules *today*. It does not prove the rules would catch a violation, and
+ * at M0 most of them are inert because only two packages exist.
  *
- * So this script constructs a violating tree in a scratch directory, runs the
- * real config against it, and asserts depcruise FAILS. Then it removes the
- * scratch tree and asserts depcruise PASSES on the real one.
+ * The first version of this guard sampled TWO edges by hand (`render -> sci`,
+ * `world -> ace`). That is what let `render -> ace` go missing from the rule
+ * set entirely: the rule did not exist, and the guard was not looking. Sampling
+ * representative cases from a matrix is not coverage of the matrix.
+ *
+ * So the guard now enumerates EVERY edge in tools/core-boundaries.cjs, builds a
+ * violating tree for each, and asserts depcruise rejects it BY NAME. Adding a
+ * core to that module automatically adds its fixtures here.
  *
  * This is M0's stop condition made executable: "a deliberately-introduced
  * forbidden import has been observed to fail the build."
@@ -21,45 +24,32 @@
  */
 
 import { execFileSync } from "node:child_process";
+import { createRequire } from "node:module";
 import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const CONFIG = ".dependency-cruiser.cjs";
-const SCRATCH = join(ROOT, ".tmp-depcruise-guard");
+// NOT dot-prefixed. depcruise SKIPS directories whose name starts with a dot,
+// so a `.tmp-…` scratch tree is scanned as "0 modules" and every fixture
+// silently reports "the rule did not bite" — a false negative that looks
+// exactly like a passing test.
+const SCRATCH_NAME = "tmp-depcruise-guard";
+const SCRATCH = join(ROOT, SCRATCH_NAME);
 
-/** Each case is a violating tree plus the rule name it must trigger. */
-const CASES = [
-  {
-    rule: "render-must-not-import-sci",
-    files: {
-      "packages/render/src/index.ts":
-        'import { SCHEMA_VERSION } from "../../sci/src/index.js";\n' +
-        "export const v = SCHEMA_VERSION;\n",
-      "packages/sci/src/index.ts": "export const SCHEMA_VERSION = 1;\n",
-    },
-  },
-  {
-    rule: "world-must-not-import-ace",
-    files: {
-      "packages/world/src/index.ts":
-        'import { hint } from "../../ace/src/index.js";\n' + "export const h = hint;\n",
-      "packages/ace/src/index.ts": "export const hint = 1;\n",
-    },
-  },
-];
+const require = createRequire(import.meta.url);
+const { CORES, SHARED, forbiddenCoreEdges } = require("./core-boundaries.cjs");
 
 /**
- * Invoke dependency-cruiser's own entry point through the Node binary that is
- * already running this script.
+ * Invoke dependency-cruiser's own entry point through the Node binary already
+ * running this script.
  *
  * NOT `npx`: on Windows `npx.cmd` resolves and spawns differently across npm
- * versions, and a failure there produces an empty output buffer — which this
- * guard would report as "the rule did not fire" when the truth is that
- * depcruise never ran. Silent emptiness read as a negative result is exactly
- * the failure mode this whole file exists to avoid, so the invocation is the
- * boring, direct one.
+ * versions, and a failure there yields an empty output buffer — which this
+ * guard would then report as "the rule did not fire" when the truth is that
+ * depcruise never ran. Silent emptiness read as a negative result is the exact
+ * failure mode this file exists to avoid.
  */
 const DEPCRUISE_BIN = join(
   ROOT,
@@ -69,8 +59,7 @@ const DEPCRUISE_BIN = join(
   "dependency-cruise.mjs",
 );
 
-/** `targets` is an ARRAY. Passing "packages apps" as one string makes
- *  depcruise look for a directory literally named "packages apps". */
+/** `targets` is an ARRAY. "packages apps" as one string names a nonexistent dir. */
 function depcruise(targets) {
   try {
     const out = execFileSync(
@@ -84,15 +73,6 @@ function depcruise(targets) {
   }
 }
 
-function fail(msg) {
-  console.error(`FAIL  ${msg}`);
-  process.exitCode = 1;
-}
-
-function pass(msg) {
-  console.log(`ok    ${msg}`);
-}
-
 function writeTree(files) {
   rmSync(SCRATCH, { recursive: true, force: true });
   for (const [rel, body] of Object.entries(files)) {
@@ -100,6 +80,26 @@ function writeTree(files) {
     mkdirSync(dirname(full), { recursive: true });
     writeFileSync(full, body, "utf8");
   }
+}
+
+/** A tree where `from` imports `to`. Both sides must exist, or the import does
+ *  not resolve and depcruise reports "unresolvable" instead of the rule. */
+function fixtureFor(from, to) {
+  return {
+    [`packages/${to}/src/index.ts`]: "export const MARKER = 1;\n",
+    [`packages/${from}/src/index.ts`]:
+      `import { MARKER } from "../../${to}/src/index.js";\n` +
+      "export const borrowed = MARKER;\n",
+  };
+}
+
+let failures = 0;
+function fail(msg) {
+  console.error(`FAIL  ${msg}`);
+  failures += 1;
+}
+function pass(msg) {
+  console.log(`ok    ${msg}`);
 }
 
 console.log("dependency-rule guard\n");
@@ -112,20 +112,80 @@ if (clean.ok) {
   fail(`clean tree FAILS depcruise — a real violation exists:\n${clean.out}`);
 }
 
-// 2. Each violating fixture must be caught, by the specific rule named.
-for (const { rule, files } of CASES) {
-  writeTree(files);
-  const res = depcruise([".tmp-depcruise-guard"]);
+// 2. Every forbidden core edge must be caught, by the rule named after it.
+console.log(`\n  core-boundary matrix: ${CORES.length} cores, ` +
+  `${forbiddenCoreEdges.length} forbidden edges\n`);
+
+let caught = 0;
+for (const { from, to, rule } of forbiddenCoreEdges) {
+  writeTree(fixtureFor(from, to));
+  const res = depcruise([SCRATCH_NAME]);
   if (res.ok) {
-    fail(`violating fixture for \`${rule}\` PASSED — the rule does not bite`);
+    fail(`${rule}: violating fixture PASSED — the rule does not bite`);
   } else if (!res.out.includes(rule)) {
-    fail(`fixture failed, but not via \`${rule}\`. Output:\n${res.out}`);
+    fail(`${rule}: fixture failed, but not via that rule. Output:\n${res.out}`);
   } else {
-    pass(`violating fixture caught by \`${rule}\``);
+    caught += 1;
+    console.log(`ok    ${from} -> ${to}   (${rule})`);
   }
 }
 
-// 3. Clean up, and confirm nothing was left behind.
+// 3. A core importing a NON-core package must also be caught, by the positive
+//    rule. This is the case that would otherwise slip through if someone adds a
+//    package and forgets to extend CORES.
+writeTree({
+  "packages/notacore/src/index.ts": "export const X = 1;\n",
+  "packages/sci/src/index.ts":
+    'import { X } from "../../notacore/src/index.js";\nexport const y = X;\n',
+});
+{
+  const res = depcruise([SCRATCH_NAME]);
+  const rule = "sci-imports-only-schema";
+  if (res.ok || !res.out.includes(rule)) {
+    fail(`${rule}: a core importing a non-core package was not caught`);
+  } else {
+    caught += 1;
+    console.log(`ok    sci -> notacore   (${rule})`);
+  }
+}
+
+// 3b. A package importing ITS OWN source is not a boundary violation. Rule
+//     regexes that do not exclude the importing package report every internal
+//     import, which is how the first version of these rules failed the clean
+//     tree on `schema/src/index.test.ts -> schema/src/index.ts`.
+writeTree({
+  "packages/sci/src/index.ts": "export const X = 1;\n",
+  "packages/sci/src/index.test.ts":
+    'import { X } from "./index.js";\nexport const y = X;\n',
+});
+{
+  const res = depcruise([SCRATCH_NAME]);
+  if (!res.ok) {
+    fail(`an intra-package import was reported as a boundary violation:\n${res.out}`);
+  } else {
+    caught += 1;
+    console.log("ok    intra-package import is not a violation");
+  }
+}
+
+// 4. The shared contract must stay a leaf.
+writeTree({
+  "packages/sci/src/index.ts": "export const X = 1;\n",
+  "packages/schema/src/index.ts":
+    'import { X } from "../../sci/src/index.js";\nexport const y = X;\n',
+});
+{
+  const res = depcruise([SCRATCH_NAME]);
+  const rule = "schema-is-a-leaf";
+  if (res.ok || !res.out.includes(rule)) {
+    fail(`${rule}: schema importing a core was not caught`);
+  } else {
+    caught += 1;
+    console.log(`ok    ${SHARED} -> sci   (${rule})`);
+  }
+}
+
+// 5. Clean up, and confirm nothing was left behind.
 rmSync(SCRATCH, { recursive: true, force: true });
 if (existsSync(SCRATCH)) {
   fail("scratch tree was not removed");
@@ -133,4 +193,10 @@ if (existsSync(SCRATCH)) {
   pass("scratch tree removed");
 }
 
-console.log(`\n${process.exitCode === 1 ? "RESULT: FAIL" : "RESULT: PASS"}`);
+const expected = forbiddenCoreEdges.length + 3;
+console.log(
+  `\n  caught ${caught}/${expected} (${forbiddenCoreEdges.length} core edges ` +
+    "+ 1 non-core import + 1 schema leaf)",
+);
+console.log(`\nRESULT: ${failures === 0 && caught === expected ? "PASS" : "FAIL"}`);
+process.exit(failures === 0 && caught === expected ? 0 : 1);

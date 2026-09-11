@@ -9,7 +9,7 @@ build/
 *.tsbuildinfo
 
 # Transient scratch trees created by tools/check_dependency_rules.mjs
-.tmp-depcruise-guard/
+tmp-depcruise-guard/
 
 # Python
 __pycache__/

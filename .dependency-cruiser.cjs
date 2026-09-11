@@ -5,47 +5,61 @@
  * GOAL.md §5.3 says the renderer must not decide chemistry; a rule that lives
  * only in a document is a rule that gets broken under deadline.
  *
- * `pnpm depcruise` runs against the real tree. `pnpm guards` additionally
- * proves the rules actually bite, by constructing a violating tree in a temp
- * directory and asserting that depcruise fails on it — see
- * tools/check_dependency_rules.mjs. A rule nobody has seen fire is not
- * evidence that the rule works.
+ * The core-boundary matrix is DERIVED in tools/core-boundaries.cjs, not written
+ * out here. M0's first version hand-listed ten of the twelve forbidden core
+ * edges and missed `render -> ace`, which no other rule covered and which the
+ * two-fixture guard did not sample. Hand-maintaining "everything that must not
+ * happen" fails silently, so the forbidden set now falls out of the allowed
+ * set: a core may import `packages/schema`, and nothing else from the workspace.
  *
- * M0 ships only packages/schema and apps/web, so most rules below are inert
- * today. They are present from the start on purpose: the cost of adding a rule
- * is near zero, and the cost of retrofitting one after the violation exists is
- * a refactor.
+ * `pnpm depcruise` runs against the real tree. `pnpm guards` additionally builds
+ * a violating tree for EVERY edge in the matrix and asserts depcruise rejects
+ * each by name — see tools/check_dependency_rules.mjs.
+ *
+ * M0 ships only packages/schema and apps/web, so most rules are inert today.
+ * They are present from the start on purpose: adding a rule costs nothing, and
+ * retrofitting one after the violation exists costs a refactor.
  */
 
-/** The four cores, in the order GOAL.md §6 lists them. */
-const CORES = ["world", "sci", "render", "ace"];
-
-/**
- * Every forbidden core-to-core edge, with the reason it is forbidden.
- * Only `→ schema` is permitted; everything else is a hidden coupling.
- */
-const forbiddenCoreEdges = [
-  ["render", "sci", "ADR-0006 / GOAL.md §5.3 — the renderer must not decide chemistry."],
-  ["render", "world", "The renderer consumes observable state, never world state."],
-  ["ace", "sci", "AGENTS.md §2 — ACE must not obtain chemistry answers directly."],
-  ["ace", "render", "ADR-0001 — ACE emits InterventionIntent data; apps/web acts on it."],
-  ["ace", "world", "ACE reads world state through the app, and writes only to its own store."],
-  ["sci", "world", "ADR-0003 — the scientific core takes plain data, not world state."],
-  ["sci", "render", "The scientific core has no notion of presentation."],
-  ["world", "sci", "ADR-0003 — the reducer receives a solver by injection."],
-  ["world", "render", "The world runtime has no notion of presentation."],
-  ["world", "ace", "GOAL.md §6.2 — the World Runtime must not embed teaching policy."],
-];
+const { CORES, SHARED, forbiddenCoreEdges } = require("./tools/core-boundaries.cjs");
 
 module.exports = {
   forbidden: [
-    ...forbiddenCoreEdges.map(([from, to, comment]) => ({
-      name: `${from}-must-not-import-${to}`,
+    ...forbiddenCoreEdges.map(({ from, to, rule, comment }) => ({
+      name: rule,
       severity: "error",
       comment,
       from: { path: `(^|/)packages/${from}/` },
       to: { path: `(^|/)packages/${to}/` },
     })),
+
+    // The positive form of the matrix: a core may reach `packages/schema` and
+    // nothing else from the workspace. One rule per core, because the exclusion
+    // has to name the importing package — a shared rule cannot say "any package
+    // except my own", and a core's own test importing its own source would
+    // otherwise be reported as a boundary violation.
+    ...CORES.map((core) => ({
+      name: `${core}-imports-only-schema`,
+      severity: "error",
+      comment:
+        `packages/${core} may import packages/${SHARED} and nothing else from ` +
+        "the workspace. apps/ is reached only from the composition root. This " +
+        "catches a core importing a package that is not yet a core, or a future " +
+        "one nobody added to CORES.",
+      from: { path: `(^|/)packages/${core}/` },
+      to: { path: `(^|/)(packages/(?!${core}/|${SHARED}/)|apps/)` },
+    })),
+
+    {
+      name: "schema-is-a-leaf",
+      severity: "error",
+      comment:
+        `packages/${SHARED} is the shared contract. It owns no behaviour, so it ` +
+        "imports nothing else in the workspace — otherwise every package that " +
+        "depends on the contract would inherit the dependency.",
+      from: { path: `(^|/)packages/${SHARED}/` },
+      to: { path: `(^|/)(packages/(?!${SHARED}/)|apps/)` },
+    },
 
     {
       name: "nobody-imports-the-composition-root",
@@ -63,26 +77,11 @@ module.exports = {
       from: {},
       to: { circular: true },
     },
-
-    // Declared for M5/M6, when `packages/render` gains a renderer. Kept here so
-    // the pinning is decided once rather than in a hurry later.
-    {
-      name: "scientific-core-is-not-a-devtool-catchall",
-      severity: "error",
-      comment:
-        "packages/sci may import packages/schema and nothing else from the workspace.",
-      from: { path: "(^|/)packages/sci/", pathNot: "(^|/)packages/sci/(test|tests)/" },
-      to: {
-        path: `(^|/)(${CORES.filter((c) => c !== "sci")
-          .map((c) => `packages/${c}/`)
-          .join("|")}|apps/)`,
-      },
-    },
   ],
 
   options: {
-    doNotFollow: { path: "(^|/)(node_modules|dist|\\.venv|spikes)(/|$)" },
-    exclude: { path: "(^|/)(node_modules|dist|\\.venv|spikes)(/|$)" },
+    doNotFollow: { path: "(^|/)(node_modules|dist|dist-types|\\.venv|spikes|\\.tmp-depcruise-guard)(/|$)" },
+    exclude: { path: "(^|/)(node_modules|dist|dist-types|\\.venv|spikes|\\.tmp-depcruise-guard)(/|$)" },
     tsPreCompilationDeps: true,
     enhancedResolveOptions: {
       exportsFields: ["exports"],
