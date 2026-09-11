@@ -4,8 +4,11 @@
 - **Date:** 2026-09-11 (round 5: event-sourced identity, genesis resolution, contract closure)
 - **Owner:** Project owner
 - **Supersedes:** revisions 1–5 of this spec
-- **Coverage:** every acceptance criterion below is mapped to a `PLAN-0001`
-  milestone, machine-checked by `tools/check_acceptance_coverage.py`
+- **Coverage:** all 70 acceptance criteria below are both **claimed** by a
+  `PLAN-0001` milestone (`**Addresses:**`) and **evidenced** in it (a test or
+  stop condition), machine-checked by `tools/check_acceptance_coverage.py`,
+  which runs in CI from M0. The check distinguishes "mentioned somewhere" from
+  "claimed and evidenced"; the weaker form passed while criteria were unmapped.
 - **Related ADRs:** 0001, 0002, 0003, 0004 (rev), 0005, 0006, 0007 (rev), 0008, 0009 — all `Proposed`, all load-bearing here
 - **Related evidence:** `spikes/activity-equilibrium/` (scientific formulation),
   `spikes/numeric-policy/` (determinism + branded types),
@@ -1813,3 +1816,15 @@ stops that second class of defect recurring.
 | **P1-5** | "If `modelRequirements` and `solverConfig` disagree, `solverConfig` wins" degraded a requirement into a comment | Resolution is a **compatibility check**: an unsatisfiable requirement **rejects world creation** with a stated reason. The two are a constraint and a record, not competing sources of truth. AC-R20 |
 | **P2-1** | The spike's call sites passed physical values into a reduced-molality core — numerically identical because `m° = 1`, which proves a **numeric** test cannot catch a standard-state error | Every physical input now crosses an explicit `solve_physical()` boundary. Standard-state safety is a compile-time property (AC-U5) |
 | **P2-2** | "Export contains no identifiers" would, read literally, forbid the `worldId` that flattened branch export requires | AC-P4 now reads "no **personal, device, or cross-session tracking** identifier"; lineage is required and permitted |
+
+### Round 6 (2026-09-11) — execution-level closure
+
+Round 6 found **no scientific, world-model, or ACE defects**. Both blockers were
+execution-level, and `SPEC-0001` itself is **unchanged at revision 6** — the
+fixes were in `PLAN-0001`, `CLAUDE.md`, `ADR-0001`, and the coverage tool.
+
+| Finding | What was wrong | Where fixed |
+|---|---|---|
+| **P1-1** | `PLAN-0001` M2 declared `CanonicalContents` to contain "waterMass, liquidVolume, material amounts, **and the scenarioSnapshot**". The snapshot is **world-level** genesis state on `WorldState`; per-vessel it would give a world with 8 vessels 8 copies, and re-blur world-metadata against per-vessel contents | M2 now lists **three** fields and states explicitly that the snapshot is not one of them. `PLAN-0001` M2 |
+| **P1-2** | `CLAUDE.md` said "never use bare `python`/`py`" while `PLAN-0001` and CI said `py tools/check_acceptance_coverage.py`. The Windows-only `py` launcher **does not exist on the GitHub Actions Ubuntu runner**, so CI would have failed on its first run. Separately, `pyproject.toml` was declared inside `tools/oracle/` while the environment lived at the root `.venv`, leaving `uv sync` with two candidate targets | One Python project at the root (`pyproject.toml` + `.venv`); `tools/oracle/` holds source. One platform-neutral command set, given **verbatim** in `README`, `CLAUDE.md`, `PLAN-0001`, CI, and `ADR-0001` §4a. `CLAUDE.md` §21.5 also gained bootstrap semantics — `.venv` is gitignored, so a fresh clone must create it |
+| **P2-1** | The coverage checker counted a criterion as mapped if it appeared **anywhere** in a milestone section, so `Addresses: AC-R1..AC-R18` while `AC-R19` sat in the test table still passed | Two tiers: **claimed** (in `Addresses:`) and **evidenced** (in tests or stop condition). The stronger check immediately exposed **17 unevidenced criteria** that the weak one had passed. All 70 are now claimed *and* evidenced |

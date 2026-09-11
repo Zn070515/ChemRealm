@@ -37,6 +37,9 @@ Python tree that is not a workspace member.**
 ```
 ChemRealm/
   docs/                      # ADRs, specs, plans, research, visual standards
+  pyproject.toml             # THE Python project (root). Environment: .venv
+  uv.lock
+  .venv/                     # project environment (gitignored)
   packages/schema/           # SINGLE SOURCE OF TRUTH for contracts (TypeScript + zod)
     src/                     # zod schemas, branded quantity types
     dist/json-schema/        # GENERATED - consumed by Python
@@ -47,9 +50,15 @@ ChemRealm/
   apps/web/                  # Composition root. The only place the four cores meet.
   content/                   # Data-driven scenario definitions (GOAL.md §11)
   tests/e2e/                 # Playwright
-  tools/oracle/              # Python, uv-managed. TEST-TIME ONLY. Not deployed.
+  tools/                     # Python source: the acceptance-coverage checker
+  tools/oracle/              # Oracle SOURCE and tests. TEST-TIME ONLY. Not deployed.
   spikes/                    # Isolated, excluded from acceptance
 ```
+
+**One Python project, at the root** (added 2026-09-11, round 6). An earlier
+sketch put `pyproject.toml` inside `tools/oracle/` while the environment lived
+at the root `.venv`, leaving `uv sync`/`uv run` with two candidate resolution
+targets. There is now exactly one. Python remains outside the pnpm workspace.
 
 Rules that make this more than a directory listing:
 
@@ -77,6 +86,21 @@ Rules that make this more than a directory listing:
    Python only produces oracle values for tests.
 4. **Python is not a pnpm workspace member.** One workspace per language. A
    cross-language root workspace buys nothing and complicates CI.
+4a. **One Python project, one environment, one command set.** `pyproject.toml`
+   and `.venv` both live at the repository root; `tools/` holds source. The
+   canonical commands are
+
+   ```
+   uv sync                                            # create/refresh .venv
+   uv run pytest                                      # oracle tests
+   uv run python tools/check_acceptance_coverage.py   # acceptance coverage
+   ```
+
+   **These exact strings appear in `README.md`, `PLAN-0001`, CI, and
+   `CLAUDE.md`.** They are deliberately platform-neutral: the Windows-only `py`
+   launcher does not exist on the GitHub Actions Ubuntu runner, so a command
+   containing `py` would fail CI on its first run. Round 6 found the repository
+   simultaneously instructing "never use bare `python`" and "run `py tools/…`".
 5. **Directories are created when their first real content lands**, not in
    advance. `PLAN-0001` M0 creates only what M0 needs.
 

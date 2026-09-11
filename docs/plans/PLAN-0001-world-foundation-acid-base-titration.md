@@ -1,7 +1,7 @@
 # PLAN-0001 — World Foundation & Acid-Base Titration
 
 - **Status:** Ready to execute (pending `SPEC-0001` acceptance, **revision 6**)
-- **Coverage check:** `py tools/check_acceptance_coverage.py` — every `AC-*` in
+- **Coverage check:** `uv run python tools/check_acceptance_coverage.py` — every `AC-*` in
   `SPEC-0001` is required to appear in at least one milestone here. Run it after
   editing either document.
 - **Date:** 2026-09-11 (revised after owner review remediation)
@@ -70,7 +70,7 @@ adapter → observable → renderer → ACE → persistence → end-to-end → d
 ## M0 — Repository foundation
 
 **Target stage:** S3
-**Addresses:** ADR-0001; `SPEC-0001` AC-P1, AC-V1
+**Addresses:** ADR-0001; `SPEC-0001` AC-P1, AC-P5, AC-V1
 
 ### Purpose
 
@@ -94,9 +94,20 @@ eslint.config.js
 .github/workflows/ci.yml
 packages/schema/                 package.json, tsconfig, src/index.ts (placeholder export)
 apps/web/                        Vite + React + TS, renders "ChemRealm"
-tools/oracle/                    pyproject.toml, uv.lock, tests/test_smoke.py
-docs/adr/, docs/specs/, docs/plans/    already present
+pyproject.toml                   THE Python project; environment is .venv (root)
+uv.lock
+.venv/                           project environment (gitignored)
+tools/check_acceptance_coverage.py   already present
+tools/oracle/                    oracle SOURCE and tests — not a separate project
+docs/adr/, docs/specs/, docs/plans/  already present
 ```
+
+**One Python project, at the root** (round 6, finding P1-2). An earlier revision
+put `pyproject.toml` inside `tools/oracle/` while the environment lived at the
+root `.venv`, which left `uv sync` / `uv run` with two plausible resolution
+targets. There is now exactly one: `pyproject.toml` at the root, `.venv` at the
+root, `tools/oracle/` holds source only. `ADR-0001`'s rule that Python is not a
+pnpm workspace member is unaffected.
 
 ### Contracts changed
 
@@ -123,19 +134,37 @@ None. M0 adds the mechanism by which contracts will be enforced.
    user's IP and referrer on every page load, is unreachable from mainland
    China, and is unreviewed code. Add a build-output check that fails on any
    external origin in the emitted HTML.
-5. `tools/oracle` as a `uv` project with a single smoke test, so the second
-   toolchain is exercised in CI from day one. **No PHREEQC yet** — that is M4.
-6. CI: `pnpm install --frozen-lockfile`, `pnpm build`, `pnpm test`,
-   `pnpm depcruise`, then `uv sync` and `uv run pytest`.
-6a. **CI also runs `py tools/check_acceptance_coverage.py`.** This is not
-   optional and not cosmetic. Across four consecutive owner-review rounds the
-   defect "a criterion was added to the spec and the plan was not updated" was
-   found by a human re-reading the documents, while the agent each time reported
-   "no dangling references". Human recollection is not evidence; this is. The
-   check fails the build if any `AC-*` defined in `SPEC-0001` is absent from
-   every `PLAN-0001` milestone, or if the plan references a criterion that does
-   not exist.
-7. `README.md` with exact setup commands for both toolchains.
+5. Root `pyproject.toml` plus a single smoke test in `tools/oracle/tests/`, so
+   the second toolchain is exercised in CI from day one. **No PHREEQC yet** —
+   that is M4.
+
+   **The canonical Python commands, used verbatim in README, CI, and every doc.**
+   They are platform-neutral on purpose: a Windows-only `py` launcher does not
+   exist on the GitHub Actions Ubuntu runner, so any command containing `py`
+   would fail CI on the first run.
+
+   ```
+   uv sync                                            # create/refresh .venv
+   uv run pytest                                      # oracle smoke tests
+   uv run python tools/check_acceptance_coverage.py   # acceptance coverage
+   ```
+6. CI runs both toolchains:
+
+   ```
+   pnpm install --frozen-lockfile && pnpm build && pnpm test && pnpm depcruise
+   uv sync && uv run pytest
+   uv run python tools/check_acceptance_coverage.py
+   ```
+6a. **The coverage check is not optional and not cosmetic.** Across four
+   consecutive owner-review rounds the defect "a criterion was added to the spec
+   and the plan was not updated" was found by a human re-reading the documents,
+   while the agent each time reported "no dangling references". Human
+   recollection is not evidence; this is. The check fails the build if any
+   `AC-*` defined in `SPEC-0001` is absent from every `PLAN-0001` milestone, or
+   if the plan references a criterion that does not exist.
+7. `README.md` with the same two-toolchain commands, copied from step 5 and
+   step 6 — **the same strings, not a paraphrase**, since divergence is what
+   round 6 found.
 
 ### Tests and evidence
 
@@ -144,10 +173,12 @@ None. M0 adds the mechanism by which contracts will be enforced.
 | `pnpm build` succeeds | Workspace is coherent |
 | `pnpm test` passes | Vitest is wired across the workspace |
 | `pnpm depcruise` passes on the clean tree | Rules are active |
-| `pnpm depcruise` **fails** on a deliberately added `render → sci` import (fixture, then reverted) | The rule actually bites — this is the point of M0 |
-| `uv run pytest` passes | The second toolchain runs |
-| **`py tools/check_acceptance_coverage.py` passes; and fails when a criterion is deliberately unmapped (fixture, then reverted)** | AC coverage is machine-checked, and the check actually bites |
+| `pnpm depcruise` **fails** on a deliberately added `render → sci` import (fixture, then reverted) | AC-V1 — the rule actually bites; this is the point of M0 |
+| `uv sync && uv run pytest` passes | The second toolchain runs |
+| **`uv run python tools/check_acceptance_coverage.py` passes; and fails when a criterion is deliberately unmapped (fixture, then reverted)** | AC coverage is machine-checked, and the check actually bites |
 | CI green on a clean checkout | Both toolchains coexist (ADR-0001's central claim) |
+| Build artifact inspection: the emitted HTML references no server API route | AC-P1 — there is no backend to route to |
+| Build-output check fails on a third-party origin (fixture, then reverted) | AC-P5 — self-hosted assets, no CDN or font service |
 
 ### Stop condition
 
@@ -164,7 +195,7 @@ Delete the M0 files. Nothing is persisted and nothing depends on them.
 ## M1 — Schema and units
 
 **Target stage:** S3
-**Addresses:** ADR-0001, ADR-0004; `SPEC-0001` AC-C1, AC-C2, AC-R8, AC-R15, AC-R16, AC-P3, AC-U1..AC-U5
+**Addresses:** ADR-0001, ADR-0004; `SPEC-0001` AC-C1, AC-C2, AC-R8, AC-R15, AC-R16, AC-P3, AC-U1..AC-U5, AC-V7
 
 ### Purpose
 
@@ -241,6 +272,12 @@ this milestone defines their representation.
 | `litre(-1)`, `molPerKilogram(NaN)` throw | Constructors validate |
 | `parseQuantity` rejects `{}` and `{"value":1,"unit":"furlong"}` | AC-U3 |
 | `Millimetre` is the geometry type; no volume-typed geometry field exists | AC-V7 |
+| Compile fixture: `ReducedMolality` and `MolPerKilogram` are not assignable | AC-U5 — the standard-state distinction is a compile-time barrier, because `m0 = 1` makes it invisible numerically |
+| Compile fixture: `ReducedIonicStrength` is not assignable to either dimensioned ionic-strength type | AC-U4 |
+| Schema test: `Vessel` has no `contents` field; contents exist only under `canonical.byVessel` | AC-R15 |
+| Schema test: the `ScenarioSnapshot` type has no solver-config field; it carries `modelRequirements` | AC-R16 |
+| Content-schema test: a scenario carries no equilibrium arithmetic | AC-C1 |
+| Negative content test: an unknown species or unit fails loudly, with no default | AC-C2 |
 | Golden JSON Schema snapshot | Contract drift is visible in review |
 | Migration registry runs `1 → 1` on a fixture world | Harness works |
 
@@ -265,7 +302,7 @@ truth" claim rather than asserting it.
 ## M2 — Event runtime and replay
 
 **Target stage:** S3
-**Addresses:** ADR-0002, ADR-0007; `SPEC-0001` AC-R1..AC-R18
+**Addresses:** ADR-0002, ADR-0007; `SPEC-0001` AC-R1..AC-R16, AC-R18..AC-R19
 
 ### Purpose
 
@@ -294,13 +331,33 @@ M4 can supply the real one without touching this package.
 
 ### Implementation
 
-1. **`CanonicalContents` is the quantized persisted state**, and contains
-   exactly four things: **`waterMass`, `liquidVolume`, material `amount`s**, and
-   the `scenarioSnapshot`. `liquidVolume` is easy to forget and was missing from
-   an earlier revision of this plan — it drives liquid level, the burette
-   reading, `c(H+)`, and **the size of the next transfer**, so it is state, not
-   a display value (AC-R13). Species, activities, and ionic strength are
-   **derived** and never quantized independently (`ADR-0007` §3).
+1. **`CanonicalContents` is per-vessel, and contains exactly three things:**
+   **`waterMass`, `liquidVolume`, and material `amount`s.** Nothing else.
+
+   **`scenarioSnapshot` is NOT part of it.** It is world-level genesis state and
+   lives on `WorldState` (`WorldCreated` writes it). Putting it in
+   `CanonicalContents` would give a world with eight vessels eight copies of one
+   genesis snapshot, and would re-blur the boundary between *world metadata* and
+   *per-vessel conserved contents* — the same confusion as the
+   `Vessel.contents` / `canonical.byVessel` duplication fixed earlier.
+
+   ```
+   WorldState {
+     scenarioSnapshot                 // world-level, from genesis
+     canonical: {
+       byVessel: {
+         vesselA: { waterMass, liquidVolume, materials }
+         vesselB: { waterMass, liquidVolume, materials }
+       }
+     }
+   }
+   ```
+
+   `liquidVolume` is easy to omit and was missing from an earlier revision of
+   this plan — it drives liquid level, the burette reading, `c(H+)`, and **the
+   size of the next transfer**, so it is state, not a display value (AC-R13).
+   Species, activities, and ionic strength are **derived** and never quantized
+   independently (`ADR-0007` §3).
 2. `quantize(v) = Number(v.toPrecision(12))`, **one** call site, applied to
    canonical independent state and to the transfer amount in the event payload.
 3. `canonicalJson`: sorted keys, specified shortest round-trip formatting,
@@ -335,6 +392,8 @@ M4 can supply the real one without touching this package.
 | Volume, water mass and solute amounts conserved over 100 transfers | AC-R14 |
 | Transfer deltas computed from the **pre-transfer** snapshot; an implementation that interleaves read/write produces a different result and fails | AC-R18 |
 | `WorldCreated` carries `worldId`; `WorldBranched` carries `childWorldId`, `parentWorldId`, `forkSequence`, `forkStateHash`; replay reconstructs the final `worldId` and lineage from the log alone | AC-R19 |
+| Schema test: contents exist only under `canonical.byVessel`; the reducer never writes a `Vessel.contents` | AC-R15 |
+| Schema test: exactly one resolved `solverConfig` per world, on `WorldState` from genesis | AC-R16 |
 
 ### Stop condition
 
@@ -347,7 +406,7 @@ the scientific engine is built means rebuilding both.
 ## M3 — Solver adapter contract
 
 **Target stage:** S3
-**Addresses:** ADR-0003; `SPEC-0001` AC-S4
+**Addresses:** ADR-0003; `SPEC-0001` AC-R20, AC-S4
 
 ### Purpose
 
@@ -425,7 +484,7 @@ packages/sci/src/acidbase/species.ts      species inventory and mass balance
 packages/sci/src/acidbase/indicator.ts    ratio-based indicator model (empirical category)
 packages/sci/src/acidbase/index.ts        the adapter implementation
 packages/sci/test/reference/*.json        REF-1..REF-10 as data, not as literals in test code
-tools/oracle/pyproject.toml               add PHREEQC invocation
+pyproject.toml                            add the PHREEQC dependency
 tools/oracle/phreeqc/run_batch.py         generate .pqi, run PHREEQC CLI, parse output
 tools/oracle/phreeqc/cases/*.pqi.in
 tools/oracle/tests/test_reference.py      oracle vs published standards
@@ -518,6 +577,11 @@ starting; the concentration-only formulation they describe is superseded.**
 | Outer residual strictly increasing in `m_H` across a sweep including the domain boundary | AC-S11 |
 | Indicator ratio is activity-coupled, continuous across the transition, no threshold branch | AC-V2 precursor |
 | Above pH 12, the monoprotic indicator approximation reports reduced validity | `SPEC-0001` failure mode 10 |
+| Copy review + DOM assertion: model pH is never described as "the true/thermodynamic pH"; the inspection view names the activity model | AC-S12 |
+| Domain-matrix test at `I_m` = 0.15 and 0.30: the result carries `accuracyStatus: outside-proposed-envelope` | AC-S13 |
+| Boundary test: the v0 scenario sweep's max `I_m` (0.1002 mol/kg) is checked against the envelope limit | AC-S14 |
+| Negative content test: a scenario without a declared density is rejected, not defaulted | AC-S15 |
+| Provenance review: no constant carries more significant figures than its source; the source's own precision is recorded | AC-S16 |
 
 ### Stop condition (revised)
 
@@ -637,6 +701,8 @@ packages/render/src/state/scene.ts            ObservableModel → RenderState
 | pH formatted to exactly 2 dp; `formatPh(4.7447123) === "4.74"` | AC-V6 |
 | Observable output is a pure function: same input → deep-equal output, no DOM, no PixiJS | Testability of the whole layer |
 | Curve points derive from a state sequence, not from a stored array | No pre-authored curves |
+| Dependency-rule fixture: an equilibrium expression in `packages/render` fails the build | AC-V9 — the indicator ratio is a scientific output |
+| DOM assertions: the taught quantity may be labelled plainly "pH"; model pH always carries its activity-model label; no view mixes the two | AC-V8 |
 
 ### Stop condition
 
@@ -712,7 +778,7 @@ exists.
 ## M7 — Interactive titration end to end
 
 **Target stage:** S3
-**Addresses:** `SPEC-0001` §UX, AC-F2
+**Addresses:** `SPEC-0001` §UX, AC-F2, AC-P2
 
 ### Purpose
 
@@ -769,7 +835,7 @@ curve came from the solver.
 ## M8 — Branch, replay, persistence
 
 **Target stage:** S3
-**Addresses:** ADR-0002, ADR-0005; `SPEC-0001` AC-R4, AC-R6, AC-R8, AC-P3, AC-P4
+**Addresses:** ADR-0002, ADR-0005; `SPEC-0001` AC-R4, AC-R6, AC-R8, AC-R17, AC-P3, AC-P4
 
 ### Purpose
 
@@ -837,7 +903,7 @@ a world survives a reload with its replay hash intact.
 ## M9 — Minimal ACE
 
 **Target stage:** S3
-**Addresses:** `GOAL.md` §6.4, §8; `AGENTS.md` §12; `SPEC-0001` AC-A1..AC-A5
+**Addresses:** `GOAL.md` §6.4, §8; `AGENTS.md` §12; `SPEC-0001` AC-A1..AC-A9
 
 ### Purpose
 
@@ -978,7 +1044,7 @@ likely explanation is that the review was not adversarial enough.
 - **Read order:** `GOAL.md` → `CLAUDE.md` → `AGENTS.md` → the relevant ADRs →
   this spec → this plan. Do not begin from a milestone title.
 - **Run:** `pnpm install`, `pnpm build`, `pnpm test`, `pnpm depcruise`,
-  `uv sync --project tools/oracle`, `uv run --project tools/oracle pytest`.
+  `uv sync`, `uv run pytest`.
 - **Never** weaken a test to reach green. If a criterion cannot be met, report it.
 - **Never** generate a reference value with the code under test (spike finding F7).
 - **Stop and escalate** rather than guessing when:

@@ -622,28 +622,41 @@ through. If a hook fails, fix the underlying cause.
 
 ## 21.5 Environment notes
 
-### Python: use the project-local `.venv`, never the global interpreter
+### Python: one project, one environment, one command set
 
-This repository has its own virtual environment at `.venv/` (CPython 3.12,
-created with `uv venv --seed`). It is gitignored.
+Expected environment: **`.venv/` at the repository root**. It is gitignored, so
+**a fresh clone does not have it** — create it rather than assuming it exists:
 
-**Install nothing into a global Python environment.** Anything this project
-needs goes into `.venv`.
-
-```powershell
-.\.venv\Scripts\Activate.ps1              # or:
-.\.venv\Scripts\python.exe tools\check_acceptance_coverage.py
-
-uv pip install <package>                  # resolves against .venv
+```bash
+uv venv --seed --python 3.12 .venv      # only if .venv is absent
+uv sync                                 # once pyproject.toml exists (M0)
 ```
 
-Do not use the bare `python` / `py` on PATH for project work: on this machine it
-resolves to a global install (3.10–3.13 are all present) and would silently put
-project dependencies somewhere shared. The scripts under `tools/` and `spikes/`
-are standard-library-only today and run under `.venv` unchanged.
+**The canonical commands.** Use these exact strings; they also appear in
+`README.md`, `PLAN-0001`, and CI. They are platform-neutral on purpose — the
+Windows-only `py` launcher does not exist on the GitHub Actions Ubuntu runner,
+so anything containing `py` would fail CI on its first run.
 
-`PLAN-0001` M0 creates `tools/oracle` as a `uv`-managed project; it uses this
-same interpreter.
+```bash
+uv sync                                            # create/refresh .venv
+uv run pytest                                      # oracle tests
+uv run python tools/check_acceptance_coverage.py   # acceptance coverage
+uv pip install <package>                           # add a dependency
+```
+
+**Never use the bare `python` / `py` on PATH for project work.** On this machine
+it resolves to a global install (3.10–3.13 are all present) and would put
+project dependencies somewhere shared. **Install nothing into a global
+environment** — everything this project needs goes into `.venv`.
+
+One Python project, at the root: `pyproject.toml` and `.venv` both live at the
+repository root; `tools/oracle/` holds source and tests, not its own project
+file. `PLAN-0001` M0 creates the root `pyproject.toml`.
+
+The scripts under `tools/` and `spikes/` are standard-library-only today and run
+under `.venv` unchanged, so `.venv\Scripts\python.exe tools\...` also works
+before M0 lands — but prefer the canonical commands above so the docs and CI
+never drift apart.
 
 ### Git
 
