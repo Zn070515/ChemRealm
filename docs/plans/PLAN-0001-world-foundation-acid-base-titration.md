@@ -175,7 +175,7 @@ None. M0 adds the mechanism by which contracts will be enforced.
 | `pnpm depcruise` passes on the clean tree | Rules are active |
 | `pnpm depcruise` **fails** on a deliberately added `render → sci` import (fixture, then reverted) | AC-V1 — the rule actually bites; this is the point of M0 |
 | `uv sync && uv run pytest` passes | The second toolchain runs |
-| **`uv run python tools/check_acceptance_coverage.py` passes; and fails when a criterion is deliberately unmapped (fixture, then reverted)** | AC coverage is machine-checked, and the check actually bites |
+| **`uv run python tools/check_acceptance_coverage.py` passes; and exits 1 both when a criterion is deliberately dropped from an `Addresses:` line and when its evidence row is deliberately removed (fixtures, then reverted)** | AC coverage is machine-checked and the check bites on all three conditions, `UNEVIDENCED` included |
 | CI green on a clean checkout | Both toolchains coexist (ADR-0001's central claim) |
 | Build artifact inspection: the emitted HTML references no server API route | AC-P1 — there is no backend to route to |
 | Build-output check fails on a third-party origin (fixture, then reverted) | AC-P5 — self-hosted assets, no CDN or font service |

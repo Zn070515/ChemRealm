@@ -304,24 +304,31 @@ dimensionless, because `a_i = γ_i·(m_i/m°)` with `m° = 1 mol/kg`.
 Kw_c = Kw / (γ_H·γ_OH)          Ka_c = Ka·γ_HA / (γ_H·γ_A)
 ```
 
-into the charge balance gives exactly the familiar scalar form:
+(which are **dimensionless**, like `Kw` and `Ka`) into the charge balance gives
+the scalar form:
 
 ```
-m_Na + m_H − Kw_c/m_H − m_A,tot·Ka_c/(Ka_c + m_H) = 0
+m̂_Na + m̂_H − Kw_c/m̂_H − m̂_A,tot·Ka_c/(Ka_c + m̂_H) = 0
 ```
+
+**Every symbol in that equation is a REDUCED molality.** Writing it with
+physical `m` — `Kw_c/m_H` — is `dimensionless / (mol/kg)` and is not a legal
+expression; see the worked failure immediately above. This block is easy to
+mistake for a harmless convention, so it is stated twice on purpose: **the hats
+are not decoration.**
 
 The scalar structure was always right. **What was wrong is that `Kw_c` and `Ka_c`
 depend on `I`, which depends on the speciation, which depends on them.** The
-earlier formulation froze them as constants. v0 solves the two unknowns `(m_H, I)`
-simultaneously, by nested bisection.
+earlier formulation froze them as constants. v0 solves the two unknowns
+`(m̂_H, Î)` simultaneously, by nested bisection.
 
 **Numerical structure** (derived and measured in `spikes/activity-equilibrium`):
 
 - Bracketing uses the ideal (γ = 1) root and expands by factors of 3, 10, 100,
   1000, smallest first. A wide fixed bracket is *not* usable: far from the root,
-  `m_OH = Kw_c/m_H` becomes enormous and the implied `I` leaves the Davies
+  `m̂_OH = Kw_c/m̂_H` becomes enormous and the implied `Î` leaves the Davies
   domain, so the residual cannot be evaluated at all.
-- The outer residual was found **strictly increasing** in `m_H` on all seven
+- The outer residual was found **strictly increasing** in `m̂_H` on all seven
   regimes sampled. This is **numerically verified, not analytically proven**, and
   is stated as such.
 - The inner ionic-strength loop is a damped fixed point. M4 replaces it with a
@@ -1738,7 +1745,7 @@ noted for later:
 
 | Finding | What was wrong | Where fixed |
 |---|---|---|
-| **P1-1** | The spec claimed an activity model but solved concentration-only, applying Davies post-hoc | §Governing model rewritten to a self-consistent `(m_H, I)` solve; REF table rebuilt; `spikes/activity-equilibrium` |
+| **P1-1** | The spec claimed an activity model but solved concentration-only, applying Davies post-hoc | §Governing model rewritten to a self-consistent `(m_H, I)` solve (later carried in REDUCED variables, round 4); REF table rebuilt; `spikes/activity-equilibrium` |
 | **P1-2** | Reproducibility was ranked above correctness, and it constrained the physics | `ADR-0007` rewritten; priority order stated; `detLog10`/`detExp10` replace native calls; canonical/derived state split |
 | **P1-3** | Molarity, molality, activity, and ionic strength were conflated | `docs/science/quantity-ontology.md` created; `ADR-0004` rewritten |
 | **P1-4** | The branded-type guarantee was false as written | Tested by compilation; split into opaque vs branded; `ADR-0004` states the real guarantee |
@@ -1828,3 +1835,11 @@ fixes were in `PLAN-0001`, `CLAUDE.md`, `ADR-0001`, and the coverage tool.
 | **P1-1** | `PLAN-0001` M2 declared `CanonicalContents` to contain "waterMass, liquidVolume, material amounts, **and the scenarioSnapshot**". The snapshot is **world-level** genesis state on `WorldState`; per-vessel it would give a world with 8 vessels 8 copies, and re-blur world-metadata against per-vessel contents | M2 now lists **three** fields and states explicitly that the snapshot is not one of them. `PLAN-0001` M2 |
 | **P1-2** | `CLAUDE.md` said "never use bare `python`/`py`" while `PLAN-0001` and CI said `py tools/check_acceptance_coverage.py`. The Windows-only `py` launcher **does not exist on the GitHub Actions Ubuntu runner**, so CI would have failed on its first run. Separately, `pyproject.toml` was declared inside `tools/oracle/` while the environment lived at the root `.venv`, leaving `uv sync` with two candidate targets | One Python project at the root (`pyproject.toml` + `.venv`); `tools/oracle/` holds source. One platform-neutral command set, given **verbatim** in `README`, `CLAUDE.md`, `PLAN-0001`, CI, and `ADR-0001` §4a. `CLAUDE.md` §21.5 also gained bootstrap semantics — `.venv` is gitignored, so a fresh clone must create it |
 | **P2-1** | The coverage checker counted a criterion as mapped if it appeared **anywhere** in a milestone section, so `Addresses: AC-R1..AC-R18` while `AC-R19` sat in the test table still passed | Two tiers: **claimed** (in `Addresses:`) and **evidenced** (in tests or stop condition). The stronger check immediately exposed **17 unevidenced criteria** that the weak one had passed. All 70 are now claimed *and* evidenced |
+
+**Two residue fixes in the same pass** (owner review round 7). Neither is a
+revision — both are the same defects not fully swept the first time.
+
+| Residue | What was wrong | Where fixed |
+|---|---|---|
+| **The scalar equation still used PHYSICAL molality** | The governing-model section defines `m̂ = m/m°` and states `Kw_c`/`Ka_c` are dimensionless, then **six lines later** wrote the scalar form as `m_Na + m_H − Kw_c/m_H − m_A,tot·Ka_c/(Ka_c + m_H) = 0` — reintroducing `dimensionless / (mol/kg)`. It was labelled "the familiar scalar form", which is precisely what invites an implementer to copy it | Corrected to reduced symbols throughout, with an explicit note that the hats are not decoration. The same equation in `docs/research/` and the bracketing discussion were corrected too. `PLAN-0001` M4 had already been right — the spec and research doc were trailing behind it |
+| **`UNEVIDENCED` was only a warning** | The checker printed unevidenced criteria but returned `ok = not unmapped and not dangling`, so a criterion claimed with no test **passed CI**. That directly contradicts `CLAUDE.md`: *"Each acceptance criterion MUST have a corresponding verification method."* | `UNEVIDENCED` now blocks. Verified by fixture rather than asserted: dropping a criterion from an `Addresses:` line and removing an evidence row each produce exit 1, and reverting restores exit 0 |

@@ -22,7 +22,7 @@ with solid phases and a curated log K database. Those are different problems.
 A technology investigation (2026-09-11, recorded in
 `docs/research/scientific-solver-landscape.md`) established:
 
-- The exact titration solve is a **coupled two-unknown problem** — `(m_H, I)` —
+- The exact titration solve is a **coupled two-unknown problem** — `(m̂_H, Î)`,
   solved by nested bisection, with activity coefficients participating inside
   the equilibrium constraints and on the **molality** basis. A ~150-line
   implementation reproduces analytic activity relations to <1e-9 pH and IUPAC

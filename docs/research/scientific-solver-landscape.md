@@ -46,37 +46,41 @@ Two candidate libraries are actively harmful for this project and are ruled out.
 
 ## 1. The rigorous formulation
 
-For a monoprotic acid HA (analytical **molality** `m_A,tot`) plus strong base
-giving `m_Na` sodium, in water:
+For a monoprotic acid HA plus strong base giving sodium, in water. **The whole
+algebra is carried in REDUCED molality** `m̂ = m/m°` (`m° = 1 mol/kg`), which is
+dimensionless — `Kw` is a dimensionless constant, so dividing it by a physical
+molality is not a legal expression:
 
 ```
-charge balance:    m_Na + m_H = m_OH + m_A + m_Cl
-mass balance:      m_A,tot  = m_HA + m_A
+charge balance:    m̂_Na + m̂_H = m̂_OH + m̂_A + m̂_Cl
+mass balance:      m̂_A,tot  = m̂_HA + m̂_A
 acid dissociation: Ka = a_H·a_A / a_HA
 water:             Kw = a_H·a_OH
-activities:        a_i = γ_i · (m_i / m°),   m° = 1 mol/kg
-ionic strength:    I = 0.5 · Σ m_i z_i²
-Davies:            log₁₀γᵢ = −A z_i² ( √I/(1+√I) − b I )
+reduced molality:  m̂_i = m_i / m°            (dimensionless)
+activities:        a_i = γ_i · m̂_i            (dimensionless)
+ionic strength:    I_m = 0.5 · Σ m_i z_i²     [mol/kg]
+reduced:           Î   = I_m / m°             (dimensionless)
+Davies:            log₁₀γᵢ = −A z_i² ( √Î/(1+√Î) − b Î )
 ```
 
 **Activities are not optional and not post-hoc.** `Ka` and `Kw` are defined on
 activities; substituting concentrations into them silently redefines the
 constants. Substituting the *conditional* constants
-`Kw_c = Kw/(γ_H γ_OH)` and `Ka_c = Ka·γ_HA/(γ_H γ_A)` into the charge balance
-recovers a single scalar equation:
+`Kw_c = Kw/(γ_H γ_OH)` and `Ka_c = Ka·γ_HA/(γ_H γ_A)` — both dimensionless — into
+the charge balance recovers a single scalar equation:
 
 ```
-m_Na + m_H − Kw_c/m_H − m_A,tot·Ka_c/(Ka_c + m_H) = 0
+m̂_Na + m̂_H − Kw_c/m̂_H − m̂_A,tot·Ka_c/(Ka_c + m̂_H) = 0
 ```
 
 The scalar structure is convenient, but `Kw_c` and `Ka_c` **depend on `I`, which
 depends on the speciation, which depends on them.** An implementation that treats
 them as constants — the superseded `spikes/solver-validation` did exactly this —
 is solving a different, inconsistent model. The correct problem has two unknowns,
-`(m_H, I)`, solved simultaneously.
+`(m̂_H, Î)`, solved simultaneously.
 
-For fixed `I` the residual is **strictly increasing** in `m_H` (its derivative is
-`1 + Kw_c/m_H² + m_A,tot·Ka_c/(Ka_c+m_H)² > 0`), so a bracketed method converges
+For fixed `I` the residual is **strictly increasing** in `m̂_H` (its derivative is
+`1 + Kw_c/m̂_H² + m̂_A,tot·Ka_c/(Ka_c+m̂_H)² > 0`), so a bracketed method converges
 without an initial guess — a materially better numerical position than the
 modified Newton–Raphson on log-activities that general packages must use. With
 `I` coupled, monotonicity is **numerically verified over the sampled domain**
