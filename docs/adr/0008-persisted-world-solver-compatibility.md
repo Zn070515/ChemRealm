@@ -12,7 +12,7 @@
 
 `ADR-0002` and `ADR-0007` establish that solver identity — id, version, and
 parameters — is part of replay identity, and that a world solved under
-`acidbase-exact@1.0.0` must not be silently replayed under `@1.1.0`.
+`acidbase-monoprotic-davies@1.0.0` must not be silently replayed under `@1.1.0`.
 
 That is correct and it creates a problem the earlier documents did not answer.
 **Local-first persistence (`ADR-0005`) means a world can live on a user's device

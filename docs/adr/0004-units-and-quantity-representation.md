@@ -59,6 +59,7 @@ wrong.
 | volume | L | `Litre` |
 | **length (geometry)** | **mm** | `Millimetre` |
 | molality | mol/kg water | `MolPerKilogram` |
+| **reduced molality** | **dimensionless** | `ReducedMolality` |
 | molarity | mol/L solution | `MolPerLitre` |
 | temperature | K | `Kelvin` |
 | pressure | kPa | `Kilopascal` |

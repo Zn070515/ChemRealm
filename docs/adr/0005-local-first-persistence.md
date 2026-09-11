@@ -67,7 +67,7 @@ Export produces a single self-describing, versioned bundle:
   "format": "chemrealm.export",
   "formatVersion": 1,
   "schemaVersion": "…",
-  "solverConfig": { "id": "acidbase-exact", "version": "…", "parameters": { } },
+  "solverConfig": { "id": "acidbase-monoprotic-davies", "version": "…", "parameters": { } },
   "world": { },
   "events": [ ],
   "learnerEvidence": [ ],
@@ -85,6 +85,48 @@ Requirements:
   not attributable to a person by construction.
 - **Export is the only sharing path.** There is no upload endpoint to design,
   secure, or file a privacy notice for.
+
+### Branch export is flattened
+
+**Added 2026-09-11 (round 4, finding P1-3).** `ADR-0002` stores a branch as
+`(shared immutable prefix) + (its own suffix)`. That is correct and efficient
+*inside* IndexedDB. It does **not** transfer.
+
+If a child branch is exported with only its suffix:
+
+```
+Root   events 0..20
+   └── Child   events 21..35      ← exported alone
+```
+
+then the bundle cannot be replayed anywhere else — the prefix that produced the
+child's starting state is missing. "Attach the event log to reproduce a bug"
+would silently fail for every branch.
+
+**Rule: export flattens.** Exporting a branch emits the **complete event log from
+genesis to the branch tip** (`0..35` in the example), plus lineage metadata
+recording the fork points. Internal storage may share the prefix; export is a
+**portability boundary** and does not inherit an internal storage optimisation.
+
+```
+{
+  "format": "chemrealm.export",
+  "formatVersion": 1,
+  "lineage": [ { worldId: "root",  forkSequence: null },
+               { worldId: "child", forkSequence: 20, forkStateHash: "…" } ],
+  "world": { },
+  "events": [ /* 0..35, complete */ ],
+  ...
+}
+```
+
+AC-R17 requires a round-trip test that exports a child, discards the parent
+entirely, and replays to the same `replayHash`.
+
+The alternative — exporting the whole branch graph — is more general and is
+**deferred**: v0's sandbox worlds are small and the flattening cost is a few
+hundred events. It is recorded here as the identified upgrade path rather than
+left implicit.
 
 ### Never collected
 

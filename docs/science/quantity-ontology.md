@@ -42,8 +42,25 @@ stores and what the state hash covers (`ADR-0007` §5).
 | Quantity | Symbol | Unit | Basis |
 |---|---|---|---|
 | Molality | `m_i` | mol/kg **water** | Per kilogram of solvent |
+| **Reduced molality** | `m̂_i` | **dimensionless** | `m_i / m°`, `m°` = 1 mol/kg |
 | Molarity (amount concentration) | `c_i` | mol/L **solution** | Per litre of solution |
 | Mole fraction | `x_i` | dimensionless | Per mole of all species |
+
+**Added 2026-09-11 (round 4, finding P1-1).** Reduced molality is the variable
+the thermodynamic algebra is actually written in, and it is a separate quantity
+from molality for the same reason reduced ionic strength is separate from ionic
+strength: **`Kw` is a dimensionless constant and cannot be divided by a
+dimensioned concentration.**
+
+```
+m̂_OH = Kw_c / m̂_H          ✓  dimensionless / dimensionless
+m_OH = Kw_c / m_H          ✗  dimensionless / (mol/kg)
+```
+
+The second form was in the solver until round 4. It produced correct numbers
+only because `m° = 1 mol/kg` numerically — which is exactly why nobody noticed.
+The scientific core now solves in reduced molality and converts **once**, at the
+`ScientificState` boundary: `m_i = m̂_i · m°`.
 
 **v0 uses molality for all thermodynamics.** Reasons:
 

@@ -53,7 +53,7 @@ and units. Consumers cannot obtain a bare number.**
 
 ```ts
 interface SolverAdapter {
-  readonly id: SolverId;            // e.g. "acidbase-exact"
+  readonly id: SolverId;            // e.g. "acidbase-monoprotic-davies"
   readonly version: string;         // semver, participates in replay identity
   readonly models: readonly ModelDescriptor[];
 
@@ -78,16 +78,26 @@ disagreed about this, which would have forced an implementing agent to guess.
 
 ```
 ScientificState {
-  species:      { symbol, molality: MolPerKilogram, amount: Mol }[]
-  gamma:        { symbol, value: ActivityCoefficient }[]
-  activity:     { symbol, value: Activity }[]
-  ionicStrength: { molal: IonicStrengthMolal, reduced: ReducedIonicStrength }
-  modelPh:      ActivityBasedModelPh      // -log10 a(H+), under a named model
-  indicators:   { indicatorId, protonationRatio: number }[]
-  validity:     ValidityStatus
-  provenance:   Provenance
+  reducedMolality: { symbol, value: ReducedMolality }[]   // the algebra's native variable
+  molality:        { symbol, value: MolPerKilogram }[]    // = reducedMolality × m°
+  amount:          { symbol, value: Mol }[]
+  gamma:           { symbol, value: ActivityCoefficient }[]
+  activity:        { symbol, value: Activity }[]
+  ionicStrength:   { molal: IonicStrengthMolal,
+                     reduced: ReducedIonicStrength }
+  modelPh:         ActivityBasedModelPh      // -log10 a(H+), under a named model
+  indicators:      { indicatorId, protonationRatio: number }[]
+  validity:        ValidityStatus
+  provenance:      Provenance
 }
 ```
+
+**Why reduced molality is a first-class output** (round 4, finding P1-1). `Kw` is
+dimensionless, so `m_OH = Kw_c / m_H` divides a pure number by a dimensioned
+concentration and is not mol/kg. The algebra must be written in
+`m̂ = m/m°`; physical molality is produced by multiplying by `m°` once, here.
+`ReducedMolality` and `MolPerKilogram` are distinct types so the two cannot be
+silently interchanged (`ADR-0004`).
 
 It does **not** contain `c(H⁺)`, `−lg c(H⁺)`, or any molarity — those require the
 world's solution volume, which the scientific core does not have.
@@ -118,7 +128,18 @@ scientific and all live here.
    swapping in a different solver that returns a different number is a P0 defect,
    not a refactor.
 
-### v0 implementation: `acidbase-exact`
+### v0 implementation: `acidbase-monoprotic-davies`
+
+**Named for the model, not for a quality claim** (round 4, finding P2-3). The
+earlier id `acidbase-exact` was wrong: the model uses the Davies activity
+equation, `γ_neutral = 1`, `a_w = 1`, a monoprotic indicator approximation,
+instantaneous equilibrium, and a fixed 25 °C. Whatever "exact" was meant to
+convey — that the solver does not take the Henderson–Hasselbalch shortcut — the
+id is permanent replay identity and should say **which model**, not how good it
+is. Renaming later would invalidate every persisted world.
+
+The id plus version plus parameters form the solver's identity; a change to any
+constant in the parameters is a new version (`ADR-0008` open decision 2).
 
 An in-repository TypeScript adapter implementing the exact charge-balance
 formulation validated in the spike. Scope is fixed by `SPEC-0001` §Scientific
@@ -203,7 +224,7 @@ intentional — it is `GOAL.md` §5.3.
 
 ## Open questions
 
-1. When `acidbase-exact` and `phreeqc-adapter` disagree, which is authoritative?
+1. When `acidbase-monoprotic-davies` and `phreeqc-adapter` disagree, which is authoritative?
    **Proposed: neither, unconditionally — a disagreement above tolerance is a
    finding to investigate, and the world records which solver produced its
    numbers.** Owner confirmation wanted before M3.

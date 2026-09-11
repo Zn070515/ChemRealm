@@ -58,7 +58,7 @@ Initial event set (`SPEC-0001` owns the full schema):
 
 | Event | Meaning |
 |---|---|
-| `WorldCreated` | Genesis. Carries scenario ref, schema version, solver config, seed. |
+| `WorldCreated` | Genesis. Carries a self-contained `scenarioSnapshot` + content hash, the **resolved** solver config, schema version, seed. |
 | `ApparatusPlaced` | Apparatus enters the world at a position. Emitted on drop, not during drag. |
 | `ApparatusAttached` | A relationship forms: burette clamped above flask, probe in vessel. |
 | `MaterialCharged` | Initial contents of a vessel (the "before you start" state). |
@@ -122,7 +122,7 @@ solver regression — since the reducer **recomputes** chemistry rather than
 replaying stored answers.
 
 Replay equivalence is *conditional on solver identity*. A world solved by
-solver `acidbase-exact@1.0.0` is not replay-equivalent under
+solver `acidbase-monoprotic-davies@1.0.0` is not replay-equivalent under
 `phreeqc-adapter@2.1.0`, and the runtime must refuse to silently substitute one.
 The solver identity is part of the genesis event and therefore part of the log.
 
