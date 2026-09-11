@@ -1,0 +1,28 @@
+[project]
+name = "chemrealm-tools"
+version = "0.0.0"
+description = "ChemRealm's Python tooling: the acceptance-coverage checker, and (from M4) the PHREEQC validation oracle. Test-time only. Never deployed."
+requires-python = ">=3.12"
+dependencies = []
+
+# The Python tree is NOT a pnpm workspace member (ADR-0001 rule 4), and its
+# environment is `.venv` at this root — one project, one environment, one
+# command set (ADR-0001 rule 4a). See CLAUDE.md 21.5.
+
+[dependency-groups]
+dev = ["pytest>=8.3"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+# Nothing is packaged yet; this project exists to hold a lockfile and a test
+# target. M4 adds the oracle modules under tools/oracle/.
+packages = ["tools"]
+
+[tool.pytest.ini_options]
+testpaths = ["tools/oracle/tests"]
+# `tools/check_acceptance_coverage.py` is a script, not a test module; it is
+# invoked directly in CI rather than collected.
+norecursedirs = ["spikes", ".venv", "node_modules"]

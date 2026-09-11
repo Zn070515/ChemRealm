@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+# Everything here is a hard gate. M0's acceptance is "CI is green on a clean
+# checkout, and a deliberately-introduced forbidden import has been observed to
+# fail the build" — which is why the guard steps are not marked continue-on-error.
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # --- TypeScript toolchain -------------------------------------------
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm build
+      - run: pnpm test
+
+      # Architectural rules, plus the guard that proves they bite. The guard is
+      # what makes M0's stop condition machine-checked rather than a claim.
+      - run: pnpm depcruise
+      - run: pnpm guards
+
+      # Product properties asserted against the shipped artifact: no
+      # third-party origin (AC-P5), no server API route (AC-P1).
+      - run: pnpm artifacts
+
+      - run: pnpm lint
+
+      # --- Python toolchain -----------------------------------------------
+      # Commands here are identical to CLAUDE.md 21.5 and README.md. They are
+      # platform-neutral on purpose: the Windows-only `py` launcher does not
+      # exist on this runner.
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - run: uv sync
+      - run: uv run pytest
+
+      # Acceptance-criterion coverage: every AC defined in SPEC-0001 must be
+      # claimed by a PLAN-0001 milestone AND carry evidence there.
+      - run: uv run python tools/check_acceptance_coverage.py
