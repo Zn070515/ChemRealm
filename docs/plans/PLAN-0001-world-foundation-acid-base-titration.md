@@ -1,6 +1,6 @@
 # PLAN-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** Ready to execute (pending `SPEC-0001` acceptance, revision 2)
+- **Status:** Ready to execute (pending `SPEC-0001` acceptance, **revision 4**)
 - **Date:** 2026-09-11 (revised after owner review remediation)
 - **Implements:** `docs/specs/SPEC-0001-world-foundation-acid-base-titration.md`
 - **Related ADRs:** 0001–0009, all `Proposed`. Load-bearing here: 0004 (revised),
@@ -152,7 +152,7 @@ Delete the M0 files. Nothing is persisted and nothing depends on them.
 ## M1 — Schema and units
 
 **Target stage:** S3
-**Addresses:** ADR-0001, ADR-0004; `SPEC-0001` AC-C1, AC-C2, AC-R8, AC-P3
+**Addresses:** ADR-0001, ADR-0004; `SPEC-0001` AC-C1, AC-C2, AC-R8, AC-R15, AC-P3, AC-U1..AC-U4
 
 ### Purpose
 
@@ -182,20 +182,30 @@ All of them. This is the milestone that creates the public surface.
 **Read `docs/science/quantity-ontology.md` first.** It defines the quantities;
 this milestone defines their representation.
 
-1. **Two representations, chosen by whether arithmetic is meaningful**
-   (`ADR-0004` §2, informed by the `spikes/numeric-policy` measurements):
-   - **Opaque** (`interface` with a `unique symbol` key, not `number & …`):
-     `Ph`, `Activity`, `ActivityCoefficient`, `IonicStrengthMolal`,
-     `IonicStrengthMolar`, `MoleFraction`. Arithmetic on these must be a **type
-     error**, verified by a compile fixture.
+1. **Representations chosen by which operations have defined physical meaning**
+   — the **controlled quantity algebra** of `ADR-0004` §2, not "is arithmetic
+   allowed". Activity is multiplied and divided (`Ka = a_H·a_A/a_HA`); mole
+   fractions are summed (`Σx = 1`); ionic strengths are summed and compared.
+   Blocking arithmetic wholesale on those would block legitimate physics.
+   - **Opaque** (`interface` with a `unique symbol` key, **not** `number & …`):
+     `Ph`, `Activity`, `ActivityCoefficient`, `MoleFraction`,
+     `IonicStrengthMolal`, `IonicStrengthMolar`, **`ReducedIonicStrength`**.
+     Raw operators must be a **type error**, verified by a compile fixture; the
+     **defined** operations are supplied as named functions
+     (`ratioActivity`, `differencePh`, `sumMoleFractions`).
    - **Branded** (`number & { __unit }`): `Mol`, `Kilogram`, `Litre`,
      `Millimetre`, `MolPerKilogram`, `MolPerLitre`, `Kelvin`, `Kilopascal`,
      `Second`.
    Each branded unit needs a **distinct brand key**. The spike found a real bug
    where `Mol` and `Litre` shared a symbol and became mutually assignable.
+   `ReducedIonicStrength` is **dimensionless** and separate from both
+   `IonicStrengthMolal` and `IonicStrengthMolar` — Davies accepts only the
+   reduced type (`AC-U4`), so the dimensionally illegal `1 + √(mol/kg)` cannot
+   be written.
 2. **Named operators** returning branded types (`sumAmounts`, `scaleVolume`, …)
-   so arithmetic results can be stored. No scientific-core public signature
-   accepts a bare `number` where a physical quantity is meant.
+   so arithmetic results can be stored, plus the quantity-algebra operators
+   above. No scientific-core public signature accepts a bare `number` where a
+   physical quantity is meant.
 3. Constructors reject `NaN`, infinities, and negatives where non-physical.
 4. **One** conversion module. No `* 1000` elsewhere. Round-trip conversions for
    every unit, including the molality↔molarity path, which needs a **sourced
@@ -242,7 +252,7 @@ truth" claim rather than asserting it.
 ## M2 — Event runtime and replay
 
 **Target stage:** S3
-**Addresses:** ADR-0002, ADR-0007; `SPEC-0001` AC-R1..AC-R5, AC-R7
+**Addresses:** ADR-0002, ADR-0007; `SPEC-0001` AC-R1..AC-R5, AC-R7, AC-R9..AC-R15
 
 ### Purpose
 
@@ -373,7 +383,7 @@ without a caller ever holding a bare number lacking provenance.
 ## M4 — Acid-base reference engine and oracle validation
 
 **Target stage:** S3
-**Addresses:** ADR-0003, ADR-0007; `SPEC-0001` AC-S1..AC-S11
+**Addresses:** ADR-0003, ADR-0007; `SPEC-0001` AC-S1..AC-S15
 
 The scientific heart of the slice. Also the milestone that closes the
 equivalence-region gap the spike could not.
@@ -439,6 +449,19 @@ starting; the concentration-only formulation they describe is superseded.**
    disagreement; never average it.**
 9. **Both hydrogen-ion quantities** (`−lg c(H⁺)` and `pH = −log10 a(H⁺)`) emitted
    as distinct types and covered by REF-5 and REF-6.
+9a. **Ownership, per `SPEC-0001` §Who owns which quantity and `ADR-0003`.**
+   The scientific core emits `ScientificState` — molal species, `γ`, activity,
+   `I_m`/`Î`, **activity-based model pH**, **indicator protonation ratios**,
+   validity, provenance. It does **not** emit molarity or `−lg c(H⁺)`.
+   Those come from **`ScientificProjection`**, which takes `ScientificState`
+   plus plain physical data (`waterMass`, `liquidVolume`) and lives in
+   `packages/sci` without importing `packages/world`.
+   Getting this wrong here forces every downstream layer to guess.
+9b. **Indicator equilibrium is scientific.** Solve it in `packages/sci`
+   (`AC-V9`). The observable layer receives `{ indicatorId, protonationRatio }`
+   and owns only the mapping ratio → colour. Do **not** put `Ka_in`, an
+   activity, or an activity coefficient in `packages/render` — that is the
+   P1-C defect.
 
 ### Tests and evidence
 
@@ -490,7 +513,7 @@ If PHREEQC cannot be installed and driven in CI:
 ## M5 — Observable state
 
 **Target stage:** S3
-**Addresses:** ADR-0006, ADR-0007; `SPEC-0001` AC-V1..AC-V4, AC-V6, AC-V8
+**Addresses:** ADR-0006, ADR-0007; `SPEC-0001` AC-V1..AC-V4, AC-V6, AC-V8, AC-V9
 
 ### Purpose
 
@@ -541,11 +564,25 @@ packages/render/src/state/scene.ts            ObservableModel → RenderState
 
    Implement it as a **policy object**, the same discipline `ADR-0009` applies
    to ACE, so the default can be changed without touching anything outside the
-   presentation layer. Non-negotiable in every configuration: both quantities
-   present in every state; every displayed number labelled with which quantity
-   it is; one convention per view, never mixed; no unlabelled "pH" anywhere.
-   **The two must never be derived from each other** — `−lg c(H⁺)` comes from a
-   genuine `c(H⁺)`, not from `−log₁₀ m(H⁺)` (this was defect P1-1).
+   presentation layer (for the format/placement half) or `ScientificProjection`
+   (for the value half).
+
+   **What "labelled" means** — the owner's two requirements ("call it pH" and
+   "no unlabelled pH anywhere") are only in tension if "labelled" is undefined.
+   It means: the *model-pH* number always carries an explicit
+   activity-model provenance label wherever it appears, and the two conventions
+   never appear in the same view without a visible separator and a distinct
+   label on each. It does **not** mean the taught quantity is captioned
+   "approximately pH" — that would make the product unusable for its primary
+   users. Non-negotiable in every configuration:
+
+   | # | Requirement |
+   |---|---|
+   | 1 | Both quantities present in every state |
+   | 2 | Model pH is never displayed without its activity-model label |
+   | 3 | One convention per view; never mixed, never unseparated |
+   | 4 | The taught quantity may be called "pH" — it is what the syllabus means |
+   | 5 | **The two are never derived from each other**: `−lg c(H⁺)` comes from a genuine `c(H⁺)`, not from `−log₁₀ m(H⁺)` (defect P1-1) |
 6. `symbolic.ts` emits the equilibrium expressions **actually used**, with the
    neglected terms named. It may also emit the Henderson–Hasselbalch form
    **flagged `label: "shortcut"`** alongside the exact solve (SPEC open question 4).

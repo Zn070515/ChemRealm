@@ -1,9 +1,9 @@
 # SPEC-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** S1 — Specified (**revision 3**, for owner re-review)
-- **Date:** 2026-09-11 (round 2: science semantics and consistency cleanup)
+- **Status:** S1 — Specified (**revision 4**, for owner re-review)
+- **Date:** 2026-09-11 (round 3: World truth, core boundaries, validation semantics)
 - **Owner:** Project owner
-- **Supersedes:** revisions 1 and 2 of this spec
+- **Supersedes:** revisions 1–3 of this spec
 - **Related ADRs:** 0001, 0002, 0003, 0004 (rev), 0005, 0006, 0007 (rev), 0008, 0009 — all `Proposed`, all load-bearing here
 - **Related evidence:** `spikes/activity-equilibrium/` (scientific formulation),
   `spikes/numeric-policy/` (determinism + branded types),
@@ -39,7 +39,7 @@ equilibrium constraints, on the molality basis — is a two-unknown root-find
 solved by nested bisection. Roughly 150 lines reproduce analytic activity
 relations to better than 1e-9 pH, reproduce IUPAC-traceable acetate buffer
 standards to within 0.012 pH, and conserve charge to 1.4e-17 mol/kg
-(`spikes/activity-equilibrium`, 18/18). The heavy general-purpose speciation
+(`spikes/activity-equilibrium`, 24/24). The heavy general-purpose speciation
 packages are not required for this domain, and two candidate libraries (`iapws`,
 and `pyEQL` which pulls it in) are GPL-3 contamination to be avoided.
 
@@ -233,11 +233,34 @@ charge balance   m_Na + m_H = m_OH + m_A + m_Cl
 mass balance     m_HA,tot  = m_HA + m_A
 Ka               Ka = a_H·a_A / a_HA = γ_H·m_H·γ_A·m_A / (γ_HA·m_HA)
 Kw               Kw = a_H·a_OH       = γ_H·m_H·γ_OH·m_OH
-ionic strength   I  = 0.5 · Σ m_i z_i²
-Davies           log₁₀γᵢ = −A·zᵢ²·( √I/(1+√I) − b·I )
-                 A = 0.509 (mol/kg)^-½,  b = 0.3,  25 °C
+
+ionic strength   I_m = 0.5 · Σ m_i z_i²                   [mol/kg]
+reduced          Î   = I_m / (1 mol/kg)                   [dimensionless]
+
+Davies           log₁₀γᵢ = −A·zᵢ²·( √Î/(1+√Î) − b·Î )
+                 A = 0.509,  b = 0.3   (pure numbers on the reduced convention)
 neutral species  γ_HA = 1   (bounded approximation — see below)
 ```
+
+**Why the reduced ionic strength is not pedantry (round 3, finding P1-F).** The
+Davies expression contains `1 + √I` and `b·I`. If `I` carries units of mol/kg,
+that is a sum of a dimensionless `1` and a dimensioned quantity, which is not
+defined. On the molality scale the standard resolution is to use the ionic
+strength **relative to the standard molality**:
+
+```
+Î = I_m / m°,   m° = 1 mol/kg
+```
+
+so `Î` is a pure number and every term in the Davies expression is
+dimensionless. `A` then carries no units either.
+
+The numerical effect is nil (`Î = I_m / 1`), and that is exactly why it is worth
+writing down: a project that insists activity and `Ka` be dimensionless while its
+own activity model adds `1 + √(mol/kg)` is not being rigorous, it is being
+inconsistent. The two are now distinct types — `IonicStrengthMolal` (mol/kg) and
+`ReducedIonicStrength` (dimensionless) — so the distinction cannot be lost in
+code by accident.
 
 `Ka` and `Kw` are **thermodynamic** constants on the molality basis and are
 dimensionless, because `a_i = γ_i·(m_i/m°)` with `m° = 1 mol/kg`.
@@ -317,11 +340,48 @@ inputs:
 them is a defect regardless of how small the number appears
 (`docs/science/quantity-ontology.md`).
 
-**The scientific core computes molalities only.** Molarity and both pH-like
-numbers are produced by the presentation layer from the converged molality state
-plus the mixture's conserved amounts and volume. There is no code path that
-derives `−lg c(H⁺)` from a molality, and that is a structural guarantee, not a
-convention.
+#### Who owns which quantity
+
+**Revised 2026-09-11 (round 3, finding P1-D).** Three separate documents
+previously described three different architectures — the spec said the
+scientific core emits molalities only, the ontology said it emits "both molality
+and molarity", and `PLAN-0001` M4 required both pH-like values to be emitted. An
+agent starting M3 would have had to guess. This table is now the single answer,
+and the other three documents defer to it.
+
+| Layer | Owns | Does **not** own |
+|---|---|---|
+| **Scientific Core** (`packages/sci`) | molal species amounts; `γ`; **activity**; `I_m`; **activity-based model pH**; **indicator chemical speciation**; validity, model identity, provenance | molarity, `−lg c(H⁺)`, colour, geometry |
+| **World Physical State** (`packages/world`) | material `amount`s, `waterMass`, `liquidVolume`, structure, `scenarioSnapshot` | any equilibrium quantity |
+| **ScientificProjection** (`packages/sci`, plain-data input) | `c(H⁺)` and `−lg c(H⁺)` — anything needing **both** scientific state and world volume | colour, geometry, formatting |
+| **Observable Model** (`packages/render/observable`) | the **empirical mapping** from an already-computed scientific value to a visual: ratio → colour, volume → height via `h(V)`, series → curve geometry | any equilibrium calculation |
+| **Renderer** (`packages/render/pixi`) | pixels | everything above |
+
+```
+Scientific Core        molality, γ, activity, I_m, model pH, indicator speciation
+       +
+World Physical State   amount, waterMass, liquidVolume
+       ↓
+ScientificProjection   c(H⁺) = n(H⁺)/V ,  −lg c(H⁺)
+       ↓
+Observable Model       colour, liquid height, curve geometry, text
+       ↓
+Renderer               pixels
+```
+
+**The key correction:** the scientific core is *solved* on the molality basis,
+but that is a numerical base, not a restriction on what it may output. **Activity,
+`I_m`, model pH, and indicator speciation are scientific outputs** and belong to
+the scientific core. What the core cannot produce is `c(H⁺)`, because that needs
+the world's solution volume — which is why `ScientificProjection` exists as a
+named layer rather than being called "the presentation layer".
+
+`ScientificProjection` lives in `packages/sci` and takes **plain data**
+(`waterMass`, `liquidVolume`), so it does not import `packages/world`
+(`ADR-0001` forbids `sci → world`).
+
+There is no code path that derives `−lg c(H⁺)` from a molality. That is a
+structural guarantee, not a convention.
 
 #### Terminology: this is a *model* pH, not "the" pH
 
@@ -369,31 +429,40 @@ displayed number is labelled with which quantity it is; one convention per view;
 and the choice is a policy object swappable without touching `packages/sci` or
 the observable model (AC-V8).
 
-### Computational domain vs validated accuracy envelope
+### Computational domain vs proposed validation envelope
 
-**Revised 2026-09-11 (round 2, finding P1-3).** The previous revision ran these
-two concepts together: it permitted `I_m ≤ 0.5 mol/kg` and then attached a single
-"±0.02 pH" claim to the whole domain. That was wrong. `I ≤ 0.5` is where the
-Davies equation is *roughly* usable — an informed rule of thumb, not an error
-bound — whereas ±0.02 pH is a claim that has only been *demonstrated* at the two
-IUPAC buffer anchors (`I = 0.01` and `I = 0.10`).
+**Revised 2026-09-11 (rounds 2 and 3, findings P1-3 and P1-E).** Two separate
+corrections live here.
 
-**They are two different things and are now stated separately.**
+**Round 2** separated `I_m ≤ 0.5 mol/kg` — where the Davies equation is *roughly*
+usable, an informed rule of thumb and not an error bound — from a claim of
+±0.02 pH, which had been demonstrated only at the two IUPAC buffer anchors
+(`I = 0.01` and `I = 0.10`).
 
-| | Value | Meaning |
+**Round 3** fixes the residual overstatement. The previous revision called the
+inner region a **"validated"** envelope spanning `I_m ≤ 0.12`, while the same
+document stated elsewhere that the **weak-acid equivalence region remains
+independently unvalidated**. Both cannot be true: *equal ionic strength does not
+imply equal model error.* Acetate buffer, strong-acid excess, and the weak-acid
+equivalence point are different composition regimes, and Davies-vs-Bates–Guggenheim
+disagreement need not be the same size in each.
+
+| | Value | Status |
 |---|---|---|
-| **Computational domain** | `I_m ≤ 0.5 mol/kg` | Outside this the model is not physically meaningful; the solver **refuses** (`MODEL_OUT_OF_DOMAIN`). |
-| **Validated accuracy envelope** | `I_m ≤ 0.12 mol/kg` | Inside this, **±0.02 pH is claimed and evidenced**. Outside it, results are computed and displayed but **accuracy is explicitly not claimed**. |
+| **Computational domain** | `I_m ≤ 0.5 mol/kg` | Model is physically meaningful. Outside: refuse (`MODEL_OUT_OF_DOMAIN`). |
+| **Proposed validation envelope** | `I_m ≤ 0.12 mol/kg` | **The target, not yet earned.** ±0.02 pH is currently evidenced *only* at the two IUPAC anchors inside it. |
+| **Validated envelope** | — | **Does not exist yet.** Comes into being only when M4's AC-S6 passes with the PHREEQC oracle across the full swept curve including the equivalence region. |
 
-Anchored by: IUPAC-traceable acetate buffer standards at `I = 0.01` (Δ 0.0112)
-and `I = 0.10` (Δ 0.0061), plus analytic activity relations across the excess
-regimes. The envelope is set above the highest anchor with margin; it is **not**
-an extrapolation of the anchors to 0.5.
+Anchored so far by: IUPAC-traceable acetate buffer standards at `I = 0.01`
+(Δ 0.0112) and `I = 0.10` (Δ 0.0061). Analytic activity relations across the
+excess regimes verify the solver's arithmetic, **not** the model's accuracy, and
+do not count toward the envelope.
 
 **The envelope is not a guess about the scenarios — it is measured against
 them.** The v0 titration scenarios (0.1 mol/L HCl/NaOH and HOAc/NaOH, 0–2
 equivalents) reach a maximum `I_m` of **0.1002 mol/kg** over the full sweep
-(`spikes/activity-equilibrium` §K), comfortably inside the envelope.
+(`spikes/activity-equilibrium` §K), comfortably inside the proposed envelope.
+
 
 **Behaviour between the envelope and the domain limit** (e.g. a learner building
 a 0.3 mol/L system in the sandbox): the solver computes, and the result carries
@@ -453,26 +522,39 @@ shows a number computed outside the domain.**
    valid over the supported domain. Not valid at high solute concentration, which
    the domain check excludes.
 
-### Indicator model — empirical, labelled, and range-limited
+### Indicator model — split across the core boundary
 
-Colour is an *empirical observable*, not a first-principles calculation.
-Phenolphthalein's pink is not derivable from the equilibrium model at this
-fidelity. Per `GOAL.md` §12 it must therefore be labelled `empirical`, never
-`calculated`.
+**Revised 2026-09-11 (round 3, finding P1-C).** An earlier revision put the
+whole indicator model in the observable layer, including the equilibrium
+expression. That was wrong: the expression contains `Ka`, an activity, and an
+activity coefficient, which is **equilibrium chemistry**, not a perceptual
+mapping. The renderer would have needed the activity model to evaluate it.
 
-The model, now activity-consistent (`P1-1`):
+The correct split (`ADR-0006`):
+
+**Half 1 — indicator equilibrium. Owned by the Scientific Core.**
 
 ```
 m_In⁻ / m_HIn = Ka_in · γ_HIn / (a_H · γ_In)
 ```
 
 with `γ_HIn = 1` (neutral species) and `γ_In` from Davies at the solution's
-`I_m`. Note that the ratio depends on the hydrogen-ion **activity**, not its
-molality — which is the correct coupling and is why `P1-1` changed this line too.
+reduced ionic strength. The ratio depends on the hydrogen-ion **activity**, not
+its molality or molarity. The core solves this alongside the analyte's
+equilibrium and emits
 
-The ratio drives a declared colour mixing between the acid-form and base-form
-colours, with a stated transition interval. There is **no `if pH > 8.2 then pink`
-branch anywhere** (`GOAL.md` §5.3, `CLAUDE.md` §8.1).
+```
+indicators: [{ indicatorId, protonationRatio }]
+```
+
+**Half 2 — colour perception. Owned by the Observable Model.** The ratio maps to
+a colour through a declared mixing model whose endpoints are standard colours and
+whose transition interval is stated. There is **no `if pH > 8.2 then pink` branch
+anywhere** (`GOAL.md` §5.3, `CLAUDE.md` §8.1).
+
+**The dividing line:** *"how much In⁻ is there" is chemistry. "What does 50 %
+In⁻ look like" is perception.* This is stated once as a general rule in
+`ADR-0006` so it does not have to be re-argued for the next observable.
 
 | Indicator | Acid form | Base form | Transition interval (25 °C) | `pKa_in` |
 |---|---|---|---|---|
@@ -480,9 +562,10 @@ branch anywhere** (`GOAL.md` §5.3, `CLAUDE.md` §8.1).
 | Methyl orange | red | yellow | 3.1 – 4.4 | ≈ 3.4 |
 
 **Provenance status: textbook/standard values, primary source to be pinned at M4.**
-These numbers enter the solver configuration and therefore replay identity
-(`ADR-0007` §8), so they must be traced to a citable source before M4's gate
-closes. They are marked here as provisional.
+`Ka_in` enters the **solver configuration** (scientific core) and therefore replay
+identity (`ADR-0007` §8); the colour endpoints enter the observable model's own
+version. They must be traced to citable sources before M4's gate closes. Marked
+here as provisional.
 
 **Labelled approximation.** Phenolphthalein is genuinely diprotic (`H₂In`,
 `HIn⁻`, `In²⁻`). v0 models it as monoprotic using the dominant transition. This
@@ -520,8 +603,9 @@ and are never stored as though they were thermodynamic.
 | `Ka`(CH₃COOH) | 1.8001e-5 (pKa 4.7447) | molality, dimensionless | Derived from Ka = 1.8e-5. **Open question 1.** |
 | HCl | fully dissociated | model choice | Not a constant |
 | NaOH | fully dissociated | model choice | Not a constant |
-| Davies `A` (25 °C) | **0.509 (mol/kg)^-½** | **molality basis** | Standard; primary source to be pinned at M4 |
-| Davies `b` | 0.3 kg/mol | molality basis | Empirical; primary source to be pinned at M4 |
+| Davies `A` (25 °C) | **0.509** | **dimensionless**, reduced-`I` convention | Standard; primary source to be pinned at M4 |
+| Davies `b` | 0.3 | dimensionless, reduced-`I` convention | Empirical; primary source to be pinned at M4 |
+| Standard molality `m°` | 1 mol/kg | defines `Î = I_m/m°` | Convention; recorded in solver config |
 | `γ_HA` (neutral) | 1.0 | molality basis | **Approximation**, bounded at +0.02 `log10 γ` at I=0.1 (F6) |
 | `a_w` | 1.0 | convention | Valid over the supported domain only |
 | Indicator `Ka_in` | see table | molality, dimensionless | **Provisional**, see above |
@@ -549,7 +633,7 @@ round-2 revision adds the envelope, finding P1-3). Reference values come from
 | Half-equivalence vs `pKa + log10 γ_A` | ~0.06 | 0.0007 pH | ±0.005 pH |
 | Dilute strong acid (1e-8 mol/kg) | ~1e-8 | 0.0002 pH vs full balance | ±0.005 pH |
 
-**Stated model tolerance: ±0.02 pH, inside the validated accuracy envelope
+**Stated model tolerance: ±0.02 pH, inside the proposed validation envelope
 `I_m ≤ 0.12 mol/kg` only.**
 
 The tolerance is **not** claimed across the whole computational domain. The two
@@ -560,7 +644,7 @@ extrapolating it to `I_m = 0.5` would be exactly the kind of unsupported claim
 this spec exists to prevent.
 
 **Molality vs molarity.** The scale choice moves the *model pH* by at most
-**0.00096 pH** over the validated envelope (measured, `spikes/activity-equilibrium`
+**0.00096 pH** over the proposed validation envelope (measured, `spikes/activity-equilibrium`
 §F). This is why the two scales can coexist — one thermodynamic, one
 pedagogical — without the difference being visible to a learner. It is **not**
 why they may be merged: the margin is a property of these concentrations, not a
@@ -651,31 +735,110 @@ routes (`AGENTS.md` §8).
 
 ### WorldState
 
+**Revised 2026-09-11 (round 3, findings P1-A and P1-B).** Two defects fixed here:
+contents had two sources of truth, and the event log could not reconstruct the
+state it claimed to own.
+
 ```
 WorldState {
   schemaVersion: 1
   worldId: WorldId
   lineage: { parentWorldId: WorldId | null, forkSequence: number, forkStateHash: Hash }
-  sequence: number                 // present cursor; not hashed
+  sequence: number                      // present cursor; not hashed
   solverConfig: { id, version, parameters }
-  vessels: Vessel[]
+  scenarioSnapshot: ScenarioSnapshot    // genesis is self-contained — see below
+  vessels: Vessel[]                     // STRUCTURE ONLY
   apparatus: Apparatus[]
   attachments: Attachment[]
   canonical: { byVessel: Record<VesselId, CanonicalContents> }
 }
 
+Vessel {
+  id, kind,
+  capacity: Litre,                      // fixed geometry
+  geometryRef,                          // -> the V(h) / h(V) profile
+  position: { x: Millimetre, y: Millimetre }
+}                                       // NO contents field. See P1-B.
+
 CanonicalContents {
-  waterMass: Kilogram                       // the conserved solvent quantity
-  materials: { materialId, amount: Mol }[]  // the conserved solute quantities
+  waterMass:    Kilogram                     // conserved solvent
+  liquidVolume: Litre                        // operational physical state
+  materials:    { materialId, amount: Mol }[]  // conserved solutes
 }
 ```
 
-`Vessel { id, kind, capacity: Litre, contents: CanonicalContents, geometryRef, position }`
+**`Vessel` holds no contents.** An earlier revision carried
+`Vessel.contents: CanonicalContents` *and* `canonical.byVessel[vesselId]` — the
+same chemistry in two places, which is the exact "second source of truth" this
+project forbids everywhere else (`CLAUDE.md` §9, `ADR-0002`). `Vessel` is now
+structure only; contents live **only** in `canonical.byVessel`.
 
 `Apparatus { id, kind, position, state }` — a burette's `state` carries
 `initialVolume: Litre`; its reading is **derived**, not stored.
 
 `Attachment { childId, parentId, portId }`
+
+### Genesis must be self-contained
+
+**This is the fix for P1-A: an event log that cannot rebuild its own state is not
+a source of truth.**
+
+An earlier revision had `WorldCreated` carry only a `scenarioRef`, and
+`MaterialCharged` carry only an `amount`. Neither is enough:
+
+- **Where does the initial `waterMass` come from?** A material is a *solution*
+  with a declared molarity and density. Charging 1.000 L of 0.1000 mol/L HCl at
+  ρ = 1.0020 kg/L gives `n(HCl) = 0.1 mol` and
+  `waterMass = 1.0020 − 0.1 × 0.03646 = 0.998354 kg`. None of that is derivable
+  from `amount` alone.
+- If the reducer resolved it by re-reading `content/`, the log would depend on an
+  external file that can change or disappear. A world whose replay changes
+  because someone edited a JSON file is not replayable.
+
+Therefore:
+
+- `WorldCreated` carries a **`ScenarioSnapshot`**: the material definitions used
+  (composition **and density**, both sourced), vessel geometry references and
+  their `V(h)` profiles, apparatus defaults, and the solver configuration —
+  together with a **content hash**. The world never re-reads `content/` at
+  replay time.
+- `MaterialCharged` carries the **charged volume**, not a bare amount. The
+  reducer derives amount, water mass, and any other state from the snapshot's
+  material definition. This also matches what a learner actually does — dispense
+  a volume.
+
+**Consequence, stated plainly:** editing `content/` does not mutate existing
+worlds. It produces a new content hash, and therefore a new world. This is the
+desired behaviour, and it is what makes the export bundle self-contained
+(`ADR-0005`).
+
+### `liquidVolume` is operational state, not derived
+
+The system explicitly **rejects** deriving volume from water mass plus a density
+model — that would put a density model back into the thermodynamic path that
+molality was chosen to avoid (`ADR-0004` open question 2).
+
+But volume is needed by four separate things: liquid level via `h(V)`, the
+burette reading, `c(H⁺)` and therefore `−lg c(H⁺)`, and **the size of the next
+transfer**. So it is tracked as state and enters `replayHash`.
+
+It is *updated by transfer*, never recomputed:
+
+```
+f = ΔV / V_source                                   // homogeneous mixture
+
+source.liquidVolume -= ΔV          target.liquidVolume += ΔV
+source.waterMass    -= f · source.waterMass
+                                   target.waterMass    += f · source.waterMass
+∀ m: source.amount(m) -= f · source.amount(m)
+                                   target.amount(m)    += f · source.amount(m)
+```
+
+Two assumptions are stated rather than hidden: **volume additivity**
+(`V_mix = ΣV`) and **complete instantaneous mixing**, which is what makes the
+transfer of water and solutes proportional to the volume fraction. Element
+conservation across a transfer sequence is the test that catches both being
+wrong (AC-S3).
 
 ### Three levels of state, never conflated
 
@@ -684,8 +847,8 @@ This is the fix for owner finding P1-2 and it is load-bearing (`ADR-0007` §3):
 | Level | Contents | Quantized | Persisted | Purpose |
 |---|---|---|---|---|
 | **Solver state** | full speciation, unquantized float64 | no | no | conservation validation |
-| **Canonical state** | `n_i` (mol), `m_w` (kg), world structure | yes | yes | defines replay equality |
-| **Derived science** | molalities, activities, `γ`, `I_m`, `pH`, species | no | no | recomputed on demand |
+| **Canonical state** | `n_i` (mol), `m_w` (kg), **`V` (L)**, `scenarioSnapshot`, world structure | yes | yes | defines replay equality |
+| **Derived science** | molalities, activities, `γ`, `I_m`, model pH, species | no | no | recomputed on demand |
 
 Species, activities, and ionic strength are **derived and never quantized
 independently**. The measured consequence (`spikes/numeric-policy`): quantizing
@@ -749,11 +912,11 @@ All events carry `{ seq, type, payload, schemaVersion, meta? }`.
 
 | Event | Payload | Notes |
 |---|---|---|
-| `WorldCreated` | `{ scenarioRef, solverConfig, seed: null }` | Genesis. Carries solver identity — it is part of replay identity. |
+| `WorldCreated` | `{ scenarioSnapshot, contentHash, solverConfig, seed: null }` | Genesis, and **self-contained**: the snapshot carries material definitions (composition, density), vessel geometry and `V(h)` profiles, apparatus defaults. Carries solver identity — part of replay identity. |
 | `ApparatusPlaced` | `{ apparatusId, kind, position }` | Emitted on drop, never during drag. |
 | `ApparatusAttached` | `{ childId, parentId, portId }` | e.g. burette clamped above flask. |
-| `MaterialCharged` | `{ vesselId, materialId, amount: {value,unit} }` | Initial contents. |
-| `TransferCommitted` | `{ fromVesselId, toVesselId, volume: {value,unit}, mechanism }` | The chemically load-bearing event. |
+| `MaterialCharged` | `{ vesselId, materialId, volume: {value,unit} }` | Carries **volume**, not amount: the reducer derives amount, `waterMass`, and `liquidVolume` from the snapshot's material definition. |
+| `TransferCommitted` | `{ fromVesselId, toVesselId, volume: {value,unit}, mechanism }` | The chemically load-bearing event. Updates `liquidVolume` and moves water and solutes by volume fraction. |
 | `WorldBranched` | `{ parentWorldId, forkSequence }` | Recorded in the **child** log. |
 
 **Not events, deliberately:** `pointermove`, `dragframe`, hover, scroll, camera,
@@ -768,6 +931,17 @@ diverge.
 **`TransferStarted` — deferred, not rejected.** With instantaneous equilibrium a
 transfer has no duration in world time, so the event would carry no semantic
 content. It becomes real when kinetics arrive.
+
+### Replay completeness test
+
+The log must reconstruct the state **without reading `content/`**. This is a
+criterion, not an aspiration (AC-R12):
+
+> Delete or corrupt every file under `content/`, then replay a serialized world.
+> The `replayHash` must be unchanged.
+
+A world that fails this is not event-sourced; it is event-sourced plus a mutable
+external dependency.
 
 ### Reducer
 
@@ -817,16 +991,25 @@ dependency rule.
 | Element | Layer |
 |---|---|
 | Glassware geometry, stroke, highlights | Renderer |
-| Liquid level | Observable model (volume + vessel geometry) |
+| Liquid level | Observable model — calls `h(V)`, mapping only |
 | Liquid fill geometry | Renderer |
-| Indicator colour | Observable model (empirical model, provenance attached) |
-| pH readout value | Observable model; formatted by renderer to 2 dp |
-| Burette reading | Observable model (derived) |
-| Curve points | Observable model (takes the *state sequence*, not one state) |
+| **Indicator protonation ratio** | **Scientific Core** — equilibrium, not rendering |
+| Indicator colour | Observable model — perceptual mapping of the ratio |
+| **Activity-based model pH value** | **Scientific Core** |
+| **`c(H⁺)` and `−lg c(H⁺)`** | **ScientificProjection** — needs scientific state + world volume |
+| Readout text, 2 dp formatting | Renderer |
+| Burette reading | Observable model (derived: `initial − Σ delivered`) |
+| Curve points | ScientificProjection supplies values; Observable model gives geometry |
 | Axes, gridlines, labels, tooltips | Renderer |
-| Species composition (micro view) | Observable model |
-| Equilibrium expressions (symbolic view) | Observable model |
-| Bubbles / precipitate / flame | **Not in v0** |
+| Species composition (micro view) | Observable model — **re-presents** scientific values |
+| Equilibrium expressions (symbolic view) | Observable model — **re-presents** solver output; computes nothing |
+| Bubbles / precipitate / flame | **Not in v0**; presence will be Scientific Core when added |
+
+**The observable layer's rule:** it may re-present a scientific value — list,
+format, map to a colour or a geometry. It may not compute new chemistry. If a
+display question needs a `Ka`, a `Ksp`, an activity, or a reaction direction, the
+answer comes from the Scientific Core. Stated once in `ADR-0006` so it does not
+get re-litigated per observable.
 
 ### Macro / micro / symbolic
 
@@ -1113,14 +1296,20 @@ Enumerated with the detection that makes each one non-silent.
 | 16 | Activity applied **post-hoc** rather than inside the equilibrium — the defect this review found | The coupled solve is the only path; REF-3/REF-4 verify the coupling; a post-hoc implementation cannot reproduce both excess regimes |
 | 17 | Molarity/molality or the two ionic-strength bases silently mixed | Distinct opaque types (AC-U2); static check (AC-S8) |
 | 18 | Taught `−lg c(H⁺)` reported as model pH, or vice versa | Distinct types (AC-S9); REF-5 and REF-6 sit side by side in the reference set |
-| 19 | **`−lg c(H⁺)` derived from a molality** — the defect this review round found | `c(H⁺)` is produced only by the presentation layer from amounts and solution volume (AC-S8); REF-5 is exact at 1.0000 and a molality-derived value would give 0.9993 and fail it |
+| 19 | **`−lg c(H⁺)` derived from a molality** — the defect this review round found | `c(H⁺)` is produced only by `ScientificProjection` from amounts and solution volume (AC-S8); REF-5 is exact at 1.0000 and a molality-derived value would give 0.9993 and fail it |
 | 20 | Model pH presented as "the true pH" rather than a model-dependent quantity | Display copy asserts the IUPAC notional definition and names the activity model (AC-S12) |
-| 21 | A result computed outside the validated accuracy envelope shown as equally trustworthy | `accuracyStatus` travels with the result; AC-S13 |
-| 19 | Cross-engine variation in a transcendental flips a hash | `detLog10`/`detExp10` replace the native calls (AC-S10); perturbed-path replay (AC-R3) |
-| 20 | Derived quantities quantized independently, breaking conservation | AC-R9 design guard, which **requires the wrong strategy to fail** |
-| 21 | An ACE tuning value becomes structural, so a guess cannot be corrected | AC-A7 replaces the whole policy object without touching the control loop |
-| 22 | An old world silently re-solved under a new solver version | `ADR-0008` tiers; a mismatched solver is refused, never substituted |
-| 23 | `detExp10` evaluated outside its validated domain, degrading silently to 32.5 ulp | Domain assertion at the call site; AC-S10 requires refusal outside |
+| 21 | A result computed outside the proposed validation envelope shown as equally trustworthy | `accuracyStatus` travels with the result; AC-S13 |
+| 22 | Cross-engine variation in a transcendental flips a hash | `detLog10`/`detExp10` replace the native calls (AC-S10); perturbed-path replay (AC-R3) |
+| 23 | Derived quantities quantized independently, breaking conservation | AC-R9 design guard, which **requires the wrong strategy to fail** |
+| 24 | An ACE tuning value becomes structural, so a guess cannot be corrected | AC-A7 replaces the whole policy object without touching the control loop |
+| 25 | An old world silently re-solved under a new solver version | `ADR-0008` tiers; a mismatched solver is refused, never substituted |
+| 26 | `detExp10` evaluated outside its validated domain, degrading silently to 32.5 ulp | Domain assertion at the call site; AC-S10 requires refusal outside |
+| 27 | **Replay depends on an external `content/` file** — the log is not self-contained | AC-R12: replay with `content/` absent must be hash-identical |
+| 28 | **Two sources of truth for vessel contents** | AC-R15: `Vessel` carries no `contents` field; schema test |
+| 29 | **`liquidVolume` not tracked**, so liquid level, burette reading, `c(H⁺)` and the next transfer all drift | AC-R13: volume is canonical state and enters `replayHash`; AC-R14 conservation |
+| 30 | **The representation layer computes equilibrium chemistry** (indicator now; precipitation and redox later) | AC-V9; the observable's input carries a ratio, never a `Ka` |
+| 31 | **Davies evaluated with a dimensioned ionic strength** | `ReducedIonicStrength` is a distinct type from `IonicStrengthMolal`; AC-U4 |
+| 32 | **An accuracy claim wider than its evidence** | The envelope is *proposed* until M4 AC-S6 passes; AC-S13/S14 |
 
 ## Test plan
 
@@ -1159,14 +1348,15 @@ Binary and verifiable. Every criterion maps to an evidence method.
 | AC-S4 | Inputs outside the validity domain return `MODEL_OUT_OF_DOMAIN` and produce no number — checked **both** before the solve and on the converged `I_m` | domain test matrix |
 | AC-S5 | The 1e-6 mol/kg acetic acid case matches the exact solve, and the HH divergence (0.65 pH) is reproduced | adversarial test |
 | AC-S6 | The PHREEQC oracle agrees within ±0.02 pH over the swept curve, **including the equivalence region**, with constants **and the molality basis** aligned | oracle comparison report; see the caveat above |
-| AC-S7 | `Ka`, `Kw`, Davies `A` and `b`, `γ_HA`, `a_w`, and the indicator constants are traced to citable sources in `docs/research/constants-provenance.md` | provenance review; **currently open — see Open questions** |
+| AC-S7 | **Every scientific input** is traced to a citable source in `docs/research/constants-provenance.md`: `Ka`, `Kw`, Davies `A` and `b`, `γ_HA`, `a_w`, the indicator `Ka_in`, **and the solution densities** (`ρ` enters `waterMass → molality → activity → model pH`, so it is a scientific input, not an implementation detail) | provenance review; **currently open — see Open questions** |
+| AC-S15 | If `ρ` is treated as a scenario input, the scenario schema must **require** it — a missing density is a validation error, never a default | negative content test |
 | AC-S8 | Every thermodynamic calculation runs on the **molality** basis; no `MolPerLitre` value reaches scientific-core internals; **`m(H⁺)`, `c(H⁺)`, and `a(H⁺)` are produced by distinct code paths and none is derived from another by renaming** | static check + type test on the `packages/sci` public surface; `c(H⁺)` construction unit test |
 | AC-S9 | `−lg c(H⁺)` (taught) and activity-based model pH are distinct types, both computed, neither assignable to the other | compile fixture + named reference cases REF-5/REF-6 |
 | AC-S10 | `detLog10` and `detExp10` meet their stated accuracy (≤1.5 ulp in domain) against arbitrary-precision references, and refuse outside their validated domain | `spikes/numeric-policy` promoted to a package test |
 | AC-S11 | The outer residual is strictly increasing in `m_H` across a sweep **including the domain boundary**, machine-checked | monotonicity sweep test |
 | AC-S12 | Model pH is never labelled or described as "the true/thermodynamic pH"; the inspection view states the IUPAC notional definition and names the activity model it depends on | copy review + DOM assertion on the inspection view |
-| AC-S13 | A result computed beyond the validated accuracy envelope carries `accuracyStatus: "outside-validated-envelope"` and is displayed with that qualification | domain-matrix test at `I_m` = 0.15 and 0.30 mol/kg |
-| AC-S14 | The validated accuracy envelope is asserted, not assumed: the v0 scenario sweep's maximum `I_m` (0.1002 mol/kg) is checked against the envelope limit at test time | boundary test derived from `spikes/activity-equilibrium` §K |
+| AC-S13 | A result computed beyond the proposed validation envelope carries `accuracyStatus: "outside-validated-envelope"` and is displayed with that qualification | domain-matrix test at `I_m` = 0.15 and 0.30 mol/kg |
+| AC-S14 | The proposed validation envelope is asserted, not assumed: the v0 scenario sweep's maximum `I_m` (0.1002 mol/kg) is checked against the envelope limit at test time | boundary test derived from `spikes/activity-equilibrium` §K |
 
 ### Runtime
 
@@ -1183,6 +1373,10 @@ Binary and verifiable. Every criterion maps to an evidence method.
 | AC-R9 | **Design guard.** Conservation after canonicalization ≤ 1e-13 relative over 100 transfers, **and** the "quantize each vessel independently" strategy demonstrably fails this threshold (measured 4.0e-12 vs 1.4e-15) | regression test derived from `spikes/numeric-policy` |
 | AC-R10 | The reducer quantizes **only** canonical independent state; no derived quantity is ever quantized independently | static check + review of the single quantization call site |
 | AC-R11 | `canonicalJson` normalizes `-0` to `0` and rejects `NaN`/`±Infinity` | unit test with the adversarial values |
+| AC-R12 | **Replay completeness.** Delete or corrupt every file under `content/`, then replay a serialized world: `replayHash` is unchanged. The log is self-contained | test that moves `content/` aside and replays |
+| AC-R13 | `liquidVolume` is updated only by transfer and enters `replayHash`; a change in it changes the hash | hash-diff test over a transfer |
+| AC-R14 | Transfer is element- and volume-conserving over 100 steps under the homogeneous-mixture assumption | conservation test (spike §N promoted) |
+| AC-R15 | `WorldState` has exactly **one** location for vessel contents; `Vessel` carries no `contents` field | schema test + review |
 
 ### Representation
 
@@ -1195,7 +1389,8 @@ Binary and verifiable. Every criterion maps to an evidence method.
 | AC-V5 | Screenshots at all four named viewports match the approved baseline | visual regression + owner review |
 | AC-V6 | pH is displayed to at most 2 decimal places | DOM assertion in Playwright |
 | AC-V7 | No geometry coordinate, stroke, or offset carries a volume; all are `Millimetre` | type check + `docs/visual/apparatus-standard.md` review checklist |
-| AC-V8 | **Presentation convention (owner-deferred choice).** Every displayed hydrogen-ion number is labelled with which quantity it is; no view mixes the two conventions; and the choice is a **policy object** swappable without changing `packages/sci`, the observable model, or any component | DOM assertions for labelling and single-convention; a test that swaps the policy and asserts zero non-presentation code changes |
+| AC-V8 | **Presentation convention (owner-decided 2026-09-11).** Default view shows `−lg c(H⁺)` labelled simply as pH; a `科学模型` affordance shows activity-based model pH with the convention caveat. Every displayed hydrogen-ion number is labelled with which quantity it is; no view mixes the two; the choice is a **policy object** swappable without touching `packages/sci` or the observable model. **"Labelled" means: the numeric readout carries a visible quantity label, and the two conventions never appear in one view unlabelled and unseparated** | DOM assertions for labelling and single-convention; a test that swaps the policy and asserts zero non-presentation code changes |
+| AC-V9 | **Indicator boundary.** The indicator protonation ratio is produced by `packages/sci`; `packages/render` receives a number and computes no `Ka`, activity, or activity coefficient. No equilibrium expression appears in the render path | dependency rule + review; the observable's input type carries a ratio, not a `Ka` |
 
 ### ACE
 
@@ -1218,6 +1413,7 @@ Binary and verifiable. Every criterion maps to an evidence method.
 | AC-U1 | Branded types reject a plain `number` and cross-unit assignment; opaque types additionally reject arithmetic on the value itself | `tsc --noEmit` on the fixture files, as in `spikes/numeric-policy` |
 | AC-U2 | `IonicStrengthMolal` and `IonicStrengthMolar` cannot be assigned to or compared with each other | compile fixture |
 | AC-U3 | Every serialized quantity carries a unit; a missing or unknown unit is a rejection, not a default | schema round-trip + negative test |
+| AC-U4 | `ReducedIonicStrength` (dimensionless), `IonicStrengthMolal` (mol/kg), and `IonicStrengthMolar` (mol/L) are three distinct types, mutually non-assignable and non-comparable. Davies accepts only the reduced type | compile fixture; a **positive** test that the Davies signature rejects `IonicStrengthMolal` |
 
 ### Privacy
 
@@ -1357,7 +1553,7 @@ consistency*, and introduced one real scientific defect.
 |---|---|---|
 | **P1-1** | `−lg c(H⁺)` was computed as `−log₁₀(m_H)` — a **molality** wearing a concentration's label. Gave 0.9993 for 0.1000 mol/L HCl, and the spec carried both 0.9993 and 1.0000 | Spike rev 3: `present()` derives `c(H⁺)` from amounts and solution volume, structurally separate from `m(H⁺)`. Correct value **1.0000**. §Three hydrogen-ion quantities |
 | **P1-2** | `−log₁₀ a(H⁺)` called the "thermodynamic pH", implying the textbook value is simply wrong | Renamed **activity-based model pH** throughout, with the IUPAC *notional definition* caveat and the activity model named. §Terminology |
-| **P1-3** | `I_m ≤ 0.5` (Davies's approximate range) and "±0.02 pH" were presented as one guarantee | Split into **computational domain** (0.5) and **validated accuracy envelope** (0.12), with `accuracyStatus` outside the envelope. §Computational domain vs validated accuracy envelope |
+| **P1-3** | `I_m ≤ 0.5` (Davies's approximate range) and "±0.02 pH" were presented as one guarantee | Split into **computational domain** (0.5) and a validation envelope (0.12). Round 3 downgraded the latter to **proposed** until M4 AC-S6 passes. |
 | **P1-4** | Round 1's own instruction was to sweep stale statements; it did not. PLAN still carried "one millilitre" geometry, `Ka_in/[H⁺]`, a duplicate M4 stop condition, and `REF-1..REF-8` | Full repository sweep; every instance corrected. PLAN M4/M5/M6, `ADR-0003`, `ADR-0006` |
 | **P2-1** | Quantity types were split by "is arithmetic allowed", which is wrong — activity, `γ`, mole fraction, and ionic strength all need arithmetic | Re-split by **which operations have defined meaning**, as a controlled quantity algebra with named operations. `ADR-0004` §2, ontology |
 | **P2-2** | `ADR-0008` Tier C promised "previously recorded derived values" that may not exist, since derived science is never persisted | Tier C now guarantees the event log, canonical state, structure, provenance, and explicit exports — **not** an old curve. `ADR-0008` |
@@ -1365,3 +1561,20 @@ consistency*, and introduced one real scientific defect.
 **Round 2 did not touch the architecture.** Event sourcing, the solver adapter
 boundary, local-first persistence, the renderer layering, and the ACE
 abstractions were accepted by the owner and are unchanged.
+
+### Round 3 (2026-09-11) — World truth, core boundaries, validation semantics
+
+Round 3 found no chemistry errors. What it found was that the **data model and
+the core boundaries** did not yet support what the documents claimed — the class
+of problem that is cheap to fix in Markdown and expensive after M1/M2 exist.
+
+| Finding | What was wrong | Where fixed |
+|---|---|---|
+| **P1-A** | The event log could not rebuild the state it owned. `WorldCreated` carried only a `scenarioRef`; `MaterialCharged` only an `amount`; **where initial `waterMass` came from was undefined**. And there was no `liquidVolume`, although volume drives level, burette reading, `c(H⁺)`, and the next transfer | Genesis carries a self-contained `ScenarioSnapshot` + content hash; `MaterialCharged` carries **volume**; `liquidVolume` is canonical state; transfer moves water and solutes by volume fraction. §Genesis must be self-contained, §`liquidVolume` is operational state, AC-R12..AC-R14 |
+| **P1-B** | Contents existed twice — `Vessel.contents` **and** `canonical.byVessel[id]` — the "second source of truth" this project forbids everywhere else | `Vessel` is structure only. AC-R15 |
+| **P1-C** | The indicator's **equilibrium** (`Ka_in`, activity, `γ`) was computed in `packages/render/observable`. That is chemistry, and the same pattern would repeat for precipitation and redox | Indicator equilibrium moves to the Scientific Core; the observable layer receives a ratio and owns only ratio → colour. General rule stated in `ADR-0006`. AC-V9 |
+| **P1-D** | Three documents gave three architectures for who owns molarity / model pH. The spec said the core emits molalities only; the ontology said it emits molarity too; PLAN M4 required both pH values | `ScientificState` now explicitly contains activity, `I`, model pH, and indicator speciation. Molarity and `−lg c(H⁺)` belong to a named **`ScientificProjection`**. §Who owns which quantity; `ADR-0003`; ontology updated. AC-S8 |
+| **P1-E** | The envelope was called **"validated"** while the same document stated the equivalence region is unvalidated. Equal `I` does not imply equal model error | Renamed **proposed validation envelope**. It becomes "validated" only when M4 AC-S6 passes. §Computational domain vs proposed validation envelope; AC-S13/S14 |
+| **P1-F** | Davies contains `1 + √I` and `b·I`; with `I` in mol/kg those are illegal sums, in a document that insists activity and `Ka` be dimensionless | **Reduced ionic strength** `Î = I_m/m°`, dimensionless; `A` and `b` are pure numbers; `ReducedIonicStrength` is its own type. §Governing model; AC-U4 |
+| **P2-1** | PLAN stale: "revision 2", the old arithmetic criterion, `AC-S1..AC-S11`, duplicated failure-mode numbers, AC-V8 still saying "deferred" | All corrected and swept. PLAN M1/M4/M5 |
+| **P2-2** | Solution **density** is a scientific input (it sets `waterMass`, hence molality, activity, model pH) but was not in the provenance requirement | Added to AC-S7, with AC-S15 requiring scenarios to declare it |
