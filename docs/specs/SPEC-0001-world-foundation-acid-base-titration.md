@@ -2,9 +2,10 @@
 
 - **Status:** **Accepted** — S1 passed. Owner, 2026-09-11.
 - **Accepted baseline:** commit `8310c685`, `SPEC-0001` revision 6
-- **Current revision:** **8** — M1 Contract Closure R2 candidate. Revision 7 was
-  the last owner-approved amendment; revision 8 records the closure needed for
-  owner review before M1 can pass S3. See "Amendments since acceptance" below.
+- **Current revision:** **9** — M1 Final Closure candidate. Revision 7 was the
+  last owner-approved amendment; revisions 8–9 record the contract closure
+  needed for owner review before M1 can pass S3. See "Amendments since
+  acceptance" below.
 - **Acceptance scope:** the specification and its acceptance criteria. Deferred
   items listed under Open questions remain open and must be resolved before the
   milestone that names them. Acceptance does **not** assert that any criterion
@@ -24,12 +25,13 @@
 |---|---|---|---|
 | 7 | 2026-09-11 | `CanonicalContents` conserves **components**, not materials (M1 contract remediation item 1). `AC-R21` added to carry that contract; `AC-S3` and `AC-R14` wording aligned to it. Round 6's claim at §"Round 6" that this file was "unchanged at revision 6" corrected. | Owner, 2026-09-11 |
 | 8 | 2026-09-11 | M1 Contract Closure R2 candidate: all persisted `MaterialSnapshot` scientific inputs are tagged quantities; source-data provenance is distinct from solver/model provenance; v0 material definitions reject mixed bases and more than one molality solute until the joint resolver is implemented. | Pending owner review |
+| 9 | 2026-09-11 | M1 Final Closure candidate: material snapshot provenance follows each datum; snapshot scientific quantities are persisted only in canonical units; export wording is aligned with the v1 bundle contract (`events[0]` carries solver config, lineage ids are allowed, and learner evidence has no v1 payload). | Pending owner review |
 
 A revision bump is recorded here rather than only in the body because the header
 is what a reader checks before deciding whether the file they are reading is the
 file that was accepted. Leaving "accepted at revision 6" in place while the body
 had changed made `git diff` the only way to find out.
-- **Related ADRs:** 0001, 0002, 0003, 0004 (rev), 0005, 0006, 0007 (rev), 0008, 0009 — **all `Accepted`, 2026-09-11**, plus ADR-0010 (**Proposed — M1 R2 candidate**) for the v0 genesis basis boundary
+- **Related ADRs:** 0001–0009 were accepted at the baseline; ADR-0001 and ADR-0003 have M1 Final Closure amendments pending owner review, plus ADR-0010 (**Proposed — M1 Final Closure candidate**) for the v0 genesis basis boundary
 - **Related evidence:** `spikes/activity-equilibrium/` (scientific formulation),
   `spikes/numeric-policy/` (determinism + branded types),
   `spikes/solver-validation/` (SUPERSEDED — concentration-only formulation)
@@ -932,25 +934,34 @@ Therefore:
   MaterialSnapshot {
     materialId
     sourceDefinition                    // what the scenario author wrote
-    density: Quantity<density>          // sourced
-    composition: { soluteId, amountConcentration: Quantity<molarity> }[]
-                                         // sourced, canonical unit mol/L
-    molarMasses: { soluteId, molarMass: Quantity<molarMass> }[]
-                                         // sourced, canonical unit kg/mol
+    density: { value, unit: "kg/L", provenance: DataProvenance }
+    composition: { soluteId,
+                   amountConcentration: { value, unit: "mol/L" },
+                   provenance: DataProvenance }[]
+    molarMasses: { soluteId,
+                   molarMass: { value, unit: "kg/mol" },
+                   provenance: DataProvenance }[]
     resolvedInventoryPerLitre: {        // FROZEN at genesis
-      waterMass:        Kilogram
-      soluteAmounts:    { soluteId, Mol }[]
+      waterMass:        { value, unit: "kg" }
+      soluteAmounts:    { soluteId, amount: { value, unit: "mol" } }[]
     }
-    provenance: MaterialDataProvenance[]
   }
   ```
 
-  `MaterialDataProvenance` is source-data provenance, not solver provenance. Each
-  record carries `appliesTo: density | composition | molarMass` plus `source`,
-  `reference`, confidence `category`, optional edition/version, optional tagged
-  temperature/pressure conditions, uncertainty notation, and `lastVerified`.
-  The solver's model identity and parameter set remain the separate
-  `ScientificState.provenance` record.
+  Each scientific input datum carries its own `DataProvenance` sibling: density
+  has one, every composition entry has one, and every molar-mass entry has one.
+  There is no aggregate `appliesTo` array whose coverage or solute target could
+  be ambiguous. `DataProvenance` is source-data provenance, not solver
+  provenance; it carries `source`, `reference`, confidence `category`, optional
+  edition/version, optional tagged temperature/pressure conditions, uncertainty
+  notation, and `lastVerified`. The solver's model identity and parameter set
+  remain the separate `ScientificState.provenance` record.
+
+  A resolved `MaterialSnapshot` is normalized before persistence: density is
+  `kg/L`, composition is `mol/L`, molar mass is `kg/mol`, water mass is `kg`,
+  and resolved solute amounts are `mol`. Authoring `MaterialDefinition` may use
+  equivalent registered units; the genesis resolver must canonicalize them
+  before constructing this snapshot.
 
   Plus vessel geometry references and their `V(h)` profiles, apparatus defaults,
   and the scenario's **model requirements** — together with a **content hash**
@@ -1260,9 +1271,12 @@ external dependency.
 IndexedDB only, per `ADR-0005`. Stores: `worlds`, `events`, `snapshots`,
 `learnerEvidence`, `aceState`, `contentCache`. No server write path exists.
 
-Export bundle: self-describing, versioned, carries `solverConfig` and
-`schemaVersion`, contains no identifiers, and states explicitly whether learner
-evidence is included.
+Export bundle: self-describing and versioned, carries `schemaVersion`, lineage
+world ids, and the complete event log. The resolved `solverConfig` travels in
+`events[0].payload`, not at the bundle top level. It contains no personal,
+device, or cross-session tracking identifiers, and states explicitly whether
+learner evidence is included; v1 carries the literal `false` and no learner
+evidence payload.
 
 ## Representation design
 
@@ -1478,7 +1492,7 @@ reveals an answer.
 |---|---|
 | **Browser-local** | World state; event log; snapshots; learner evidence; ACE state; content cache. All in IndexedDB. |
 | **Server-request** | **Static assets only** — HTML, JS, CSS, images, content JSON. **No API routes exist in v0.** No user data is transmitted. |
-| **Explicitly exportable** | World bundle; event log; learner-evidence bundle; rendered screenshots. All user-initiated. |
+| **Explicitly exportable** | World bundle; event log; rendered screenshots. A learner-evidence export is deferred until a versioned privacy-safe payload exists. All user-initiated. |
 | **Never collected** | Names; email; phone; school; class; student id; precise geolocation; IP-derived identity; device fingerprints; cross-session identifiers; any server-side learner profile; any third-party analytics of any kind. |
 
 ### Network boundary

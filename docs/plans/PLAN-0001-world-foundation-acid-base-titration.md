@@ -1,22 +1,23 @@
 # PLAN-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** **M1 R2 candidate for owner review** — the original plan was
-  approved on 2026-09-11 at `SPEC-0001` revision 6; the current contract
-  candidate is revision 8.
+- **Status:** **M1 Final Closure candidate for owner review** — the original plan
+  was approved on 2026-09-11 at `SPEC-0001` revision 6; the current contract
+  candidate is revision 9.
 - **Completed:** `M0 — Repository foundation` reached **S3 — Verified** on
   2026-09-11. Evidence: `docs/evidence/M0.md`, commits `1f3dfee`/`565a2e8`,
   CI run `34595967023` (13/13 gate steps on a clean `ubuntu-latest` checkout).
-- **Authorized next:** `M1 — Contract Closure R2`. The implementation is **S2**;
-  it reaches **S3** only when the owner accepts the R2 contract and its evidence
-  packet. **M2 is not authorized** on the strength of M1 being written.
+- **Authorized next:** `M1 — Final Closure`. The implementation is **S2**; it
+  reaches **S3** only when the owner accepts the final-closure contract and its
+  evidence packet. **M2 is not authorized** on the strength of M1 being written.
 - **Coverage check:** `uv run python tools/check_acceptance_coverage.py` — every `AC-*` in
   `SPEC-0001` is required to appear in at least one milestone here. Run it after
   editing either document.
-- **Date:** 2026-09-11 (revised for M1 Contract Closure R2)
+- **Date:** 2026-09-11 (revised for M1 Final Closure)
 - **Implements:** `docs/specs/SPEC-0001-world-foundation-acid-base-titration.md`
-- **Related ADRs:** 0001–0009, **all `Accepted`, 2026-09-11**, plus ADR-0010
-  (**Proposed — M1 R2 candidate**). Load-bearing here: 0004 (revised), 0007
-  (revised), 0008, 0009, and 0010's M2 basis-boundary gate.
+- **Related ADRs:** 0001–0009 were accepted at the baseline; ADR-0001 and
+  ADR-0003 have M1 Final Closure amendments pending owner review, plus ADR-0010
+  (**Proposed — M1 Final Closure candidate**). Load-bearing here: 0004
+  (revised), 0007 (revised), 0008, 0009, and 0010's M2 basis-boundary gate.
 - **Audience:** an agent that did not participate in the design. Nothing below
   assumes prior context beyond the repository documents.
 
@@ -27,10 +28,11 @@
 > state stores independent amounts rather than species. **An agent executing an
 > earlier copy of this plan would build the wrong thing.**
 
-> **R2 closure note.** DTO→domain bridges canonicalize units before construction;
-> `MaterialSnapshot` uses tagged scientific inputs with field-associated
-> `DataProvenance`; and v0 rejects mixed composition bases until the Scientific
-> Reality Core owns the joint resolver. The R2 candidate remains S2 pending owner
+> **Final-closure note.** DTO→domain bridges canonicalize units before
+> construction; every resolved snapshot datum is canonical, carries its own
+> `DataProvenance`, and is required structurally; export contracts are aligned
+> with the v1 schema; and v0 rejects mixed composition bases until the Scientific
+> Reality Core owns the joint resolver. The candidate remains S2 pending owner
 > review.
 
 ## How to read this plan
@@ -316,7 +318,7 @@ this milestone defines their representation.
 | Compile fixture: `amount: state.modelPh` does not typecheck, and neither does an `Activity` standing in for an `ActivityCoefficient` | The domain types at the Scientific API boundary are quantities, not bare numbers — the guarantee the DTO/domain split exists to provide |
 | `parseSolveRequest` / `parseScientificState` go through the constructors, and a DTO with `{value, unit:"mol/kg"}` where a dimensionless quantity belongs is REJECTED | A dimensionless quantity is not interchangeable with a dimensioned one across the wire |
 | DTO bridge cases `g→kg`, `mL→L`, `mmol→mol`, and `degC→K` produce canonical domain values; the nested scientific state and nearest-supported descriptor are covered too | Wire units are validated **and converted**, not merely validated then discarded |
-| `MaterialSnapshot` accepts tagged `amountConcentration`/`molarMass` fields, rejects `molPerLitre`/`kilogramsPerMol`, and carries field-associated `DataProvenance` | AC-U3 applies to the persisted world contract, not only the standalone quantity parser |
+| `MaterialSnapshot` accepts canonical tagged `amountConcentration`/`molarMass` fields, requires provenance beside density and every composition/molar-mass datum, and rejects legacy or non-canonical forms | AC-U3 applies to the persisted world contract, not only the standalone quantity parser; coverage is structural |
 | Content artifact accepts multiple molarity solutes but rejects mixed bases and more than one molality solute | v0 does not express a state the resolver cannot safely resolve; the future joint formula is a Scientific Reality Core prerequisite |
 | Meta-test: every object that declares `properties` in **every** emitted artifact also sets `additionalProperties: false`; the runtime rejects the same nested unknown key | TypeScript and Python agree on unknown fields, in both directions |
 | Compile fixture: summing ionic strength across bases does not compile | AC-U2 — one generic `sumIonicStrength` would have accepted `I_m + I_c` silently |
@@ -495,8 +497,9 @@ packages/sci/src/registry.ts         adapter registry, id+version lookup
    across every call site.
 3. Solver `Provenance` carries `{ modelId, modelVersion, activityModel, parameters,
    uncertainty, source, category }`. It records the model run, not citations for
-   material inputs. Genesis `MaterialSnapshot` uses field-associated
-   `DataProvenance` instead.
+   material inputs. Genesis `MaterialSnapshot` attaches `DataProvenance` to
+   density and to every composition and molar-mass datum; it does not use an
+   aggregate provenance array.
    Its `category ∈ { measured, evaluated, calculated, empirical, pedagogicalApproximation }`
    (`GOAL.md` §12). The indicator colour model will use `empirical`.
 4. `registry.ts` resolves by id **and** version, and refuses to return a
@@ -932,8 +935,11 @@ IndexedDB record shapes; `chemrealm.export` v1; migration registry entries.
 2. Fork UI with an explicit fork-point confirmation.
 3. Comparison aligns on **cumulative titrant volume**, not step index
    (`SPEC-0001` §Replay, undo/redo, branch).
-4. Export/import round-trip. Bundle carries `schemaVersion` and `solverConfig`,
-   contains no identifiers, and states whether learner evidence is included.
+4. Export/import round-trip. Bundle carries `schemaVersion` and lineage ids; the
+   resolved `solverConfig` is read from `events[0].payload`, not duplicated at
+   the bundle top level. It contains no personal, device, or cross-session
+   tracking identifiers and states whether learner evidence is included. v1
+   carries `includesLearnerEvidence: false` and no learner-evidence payload.
 5. Quota handling: estimate before writing; on a likely failure, warn and offer
    export. **A full store must not corrupt an existing world.**
 6. Downgrade detection: a newer `schemaVersion` is refused with a clear message,
@@ -946,7 +952,7 @@ IndexedDB record shapes; `chemrealm.export` v1; migration registry entries.
 | Fork, mutate child heavily, parent hash unchanged, in the browser | AC-R4 end to end |
 | Reload the page; world replays to the same `replayHash` | Persistence |
 | Export → import → identical `replayHash` | AC-R8 |
-| Export bundle contains no identifier field and declares evidence inclusion | AC-P4 |
+| Export bundle contains no personal/device/cross-session tracking identifier and declares evidence inclusion | AC-P4 |
 | IndexedDB inspection: no identifier, name, or contact field in any store | AC-P3 |
 | Replay under a mismatched solver version is refused; re-solve offered and labelled as a new world | AC-R6 |
 | **Tier B**: with the creating solver version deliberately made unavailable, the world opens marked `re-solved`, keeps both provenance records, and does not overwrite the original | `ADR-0008` §2 |

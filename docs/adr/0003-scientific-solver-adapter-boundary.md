@@ -1,8 +1,8 @@
 # ADR-0003: Scientific solver adapter boundary
 
-- **Status:** **Accepted baseline; amendment proposed** — M1 R2, owner review
+- **Status:** **Accepted baseline; amendment proposed** — M1 Final Closure, owner review
   pending
-- **Deferred decisions:** the M1 R2 source-data provenance amendment below is
+- **Deferred decisions:** the M1 Final Closure source-data provenance amendment below is
   pending owner review. Otherwise see the ADR's own `## Open questions` /
   `## Open decisions`; acceptance covers the decision, not deferred
   sub-questions.
@@ -91,11 +91,14 @@ Three properties make this load-bearing rather than decorative:
 `Provenance` belongs to a solver result and answers which model, version,
 activity model, and pinned parameters produced the state. It is not a citation
 for an input such as density or molar mass. Genesis snapshots therefore use the
-separate `DataProvenance` contract, with an explicit field association, source
-reference, confidence category, and optional tagged measurement conditions.
-Neither type may be substituted for the other merely because both contain a
-`category` field. This distinction is the M1 R2 amendment proposed for owner
-review; until accepted, it is not a new runtime milestone authorization.
+separate `DataProvenance` contract attached directly to each datum: density and
+each composition or molar-mass record carry their own source reference,
+confidence category, and optional tagged measurement conditions. The record's
+`soluteId` identifies the composition or molar-mass datum it accompanies; there
+is no aggregate target list whose coverage can be ambiguous. Neither type may be
+substituted for the other merely because both contain a `category` field. This
+distinction is the M1 Final Closure amendment proposed for owner review; until
+accepted, it is not a new runtime milestone authorization.
 
 ### What `ScientificState` contains — and what it does not
 

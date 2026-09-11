@@ -68,11 +68,17 @@ Export produces a single self-describing, versioned bundle:
 {
   "format": "chemrealm.export",
   "formatVersion": 1,
-  "schemaVersion": "…",
-  "lineage": [ { "worldId": "…", "lineage": { } } ],
+  "schemaVersion": 1,
+  "lineage": [ {
+    "worldId": "world-1",
+    "lineage": {
+      "parentWorldId": null,
+      "forkSequence": null,
+      "forkStateHash": null
+    }
+  } ],
   "events": [ ],
   "includesLearnerEvidence": false,
-  "learnerEvidence": [ ],
   "createdAt": "…"
 }
 ```
@@ -96,8 +102,9 @@ Requirements:
   requirement; it removes a way for it to become false.
 - **Complete or explicitly partial.** A bundle that omits learner evidence says
   so in a field, rather than being silently narrower than the user expects.
-- **No identifiers.** No device id, no install id, no fingerprint. A bundle is
-  not attributable to a person by construction.
+- **No tracking identifiers.** No personal, device, or cross-session tracking
+  identifier; world ids, lineage ids, and fork hashes are required content, not
+  learner identity.
 - **Export is the only sharing path.** There is no upload endpoint to design,
   secure, or file a privacy notice for.
 
@@ -127,11 +134,17 @@ recording the fork points. Internal storage may share the prefix; export is a
 {
   "format": "chemrealm.export",
   "formatVersion": 1,
-  "lineage": [ { worldId: "root",  forkSequence: null },
-               { worldId: "child", forkSequence: 20, forkStateHash: "…" } ],
-  "world": { },
+  "schemaVersion": 1,
+  "lineage": [
+    { "worldId": "root", "lineage": {
+      "parentWorldId": null, "forkSequence": null, "forkStateHash": null
+    } },
+    { "worldId": "child", "lineage": {
+      "parentWorldId": "root", "forkSequence": 20, "forkStateHash": "…"
+    } }
+  ],
   "events": [ /* 0..35, complete */ ],
-  ...
+  "includesLearnerEvidence": false
 }
 ```
 

@@ -547,41 +547,75 @@ describe("persisted material snapshots tag every scientific input", () => {
   const snapshot = {
     materialId: "hcl-0.1",
     sourceDefinition: "0.1000 mol/L HCl",
-    density: { value: 1.002, unit: "kg/L" },
+    density: {
+      value: 1.002,
+      unit: "kg/L",
+      provenance: {
+        source: "CRC Handbook",
+        reference: "aqueous HCl density table",
+        category: "evaluated",
+      },
+    },
     composition: [
-      { soluteId: "HCl", amountConcentration: { value: 0.1, unit: "mol/L" } },
+      {
+        soluteId: "HCl",
+        amountConcentration: { value: 0.1, unit: "mol/L" },
+        provenance: {
+          source: "Scenario record",
+          reference: "hcl-0.1 composition label",
+          category: "evaluated",
+        },
+      },
     ],
     molarMasses: [
-      { soluteId: "HCl", molarMass: { value: 0.0364609, unit: "kg/mol" } },
+      {
+        soluteId: "HCl",
+        molarMass: { value: 0.0364609, unit: "kg/mol" },
+        provenance: {
+          source: "IUPAC standard atomic weights",
+          reference: "HCl molar mass calculation",
+          category: "calculated",
+        },
+      },
     ],
     resolvedInventoryPerLitre: {
       waterMass: { value: 0.998, unit: "kg" },
       soluteAmounts: [{ soluteId: "HCl", amount: { value: 0.1, unit: "mol" } }],
     },
-    provenance: [
-      {
-        appliesTo: ["density"],
-        source: "CRC Handbook",
-        reference: "aqueous HCl density table",
-        category: "evaluated",
-      },
-      {
-        appliesTo: ["composition"],
-        source: "Scenario record",
-        reference: "hcl-0.1 composition label",
-        category: "evaluated",
-      },
-      {
-        appliesTo: ["molarMass"],
-        source: "IUPAC standard atomic weights",
-        reference: "HCl molar mass calculation",
-        category: "calculated",
-      },
-    ],
   };
 
-  it("accepts tagged composition and molar-mass quantities", () => {
+  it("accepts canonical tagged quantities with provenance attached to each datum", () => {
     expect(MaterialSnapshotSchema.safeParse(snapshot).success).toBe(true);
+  });
+
+  it("accepts separate provenance for each solute datum", () => {
+    const expanded = structuredClone(snapshot);
+    expanded.composition.push({
+      soluteId: "NaCl",
+      amountConcentration: { value: 0.1, unit: "mol/L" },
+      provenance: {
+        source: "Scenario record",
+        reference: "nacl-0.1 composition label",
+        category: "evaluated",
+      },
+    });
+    expanded.molarMasses.push({
+      soluteId: "NaCl",
+      molarMass: { value: 0.05844, unit: "kg/mol" },
+      provenance: {
+        source: "IUPAC standard atomic weights",
+        reference: "NaCl molar mass calculation",
+        category: "calculated",
+      },
+    });
+
+    const parsed = MaterialSnapshotSchema.parse(expanded);
+    expect(parsed.composition[1]?.provenance.reference).toBe(
+      "nacl-0.1 composition label",
+    );
+    expect(parsed.molarMasses[1]?.provenance.reference).toBe(
+      "NaCl molar mass calculation",
+    );
   });
 
   it("rejects the old bare composition and molar-mass fields", () => {
@@ -597,6 +631,47 @@ describe("persisted material snapshots tag every scientific input", () => {
     expect(MaterialSnapshotSchema.safeParse(broken).success).toBe(false);
   });
 
+  it("rejects a snapshot when density provenance is missing", () => {
+    const broken = structuredClone(snapshot) as Record<string, unknown>;
+    delete (broken.density as Record<string, unknown>)["provenance"];
+    expect(MaterialSnapshotSchema.safeParse(broken).success).toBe(false);
+  });
+
+  it("rejects a snapshot when a composition datum lacks provenance", () => {
+    const broken = structuredClone(snapshot) as Record<string, unknown>;
+    delete (broken.composition as Array<Record<string, unknown>>)[0]!["provenance"];
+    expect(MaterialSnapshotSchema.safeParse(broken).success).toBe(false);
+  });
+
+  it("rejects a snapshot when a molar-mass datum lacks provenance", () => {
+    const broken = structuredClone(snapshot) as Record<string, unknown>;
+    delete (broken.molarMasses as Array<Record<string, unknown>>)[0]!["provenance"];
+    expect(MaterialSnapshotSchema.safeParse(broken).success).toBe(false);
+  });
+
+  it("rejects non-canonical units in the resolved snapshot", () => {
+    const broken = structuredClone(snapshot) as Record<string, unknown>;
+    (broken.density as Record<string, unknown>)["unit"] = "g/mL";
+    (broken.composition as Array<Record<string, unknown>>)[0]!["amountConcentration"] = {
+      value: 100,
+      unit: "mmol/L",
+    };
+    (broken.molarMasses as Array<Record<string, unknown>>)[0]!["molarMass"] = {
+      value: 36.4609,
+      unit: "g/mol",
+    };
+    (broken.resolvedInventoryPerLitre as Record<string, unknown>)["waterMass"] = {
+      value: 998,
+      unit: "g",
+    };
+    (
+      (broken.resolvedInventoryPerLitre as Record<string, unknown>)[
+        "soluteAmounts"
+      ] as Array<Record<string, unknown>>
+    )[0]!["amount"] = { value: 100, unit: "mmol" };
+    expect(MaterialSnapshotSchema.safeParse(broken).success).toBe(false);
+  });
+
   it("emits no bare legacy physical fields in persisted artifacts", () => {
     const json = JSON.stringify(generateJsonSchemas());
     expect(json).not.toContain('"molPerLitre"');
@@ -607,15 +682,13 @@ describe("persisted material snapshots tag every scientific input", () => {
 
   it("does not accept solver provenance as a material-data citation", () => {
     const broken = structuredClone(snapshot) as Record<string, unknown>;
-    broken.provenance = [
-      {
-        modelId: "acidbase-monoprotic-davies",
-        modelVersion: "1.0.0",
-        activityModel: "davies",
-        category: "calculated",
-        parameters: {},
-      },
-    ];
+    (broken.density as Record<string, unknown>)["provenance"] = {
+      modelId: "acidbase-monoprotic-davies",
+      modelVersion: "1.0.0",
+      activityModel: "davies",
+      category: "calculated",
+      parameters: {},
+    };
     expect(MaterialSnapshotSchema.safeParse(broken).success).toBe(false);
   });
 });

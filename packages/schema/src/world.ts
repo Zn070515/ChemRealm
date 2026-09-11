@@ -21,7 +21,7 @@
 
 import { z } from "zod";
 
-import { quantityOfDimension } from "./quantity.js";
+import { canonicalQuantityOfDimension, quantityOfDimension } from "./quantity.js";
 import { DataProvenanceSchema, SolverConfigSchema } from "./scientific.js";
 
 export const WorldIdSchema = z.string().min(1);
@@ -49,14 +49,6 @@ export const PositionSchema = z.strictObject({
 });
 export type Position = z.infer<typeof PositionSchema>;
 
-/** Source-data provenance attached to one or more material snapshot fields. */
-export const MaterialDataProvenanceSchema = DataProvenanceSchema.extend({
-  appliesTo: z
-    .array(z.enum(["density", "composition", "molarMass"]))
-    .min(1),
-});
-export type MaterialDataProvenance = z.infer<typeof MaterialDataProvenanceSchema>;
-
 /**
  * One material, resolved at genesis.
  *
@@ -64,26 +56,31 @@ export type MaterialDataProvenance = z.infer<typeof MaterialDataProvenanceSchema
  * needs `M(HCl)`, and if that came from a runtime periodic table the world
  * would depend on it. Freezing the resolved inventory means `MaterialCharged`
  * reduces to `contents = volume × inventory` with no lookup of any kind.
- * Composition and molar mass remain tagged quantities, and their source-data
- * provenance is stored separately from the solver provenance on ScientificState.
+ * Composition and molar mass remain tagged canonical quantities, and each
+ * source datum carries its own provenance, separate from solver provenance.
  */
 export const MaterialSnapshotSchema = z.strictObject({
   materialId: MaterialIdSchema,
   /** What the scenario author wrote, kept for inspection. */
   sourceDefinition: z.string(),
-  density: quantityOfDimension("density"),
+  /** Resolved snapshots are normalized to kg/L before persistence. */
+  density: canonicalQuantityOfDimension("density").extend({
+    provenance: DataProvenanceSchema,
+  }),
   composition: z.array(
     z.strictObject({
       soluteId: z.string().min(1),
       /** Canonical resolved composition, mol per litre of solution. */
-      amountConcentration: quantityOfDimension("molarity"),
+      amountConcentration: canonicalQuantityOfDimension("molarity"),
+      provenance: DataProvenanceSchema,
     }),
   ),
   molarMasses: z.array(
     z.strictObject({
       soluteId: z.string().min(1),
       /** Canonical molar mass. */
-      molarMass: quantityOfDimension("molarMass"),
+      molarMass: canonicalQuantityOfDimension("molarMass"),
+      provenance: DataProvenanceSchema,
     }),
   ),
   /**
@@ -95,20 +92,14 @@ export const MaterialSnapshotSchema = z.strictObject({
    * resolver's job. v0 maps one-for-one; see the note on `CanonicalContents`.
    */
   resolvedInventoryPerLitre: z.strictObject({
-    waterMass: quantityOfDimension("mass"),
+    waterMass: canonicalQuantityOfDimension("mass"),
     soluteAmounts: z.array(
       z.strictObject({
         soluteId: z.string().min(1),
-        amount: quantityOfDimension("amount"),
+        amount: canonicalQuantityOfDimension("amount"),
       }),
     ),
   }),
-  /**
-   * Source-data provenance, separate from the solver/model provenance on
-   * ScientificState. Each record names the snapshot fields it supports so a
-   * replay can identify the source of density, composition, and molar mass.
-   */
-  provenance: z.array(MaterialDataProvenanceSchema).min(1),
 });
 export type MaterialSnapshot = z.infer<typeof MaterialSnapshotSchema>;
 

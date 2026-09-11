@@ -162,6 +162,21 @@ export function quantityOfDimension(
   });
 }
 
+/**
+ * A serialized quantity constrained to the canonical unit of its dimension.
+ *
+ * Resolved snapshots are a normalized representation, not authoring input, so
+ * accepting `g/mL`, `mmol/L`, or another equivalent unit there would let
+ * equivalent genesis data produce different persisted identities. Authoring
+ * contracts should use `quantityOfDimension`; resolved contracts use this
+ * helper and normalize before persistence.
+ */
+export function canonicalQuantityOfDimension(dimension: Dimension) {
+  return z.strictObject({
+    value: z.number().finite(),
+    unit: z.literal(CANONICAL_UNIT[dimension]),
+  });
+}
 
 /**
  * Convert a serialized quantity to its canonical unit.

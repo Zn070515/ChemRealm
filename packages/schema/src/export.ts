@@ -18,10 +18,10 @@
  * optimisation. `SPEC-0001` AC-R17 requires a round-trip test that discards the
  * parent entirely.
  *
- * ON IDENTIFIERS. `ADR-0005` says a bundle contains no identifiers. Read
- * literally that would forbid the `worldId` that flattened export requires, so
- * the rule is stated precisely: no PERSONAL, DEVICE, or CROSS-SESSION TRACKING
- * identifier. World ids are content, not identity.
+ * ON IDENTIFIERS. Earlier wording in `ADR-0005` said a bundle contains no
+ * identifiers. Read literally that would forbid the `worldId` that flattened
+ * export requires, so the rule is stated precisely: no PERSONAL, DEVICE, or
+ * CROSS-SESSION TRACKING identifier. World ids are content, not identity.
  *
  * WHERE GENESIS FACTS LIVE. A bundle carries the log and nothing that the log
  * already says. An earlier version also copied `scenarioSnapshot`,
@@ -112,4 +112,3 @@ export const FORBIDDEN_BUNDLE_FIELDS = [
   "sessionId",
   "ipAddress",
 ] as const;
-

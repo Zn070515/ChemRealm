@@ -270,10 +270,12 @@ questions and use different contracts:
 | `DataProvenance` | Where did an input value come from? | evaluated density table, IUPAC molar mass |
 | solver `Provenance` | Which model produced this state? | Davies model version and pinned parameters |
 
-The genesis `MaterialSnapshot` uses field-associated `DataProvenance` records for
-density, composition, and molar mass. It must not reuse solver provenance as a
-generic citation bucket. Measurement conditions such as temperature and pressure
-remain tagged quantities at the wire boundary.
+The genesis `MaterialSnapshot` attaches `DataProvenance` to each scientific
+datum: density, each composition entry, and each molar-mass entry. This makes
+coverage structural and identifies the source for a particular solute; an
+aggregate `appliesTo` list is not sufficient. It must not reuse solver
+provenance as a generic citation bucket. Measurement conditions such as
+temperature and pressure remain tagged quantities at the wire boundary.
 
 ## Anti-patterns this document forbids
 

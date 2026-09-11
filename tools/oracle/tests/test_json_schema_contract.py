@@ -151,17 +151,35 @@ SCENARIO_SNAPSHOT = {
         {
             "materialId": "hcl-0.1",
             "sourceDefinition": "0.1000 mol/L HCl",
-            "density": {"value": 1.002, "unit": "kg/L"},
+            "density": {
+                "value": 1.002,
+                "unit": "kg/L",
+                "provenance": {
+                    "source": "CRC Handbook",
+                    "reference": "aqueous HCl density table",
+                    "category": "evaluated",
+                },
+            },
             "composition": [
                 {
                     "soluteId": "HCl",
                     "amountConcentration": {"value": 0.1, "unit": "mol/L"},
+                    "provenance": {
+                        "source": "Scenario record",
+                        "reference": "hcl-0.1 composition label",
+                        "category": "evaluated",
+                    },
                 }
             ],
             "molarMasses": [
                 {
                     "soluteId": "HCl",
                     "molarMass": {"value": 0.0364609, "unit": "kg/mol"},
+                    "provenance": {
+                        "source": "IUPAC standard atomic weights",
+                        "reference": "HCl molar mass calculation",
+                        "category": "calculated",
+                    },
                 }
             ],
             "resolvedInventoryPerLitre": {
@@ -170,26 +188,6 @@ SCENARIO_SNAPSHOT = {
                     {"soluteId": "HCl", "amount": {"value": 0.1, "unit": "mol"}}
                 ],
             },
-            "provenance": [
-                {
-                    "appliesTo": ["density"],
-                    "source": "CRC Handbook",
-                    "reference": "aqueous HCl density table",
-                    "category": "evaluated",
-                },
-                {
-                    "appliesTo": ["composition"],
-                    "source": "Scenario record",
-                    "reference": "hcl-0.1 composition label",
-                    "category": "evaluated",
-                },
-                {
-                    "appliesTo": ["molarMass"],
-                    "source": "IUPAC standard atomic weights",
-                    "reference": "HCl molar mass calculation",
-                    "category": "calculated",
-                },
-            ],
         }
     ],
     "vessels": [
@@ -451,11 +449,81 @@ class TestWorldGenesisSnapshot:
     def test_accepts_a_snapshot_with_tagged_scientific_inputs_and_data_provenance(self):
         assert is_valid("domain-event", WORLD_CREATED_EVENT)
 
+    def test_accepts_separate_provenance_for_each_solute_datum(self):
+        expanded = copy.deepcopy(WORLD_CREATED_EVENT)
+        material = expanded["payload"]["scenarioSnapshot"]["materials"][0]
+        material["composition"].append(
+            {
+                "soluteId": "NaCl",
+                "amountConcentration": {"value": 0.1, "unit": "mol/L"},
+                "provenance": {
+                    "source": "Scenario record",
+                    "reference": "nacl-0.1 composition label",
+                    "category": "evaluated",
+                },
+            }
+        )
+        material["molarMasses"].append(
+            {
+                "soluteId": "NaCl",
+                "molarMass": {"value": 0.05844, "unit": "kg/mol"},
+                "provenance": {
+                    "source": "IUPAC standard atomic weights",
+                    "reference": "NaCl molar mass calculation",
+                    "category": "calculated",
+                },
+            }
+        )
+        assert is_valid("domain-event", expanded)
+
     def test_REJECTS_bare_snapshot_composition_and_molar_mass(self):
         broken = copy.deepcopy(WORLD_CREATED_EVENT)
         material = broken["payload"]["scenarioSnapshot"]["materials"][0]
         material["composition"] = [{"soluteId": "HCl", "molPerLitre": 0.1}]
         material["molarMasses"] = [{"soluteId": "HCl", "kilogramsPerMol": 0.0364609}]
+        assert not is_valid("domain-event", broken)
+
+    def test_REJECTS_snapshot_without_density_provenance(self):
+        broken = copy.deepcopy(WORLD_CREATED_EVENT)
+        del broken["payload"]["scenarioSnapshot"]["materials"][0]["density"][
+            "provenance"
+        ]
+        assert not is_valid("domain-event", broken)
+
+    def test_REJECTS_snapshot_without_composition_provenance(self):
+        broken = copy.deepcopy(WORLD_CREATED_EVENT)
+        del broken["payload"]["scenarioSnapshot"]["materials"][0]["composition"][0][
+            "provenance"
+        ]
+        assert not is_valid("domain-event", broken)
+
+    def test_REJECTS_snapshot_without_molar_mass_provenance(self):
+        broken = copy.deepcopy(WORLD_CREATED_EVENT)
+        del broken["payload"]["scenarioSnapshot"]["materials"][0]["molarMasses"][0][
+            "provenance"
+        ]
+        assert not is_valid("domain-event", broken)
+
+    def test_REJECTS_noncanonical_units_in_resolved_snapshot(self):
+        broken = copy.deepcopy(WORLD_CREATED_EVENT)
+        material = broken["payload"]["scenarioSnapshot"]["materials"][0]
+        material["density"]["unit"] = "g/mL"
+        material["composition"][0]["amountConcentration"] = {
+            "value": 100,
+            "unit": "mmol/L",
+        }
+        material["molarMasses"][0]["molarMass"] = {
+            "value": 36.4609,
+            "unit": "g/mol",
+        }
+        material["resolvedInventoryPerLitre"]["waterMass"] = {
+            "value": 998,
+            "unit": "g",
+        }
+        material["resolvedInventoryPerLitre"]["soluteAmounts"][0]["amount"] = {
+            "value": 100,
+            "unit": "mmol",
+        }
         assert not is_valid("domain-event", broken)
 
     def test_artifact_contains_no_bare_legacy_snapshot_fields(self):
@@ -469,15 +537,15 @@ class TestWorldGenesisSnapshot:
 
     def test_REJECTS_solver_provenance_in_place_of_material_data_provenance(self):
         broken = copy.deepcopy(WORLD_CREATED_EVENT)
-        broken["payload"]["scenarioSnapshot"]["materials"][0]["provenance"] = [
-            {
-                "modelId": "acidbase-monoprotic-davies",
-                "modelVersion": "1.0.0",
-                "activityModel": "davies",
-                "category": "calculated",
-                "parameters": {},
-            }
-        ]
+        broken["payload"]["scenarioSnapshot"]["materials"][0]["density"][
+            "provenance"
+        ] = {
+            "modelId": "acidbase-monoprotic-davies",
+            "modelVersion": "1.0.0",
+            "activityModel": "davies",
+            "category": "calculated",
+            "parameters": {},
+        }
         assert not is_valid("domain-event", broken)
 
 

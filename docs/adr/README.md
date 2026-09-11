@@ -15,7 +15,7 @@ scientifically consequential, format-defining, or dependency-defining
 | `Rejected` | Considered and declined. Kept so the question is not re-litigated from scratch. |
 
 **All nine baseline ADRs were accepted by the owner on 2026-09-11**, at baseline
-commit `8310c685`, together with `SPEC-0001` revision 6. The M1 R2 amendments
+commit `8310c685`, together with `SPEC-0001` revision 6. The M1 Final Closure amendments
 shown below are proposals pending owner review; they do not retroactively alter
 that acceptance. Acceptance covers each ADR's *decision*; every ADR that carries
 an `## Open questions` or `## Open decisions` section keeps those explicitly
@@ -37,7 +37,7 @@ new ADR**, not quietly edited.
 | [0007](0007-deterministic-numeric-and-replay-policy.md) | Deterministic numeric and replay policy | **Accepted** (revised) | M2, M4, M8 |
 | [0008](0008-persisted-world-solver-compatibility.md) | Persisted-world solver compatibility | **Accepted** (new) | M8 |
 | [0009](0009-ace-control-loop-architecture.md) | ACE control-loop architecture | **Accepted** (new) | M9 |
-| [0010](0010-material-genesis-resolution-boundary.md) | Material genesis composition-basis boundary | **Proposed** — M1 R2 candidate | M2 |
+| [0010](0010-material-genesis-resolution-boundary.md) | Material genesis composition-basis boundary | **Proposed** — M1 Final Closure candidate | M2 |
 
 > **Revision note (2026-09-11, owner review remediation).** ADR-0004 and ADR-0007
 > were rewritten rather than amended: the original ADR-0004 overstated what

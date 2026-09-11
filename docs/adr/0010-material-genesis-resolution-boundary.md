@@ -1,9 +1,9 @@
 # ADR-0010: Material genesis composition-basis boundary
 
-- **Status:** **Proposed — M1 Contract Closure R2 candidate**
+- **Status:** **Proposed — M1 Final Closure candidate**
 - **Date:** 2026-09-11
 - **Deciders:** Project owner review pending
-- **Related:** `SPEC-0001` revision 8, `ADR-0003`, `ADR-0004`, `PLAN-0001`
+- **Related:** `SPEC-0001` revision 9, `ADR-0003`, `ADR-0004`, `PLAN-0001`
 - **Blocks:** M2 genesis/reducer implementation until accepted
 
 ## Context

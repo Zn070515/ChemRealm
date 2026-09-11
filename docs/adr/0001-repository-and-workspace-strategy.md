@@ -1,8 +1,8 @@
 # ADR-0001: Repository and workspace strategy
 
-- **Status:** **Accepted baseline; amendment proposed** — M1 R2, owner review
+- **Status:** **Accepted baseline; amendment proposed** — M1 Final Closure, owner review
   pending
-- **Deferred decisions:** the M1 R2 artifact-location amendment below is pending
+- **Deferred decisions:** the M1 Final Closure artifact-location amendment below is pending
   owner review. Any later format decision gets a new ADR or an explicit
   amendment rather than an unresolved question in an accepted record.
 - **Date:** 2026-09-11
@@ -179,7 +179,7 @@ Changing the TypeScript package manager is trivial. Changing the schema
 source-of-truth language would be a meaningful migration, which is why it is
 recorded above as the identified alternative rather than left implicit.
 
-## Proposed amendment — M1 R2 (owner review pending)
+## Proposed amendment — M1 Final Closure (owner review pending)
 
 1. **Candidate decision: JSON Schema artifacts are committed at
    `packages/schema/json-schema/`.** The build/emitter regenerates them, and
