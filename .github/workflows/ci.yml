@@ -31,6 +31,17 @@ jobs:
       - run: pnpm build
       - run: pnpm test
 
+      # Type-level guarantees (AC-U1..AC-U5). These CANNOT be runtime tests:
+      # m0 = 1 mol/kg makes reduced and physical molality numerically identical,
+      # so a passing numeric assertion says nothing about whether the types are
+      # respected. `tsc --noEmit` over the fixture file fails on an unused
+      # @ts-expect-error, which is exactly what a broken guarantee produces.
+      - run: pnpm verify:guarantees
+
+      # The committed JSON Schema artifacts must match a fresh emission, so the
+      # Python side never validates against a stale contract.
+      - run: pnpm verify:schema-artifacts
+
       # Architectural rules, plus the guard that proves they bite. The guard is
       # what makes M0's stop condition machine-checked rather than a claim.
       - run: pnpm depcruise

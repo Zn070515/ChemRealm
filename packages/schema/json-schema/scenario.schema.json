@@ -1,0 +1,340 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "apparatus": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "state": {
+            "additionalProperties": {},
+            "propertyNames": {
+              "type": "string"
+            },
+            "type": "object"
+          }
+        },
+        "required": [
+          "kind",
+          "state"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "contentVersion": {
+      "exclusiveMinimum": 0,
+      "maximum": 9007199254740991,
+      "type": "integer"
+    },
+    "description": {
+      "type": "string"
+    },
+    "learningGoals": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "materials": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "density": {
+            "additionalProperties": false,
+            "properties": {
+              "unit": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "value": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "value",
+              "unit"
+            ],
+            "type": "object"
+          },
+          "label": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "materialId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "phase": {
+            "const": "aqueous",
+            "type": "string"
+          },
+          "solutes": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "concentration": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "unit": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "value",
+                    "unit"
+                  ],
+                  "type": "object"
+                },
+                "fullyDissociated": {
+                  "type": "boolean"
+                },
+                "molarMass": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "unit": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "value",
+                    "unit"
+                  ],
+                  "type": "object"
+                },
+                "soluteId": {
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "soluteId",
+                "concentration",
+                "molarMass",
+                "fullyDissociated"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "materialId",
+          "label",
+          "phase",
+          "solutes",
+          "density"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "modelRequirements": {
+      "additionalProperties": false,
+      "properties": {
+        "activityCorrected": {
+          "type": "boolean"
+        },
+        "phase": {
+          "const": "aqueous",
+          "type": "string"
+        },
+        "solvent": {
+          "const": "water",
+          "type": "string"
+        },
+        "species": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "temperature": {
+          "additionalProperties": false,
+          "properties": {
+            "unit": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "value": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "value",
+            "unit"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "temperature",
+        "solvent",
+        "phase",
+        "activityCorrected",
+        "species"
+      ],
+      "type": "object"
+    },
+    "representation": {
+      "additionalProperties": false,
+      "properties": {
+        "defaultViews": {
+          "items": {
+            "enum": [
+              "macro",
+              "micro",
+              "symbolic"
+            ],
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "defaultViews"
+      ],
+      "type": "object"
+    },
+    "scenarioRef": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "title": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "vessels": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "capacity": {
+            "additionalProperties": false,
+            "properties": {
+              "unit": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "value": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "value",
+              "unit"
+            ],
+            "type": "object"
+          },
+          "initialContents": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "materialId": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "volume": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "unit": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "value",
+                    "unit"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "materialId",
+                "volume"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "kind": {
+            "enum": [
+              "conicalFlask",
+              "beaker",
+              "burette",
+              "volumetricFlask"
+            ],
+            "type": "string"
+          },
+          "position": {
+            "additionalProperties": false,
+            "properties": {
+              "unit": {
+                "const": "mm",
+                "type": "string"
+              },
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "unit",
+              "x",
+              "y"
+            ],
+            "type": "object"
+          },
+          "vesselId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "volumeProfileRef": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "vesselId",
+          "kind",
+          "capacity",
+          "volumeProfileRef",
+          "position",
+          "initialContents"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
+    }
+  },
+  "required": [
+    "contentVersion",
+    "scenarioRef",
+    "title",
+    "materials",
+    "vessels",
+    "apparatus",
+    "modelRequirements"
+  ],
+  "type": "object"
+}

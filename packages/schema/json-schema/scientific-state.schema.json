@@ -1,0 +1,158 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "indicators": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "indicatorId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "protonationRatio": {
+            "minimum": 0,
+            "type": "number"
+          }
+        },
+        "required": [
+          "indicatorId",
+          "protonationRatio"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "ionicStrengthMolal": {
+      "minimum": 0,
+      "type": "number"
+    },
+    "ionicStrengthReduced": {
+      "minimum": 0,
+      "type": "number"
+    },
+    "modelPh": {
+      "type": "number"
+    },
+    "provenance": {
+      "additionalProperties": false,
+      "properties": {
+        "activityModel": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "category": {
+          "enum": [
+            "measured",
+            "evaluated",
+            "calculated",
+            "empirical",
+            "pedagogicalApproximation"
+          ],
+          "type": "string"
+        },
+        "modelId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "modelVersion": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "parameters": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "propertyNames": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "source": {
+          "type": "string"
+        },
+        "uncertainty": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "modelId",
+        "modelVersion",
+        "activityModel",
+        "category",
+        "parameters"
+      ],
+      "type": "object"
+    },
+    "species": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "activity": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "activityCoefficient": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "amountMol": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "molality": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "reducedMolality": {
+            "minimum": 0,
+            "type": "number"
+          },
+          "symbol": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "symbol",
+          "reducedMolality",
+          "molality",
+          "amountMol",
+          "activityCoefficient",
+          "activity"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "validity": {
+      "additionalProperties": false,
+      "properties": {
+        "inDomain": {
+          "type": "boolean"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "withinProposedAccuracyEnvelope": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "inDomain",
+        "withinProposedAccuracyEnvelope"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "species",
+    "ionicStrengthMolal",
+    "ionicStrengthReduced",
+    "modelPh",
+    "indicators",
+    "validity",
+    "provenance"
+  ],
+  "type": "object"
+}

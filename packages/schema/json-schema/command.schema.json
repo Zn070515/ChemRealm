@@ -1,0 +1,195 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "additionalProperties": false,
+      "properties": {
+        "apparatusId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "kind": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "position": {
+          "additionalProperties": false,
+          "properties": {
+            "unit": {
+              "const": "mm",
+              "type": "string"
+            },
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "unit",
+            "x",
+            "y"
+          ],
+          "type": "object"
+        },
+        "type": {
+          "const": "PlaceApparatus",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "apparatusId",
+        "kind",
+        "position"
+      ],
+      "type": "object"
+    },
+    {
+      "additionalProperties": false,
+      "properties": {
+        "childId": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "minLength": 1,
+              "type": "string"
+            }
+          ]
+        },
+        "parentId": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "minLength": 1,
+              "type": "string"
+            }
+          ]
+        },
+        "portId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "type": {
+          "const": "AttachApparatus",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "childId",
+        "parentId",
+        "portId"
+      ],
+      "type": "object"
+    },
+    {
+      "additionalProperties": false,
+      "properties": {
+        "materialId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "type": {
+          "const": "ChargeVessel",
+          "type": "string"
+        },
+        "vesselId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "volume": {
+          "additionalProperties": false,
+          "properties": {
+            "unit": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "value": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "value",
+            "unit"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "type",
+        "vesselId",
+        "materialId",
+        "volume"
+      ],
+      "type": "object"
+    },
+    {
+      "additionalProperties": false,
+      "properties": {
+        "fromVesselId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "toVesselId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "type": {
+          "const": "DeliverTitrant",
+          "type": "string"
+        },
+        "volume": {
+          "additionalProperties": false,
+          "properties": {
+            "unit": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "value": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "value",
+            "unit"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "type",
+        "fromVesselId",
+        "toVesselId",
+        "volume"
+      ],
+      "type": "object"
+    },
+    {
+      "additionalProperties": false,
+      "properties": {
+        "fromSequence": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "type": {
+          "const": "BranchWorld",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "fromSequence"
+      ],
+      "type": "object"
+    }
+  ]
+}

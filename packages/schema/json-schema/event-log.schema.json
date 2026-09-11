@@ -1,0 +1,763 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "items": {
+    "oneOf": [
+      {
+        "additionalProperties": false,
+        "properties": {
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "recordedAt": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "payload": {
+            "additionalProperties": false,
+            "properties": {
+              "contentHash": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "scenarioSnapshot": {
+                "additionalProperties": false,
+                "properties": {
+                  "apparatusDefaults": {
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "kind": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "state": {
+                          "additionalProperties": {},
+                          "propertyNames": {
+                            "type": "string"
+                          },
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "state"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  "materials": {
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "composition": {
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "molPerLitre": {
+                                "minimum": 0,
+                                "type": "number"
+                              },
+                              "soluteId": {
+                                "minLength": 1,
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "soluteId",
+                              "molPerLitre"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "density": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "unit": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "value": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "value",
+                            "unit"
+                          ],
+                          "type": "object"
+                        },
+                        "materialId": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "molarMasses": {
+                          "items": {
+                            "additionalProperties": false,
+                            "properties": {
+                              "kilogramsPerMol": {
+                                "exclusiveMinimum": 0,
+                                "type": "number"
+                              },
+                              "soluteId": {
+                                "minLength": 1,
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "soluteId",
+                              "kilogramsPerMol"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "resolvedInventoryPerLitre": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "soluteAmounts": {
+                              "items": {
+                                "additionalProperties": false,
+                                "properties": {
+                                  "amount": {
+                                    "additionalProperties": false,
+                                    "properties": {
+                                      "unit": {
+                                        "minLength": 1,
+                                        "type": "string"
+                                      },
+                                      "value": {
+                                        "type": "number"
+                                      }
+                                    },
+                                    "required": [
+                                      "value",
+                                      "unit"
+                                    ],
+                                    "type": "object"
+                                  },
+                                  "soluteId": {
+                                    "minLength": 1,
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "soluteId",
+                                  "amount"
+                                ],
+                                "type": "object"
+                              },
+                              "type": "array"
+                            },
+                            "waterMass": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "unit": {
+                                  "minLength": 1,
+                                  "type": "string"
+                                },
+                                "value": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "value",
+                                "unit"
+                              ],
+                              "type": "object"
+                            }
+                          },
+                          "required": [
+                            "waterMass",
+                            "soluteAmounts"
+                          ],
+                          "type": "object"
+                        },
+                        "sourceDefinition": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "materialId",
+                        "sourceDefinition",
+                        "density",
+                        "composition",
+                        "molarMasses",
+                        "resolvedInventoryPerLitre"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  "modelRequirements": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "activityCorrected": {
+                        "type": "boolean"
+                      },
+                      "phase": {
+                        "type": "string"
+                      },
+                      "solvent": {
+                        "type": "string"
+                      },
+                      "species": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      },
+                      "temperature": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "unit": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "value": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "value",
+                          "unit"
+                        ],
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "temperature",
+                      "species",
+                      "solvent",
+                      "phase",
+                      "activityCorrected"
+                    ],
+                    "type": "object"
+                  },
+                  "scenarioRef": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "vessels": {
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "capacity": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "unit": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "value": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "value",
+                            "unit"
+                          ],
+                          "type": "object"
+                        },
+                        "geometryRef": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "kind": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "position": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "unit": {
+                              "const": "mm",
+                              "type": "string"
+                            },
+                            "x": {
+                              "type": "number"
+                            },
+                            "y": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "unit",
+                            "x",
+                            "y"
+                          ],
+                          "type": "object"
+                        },
+                        "vesselId": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "volumeProfileRef": {
+                          "minLength": 1,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "vesselId",
+                        "kind",
+                        "capacity",
+                        "geometryRef",
+                        "volumeProfileRef",
+                        "position"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "scenarioRef",
+                  "materials",
+                  "vessels",
+                  "apparatusDefaults",
+                  "modelRequirements"
+                ],
+                "type": "object"
+              },
+              "seed": {
+                "anyOf": [
+                  {
+                    "maximum": 9007199254740991,
+                    "minimum": -9007199254740991,
+                    "type": "integer"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "solverConfig": {
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "parameters": {
+                    "additionalProperties": {
+                      "type": "number"
+                    },
+                    "propertyNames": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  },
+                  "version": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "version",
+                  "parameters"
+                ],
+                "type": "object"
+              },
+              "worldId": {
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "worldId",
+              "scenarioSnapshot",
+              "contentHash",
+              "solverConfig",
+              "seed"
+            ],
+            "type": "object"
+          },
+          "schemaVersion": {
+            "const": 1,
+            "type": "number"
+          },
+          "seq": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": {
+            "const": "WorldCreated",
+            "type": "string"
+          }
+        },
+        "required": [
+          "seq",
+          "schemaVersion",
+          "type",
+          "payload"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "recordedAt": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "payload": {
+            "additionalProperties": false,
+            "properties": {
+              "apparatusId": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "kind": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "position": {
+                "additionalProperties": false,
+                "properties": {
+                  "unit": {
+                    "const": "mm",
+                    "type": "string"
+                  },
+                  "x": {
+                    "type": "number"
+                  },
+                  "y": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "unit",
+                  "x",
+                  "y"
+                ],
+                "type": "object"
+              }
+            },
+            "required": [
+              "apparatusId",
+              "kind",
+              "position"
+            ],
+            "type": "object"
+          },
+          "schemaVersion": {
+            "const": 1,
+            "type": "number"
+          },
+          "seq": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": {
+            "const": "ApparatusPlaced",
+            "type": "string"
+          }
+        },
+        "required": [
+          "seq",
+          "schemaVersion",
+          "type",
+          "payload"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "recordedAt": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "payload": {
+            "additionalProperties": false,
+            "properties": {
+              "childId": {
+                "anyOf": [
+                  {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                ]
+              },
+              "parentId": {
+                "anyOf": [
+                  {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                ]
+              },
+              "portId": {
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "childId",
+              "parentId",
+              "portId"
+            ],
+            "type": "object"
+          },
+          "schemaVersion": {
+            "const": 1,
+            "type": "number"
+          },
+          "seq": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": {
+            "const": "ApparatusAttached",
+            "type": "string"
+          }
+        },
+        "required": [
+          "seq",
+          "schemaVersion",
+          "type",
+          "payload"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "recordedAt": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "payload": {
+            "additionalProperties": false,
+            "properties": {
+              "materialId": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "vesselId": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "volume": {
+                "additionalProperties": false,
+                "properties": {
+                  "unit": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "value",
+                  "unit"
+                ],
+                "type": "object"
+              }
+            },
+            "required": [
+              "vesselId",
+              "materialId",
+              "volume"
+            ],
+            "type": "object"
+          },
+          "schemaVersion": {
+            "const": 1,
+            "type": "number"
+          },
+          "seq": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": {
+            "const": "MaterialCharged",
+            "type": "string"
+          }
+        },
+        "required": [
+          "seq",
+          "schemaVersion",
+          "type",
+          "payload"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "recordedAt": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "payload": {
+            "additionalProperties": false,
+            "properties": {
+              "fromVesselId": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "mechanism": {
+                "enum": [
+                  "burette",
+                  "pipette",
+                  "poured"
+                ],
+                "type": "string"
+              },
+              "toVesselId": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "volume": {
+                "additionalProperties": false,
+                "properties": {
+                  "unit": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "value",
+                  "unit"
+                ],
+                "type": "object"
+              }
+            },
+            "required": [
+              "fromVesselId",
+              "toVesselId",
+              "volume",
+              "mechanism"
+            ],
+            "type": "object"
+          },
+          "schemaVersion": {
+            "const": 1,
+            "type": "number"
+          },
+          "seq": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": {
+            "const": "TransferCommitted",
+            "type": "string"
+          }
+        },
+        "required": [
+          "seq",
+          "schemaVersion",
+          "type",
+          "payload"
+        ],
+        "type": "object"
+      },
+      {
+        "additionalProperties": false,
+        "properties": {
+          "meta": {
+            "additionalProperties": false,
+            "properties": {
+              "recordedAt": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "payload": {
+            "additionalProperties": false,
+            "properties": {
+              "childWorldId": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "forkSequence": {
+                "maximum": 9007199254740991,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "forkStateHash": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "parentWorldId": {
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "childWorldId",
+              "parentWorldId",
+              "forkSequence",
+              "forkStateHash"
+            ],
+            "type": "object"
+          },
+          "schemaVersion": {
+            "const": 1,
+            "type": "number"
+          },
+          "seq": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "type": {
+            "const": "WorldBranched",
+            "type": "string"
+          }
+        },
+        "required": [
+          "seq",
+          "schemaVersion",
+          "type",
+          "payload"
+        ],
+        "type": "object"
+      }
+    ]
+  },
+  "type": "array"
+}
