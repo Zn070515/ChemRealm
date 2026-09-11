@@ -25,7 +25,7 @@
 >    is **notional** (single-ion activity is not independently measurable and
 >    needs an extrathermodynamic convention), so "activity-based model pH" is the
 >    accurate name.
-> 5. **Round 2 addition: the validated accuracy envelope.** `I_m ≤ 0.5 mol/kg` is
+> 5. **Round 2 addition, round 3 corrected: the PROPOSED validation envelope.** `I_m ≤ 0.5 mol/kg` is
 >    the Davies *computational domain*; it is not an error bound. ±0.02 pH is
 >    claimed only inside `I_m ≤ 0.12 mol/kg`, where the IUPAC anchors sit.
 

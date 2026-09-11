@@ -97,12 +97,25 @@ raw doubles:
 > version, and the same solver configuration produces the same `replayHash` at
 > every committed event boundary.
 
-**What the canonical state is** (revised 2026-09-11): the **independent**
-conserved quantities only — material amounts and water mass — plus world
-structure. Species concentrations, activities, and ionic strength are **derived**
-and are never quantized independently. Quantizing derived quantities separately
+**What the canonical state is** (revised 2026-09-11, rounds 2–3): the
+**independent** quantities only —
+
+- material `amount`s (mol) — conserved solutes;
+- `waterMass` (kg) — conserved solvent;
+- **`liquidVolume` (L)** — operational physical state, updated by transfer and
+  entering `replayHash`, because it drives liquid level, the burette reading,
+  `c(H⁺)`, and the size of the next transfer (finding P1-A);
+- the **`scenarioSnapshot`** carried by genesis, so the log is self-contained
+  and never re-reads `content/`;
+- world structure.
+
+Species concentrations, activities, and ionic strength are **derived** and are
+never quantized independently. Quantizing derived quantities separately
 accumulates conservation drift; the spike measured `4.0e-12` for that approach
 against `1.4e-15` for quantizing independent amounts (`spikes/numeric-policy`).
+
+Contents live in **exactly one place** — `canonical.byVessel[vesselId]`.
+`Vessel` is structure only and carries no `contents` field (finding P1-B).
 
 A second hash, `scienceHash`, covers the derived science and exists to detect a
 solver regression — since the reducer **recomputes** chemistry rather than

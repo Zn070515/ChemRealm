@@ -60,39 +60,87 @@ Renderer               packages/render/pixi
 | Glassware geometry, stroke, highlights | Renderer | Pure drawing |
 | Liquid level in a vessel | ObservableModel | Derived by calling the vessel's declared `h(V)`; never by scaling a volume into a geometry axis |
 | Liquid fill geometry | Renderer | Consumes level from RenderState |
-| Indicator colour | ObservableModel | Empirical model, see below |
-| pH readout text | ObservableModel (value) + Renderer (formatting) | Precision rule from `ADR-0004` §5 and `SPEC-0001` |
-| pH-volume curve points | ObservableModel | Derived from the scientific state sequence |
+| Indicator **protonation ratio** | **Scientific Core** | Equilibrium — `Ka_in`, `γ`, `a_H`. Not the renderer's business. |
+| Indicator **colour** | ObservableModel | Empirical perceptual mapping: ratio → colour |
+| Model pH value | Scientific Core | `−log₁₀ a(H⁺)` |
+| `c(H⁺)` / `−lg c(H⁺)` | **ScientificProjection** | Needs scientific state **and** world volume |
+| Readout text and precision | Renderer | Formatting only; precision rule from `ADR-0004` §5 |
+| pH-volume curve points | ScientificProjection (values) + ObservableModel (geometry) | Values from the state sequence; the renderer draws |
 | Curve axes, gridlines, labels | Renderer | Pure presentation |
 | Burette reading | ObservableModel | Derived: `initial − Σ delivered` |
-| Species composition table | ObservableModel | Projection of ScientificState |
-| Bubbles, precipitate, flames | ObservableModel decides presence; Renderer animates | Deferred past M5 |
+| Species composition table | ObservableModel | **Re-presents** scientific values; computes no chemistry |
+| Bubbles, precipitate, flames | **Scientific Core** decides presence; Renderer animates | Deferred past M5 |
 
-### The indicator colour model
+**The rule for the observable layer:** it may *re-present* a scientific value —
+list it, format it, map it to a geometry or a colour, scale it for display. It
+may not *compute new chemistry*. If answering a display question requires
+`Ka`, `Ksp`, an activity, or a reaction direction, the answer comes from the
+Scientific Core.
 
-Colour is produced by a documented empirical observable model, not a lookup
-table keyed on pH:
+### The indicator boundary — corrected
 
-1. The indicator is modelled as a weak acid with its own `Ka_in`, taken from
-   literature with provenance (`SPEC-0001` carries the values and sources).
-2. The observable model computes the protonation ratio
-   `m(In⁻)/m(HIn) = Ka_in · γ_HIn / (a_H · γ_In)` — activity-coupled, and a
-   **ratio, not a log**. Note it depends on the hydrogen-ion *activity*
-   (`docs/science/quantity-ontology.md`), not on its molality or molarity.
-3. That ratio maps to a colour through a declared mixing model whose endpoints
-   are measured/standard colours, with an explicitly stated transition range.
+**Revised 2026-09-11 (round 3, finding P1-C).** The previous version of this
+section identified the right problem and then drew the boundary in the wrong
+place. It correctly observed that indicator colour has two halves — real
+acid-base equilibrium, and an empirical perceptual mapping — and then assigned
+**both** to the observable model, which computed
 
-Three properties make this compliant rather than merely convenient:
+```
+m(In⁻)/m(HIn) = Ka_in · γ_HIn / (a_H · γ_In)
+```
 
-- **It is continuous and derived.** There is no `if pH > 8.2 then pink`. The
-  transition range is a property of the model, not a branch in the code.
-- **It has provenance and a range.** The model records: indicator identity,
-  `Ka_in` and its source, the transition interval, and the ionic-strength
-  validity range. Outside that range the model reports reduced confidence rather
-  than pretending.
-- **It is labelled empirical, not first-principles.** Per `GOAL.md` §12, an
-  empirical colour model must not be presented as calculated science. The
-  inspection view says which is which.
+That expression contains `Ka`, an activity, and an activity coefficient. It is
+**equilibrium chemistry**, not an observable mapping, and it belongs to the
+Scientific Reality Core. Computing it in `packages/render` would require the
+renderer to import or reimplement the activity model — exactly what `GOAL.md`
+§5.3 forbids.
+
+The corrected split:
+
+```
+Scientific Core
+   │  solves the indicator's acid-base equilibrium alongside the analyte's
+   ▼
+indicators: [{ indicatorId, protonationRatio }]     ← scientific output
+   │
+Observable Model
+   │  empirical mapping ONLY: ratio → colour
+   ▼
+colour
+```
+
+| Half | Owner | Input → output |
+|---|---|---|
+| **Indicator equilibrium** | Scientific Core | `Ka_in`, activity coefficients, mixture state → `protonationRatio` |
+| **Colour perception** | Observable Model | `protonationRatio` → colour, via a declared mixing model with measured/standard endpoints and an explicitly stated transition range |
+
+The dividing line is: **"how much In⁻ is there" is chemistry; "what does 50 %
+In⁻ look like" is perception.** The observable model may own the latter and must
+never own the former.
+
+**This is the general rule, not an indicator special case.** The same pattern
+would otherwise repeat for every future observable:
+
+- precipitate colour ← needs `Q` vs `Ksp` — **chemistry**, not the renderer;
+- flame colour ← needs the emitting species — **chemistry**;
+- gas evolution presence ← needs the reaction — **chemistry**;
+- bubble animation rate ← presentation.
+
+If the "does the observable model compute…" question is answered per-feature by
+convenience, the Scientific Core is hollowed out one observable at a time. The
+rule is stated once, here, so it does not have to be re-litigated.
+
+Three properties make the colour half compliant:
+
+- **It is continuous.** There is no `if ratio > 0.5 then pink`. The transition
+  range is a property of the model, not a branch in the code.
+- **It has provenance and a range.** The model records the indicator identity,
+  the transition interval, and the perceptual endpoints. The *equilibrium* half,
+  including `Ka_in` and its source, is recorded by the scientific core under
+  `ADR-0003`.
+- **It is labelled empirical, not first-principles.** Per `GOAL.md` §12, a
+  perceptual mapping must not be presented as calculated science. The inspection
+  view says which half produces which number.
 
 ### Enforcement
 

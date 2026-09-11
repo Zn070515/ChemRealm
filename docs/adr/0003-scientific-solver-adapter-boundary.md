@@ -69,8 +69,41 @@ type SolveResult =
 
 Three properties make this load-bearing rather than decorative:
 
-1. **No bare numbers cross the boundary.** A consumer that wants pH receives a
-   `ScientificState` plus the `Provenance` that produced it. There is no
+### What `ScientificState` contains — and what it does not
+
+**Clarified 2026-09-11 (round 3, finding P1-D).** Three documents previously
+disagreed about this, which would have forced an implementing agent to guess.
+
+`ScientificState` is the scientific core's output and contains:
+
+```
+ScientificState {
+  species:      { symbol, molality: MolPerKilogram, amount: Mol }[]
+  gamma:        { symbol, value: ActivityCoefficient }[]
+  activity:     { symbol, value: Activity }[]
+  ionicStrength: { molal: IonicStrengthMolal, reduced: ReducedIonicStrength }
+  modelPh:      ActivityBasedModelPh      // -log10 a(H+), under a named model
+  indicators:   { indicatorId, protonationRatio: number }[]
+  validity:     ValidityStatus
+  provenance:   Provenance
+}
+```
+
+It does **not** contain `c(H⁺)`, `−lg c(H⁺)`, or any molarity — those require the
+world's solution volume, which the scientific core does not have.
+
+`c(H⁺)` and `−lg c(H⁺)` are produced by **`ScientificProjection`**, which takes
+`ScientificState` plus plain physical data (`waterMass`, `liquidVolume`) and is
+tested independently of both the world runtime and the renderer.
+
+Molality is the core's *numerical base*; it is not a limit on what the core may
+output. Activity, ionic strength, model pH, and indicator speciation are all
+scientific and all live here.
+
+### Boundary properties
+
+1. **No bare numbers cross the boundary.** A consumer that wants the model pH
+   reads `ScientificState.modelPh` together with its `Provenance`. There is no
    `getPh(): number` shortcut, because that shortcut is how provenance gets lost.
 
 2. **Validity is a first-class return value, not an exception.** Returning

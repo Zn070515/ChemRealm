@@ -82,6 +82,22 @@ the ±0.02 band. **A bounded, recorded approximation, not an unexamined default.
 |---|---|---|---|
 | Ionic strength, molality basis | `I_m` | mol/kg | `0.5 · Σ m_i z_i²` |
 | Ionic strength, molarity basis | `I_c` | mol/L | `0.5 · Σ c_i z_i²` |
+| **Reduced ionic strength** | `Î` | **dimensionless** | `I_m / m°`, `m°` = 1 mol/kg |
+
+**Added 2026-09-11 (round 3, finding P1-F).** The Davies equation contains
+`1 + √I` and `b·I`. With a dimensioned `I` those are illegal sums. The standard
+molality-scale resolution is to work with the **reduced** ionic strength
+`Î = I_m / m°`, which is a pure number, so every term is dimensionless and `A` and
+`b` are pure numbers too.
+
+Numerically `Î = I_m` because `m° = 1 mol/kg`; the point is semantic, and it is
+exactly the kind of semantics this document exists to keep straight. A project
+that requires all activities and equilibrium constants to be dimensionless cannot
+have an activity model that adds `1 + √(mol/kg)`.
+
+`IonicStrengthMolal` and `ReducedIonicStrength` are therefore **distinct
+types** — and distinct also from `IonicStrengthMolar`, which is a different
+quantity again.
 
 **v0 uses `I_m`**, because it must be consistent with the molality-scale activity
 coefficients it feeds. Mixing bases (`I_c` into a molality-scale Davies equation)
@@ -202,15 +218,25 @@ see finding P2-1.
 
 ## Where each quantity lives
 
-| Layer | Speaks in |
-|---|---|
-| World state | amounts (mol), water mass (kg), volume (L) |
-| Scientific core (internal) | molality (mol/kg), activity (dimensionless), `I_m` |
-| Scientific core (output) | both molality and molarity; activity; `I_m`; `pH` |
-| Observable model | whatever the view needs, converted explicitly |
-| Teaching view | molarity (`mol/L`), `−lg c(H⁺)` |
-| Scientific view | molality, activity, activity-based model pH |
-| Serialized forms | `{value, unit}` always; no bare numbers |
+**Revised 2026-09-11 (round 3, finding P1-D).** The previous version of this
+table said the scientific core outputs "both molality and molarity", which
+contradicted `SPEC-0001`. The authoritative assignment is now:
+
+| Layer | Owns | Does not own |
+|---|---|---|
+| **World Physical State** | `amount` (mol), `waterMass` (kg), `liquidVolume` (L), structure | any equilibrium quantity |
+| **Scientific Core** | molal species amounts; `γ`; **activity** (dimensionless); `I_m`; **activity-based model pH**; **indicator chemical speciation**; validity/provenance | molarity, `−lg c(H⁺)`, colour, geometry |
+| **ScientificProjection** | `c(H⁺)`, `−lg c(H⁺)` — needs scientific state **and** world volume | colour, geometry, formatting |
+| **Observable Model** | empirical mapping only: ratio → colour, volume → height via `h(V)`, series → curve | any equilibrium calculation |
+| **Renderer** | pixels | everything above |
+
+Molality is the scientific core's **numerical base**. It is not a restriction on
+what the core may output: activity, ionic strength, model pH, and indicator
+speciation are all scientific quantities and all belong to the core. Molarity is
+different — it needs the world's solution volume — which is why
+`ScientificProjection` is a named layer.
+
+Serialized forms always carry `{value, unit}`; never a bare number.
 
 ## Anti-patterns this document forbids
 

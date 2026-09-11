@@ -67,6 +67,7 @@ wrong.
 | activity coefficient | dimensionless | `ActivityCoefficient` |
 | ionic strength (molality basis) | mol/kg | `IonicStrengthMolal` |
 | ionic strength (molarity basis) | mol/L | `IonicStrengthMolar` |
+| **reduced ionic strength** | **dimensionless** | `ReducedIonicStrength` |
 | mole fraction | dimensionless | `MoleFraction` |
 | pH | dimensionless | `Ph` |
 
