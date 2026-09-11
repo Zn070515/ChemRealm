@@ -448,7 +448,23 @@ A handoff should state:
 
 Do not hand off with “should work.”
 
-# 21. Final Principle
+# 21. Round Integration Workflow
+
+The default collaboration workflow for this repository is direct integration:
+
+- At the start of each round, work directly in the current shared working tree.
+  Do not create or switch to a Git worktree unless the user explicitly asks for
+  one.
+- At the end of each completed round, run the relevant verification commands,
+  inspect the diff, then commit the round's changes and push the current branch
+  to its configured upstream remote.
+- Do not create a pull request. A normal push is the integration mechanism for
+  this repository; do not force-push unless the user explicitly requests it.
+- A failed verification, unresolved P0/P1 finding, or incomplete contract is
+  not a completed round and must not be described as one. Report the blocker
+  and preserve the evidence needed to continue in the same working tree.
+
+# 22. Final Principle
 
 The project's hardest failures will often look superficially successful:
 
