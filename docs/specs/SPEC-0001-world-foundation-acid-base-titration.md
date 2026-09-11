@@ -1,9 +1,11 @@
 # SPEC-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** S1 — Specified (**revision 5**, for owner re-review)
-- **Date:** 2026-09-11 (round 4: standard state, persistence format, contract semantics)
+- **Status:** S1 — Specified (**revision 6**, for owner re-review)
+- **Date:** 2026-09-11 (round 5: event-sourced identity, genesis resolution, contract closure)
 - **Owner:** Project owner
-- **Supersedes:** revisions 1–4 of this spec
+- **Supersedes:** revisions 1–5 of this spec
+- **Coverage:** every acceptance criterion below is mapped to a `PLAN-0001`
+  milestone, machine-checked by `tools/check_acceptance_coverage.py`
 - **Related ADRs:** 0001, 0002, 0003, 0004 (rev), 0005, 0006, 0007 (rev), 0008, 0009 — all `Proposed`, all load-bearing here
 - **Related evidence:** `spikes/activity-equilibrium/` (scientific formulation),
   `spikes/numeric-policy/` (determinism + branded types),
@@ -536,12 +538,40 @@ shows a number computed outside the domain.**
 2. **Instantaneous equilibrium.** No kinetics.
 3. **Ideal mixing on transfer.** Delivered volume mixes completely and
    immediately.
-4. **Volume additivity is a DISPLAY approximation only.** The mixture volume is
-   estimated by volume additivity; volume contraction on mixing is not modelled.
-   This affects the reported molarity, the burette-vessel level, and the liquid
-   height — **never the thermodynamics**, which run on molality derived from
-   conserved amounts and water mass (`docs/science/quantity-ontology.md`).
-   Bounded and labelled; M4 measures the bound over the supported domain.
+4. **Volume additivity is an OPERATIONAL approximation, not a display one.**
+   **Corrected 2026-09-11 (round 5, finding P1-4).** An earlier revision called
+   this "display-only, never affecting the thermodynamics". That was false, and
+   the spec had itself made it false one section later by defining transfer as
+
+   ```
+   f = ΔV / liquidVolume_source      Δn_i = f·n_i      Δm_w = f·m_w
+   ```
+
+   `liquidVolume` is therefore **not** merely shown: it sets how much water and
+   solute move on the *next* transfer, which sets the next mixture's molality,
+   which is what the thermodynamics solve on. The approximation propagates.
+
+   | Affected | How |
+   |---|---|
+   | Presentation | reported molarity, `c(H⁺)`, `−lg c(H⁺)`, liquid height, burette reading |
+   | **Transfer metering** | the volume fraction `f` moved on the next transfer |
+   | **Subsequent canonical composition** | hence the next state's molality |
+   | **Hence subsequent thermodynamics** | indirectly, through molality |
+
+   What remains true: **thermodynamics is never solved on a molarity.** The
+   solver's inputs are always amounts and water mass. But those amounts are
+   themselves shaped by earlier volume-additive metering, so the honest claim is
+   "does not enter the equilibrium algebra directly", not "does not affect the
+   result".
+
+   The approximation is acceptable at the supported concentrations and is
+   labelled as such. M4 measures the bound over the supported domain, and
+   `AC-R14` checks that volume, water mass and solute amounts are conserved
+   across transfers — which bounds the *error*, not the approximation away.
+
+   **This is the general principle:** an approximation may be accepted, but its
+   influence must be described honestly. "Display-only" was a claim about
+   blast radius that turned out to be wrong.
 5. **Constant pressure.** 1 atm; no pressure dependence.
 6. **The indicator is modelled as monoprotic** even where it is not (see below).
 7. **Neutral-species activity is unity** (`γ_HA = 1`), neglecting the Setchenow
@@ -826,11 +856,46 @@ An earlier revision had `WorldCreated` carry only a `scenarioRef`, and
 
 Therefore:
 
-- `WorldCreated` carries a **`ScenarioSnapshot`**: the material definitions used
-  (composition **and density**, both sourced), vessel geometry references and
-  their `V(h)` profiles, apparatus defaults, and the scenario's **model
-  requirements** — together with a **content hash** (the checksum of the
-  snapshot). The world never re-reads `content/` at replay time.
+- `WorldCreated` carries a **`ScenarioSnapshot`** containing, for each material,
+  a **resolved inventory per litre** — not merely the raw reagent definition:
+
+  ```
+  MaterialSnapshot {
+    materialId
+    sourceDefinition                    // what the scenario author wrote
+    density: Kilogram                   // sourced
+    composition: { soluteId, molPerLitre }[]   // sourced
+    molarMasses: { soluteId, KilogramsPerMol }[]  // sourced
+    resolvedInventoryPerLitre: {        // FROZEN at genesis
+      waterMass:        Kilogram
+      soluteAmounts:    { soluteId, Mol }[]
+    }
+    provenance: Provenance
+  }
+  ```
+
+  Plus vessel geometry references and their `V(h)` profiles, apparatus defaults,
+  and the scenario's **model requirements** — together with a **content hash**
+  (the checksum of the snapshot). The world never re-reads `content/` at replay
+  time.
+
+  **Why the resolved inventory is stored rather than re-derived (round 5,
+  finding P1-3).** Deriving `waterMass` needs `M(HCl) = 0.03646 kg/mol`. If the
+  molar mass came from a runtime periodic table, then a replay would silently
+  depend on that table — and `AC-R12` ("delete `content/`, replay, hash
+  unchanged") would not actually be closed, only apparently closed. Storing the
+  resolved inventory removes the dependency entirely: `MaterialCharged(volume)`
+  becomes
+
+  ```
+  contents = volume × resolvedInventoryPerLitre
+  ```
+
+  Molar mass participates **once**, at scenario resolution, and is then frozen
+  with its provenance. Replay performs no chemistry lookup of any kind.
+
+  Molar masses therefore join the `AC-S7` provenance list alongside densities —
+  both are scientific inputs, not implementation detail.
 
 **The snapshot does NOT contain the resolved `solverConfig`** (round 4, finding
 P1-2b). The two are different things and storing both would recreate the
@@ -838,18 +903,45 @@ double-source-of-truth problem just removed from `Vessel.contents`:
 
 | | Records | Whose |
 |---|---|---|
-| `scenarioSnapshot.modelRequirements` | what the scenario *needs* (e.g. "monoprotic acid-base in water at 25 °C") | the content author |
+| `scenarioSnapshot.modelRequirements` | what the scenario *needs* (e.g. "monoprotic acid-base in water at 25 °C, activity-corrected equilibrium") | the content author |
 | `WorldCreated.solverConfig` | which solver, version and parameters were **actually used** for this world | the runtime, at genesis |
-
-The boundary is `content requirement ≠ resolved scientific implementation`. A
-scenario may be satisfiable by more than one solver; only the resolved config is
-replay identity. If the two ever disagreed — say the snapshot named
-`acidbase-monoprotic-davies@1.0` and `solverConfig` named `@1.1` — `solverConfig`
-wins, because it is what the numbers were actually produced with. Storing only
-one makes the question unaskable.
 
 `contentHash` is not a third source of truth: it is the snapshot's checksum,
 verified on load by `hash(snapshot) === contentHash`.
+
+### Requirements constrain the solver; the solver never overrides them
+
+**Corrected 2026-09-11 (round 5, finding P1-5).** An earlier revision said that
+if the two disagreed, "`solverConfig` wins, because it is what the numbers were
+actually produced with". That is wrong, and it degrades a requirement into a
+comment.
+
+Resolution is a **compatibility check, not a precedence contest**:
+
+```
+ModelRequirements              (from the scenario snapshot)
+        ↓
+  SolverResolver
+        ↓
+  compatible?
+   ┌────┴────┐
+  no        yes
+   ↓          ↓
+REJECT    SolverConfig  →  frozen into genesis
+```
+
+If the resolved solver does **not** satisfy the snapshot's requirements — wrong
+temperature, an unsupported species set, an activity model outside its stated
+domain — then **world creation fails**. It does not quietly proceed with a
+solver the scenario did not ask for.
+
+The two are not competing sources of truth; they answer different questions:
+
+- `modelRequirements` is a **constraint** on what may be used.
+- `solverConfig` is a **record** of what *was* used, and must satisfy the constraint.
+
+**AC-R20** requires that an unsatisfiable requirement rejects world creation with
+a stated reason, rather than resolving to some other solver.
 - `MaterialCharged` carries the **charged volume**, not a bare amount. The
   reducer derives amount, water mass, and any other state from the snapshot's
   material definition. This also matches what a learner actually does — dispense
@@ -973,12 +1065,41 @@ All events carry `{ seq, type, payload, schemaVersion, meta? }`.
 
 | Event | Payload | Notes |
 |---|---|---|
-| `WorldCreated` | `{ scenarioSnapshot, contentHash, solverConfig, seed: null }` | Genesis, and **self-contained**: the snapshot carries material definitions (composition, density), vessel geometry and `V(h)` profiles, apparatus defaults, and model **requirements**. `solverConfig` is the single record of what was **resolved and used**. |
+| `WorldCreated` | `{ worldId, scenarioSnapshot, contentHash, solverConfig, seed: null }` | Genesis, and **self-contained**: the snapshot carries resolved material inventories, vessel geometry and `V(h)` profiles, apparatus defaults, and model **requirements**. `solverConfig` is the single record of what was **resolved and used**. |
 | `ApparatusPlaced` | `{ apparatusId, kind, position }` | Emitted on drop, never during drag. |
 | `ApparatusAttached` | `{ childId, parentId, portId }` | e.g. burette clamped above flask. |
-| `MaterialCharged` | `{ vesselId, materialId, volume: {value,unit} }` | Carries **volume**, not amount: the reducer derives amount, `waterMass`, and `liquidVolume` from the snapshot's material definition. |
-| `TransferCommitted` | `{ fromVesselId, toVesselId, volume: {value,unit}, mechanism }` | The chemically load-bearing event. Updates `liquidVolume` and moves water and solutes by volume fraction. |
-| `WorldBranched` | `{ parentWorldId, forkSequence }` | Recorded in the **child** log. |
+| `MaterialCharged` | `{ vesselId, materialId, volume: {value,unit} }` | Carries **volume**, not amount: the reducer derives amount, `waterMass`, and `liquidVolume` from the snapshot's resolved inventory. |
+| `TransferCommitted` | `{ fromVesselId, toVesselId, volume: {value,unit}, mechanism }` | The chemically load-bearing event. Updates `liquidVolume` and moves water and solutes by volume fraction, all deltas from the pre-transfer snapshot. |
+| `WorldBranched` | `{ childWorldId, parentWorldId, forkSequence, forkStateHash }` | Creates the child's identity. Recorded in the **child** log. |
+
+### World identity is event-sourced too
+
+**Added 2026-09-11 (round 5, finding P1-2).** `ADR-0002`'s governing principle is
+that **the event log is the source of truth and `WorldState` is a fold over it**.
+It was not true: `WorldState` carries `worldId` and `lineage`, but the event
+envelope carries neither, so
+
+```
+WorldState ≠ fold(events)
+```
+
+`worldId` was unreconstructable for a root world. It was worse for a flattened
+child export: replaying a genesis-to-tip log could not tell that the final
+identity had changed from root to child.
+
+**Rule: identity is created once, at event time, and written into the event;
+replay reads it and never regenerates it.**
+
+| Field | Written by | On replay |
+|---|---|---|
+| `worldId` | `WorldCreated` | read from the event |
+| `childWorldId`, `parentWorldId`, `forkSequence`, `forkStateHash` | `WorldBranched` | read from the event |
+
+That random ids are fine is the point — a generated id is not nondeterminism as
+long as generation happens **when the event is created** and the value is then
+frozen in the log. Replay of the same log yields the same identity because it
+reads the same bytes. **AC-R19** asserts it by replaying a flattened child log
+and checking the reconstructed `worldId` and lineage.
 
 **Not events, deliberately:** `pointermove`, `dragframe`, hover, scroll, camera,
 animation ticks, live slider position during a drag. `AGENTS.md` §11 and
@@ -1409,7 +1530,7 @@ Binary and verifiable. Every criterion maps to an evidence method.
 | AC-S4 | Inputs outside the validity domain return `MODEL_OUT_OF_DOMAIN` and produce no number — checked **both** before the solve and on the converged `I_m` | domain test matrix |
 | AC-S5 | The 1e-6 mol/kg acetic acid case matches the exact solve, and the HH divergence (0.65 pH) is reproduced | adversarial test |
 | AC-S6 | The PHREEQC oracle agrees within ±0.02 pH over the swept curve, **including the equivalence region**, with constants **and the molality basis** aligned | oracle comparison report; see the caveat above |
-| AC-S7 | **Every scientific input** is traced to a citable source in `docs/research/constants-provenance.md`: `Ka`, `Kw`, Davies `A` and `b`, `γ_HA`, `a_w`, the indicator `Ka_in`, **and the solution densities** (`ρ` enters `waterMass → molality → activity → model pH`, so it is a scientific input, not an implementation detail) | provenance review; **currently open — see Open questions** |
+| AC-S7 | **Every scientific input** is traced to a citable source in `docs/research/constants-provenance.md`: `Ka`, `Kw`, Davies `A` and `b`, `γ_HA`, `a_w`, the indicator `Ka_in`, the solution **densities**, and the **molar masses** (`ρ` and `M` jointly set `waterMass → molality → activity → model pH`; both are scientific inputs, not implementation details) | provenance review; **currently open — see Open questions** |
 | AC-S15 | If `ρ` is treated as a scenario input, the scenario schema must **require** it — a missing density is a validation error, never a default | negative content test |
 | AC-S8 | Every thermodynamic calculation runs on the **molality** basis; no `MolPerLitre` value reaches scientific-core internals; **`m(H⁺)`, `c(H⁺)`, and `a(H⁺)` are produced by distinct code paths and none is derived from another by renaming** | static check + type test on the `packages/sci` public surface; `c(H⁺)` construction unit test |
 | AC-S9 | `−lg c(H⁺)` (taught) and activity-based model pH are distinct types, both computed, neither assignable to the other | compile fixture + named reference cases REF-5/REF-6 |
@@ -1441,6 +1562,8 @@ Binary and verifiable. Every criterion maps to an evidence method.
 | AC-R16 | `scenarioSnapshot` carries model **requirements**, never a resolved `solverConfig`; exactly one resolved solver config exists per world | schema test: the snapshot type has no solver-config field |
 | AC-R17 | **Branch export is self-contained.** Exporting a branch emits the **complete** event log from genesis (flattened), with lineage metadata — not just the branch's suffix. A bundle imported on a machine with no parent replays to the same `replayHash` | round-trip test that exports a child, discards the parent, and replays |
 | AC-R18 | Transfer deltas are computed from the pre-transfer snapshot: a test that interleaves read/write fails | unit test asserting the order-independence of the transfer update |
+| AC-R19 | **World identity is event-sourced.** `WorldCreated` carries `worldId`; `WorldBranched` carries `childWorldId`, `parentWorldId`, `forkSequence`, `forkStateHash`. Replaying a flattened genesis-to-tip log reconstructs the final `worldId` and full `lineage` from the log alone, with nothing regenerated | replay test: fold a flattened child log, compare reconstructed identity to the live world's |
+| AC-R20 | **Requirements constrain, they do not lose.** A scenario whose `modelRequirements` cannot be satisfied by any available solver **rejects world creation** with a stated reason. It never resolves to a solver the scenario did not ask for | negative test: a scenario requiring a temperature outside every shipped solver's domain fails to create, with the reason recorded |
 
 ### Representation
 
@@ -1488,7 +1611,7 @@ Binary and verifiable. Every criterion maps to an evidence method.
 | AC-P1 | No server API route exists in the v0 build | build artifact inspection |
 | AC-P2 | A full scripted session issues no request carrying learner data | network inspection log |
 | AC-P3 | IndexedDB contains no identifier, name, or contact field | storage inspection |
-| AC-P4 | Export produces a bundle with no identifier field, and states whether learner evidence is included | export schema test |
+| AC-P4 | Export produces a bundle with **no personal, device, or cross-session tracking identifier**, and states whether learner evidence is included. **World ids, lineage, and fork hashes are not identifiers in this sense and are required** — a literal reading of "no identifier field" would wrongly forbid them | export schema test, asserting the absence of tracking fields and the presence of lineage |
 | AC-P5 | A full page load issues no request to a third-party origin | network inspection; no external font, CDN, or script in the built HTML |
 
 ### Content, performance, accessibility
@@ -1674,3 +1797,19 @@ ambiguities an implementing agent would resolve differently.
 | **P2-3** | Solver id `acidbase-exact` claimed a quality, not a model — and it is permanent replay identity | Renamed **`acidbase-monoprotic-davies`**, which names the model and the activity equation. `ADR-0003` |
 | **P2-4** | `Ka = 1.8001e-5` was "derived" from a two-significant-figure source. Five digits from two is invented precision | A constant carries **exactly** its source's precision. AC-S16; Open question 1 rewritten |
 | **P2-5** | The literal sweep was still not clean: the spike printed "INSIDE validated envelope"; `ADR-0002`'s event table said "scenario ref" | Fixed, and the sweep run as a literal command |
+
+### Round 5 (2026-09-11) — event-sourced identity, genesis resolution, contract closure
+
+Round 5 found that the event log still could not reconstruct its own world, and
+that the plan had not followed the spec. It also produced the mechanism that
+stops that second class of defect recurring.
+
+| Finding | What was wrong | Where fixed |
+|---|---|---|
+| **P1-1** | `PLAN-0001` was not updated for revision 5: M1 lacked `ReducedMolality`; M2's `CanonicalContents` omitted `liquidVolume`; M4's stop condition still read `AC-S1..AC-S11`; M2/M4/M8 did not cover `AC-R12..AC-R18`, `AC-S12..AC-S14`, `AC-S15`, `AC-S16`, `AC-U5` | Plan updated **driven by the new coverage check**, not by re-reading. **`tools/check_acceptance_coverage.py`** now runs in CI (M0 6a) and PASSES at 0 unmapped / 0 dangling |
+| **P1-2** | `WorldState` carries `worldId` and `lineage`, but neither `WorldCreated` nor `WorldBranched` carried identity — so `WorldState ≠ fold(events)`, and a flattened child log could not tell it had become a child | Identity is created once at event time and written into the event; replay reads it and never regenerates. AC-R19 |
+| **P1-3** | `ScenarioSnapshot` held composition and density but not molar masses, so `waterMass` derivation would depend on a runtime periodic table — leaving AC-R12 only *apparently* closed | The snapshot stores a **resolved inventory per litre** (`waterMass` + `soluteAmounts`), frozen at genesis with provenance. Molar masses join the AC-S7 list |
+| **P1-4** | "Volume additivity is a display-only approximation, never affecting the thermodynamics" was **false** — `f = ΔV/liquidVolume` makes volume set how much moves on the next transfer, hence later molality | Renamed an **operational** approximation with its influence traced explicitly through metering to subsequent composition. The honest claim is "does not enter the equilibrium algebra directly", not "does not affect the result" |
+| **P1-5** | "If `modelRequirements` and `solverConfig` disagree, `solverConfig` wins" degraded a requirement into a comment | Resolution is a **compatibility check**: an unsatisfiable requirement **rejects world creation** with a stated reason. The two are a constraint and a record, not competing sources of truth. AC-R20 |
+| **P2-1** | The spike's call sites passed physical values into a reduced-molality core — numerically identical because `m° = 1`, which proves a **numeric** test cannot catch a standard-state error | Every physical input now crosses an explicit `solve_physical()` boundary. Standard-state safety is a compile-time property (AC-U5) |
+| **P2-2** | "Export contains no identifiers" would, read literally, forbid the `worldId` that flattened branch export requires | AC-P4 now reads "no **personal, device, or cross-session tracking** identifier"; lineage is required and permitted |

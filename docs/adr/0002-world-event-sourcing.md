@@ -130,6 +130,32 @@ The solver identity is part of the genesis event and therefore part of the log.
 the original model of this ADR left open; it is answered by `ADR-0008`'s three
 availability tiers.
 
+### Identity is event-sourced too
+
+**Added 2026-09-11 (round 5, finding P1-2).** This ADR's governing claim is that
+the event log is the source of truth and `WorldState` is a fold over it. That
+was not true: `WorldState` carries `worldId` and `lineage`, and neither
+`WorldCreated` nor `WorldBranched` carried them, so
+
+```
+WorldState ≠ fold(events)
+```
+
+`worldId` was unreconstructable even for a root world. For a flattened child
+export it was worse — replaying a genesis-to-tip log could not tell that the
+final identity had changed from root to child.
+
+| Field | Written by |
+|---|---|
+| `worldId` | `WorldCreated` |
+| `childWorldId`, `parentWorldId`, `forkSequence`, `forkStateHash` | `WorldBranched` |
+
+**Rule: identity is generated once, when the event is created, and frozen in the
+log. Replay reads it; it never regenerates it.** Random generation is therefore
+not a source of nondeterminism — the value is an input to the fold, not a
+product of it. `SPEC-0001` AC-R19 asserts this by replaying a flattened child log
+and comparing the reconstructed identity and lineage against the live world's.
+
 ### Snapshots
 
 - A snapshot is taken every `N` committed events (initial `N = 50`) and **always

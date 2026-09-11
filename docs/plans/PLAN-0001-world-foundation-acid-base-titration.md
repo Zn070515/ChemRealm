@@ -1,6 +1,9 @@
 # PLAN-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** Ready to execute (pending `SPEC-0001` acceptance, **revision 4**)
+- **Status:** Ready to execute (pending `SPEC-0001` acceptance, **revision 6**)
+- **Coverage check:** `py tools/check_acceptance_coverage.py` — every `AC-*` in
+  `SPEC-0001` is required to appear in at least one milestone here. Run it after
+  editing either document.
 - **Date:** 2026-09-11 (revised after owner review remediation)
 - **Implements:** `docs/specs/SPEC-0001-world-foundation-acid-base-titration.md`
 - **Related ADRs:** 0001–0009, all `Proposed`. Load-bearing here: 0004 (revised),
@@ -124,6 +127,14 @@ None. M0 adds the mechanism by which contracts will be enforced.
    toolchain is exercised in CI from day one. **No PHREEQC yet** — that is M4.
 6. CI: `pnpm install --frozen-lockfile`, `pnpm build`, `pnpm test`,
    `pnpm depcruise`, then `uv sync` and `uv run pytest`.
+6a. **CI also runs `py tools/check_acceptance_coverage.py`.** This is not
+   optional and not cosmetic. Across four consecutive owner-review rounds the
+   defect "a criterion was added to the spec and the plan was not updated" was
+   found by a human re-reading the documents, while the agent each time reported
+   "no dangling references". Human recollection is not evidence; this is. The
+   check fails the build if any `AC-*` defined in `SPEC-0001` is absent from
+   every `PLAN-0001` milestone, or if the plan references a criterion that does
+   not exist.
 7. `README.md` with exact setup commands for both toolchains.
 
 ### Tests and evidence
@@ -135,6 +146,7 @@ None. M0 adds the mechanism by which contracts will be enforced.
 | `pnpm depcruise` passes on the clean tree | Rules are active |
 | `pnpm depcruise` **fails** on a deliberately added `render → sci` import (fixture, then reverted) | The rule actually bites — this is the point of M0 |
 | `uv run pytest` passes | The second toolchain runs |
+| **`py tools/check_acceptance_coverage.py` passes; and fails when a criterion is deliberately unmapped (fixture, then reverted)** | AC coverage is machine-checked, and the check actually bites |
 | CI green on a clean checkout | Both toolchains coexist (ADR-0001's central claim) |
 
 ### Stop condition
@@ -152,7 +164,7 @@ Delete the M0 files. Nothing is persisted and nothing depends on them.
 ## M1 — Schema and units
 
 **Target stage:** S3
-**Addresses:** ADR-0001, ADR-0004; `SPEC-0001` AC-C1, AC-C2, AC-R8, AC-R15, AC-P3, AC-U1..AC-U4
+**Addresses:** ADR-0001, ADR-0004; `SPEC-0001` AC-C1, AC-C2, AC-R8, AC-R15, AC-R16, AC-P3, AC-U1..AC-U5
 
 ### Purpose
 
@@ -189,7 +201,8 @@ this milestone defines their representation.
    Blocking arithmetic wholesale on those would block legitimate physics.
    - **Opaque** (`interface` with a `unique symbol` key, **not** `number & …`):
      `Ph`, `Activity`, `ActivityCoefficient`, `MoleFraction`,
-     `IonicStrengthMolal`, `IonicStrengthMolar`, **`ReducedIonicStrength`**.
+     `IonicStrengthMolal`, `IonicStrengthMolar`, `ReducedIonicStrength`,
+     **`ReducedMolality`** (dimensionless, distinct from `MolPerKilogram`).
      Raw operators must be a **type error**, verified by a compile fixture; the
      **defined** operations are supplied as named functions
      (`ratioActivity`, `differencePh`, `sumMoleFractions`).
@@ -252,7 +265,7 @@ truth" claim rather than asserting it.
 ## M2 — Event runtime and replay
 
 **Target stage:** S3
-**Addresses:** ADR-0002, ADR-0007; `SPEC-0001` AC-R1..AC-R5, AC-R7, AC-R9..AC-R15
+**Addresses:** ADR-0002, ADR-0007; `SPEC-0001` AC-R1..AC-R18
 
 ### Purpose
 
@@ -281,10 +294,13 @@ M4 can supply the real one without touching this package.
 
 ### Implementation
 
-1. **`CanonicalContents` is the quantized persisted state**: `waterMass` and
-   material `amount`s only. Species, activities, and ionic strength are
-   **derived** and never quantized independently (`ADR-0007` §3). This is the
-   fix for the conservation defect the spike measured.
+1. **`CanonicalContents` is the quantized persisted state**, and contains
+   exactly four things: **`waterMass`, `liquidVolume`, material `amount`s**, and
+   the `scenarioSnapshot`. `liquidVolume` is easy to forget and was missing from
+   an earlier revision of this plan — it drives liquid level, the burette
+   reading, `c(H+)`, and **the size of the next transfer**, so it is state, not
+   a display value (AC-R13). Species, activities, and ionic strength are
+   **derived** and never quantized independently (`ADR-0007` §3).
 2. `quantize(v) = Number(v.toPrecision(12))`, **one** call site, applied to
    canonical independent state and to the transfer amount in the event payload.
 3. `canonicalJson`: sorted keys, specified shortest round-trip formatting,
@@ -314,6 +330,11 @@ M4 can supply the real one without touching this package.
 | 500-event replay under 2 s | AC-R7 |
 | Reducer rejects out-of-sequence events | Sequence enforcement |
 | `canonicalJson` order-independence | Hash is structural, not incidental |
+| **Replay completeness: move `content/` aside entirely, replay a serialized world, `replayHash` unchanged** | AC-R12 — the log is self-contained |
+| `liquidVolume` is updated only by transfer; changing it changes `replayHash` | AC-R13 |
+| Volume, water mass and solute amounts conserved over 100 transfers | AC-R14 |
+| Transfer deltas computed from the **pre-transfer** snapshot; an implementation that interleaves read/write produces a different result and fails | AC-R18 |
+| `WorldCreated` carries `worldId`; `WorldBranched` carries `childWorldId`, `parentWorldId`, `forkSequence`, `forkStateHash`; replay reconstructs the final `worldId` and lineage from the log alone | AC-R19 |
 
 ### Stop condition
 
@@ -372,6 +393,7 @@ packages/sci/src/registry.ts         adapter registry, id+version lookup
 | A request outside the declared domain returns `MODEL_OUT_OF_DOMAIN` with no state | AC-S4 |
 | Type test: `SolveResult` has no `ph: number` field | The convenience shortcut cannot be added quietly |
 | `Provenance.category` is required, not optional | `GOAL.md` §12 is enforceable |
+| **`SolverResolver` returns `incompatible` for a scenario whose `modelRequirements` no available solver satisfies; world creation fails with the reason** | AC-R20 — requirements are a constraint, not a comment that `solverConfig` may override |
 
 ### Stop condition
 
@@ -383,7 +405,7 @@ without a caller ever holding a bare number lacking provenance.
 ## M4 — Acid-base reference engine and oracle validation
 
 **Target stage:** S3
-**Addresses:** ADR-0003, ADR-0007; `SPEC-0001` AC-S1..AC-S15
+**Addresses:** ADR-0003, ADR-0007; `SPEC-0001` AC-S1..AC-S16
 
 The scientific heart of the slice. Also the milestone that closes the
 equivalence-region gap the spike could not.
@@ -422,9 +444,25 @@ identity.
 `SPEC-0001` §Scientific design and `spikes/activity-equilibrium/README.md` before
 starting; the concentration-only formulation they describe is superseded.**
 
-1. Implement the **self-consistent** solve: unknowns `(m_H, I)`, nested
-   bisection, activity coefficients inside the equilibrium constraints.
-   **Molality basis throughout.**
+1. Implement the **self-consistent** solve: nested bisection over the unknowns
+   **`(m̂_H, Î)` — REDUCED molality and REDUCED ionic strength, both
+   dimensionless** — with activity coefficients inside the equilibrium
+   constraints.
+
+   **This is the point most likely to be implemented wrong.** The conditional
+   constants `Kw_c` and `Ka_c` are dimensionless, so `m̂_OH = Kw_c/m̂_H` is only
+   legal in reduced variables. Writing `m_OH = Kw_c/m_H` with a *physical*
+   molality is `dimensionless / (mol/kg)`, and it will produce **correct-looking
+   numbers anyway** because `m° = 1 mol/kg`. Three separate review rounds have
+   now found dimensioned-when-it-should-be-dimensionless errors of exactly this
+   shape.
+
+   **Rule for this milestone: before writing each equation, write the unit of
+   every term beside it.** Physical molalities are produced once, at the
+   `ScientificState` boundary, as `m = m̂·m°`. `ReducedMolality` and
+   `MolPerKilogram` are distinct types (`AC-U5`), and the spike now routes every
+   physical input through an explicit `solve_physical()` boundary rather than
+   relying on the call site to remember.
 2. `deterministic-math.ts`: `detLog10` and `detExp10`, built only from
    `+ - * /` and exactly-specified integer operations. Port from
    `spikes/numeric-policy/check.ts`. **Improve `detExp10`'s argument reduction
@@ -719,6 +757,7 @@ No new persisted contracts. Command wiring is finalized.
 | Content file contains no equilibrium arithmetic | AC-C1 |
 | Unknown species in content fails loudly | AC-C2 |
 | pH readout shows at most 2 dp in the live DOM | AC-V6 end to end |
+| **Network capture over the full scripted session: no request leaves the device carrying learner data; only static assets are fetched** | AC-P2 — the first point at which a "full session" exists |
 
 ### Stop condition
 
@@ -779,6 +818,8 @@ IndexedDB record shapes; `chemrealm.export` v1; migration registry entries.
 | Replay under a mismatched solver version is refused; re-solve offered and labelled as a new world | AC-R6 |
 | **Tier B**: with the creating solver version deliberately made unavailable, the world opens marked `re-solved`, keeps both provenance records, and does not overwrite the original | `ADR-0008` §2 |
 | **Tier C**: with the model unsupported entirely, the world opens read-only, states why, and remains exportable | `ADR-0008` §2 |
+| **Flattened branch export**: export a CHILD, delete the parent entirely, import on a clean profile, replay to an identical `replayHash` | AC-R17 — a suffix-only bundle is unreplayable |
+| Export bundle contains no **personal, device, or cross-session tracking** identifier (world ids and lineage are required and permitted) | AC-P4 |
 | Simulated quota exhaustion leaves existing worlds intact | No-corruption requirement |
 | Migration failure leaves the world untouched and reports it | Loud, non-destructive failure |
 
