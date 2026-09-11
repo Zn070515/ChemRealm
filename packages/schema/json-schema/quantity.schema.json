@@ -4,6 +4,7 @@
   "properties": {
     "unit": {
       "enum": [
+        "1",
         "mol",
         "mmol",
         "kg",

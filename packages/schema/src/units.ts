@@ -64,6 +64,21 @@ function nonNegative(value: number, what: string): number {
   return value;
 }
 
+/**
+ * Reject zero as well as negatives, for quantities that are strictly positive.
+ *
+ * Zero is not a special case of "small": an activity coefficient of 0 makes
+ * `log10 γ` undefined and `x / γ` infinite, so a type that admits it admits a
+ * value every operation on it refuses.
+ */
+function positive(value: number, what: string): number {
+  finite(value, what);
+  if (value <= 0) {
+    throw new RangeError(`${what}: expected a positive number, got ${value}`);
+  }
+  return value;
+}
+
 // ---------------------------------------------------------------------------
 // OPAQUE QUANTITIES — arithmetic is a compile error
 // ---------------------------------------------------------------------------
@@ -82,6 +97,7 @@ const ionicStrengthMolalBrand = Symbol("chemrealm.IonicStrengthMolal");
 const ionicStrengthMolarBrand = Symbol("chemrealm.IonicStrengthMolar");
 const reducedIonicStrengthBrand = Symbol("chemrealm.ReducedIonicStrength");
 const reducedMolalityBrand = Symbol("chemrealm.ReducedMolality");
+const thermodynamicConstantBrand = Symbol("chemrealm.ThermodynamicConstant");
 
 /**
  * pH. A logarithmic coordinate, so `averagePh(a, b)` has no meaning while
@@ -179,10 +195,17 @@ export function activity(value: number): Activity {
   return { [activityBrand]: true, value: nonNegative(value, "activity") };
 }
 
+/**
+ * `γ`. STRICTLY positive, not merely non-negative.
+ *
+ * `γ = 0` is not a physical state, and both `log10ActivityCoefficient` and
+ * `divideActivityCoefficient` refuse it — so admitting it here would let the
+ * constructor build a value that every operation defined on the type rejects.
+ */
 export function activityCoefficient(value: number): ActivityCoefficient {
   return {
     [activityCoefficientBrand]: true,
-    value: nonNegative(value, "activity coefficient"),
+    value: positive(value, "activity coefficient"),
   };
 }
 
@@ -211,6 +234,33 @@ export function reducedIonicStrength(value: number): ReducedIonicStrength {
 
 export function reducedMolality(value: number): ReducedMolality {
   return { [reducedMolalityBrand]: true, value: nonNegative(value, "reduced molality") };
+}
+
+/**
+ * A THERMODYNAMIC (standard-state) equilibrium constant — `Ka` or `Kw`.
+ *
+ * Dimensionless and strictly positive. It has its own type because the
+ * ontology distinguishes three kinds of constant that must never be
+ * interchanged, and names storing one as another as anti-pattern 5:
+ *
+ *   thermodynamic   activity basis, a property of the CONFIGURATION  ← this
+ *   conditional     concentration basis at a stated I, I-dependent
+ *   apparent        mixed conventions
+ *
+ * A conditional constant is derived inside the equilibrium loop at a converged
+ * ionic strength. With both as `number`, storing one where the other belongs is
+ * an assignment TypeScript accepts and nothing else catches.
+ */
+export interface ThermodynamicConstant {
+  readonly [thermodynamicConstantBrand]: true;
+  readonly value: number;
+}
+
+export function thermodynamicConstant(value: number): ThermodynamicConstant {
+  return {
+    [thermodynamicConstantBrand]: true,
+    value: positive(value, "thermodynamic constant"),
+  };
 }
 
 // --- named operations on opaque quantities ---------------------------------

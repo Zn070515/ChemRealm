@@ -26,6 +26,18 @@ import { z } from "zod";
  * kg/mol, kg/L.
  */
 export const UNIT_TABLE = {
+  /**
+   * The unit ONE (ISO 80000), for DIMENSIONLESS quantities.
+   *
+   * Activity, activity coefficient, mole fraction, reduced molality, and
+   * reduced ionic strength are all dimensionless — and all are physical
+   * quantities. Without this entry the only way to serialize them is a bare
+   * number, which would be the first exception to rule 1 in the header and
+   * would leave `quantityOfDimension` unable to constrain them. The entry
+   * keeps the rule exceptionless: a dimensionless quantity crosses the
+   * boundary as `{ value, unit: "1" }` like every other quantity.
+   */
+  "1": { dimension: "dimensionless", toCanonical: 1 },
   // amount
   mol: { dimension: "amount", toCanonical: 1 },
   mmol: { dimension: "amount", toCanonical: 1e-3 },
@@ -69,6 +81,7 @@ export type Dimension = (typeof UNIT_TABLE)[UnitSymbol]["dimension"];
 
 /** The canonical unit of each dimension. */
 export const CANONICAL_UNIT: Record<Dimension, UnitSymbol> = {
+  dimensionless: "1",
   amount: "mol",
   mass: "kg",
   volume: "L",
@@ -82,7 +95,7 @@ export const CANONICAL_UNIT: Record<Dimension, UnitSymbol> = {
   density: "kg/L",
 };
 
-export const QuantitySchema = z.object({
+export const QuantitySchema = z.strictObject({
   value: z.number().finite(),
   /**
    * `z.enum` of the registered symbols, NOT `.refine()`.
@@ -143,7 +156,7 @@ export function quantityOfDimension(
   ...dimensions: [Dimension, ...Dimension[]]
 ) {
   const units = dimensions.flatMap((d) => unitsOfDimension(d));
-  return z.object({
+  return z.strictObject({
     value: z.number().finite(),
     unit: z.enum(units as unknown as [UnitSymbol, ...UnitSymbol[]]),
   });

@@ -47,7 +47,9 @@ import {
   sumIonicStrengthMolal,
   sumIonicStrengthMolar,
   sumReducedIonicStrength,
+  thermodynamicConstant,
   type ActivityCoefficient,
+  type ThermodynamicConstant,
 } from "./units.js";
 
 // ---------------------------------------------------------------------------
@@ -215,4 +217,30 @@ export function activityCoefficientGuarantees(): void {
   void multiplyActivityCoefficient(g, g);
   void divideActivityCoefficient(g, g);
   void log10ActivityCoefficient(g);
+}
+
+// ---------------------------------------------------------------------------
+// EQUILIBRIUM CONSTANTS — thermodynamic is not conditional
+// ---------------------------------------------------------------------------
+
+export function thermodynamicConstantGuarantees(): void {
+  const ka = thermodynamicConstant(1.8e-5);
+
+  // @ts-expect-error — a bare number is not a thermodynamic constant. This is
+  // the assignment that would let a CONDITIONAL (I-dependent, derived inside
+  // the loop) constant be stored where a standard-state one belongs, which is
+  // anti-pattern 5 of the quantity ontology.
+  const bare: ThermodynamicConstant = 1.8e-5;
+  void bare;
+
+  // @ts-expect-error — nor is an activity, though both are dimensionless and
+  // both live near 1 in dilute solution.
+  const asActivity: ThermodynamicConstant = activity(1);
+  void asActivity;
+
+  // @ts-expect-error — and a reduced molality, also dimensionless.
+  const asMolality: ThermodynamicConstant = reducedMolality(0.1);
+  void asMolality;
+
+  void ka.value;
 }

@@ -56,6 +56,7 @@ import {
   sumIonicStrengthMolal,
   sumIonicStrengthMolar,
   sumReducedIonicStrength,
+  thermodynamicConstant,
   type MolPerKilogram,
   type ReducedMolality,
 } from "./units.js";
@@ -318,17 +319,25 @@ describe("every operation the ontology defines exists as a function", () => {
     ).toBeCloseTo(1.6, 15);
   });
 
-  it("refuses a zero activity coefficient as a divisor", () => {
-    expect(() =>
-      divideActivityCoefficient(activityCoefficient(1), activityCoefficient(0)),
-    ).toThrow(RangeError);
+  it("refuses a zero activity coefficient at the CONSTRUCTOR", () => {
+    // γ = 0 is not a physical state. An earlier version admitted it and relied
+    // on the operators to refuse it, which let a constructor build a value that
+    // every operation defined on the type rejects.
+    expect(() => activityCoefficient(0)).toThrow(RangeError);
+    expect(() => activityCoefficient(-0.1)).toThrow(RangeError);
   });
 
-  it("takes log10 of an activity coefficient, and refuses log10 of zero", () => {
+  it("takes log10 of an activity coefficient", () => {
     expect(log10ActivityCoefficient(activityCoefficient(0.1))).toBeCloseTo(-1, 12);
-    expect(() => log10ActivityCoefficient(activityCoefficient(0))).toThrow(
-      RangeError,
-    );
+  });
+
+  it("keeps a thermodynamic constant strictly positive and its own type", () => {
+    // Ontology anti-pattern 5: a CONDITIONAL constant is I-dependent and
+    // belongs to a converged state, not to the configuration. With both as
+    // `number`, storing one as the other is an assignment TypeScript accepts.
+    expect(thermodynamicConstant(1.8e-5).value).toBeCloseTo(1.8e-5, 20);
+    expect(() => thermodynamicConstant(0)).toThrow(RangeError);
+    expect(() => thermodynamicConstant(-1.8e-5)).toThrow(RangeError);
   });
 
   it("ratios mole fractions; there is deliberately no product", () => {
