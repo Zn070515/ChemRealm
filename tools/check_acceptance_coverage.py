@@ -14,19 +14,21 @@ runs in CI from M0 onward.
 
 WHAT IT CHECKS
 --------------
-Two tiers, because "mentioned somewhere in the section" is too weak a bar.
+All three conditions BLOCK (exit 1). "Mentioned somewhere in the section" is too
+weak a bar, and so is a criterion that is named but never evidenced.
 
-  BLOCKS (exit 1)
-    1. UNMAPPED  - defined in SPEC-0001, but no PLAN milestone claims it in an
-                   `**Addresses:**` line.
-    2. DANGLING  - referenced in PLAN-0001 but not defined in SPEC-0001.
-
-  WARNS (exit 0, printed loudly)
+    1. UNMAPPED    - defined in SPEC-0001, but no PLAN milestone claims it in an
+                     `**Addresses:**` line.
+    2. DANGLING    - referenced in PLAN-0001 but not defined in SPEC-0001.
     3. UNEVIDENCED - a milestone claims the criterion in `**Addresses:**` but
-                   neither that milestone's test/evidence table nor its stop
-                   condition mentions it. This is the shape the previous
-                   checker missed: the criterion is named in a header while the
-                   tests that would prove it were never written into the plan.
+                     neither that milestone's test/evidence table nor its stop
+                     condition mentions it.
+
+UNEVIDENCED was a warning in the first version of this checker. That contradicts
+`CLAUDE.md`: "Each acceptance criterion MUST have a corresponding verification
+method." A criterion named in a header with no test behind it is exactly the
+"agent claims coverage, nothing verifies it" failure this tool exists to catch,
+so it fails the build like the other two.
 
 Usage:
     uv run python tools/check_acceptance_coverage.py
@@ -145,13 +147,13 @@ def main():
             print()
 
     if unevidenced:
-        print("  UNEVIDENCED -- claimed in an Addresses line, but no test or stop")
-        print("  condition in the claiming milestone mentions it (warning):")
+        print("  UNEVIDENCED -- blocking. Claimed in an Addresses line, but no test")
+        print("  or stop condition in the claiming milestone mentions it:")
         for ac in unevidenced:
             print(f"    {ac}   (claimed by {', '.join(claimed[ac])})")
         print()
 
-    ok = not unmapped and not dangling
+    ok = not unmapped and not dangling and not unevidenced
     print("=" * 74)
     print(f"RESULT: {'PASS' if ok else 'FAIL'}  ({len(unmapped)} unmapped, "
           f"{len(dangling)} dangling, {len(unevidenced)} unevidenced)")
