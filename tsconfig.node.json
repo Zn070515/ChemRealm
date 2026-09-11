@@ -1,0 +1,14 @@
+{
+  "//": "Root-level TypeScript that is not part of a package: the tool configs (vitest, playwright) and the browser tests. Without this project they are in NO tsconfig's include list, so `tsc -b` never type-checks them and a type error there surfaces only at runtime.",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "emitDeclarationOnly": true,
+    "outDir": "dist-types",
+    "tsBuildInfoFile": "dist-types/.tsbuildinfo-node",
+    "lib": ["ES2022", "DOM"],
+    "types": ["node"]
+  },
+  "include": ["*.ts", "tests/**/*.ts"],
+  "exclude": ["node_modules", "dist", "dist-types"]
+}

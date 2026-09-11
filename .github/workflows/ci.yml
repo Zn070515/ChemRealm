@@ -40,6 +40,13 @@ jobs:
       # third-party origin (AC-P5), no server API route (AC-P1).
       - run: pnpm artifacts
 
+      # AC-P5's actual acceptance evidence. The artifact scan above is a static
+      # guard; this loads the built page in a real browser and captures every
+      # request, which is what the spec's "network inspection" asks for. A URL
+      # assembled at runtime is invisible to a regex and caught here.
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:browser
+
       - run: pnpm lint
 
       # --- Python toolchain -----------------------------------------------

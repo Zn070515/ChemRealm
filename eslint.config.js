@@ -14,9 +14,14 @@ export default tseslint.config(
   {
     ignores: [
       "**/dist/**",
+      "dist-types/**",
       "**/node_modules/**",
       "**/.venv/**",
       "spikes/**",
+      // Generated/transient output from the guard and the browser tests.
+      "tmp-depcruise-guard/**",
+      "test-results/**",
+      "playwright-report/**",
       "**/*.cjs",
     ],
   },

@@ -3,6 +3,7 @@
   "files": [],
   "references": [
     { "path": "packages/schema" },
-    { "path": "apps/web" }
+    { "path": "apps/web" },
+    { "path": "tsconfig.node.json" }
   ]
 }

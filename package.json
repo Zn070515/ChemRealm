@@ -14,7 +14,8 @@
     "depcruise": "depcruise --config .dependency-cruiser.cjs packages apps",
     "guards": "node tools/check_dependency_rules.mjs",
     "artifacts": "node tools/check_build_artifacts.mjs",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test:browser": "playwright test"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
@@ -22,6 +23,7 @@
     "eslint": "^9.39.1",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.46.4",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "@playwright/test": "^1.56.1"
   }
 }
