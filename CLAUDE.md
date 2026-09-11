@@ -572,3 +572,57 @@ Before asking for owner acceptance, answer this:
 > If another agent continues from this exact commit six months later, can they determine what is scientifically true, what is intentionally approximate, what was verified, what remains uncertain, and why the architecture looks this way?
 
 If the answer is no, the stage is not ready.
+
+# 21. Version Control Workflow
+
+## 21.1 Push is pre-authorized
+
+The owner has pre-authorized committing and pushing to `origin/main` in this
+repository. Agents **do not ask for confirmation** before pushing a completed
+unit of work, and do not wait to be asked.
+
+This standing authorization covers `git add`, `git commit`, and `git push` to
+`main` on the existing `origin` remote. It does **not** cover force-pushing,
+rewriting published history, changing the remote, or deleting branches — those
+still require explicit owner instruction for the specific action.
+
+## 21.2 Commit in small units
+
+Prefer several small, coherent commits over one large one. A unit is a single
+logical change that can be reviewed, reverted, or bisected independently.
+
+This is not stylistic. **The commit history is part of this project's evidence
+trail**: it is how a later reader determines which finding each change addressed,
+when a criterion was satisfied, and what was true at a given commit (§20). A
+26-file commit cannot be reviewed, reverted, or bisected, and it makes the
+history useless as evidence precisely when it is needed most.
+
+Commit at boundaries such as:
+
+- a contract/schema change together with its tests;
+- one finding's remediation, with the finding identifier in the message;
+- a spike together with its README;
+- one ADR, once its decision is settled.
+
+Do not batch unrelated changes into one commit merely because they happened in
+the same working session.
+
+## 21.3 Commit messages carry the reasoning
+
+State *why*, not only *what*. Reference finding identifiers, spec sections, and
+ADR numbers. The message is what makes a change reviewable six months later.
+
+A commit may honestly say "WIP" or "partial"; it must not imply completion that
+was not demonstrated (§7).
+
+## 21.4 Never bypass the guardrails
+
+Do not use `--no-verify`, `--no-gpg-sign`, or skip hooks to get a commit or push
+through. If a hook fails, fix the underlying cause.
+
+## 21.5 Environment notes
+
+Local git config for this repository carries an HTTP proxy (a local VPN
+endpoint) and a GitHub noreply commit email. Both are set with `--local` scope,
+so they apply only here and require no per-command flags. Do not move them to
+global config, and do not commit a real personal email address.
