@@ -10,7 +10,14 @@ dependencies = []
 # command set (ADR-0001 rule 4a). See CLAUDE.md 21.5.
 
 [dependency-groups]
-dev = ["pytest>=8.3"]
+dev = [
+  "pytest>=8.3",
+  # Validates fixtures against the artifacts emitted by packages/schema.
+  # MIT-licensed, test-only, never deployed. This is what makes `ADR-0001`
+  # rule 1's "one source of truth" a demonstrated claim rather than an
+  # assertion — see tools/oracle/tests/test_json_schema_contract.py.
+  "jsonschema>=4.23",
+]
 
 [build-system]
 requires = ["hatchling"]
