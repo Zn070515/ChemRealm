@@ -413,7 +413,7 @@ docs/research/constants-provenance.md     pin every constant to a citable source
 
 ### Contracts changed
 
-`acidbase-exact@1.0.0` registered. Constants table finalized — this enters replay
+`acidbase-monoprotic-davies@1.0.0` registered. Constants table finalized — this enters replay
 identity.
 
 ### Implementation

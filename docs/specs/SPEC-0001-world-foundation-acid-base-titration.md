@@ -1,9 +1,9 @@
 # SPEC-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** S1 — Specified (**revision 4**, for owner re-review)
-- **Date:** 2026-09-11 (round 3: World truth, core boundaries, validation semantics)
+- **Status:** S1 — Specified (**revision 5**, for owner re-review)
+- **Date:** 2026-09-11 (round 4: standard state, persistence format, contract semantics)
 - **Owner:** Project owner
-- **Supersedes:** revisions 1–3 of this spec
+- **Supersedes:** revisions 1–4 of this spec
 - **Related ADRs:** 0001, 0002, 0003, 0004 (rev), 0005, 0006, 0007 (rev), 0008, 0009 — all `Proposed`, all load-bearing here
 - **Related evidence:** `spikes/activity-equilibrium/` (scientific formulation),
   `spikes/numeric-policy/` (determinism + branded types),
@@ -229,18 +229,46 @@ Scale is **molality (mol/kg water)** throughout. See
 `docs/science/quantity-ontology.md` for why, and `ADR-0004` for the types.
 
 ```
-charge balance   m_Na + m_H = m_OH + m_A + m_Cl
-mass balance     m_HA,tot  = m_HA + m_A
-Ka               Ka = a_H·a_A / a_HA = γ_H·m_H·γ_A·m_A / (γ_HA·m_HA)
-Kw               Kw = a_H·a_OH       = γ_H·m_H·γ_OH·m_OH
+charge balance   m̂_Na + m̂_H = m̂_OH + m̂_A + m̂_Cl              [dimensionless]
+mass balance     m̂_HA,tot  = m̂_HA + m̂_A
+Ka               Ka = a_H·a_A / a_HA = γ_H·m̂_H·γ_A·m̂_A / (γ_HA·m̂_HA)
+Kw               Kw = a_H·a_OH       = γ_H·m̂_H·γ_OH·m̂_OH
 
-ionic strength   I_m = 0.5 · Σ m_i z_i²                   [mol/kg]
-reduced          Î   = I_m / (1 mol/kg)                   [dimensionless]
+reduced molality m̂_i = m_i / m°          m° = 1 mol/kg     [dimensionless]
+activity         a_i = γ_i · m̂_i                            [dimensionless]
+
+ionic strength   I_m = 0.5 · Σ m_i z_i²                     [mol/kg]
+reduced          Î   = I_m / m°                             [dimensionless]
 
 Davies           log₁₀γᵢ = −A·zᵢ²·( √Î/(1+√Î) − b·Î )
                  A = 0.509,  b = 0.3   (pure numbers on the reduced convention)
+conditional      Kw_c = Kw/(γ_H·γ_OH)                       [dimensionless]
+                 Ka_c = Ka·γ_HA/(γ_H·γ_A)                   [dimensionless]
 neutral species  γ_HA = 1   (bounded approximation — see below)
 ```
+
+**The algebra runs in reduced molality (round 4, finding P1-1).** Everything
+above the dashed line is dimensionless; physical molalities are produced once at
+the`ScientificState` boundary as `m_i = m̂_i · m°`.
+
+This matters because `Kw` is a **dimensionless** thermodynamic constant. The
+previous revision wrote
+
+```
+m_OH = Kw_c / m_H          ← dimensionless / (mol/kg)
+```
+
+which is not mol/kg. It produced correct numbers only because `m° = 1 mol/kg`
+numerically, so the missing standard-state factor was invisible. Written in
+reduced variables the same equation is legal:
+
+```
+m̂_OH = Kw_c / m̂_H         ← dimensionless / dimensionless
+```
+
+This is the same class of defect as the `1 + √I` problem below, and it was
+found the same way — by asking what the units of each term are, rather than
+whether the number looked right.
 
 **Why the reduced ionic strength is not pedantry (round 3, finding P1-F).** The
 Davies expression contains `1 + √I` and `b·I`. If `I` carries units of mol/kg,
@@ -600,7 +628,7 @@ and are never stored as though they were thermodynamic.
 | Constant | v0 value | Basis | Source status |
 |---|---|---|---|
 | `Kw` (25 °C) | 1.0e-14 | molality, dimensionless | Standard; primary source to be pinned at M4 |
-| `Ka`(CH₃COOH) | 1.8001e-5 (pKa 4.7447) | molality, dimensionless | Derived from Ka = 1.8e-5. **Open question 1.** |
+| `Ka`(CH₃COOH) | **to be pinned at M4** | molality, dimensionless | **Do not carry more digits than the source.** See Open question 1 — the previous `1.8001e-5` was invented precision from a two-figure input. |
 | HCl | fully dissociated | model choice | Not a constant |
 | NaOH | fully dissociated | model choice | Not a constant |
 | Davies `A` (25 °C) | **0.509** | **dimensionless**, reduced-`I` convention | Standard; primary source to be pinned at M4 |
@@ -747,6 +775,7 @@ WorldState {
   sequence: number                      // present cursor; not hashed
   solverConfig: { id, version, parameters }
   scenarioSnapshot: ScenarioSnapshot    // genesis is self-contained — see below
+                                        // carries model REQUIREMENTS, not a resolved solver
   vessels: Vessel[]                     // STRUCTURE ONLY
   apparatus: Apparatus[]
   attachments: Attachment[]
@@ -799,9 +828,28 @@ Therefore:
 
 - `WorldCreated` carries a **`ScenarioSnapshot`**: the material definitions used
   (composition **and density**, both sourced), vessel geometry references and
-  their `V(h)` profiles, apparatus defaults, and the solver configuration —
-  together with a **content hash**. The world never re-reads `content/` at
-  replay time.
+  their `V(h)` profiles, apparatus defaults, and the scenario's **model
+  requirements** — together with a **content hash** (the checksum of the
+  snapshot). The world never re-reads `content/` at replay time.
+
+**The snapshot does NOT contain the resolved `solverConfig`** (round 4, finding
+P1-2b). The two are different things and storing both would recreate the
+double-source-of-truth problem just removed from `Vessel.contents`:
+
+| | Records | Whose |
+|---|---|---|
+| `scenarioSnapshot.modelRequirements` | what the scenario *needs* (e.g. "monoprotic acid-base in water at 25 °C") | the content author |
+| `WorldCreated.solverConfig` | which solver, version and parameters were **actually used** for this world | the runtime, at genesis |
+
+The boundary is `content requirement ≠ resolved scientific implementation`. A
+scenario may be satisfiable by more than one solver; only the resolved config is
+replay identity. If the two ever disagreed — say the snapshot named
+`acidbase-monoprotic-davies@1.0` and `solverConfig` named `@1.1` — `solverConfig`
+wins, because it is what the numbers were actually produced with. Storing only
+one makes the question unaskable.
+
+`contentHash` is not a third source of truth: it is the snapshot's checksum,
+verified on load by `hash(snapshot) === contentHash`.
 - `MaterialCharged` carries the **charged volume**, not a bare amount. The
   reducer derives amount, water mass, and any other state from the snapshot's
   material definition. This also matches what a learner actually does — dispense
@@ -824,15 +872,28 @@ transfer**. So it is tracked as state and enters `replayHash`.
 
 It is *updated by transfer*, never recomputed:
 
+**Every delta is computed from the pre-transfer values** (round 4, finding
+P2-1b). The previous pseudocode read `source.waterMass -= f · source.waterMass`
+and then `target.waterMass += f · source.waterMass` — if executed literally in
+that order, the second line sees an already-decremented source and moves too
+little. The spike's implementation was correct; the spec's pseudocode was
+ambiguous, which is worse, because M2 will be written from the spec.
+
 ```
-f = ΔV / V_source                                   // homogeneous mixture
+f = ΔV / liquidVolume_source                       // pre-transfer value
+
+Δwater = f · waterMass_source                      // pre-transfer
+Δn(m)  = f · amount_source(m)          ∀ m         // pre-transfer
 
 source.liquidVolume -= ΔV          target.liquidVolume += ΔV
-source.waterMass    -= f · source.waterMass
-                                   target.waterMass    += f · source.waterMass
-∀ m: source.amount(m) -= f · source.amount(m)
-                                   target.amount(m)    += f · source.amount(m)
+source.waterMass    -= Δwater      target.waterMass    += Δwater
+∀ m:
+  source.amount(m)  -= Δn(m)       target.amount(m)    += Δn(m)
 ```
+
+The rule is stated once: **read the source's pre-transfer contents, compute all
+deltas from that snapshot, then apply.** An implementation that interleaves
+reads and writes is a defect even when it happens to be numerically close.
 
 Two assumptions are stated rather than hidden: **volume additivity**
 (`V_mix = ΣV`) and **complete instantaneous mixing**, which is what makes the
@@ -887,8 +948,8 @@ verify the solver. Recomputation means a solver regression surfaces as a replay
 mismatch instead of being masked.
 
 Consequence, stated plainly: **replay requires the same solver version.** A world
-created under `acidbase-exact@1.0.0` is not replayable under
-`acidbase-exact@1.1.0`. The runtime must:
+created under `acidbase-monoprotic-davies@1.0.0` is not replayable under
+`acidbase-monoprotic-davies@1.1.0`. The runtime must:
 
 - refuse to replay under a mismatched solver, rather than producing a different
   hash; and
@@ -912,7 +973,7 @@ All events carry `{ seq, type, payload, schemaVersion, meta? }`.
 
 | Event | Payload | Notes |
 |---|---|---|
-| `WorldCreated` | `{ scenarioSnapshot, contentHash, solverConfig, seed: null }` | Genesis, and **self-contained**: the snapshot carries material definitions (composition, density), vessel geometry and `V(h)` profiles, apparatus defaults. Carries solver identity — part of replay identity. |
+| `WorldCreated` | `{ scenarioSnapshot, contentHash, solverConfig, seed: null }` | Genesis, and **self-contained**: the snapshot carries material definitions (composition, density), vessel geometry and `V(h)` profiles, apparatus defaults, and model **requirements**. `solverConfig` is the single record of what was **resolved and used**. |
 | `ApparatusPlaced` | `{ apparatusId, kind, position }` | Emitted on drop, never during drag. |
 | `ApparatusAttached` | `{ childId, parentId, portId }` | e.g. burette clamped above flask. |
 | `MaterialCharged` | `{ vesselId, materialId, volume: {value,unit} }` | Carries **volume**, not amount: the reducer derives amount, `waterMass`, and `liquidVolume` from the snapshot's material definition. |
@@ -1377,6 +1438,9 @@ Binary and verifiable. Every criterion maps to an evidence method.
 | AC-R13 | `liquidVolume` is updated only by transfer and enters `replayHash`; a change in it changes the hash | hash-diff test over a transfer |
 | AC-R14 | Transfer is element- and volume-conserving over 100 steps under the homogeneous-mixture assumption | conservation test (spike §N promoted) |
 | AC-R15 | `WorldState` has exactly **one** location for vessel contents; `Vessel` carries no `contents` field | schema test + review |
+| AC-R16 | `scenarioSnapshot` carries model **requirements**, never a resolved `solverConfig`; exactly one resolved solver config exists per world | schema test: the snapshot type has no solver-config field |
+| AC-R17 | **Branch export is self-contained.** Exporting a branch emits the **complete** event log from genesis (flattened), with lineage metadata — not just the branch's suffix. A bundle imported on a machine with no parent replays to the same `replayHash` | round-trip test that exports a child, discards the parent, and replays |
+| AC-R18 | Transfer deltas are computed from the pre-transfer snapshot: a test that interleaves read/write fails | unit test asserting the order-independence of the transfer update |
 
 ### Representation
 
@@ -1414,6 +1478,8 @@ Binary and verifiable. Every criterion maps to an evidence method.
 | AC-U2 | `IonicStrengthMolal` and `IonicStrengthMolar` cannot be assigned to or compared with each other | compile fixture |
 | AC-U3 | Every serialized quantity carries a unit; a missing or unknown unit is a rejection, not a default | schema round-trip + negative test |
 | AC-U4 | `ReducedIonicStrength` (dimensionless), `IonicStrengthMolal` (mol/kg), and `IonicStrengthMolar` (mol/L) are three distinct types, mutually non-assignable and non-comparable. Davies accepts only the reduced type | compile fixture; a **positive** test that the Davies signature rejects `IonicStrengthMolal` |
+| AC-U5 | `ReducedMolality` (dimensionless) and `MolPerKilogram` are distinct, non-assignable types; the equilibrium helpers accept only the reduced type | compile fixture, as `AC-U4` |
+| AC-S16 | Every recorded constant carries **exactly** the precision of its source; no constant has more significant figures than the source states | provenance review against `constants-provenance.md`, with the source's own precision recorded |
 
 ### Privacy
 
@@ -1454,12 +1520,26 @@ Binary and verifiable. Every criterion maps to an evidence method.
 
 Only questions that genuinely need the owner.
 
-1. **Which acetic acid `Ka` is authoritative?** `Ka = 1.8e-5` implies pKa 4.7447;
-   textbooks commonly print 4.75 or 4.76. This value enters replay identity and
-   appears in the symbolic view, so it cannot be changed casually. **Recommendation:
-   pin `Ka = 1.8001e-5` (pKa 4.7447) as derived from the commonly cited 1.8e-5,
-   with the source recorded; note the textbook discrepancy in the symbolic view
-   rather than hiding it.**
+1. **Which acetic acid `Ka` is authoritative?** It enters replay identity and
+   appears in the symbolic view, so it cannot be changed casually.
+
+   **The previous recommendation was itself an instance of fake precision**
+   (round 4, finding P2-4). It proposed pinning `Ka = 1.8001e-5` as "derived
+   from the commonly cited `1.8e-5`". A two-significant-figure source cannot
+   yield five significant figures; the extra digits were invented. `GOAL.md`
+   §5.2 prohibits precisely this.
+
+   **The rule: a recorded constant carries exactly the precision of its
+   source.** Two acceptable resolutions, and the choice depends on what M4 finds:
+
+   - Source states `pKa = 4.7447` → record that source and derive
+     `Ka = 10^−4.7447`, documenting that the derivation is exact given the pKa.
+   - Source states `Ka = 1.8e-5` → **store `1.8e-5` unchanged**, with a stated
+     uncertainty of ±1 in the last digit. Do not append digits.
+
+   Either way the textbook discrepancy (4.75 / 4.76) is shown in the symbolic
+   view rather than hidden. **M4 pins the source; the value and its precision
+   both come from it.**
 2. **Is ±0.02 pH an acceptable accuracy claim for the first release?** It is what
    the activity model delivers against IUPAC buffers. A tighter claim would
    require SIT or Pitzer activity models and a larger constant database, which is
@@ -1578,3 +1658,19 @@ of problem that is cheap to fix in Markdown and expensive after M1/M2 exist.
 | **P1-F** | Davies contains `1 + √I` and `b·I`; with `I` in mol/kg those are illegal sums, in a document that insists activity and `Ka` be dimensionless | **Reduced ionic strength** `Î = I_m/m°`, dimensionless; `A` and `b` are pure numbers; `ReducedIonicStrength` is its own type. §Governing model; AC-U4 |
 | **P2-1** | PLAN stale: "revision 2", the old arithmetic criterion, `AC-S1..AC-S11`, duplicated failure-mode numbers, AC-V8 still saying "deferred" | All corrected and swept. PLAN M1/M4/M5 |
 | **P2-2** | Solution **density** is a scientific input (it sets `waterMass`, hence molality, activity, model pH) but was not in the provenance requirement | Added to AC-S7, with AC-S15 requiring scenarios to declare it |
+
+### Round 4 (2026-09-11) — standard state, persistence format, contract semantics
+
+Round 4 found no architecture problems. It found that the standard-state factor
+had not been carried through the algebra, and that three contracts still had
+ambiguities an implementing agent would resolve differently.
+
+| Finding | What was wrong | Where fixed |
+|---|---|---|
+| **P1-1** | `Ka_c` and `Kw_c` are dimensionless, but the solver divided them by **physical** molalities: `dimensionless / (mol/kg)`. Correct numbers only because `m° = 1 mol/kg` numerically | The algebra now runs in **reduced molality** `m̂ = m/m°`; physical molalities are produced once at the boundary. `ReducedMolality` is its own type. §Governing model; AC-U5; spike §L2 |
+| **P1-2b** | `solverConfig` appeared in **both** `scenarioSnapshot` and `WorldCreated` — the double-source-of-truth just removed from `Vessel.contents` | The snapshot carries model **requirements**; `WorldCreated.solverConfig` is the single record of what was resolved and used. `contentHash` is the snapshot's checksum, verified on load. AC-R16 |
+| **P1-3** | A branch stores only its suffix, but the export bundle could be exported alone → **unreplayable**, so "attach the log to reproduce a bug" silently fails for branches | **Export flattens**: a branch exports the complete log from genesis with lineage metadata. Internal storage may share the prefix; export is a portability boundary. `ADR-0005`; AC-R17 |
+| **P2-1b** | The transfer pseudocode interleaved reads and writes, so a literal implementation would move too little | All deltas are computed from the **pre-transfer snapshot**, stated as a rule. AC-R18 |
+| **P2-3** | Solver id `acidbase-exact` claimed a quality, not a model — and it is permanent replay identity | Renamed **`acidbase-monoprotic-davies`**, which names the model and the activity equation. `ADR-0003` |
+| **P2-4** | `Ka = 1.8001e-5` was "derived" from a two-significant-figure source. Five digits from two is invented precision | A constant carries **exactly** its source's precision. AC-S16; Open question 1 rewritten |
+| **P2-5** | The literal sweep was still not clean: the spike printed "INSIDE validated envelope"; `ADR-0002`'s event table said "scenario ref" | Fixed, and the sweep run as a literal command |
