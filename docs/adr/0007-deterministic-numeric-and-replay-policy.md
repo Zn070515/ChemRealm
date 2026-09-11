@@ -1,235 +1,271 @@
 # ADR-0007: Deterministic numeric and replay policy
 
-- **Status:** Proposed
+- **Status:** Proposed (revised 2026-09-11 after owner review)
 - **Date:** 2026-09-11
 - **Deciders:** Project owner
-- **Related:** `GOAL.md` §5.2, §5.4, §14; `CLAUDE.md` §4.6, §9; `AGENTS.md` §8; `SPEC-0001`
+- **Related:** `GOAL.md` §5.2, §5.4, §14; `CLAUDE.md` §4.6, §9; `AGENTS.md` §8;
+  `ADR-0002`; `ADR-0003`; `SPEC-0001`; `spikes/numeric-policy`
 - **Blocks:** `PLAN-0001` M2, M4, M8
+- **Supersedes:** the original ADR-0007 of the same date
 
 ## Context
 
-`GOAL.md` §5.4 requires deterministic replay. `AGENTS.md` §8 makes replay a
-release blocker for affected features. `ADR-0002` defines replay as: same genesis
-world, same event sequence, same schema version, same solver configuration →
-same state hash at every committed event boundary.
+`GOAL.md` §5.4 requires deterministic replay, and `AGENTS.md` §8 makes a replay
+failure a release blocker.
 
-That definition is not achievable with ordinary floating-point code, for two
-independent reasons.
+The original version of this ADR put reproducibility *first* and constrained the
+scientific hot path to `+ - * /` in order to avoid implementation-approximated
+transcendental functions. **That was the wrong ordering, and it distorted the
+chemistry.** An activity model needs `sqrt` and `exp`; banning them to protect a
+hash is letting a convenience constraint dictate a physical model. Owner review
+(P1-2) correctly rejected this.
 
-**Reason 1 — ECMAScript does not guarantee transcendental results.**
-`+`, `-`, `*`, `/` and comparisons are IEEE-754 binary64 with round-to-nearest
-and are exactly reproducible. But `Math.log`, `Math.pow`, `Math.exp`, `Math.cbrt`,
-and their relatives are specified as *implementation-approximated*: the standard
-permits engines to differ. V8, SpiderMonkey, and JavaScriptCore may return
-values differing in the last unit in the last place. A solver that computes pH as
-`-Math.log10(h)` and feeds it back into a subsequent calculation is therefore not
-reproducible across browsers.
+The investigation that replaces it produced four measured facts
+(`spikes/numeric-policy`), which are the real basis for this ADR:
 
-For a chemical world this is not hypothetical. The natural formulation of
-acid-base equilibrium is in pH space, where `Ka = 10^-pKa`, and the natural
-Henderson–Hasselbalch form is `pH = pKa + Math.log10(ratio)`. An implementation
-written the obvious way hits implementation-approximated functions on every
-step.
+**1. `Math.sqrt` is not in the same category as `Math.log`.** The ECMAScript
+specification changed in July 2024: `Math.sqrt` was removed from the
+"implementation-approximated" set and now carries a correctly-rounded
+requirement, because every engine ships WebAssembly's `f64.sqrt` and IEEE 754-2019
+specifies `squareRoot` exactly. `Math.log`, `Math.pow`, and `Math.exp` **remain
+implementation-approximated**, under the same NOTE that recommends but does not
+require fdlibm-derived algorithms. Measured on 1861 inputs spanning 1e-300 to
+1e300: `Math.sqrt` error **0.000 ulp** — correctly rounded.
 
-**Reason 2 — float accumulation and comparison are fragile.** Two runs that
-differ in the last bits will compare unequal, and if any control flow branches on
-such a comparison, the divergence becomes macroscopic rather than staying
-sub-ulp.
+**2. In V8, `Math.log10` and `Math.pow(10,x)` are also correctly rounded**
+(0.500 and 0.000 ulp measured). But the spec does not require it, and this spike
+can only test V8. "Correctly rounded in the engine we tested" is not a
+cross-engine guarantee.
+
+**3. A deterministic implementation is feasible.** `detLog10` and `detExp10`
+built only from `+ - * /` and exactly-specified integer operations are
+bit-identical on every conforming engine by construction. Measured error:
+1.500 ulp for `detLog10`, and 1.500 ulp for `detExp10` **inside its domain** —
+but 32.5 ulp outside it, which is a real limitation, not a pass.
+
+**4. Independent quantization of species breaks conservation.** 100-step serial
+transfer of 0.1 mol, 500 trials: quantizing the **transfer amount** once gives
+1.39e-15 relative drift; quantizing each **vessel independently** gives 4.00e-12
+— ~3000× worse. The original policy quantized derived quantities independently
+and would have shipped this defect.
 
 ## Decision
 
-**The scientific hot path uses only exactly-specified IEEE-754 operations.
-Scientific state is quantized before it enters the world. Replay equivalence is
-defined over quantized state.**
+**Priority order, which resolves every conflict below:**
 
-### 1. Solve in concentration space, never in pH space
+> 1. scientific correctness — 2. numerical stability — 3. reproducibility —
+> 4. bitwise/hash convenience
 
-The equilibrium solve is expressed entirely in `[H⁺]`:
+Reproducibility is pursued *within* whatever the correct model requires. It never
+chooses the model, and it never simplifies the physics.
+
+### 1. Transcendental functions are permitted where the model needs them
+
+The hot path may use `sqrt`, `log10`, and `exp`. Nothing in this policy forbids a
+mathematical operation that the physical model requires.
+
+### 2. `Math.sqrt` is used directly; `Math.log10` and `Math.pow`/`Math.exp` are not
+
+| Operation | Policy | Basis |
+|---|---|---|
+| `Math.sqrt` | **Permitted, used directly** | Correctly rounded per the July 2024 spec change; measured 0.000 ulp |
+| `Math.log10` | **Shipped as `detLog10`** | Spec-permitted engine variation; measured 1.5 ulp |
+| `Math.exp` / `Math.pow(10,x)` | **Shipped as `detExp10`** | Same; measured 1.5 ulp in domain |
+
+The deterministic implementations live in `packages/sci/src/deterministic-math.ts`,
+are covered by tests against arbitrary-precision references, and are the only
+permitted route to these functions inside `packages/sci` and `packages/world`.
+A lint rule bans the native calls there.
+
+**Honest statement of the trade:** `detLog10` at 1.5 ulp is *less accurate in V8*
+than the native `Math.log10` at 0.5 ulp. We accept a measured 1 ulp of accuracy
+loss to obtain engine-independence. That is the correct trade under the priority
+order — 1 ulp is nine orders of magnitude below the ±0.02 pH tolerance — but it
+is a real trade and is recorded as one.
+
+**Domain restriction is mandatory.** `detExp10` degrades to 32.5 ulp outside its
+validated domain because its single-constant argument reduction loses precision
+as `|x|` grows. It must refuse outside the domain, and the domain must be
+asserted at its call site. **M4 must replace the reduction with a two-part
+(Cody–Waite) constant** and re-measure; until then, restriction rather than
+silent degradation.
+
+### 3. Canonical state stores independent quantities, never derived ones
+
+This is the fix for finding 4, and it changes the state model.
+
+Three distinct levels, never conflated:
+
+| Level | Contents | Quantized? | Purpose |
+|---|---|---|---|
+| **Solver state** | full speciation, unquantized float64 | no | validated against conservation |
+| **Canonical state** | **independent** amounts (`n_i`, mol) and water mass (`m_w`, kg), plus world structure | yes | persisted; defines replay equality |
+| **Derived science** | molalities, activities, `γ`, `I`, `pH`, species | recomputed | never persisted as truth |
+
+**Species concentrations, activities, and ionic strength are derived and are
+never quantized independently.** Quantizing them separately is what accumulates
+drift, because each rounding is an independent error that no constraint corrects.
+
+A transfer is quantized **once**, in the event payload, and applied as an exact
+zero-sum update: `n_from -= d; n_to += d`. Measured drift 1.39e-15 over 100
+transfers, indistinguishable from the unquantized float baseline of 1.25e-15.
+
+Quantization remains `Number(v.toPrecision(12))`. `toPrecision` is
+algorithmically specified for exact decimal conversion and is deterministic.
+
+**Residual risk, stated rather than hidden.** Quantization is a bound, not a
+proof. If a value lands within ~1 ulp of a 12th-digit rounding boundary, two
+engines could quantize it differently. The margin is large — measured
+cross-implementation divergence is ≤1.5 ulp (≈3e-16 relative) against a
+quantization resolution of 1e-12 relative, roughly four orders of magnitude — so
+the condition requires an essentially exact tie. Were it to occur, the
+consequence is one unit in the 12th significant digit, far below any display
+precision, and it surfaces as a loud hash mismatch rather than a silent wrong
+answer. **An accepted, bounded risk, not an impossibility** (`SPEC-0001` failure
+mode 11).
+
+### 4. Conservation tolerances, stated per level
+
+| Level | Quantity | Tolerance | Measured |
+|---|---|---|---|
+| Solver state (unquantized) | charge balance | ≤ 1e-14 relative | 1.39e-17 mol/kg |
+| Solver state (unquantized) | element / mass balance | ≤ 1e-15 relative | 0.00e+00 mol/kg |
+| Canonical state (quantized) | amount / mass conservation | ≤ 1e-13 relative over 100 transfers | 1.39e-15 |
+| Canonical state | **design guard** | the "quantize each vessel independently" strategy **must fail** the above | 4.00e-12 |
+
+The threshold is chosen to sit two orders of magnitude above the correct strategy
+and one order below the incorrect one — so it passes the design we want and fails
+the design we do not. That regression test is a required acceptance criterion
+(`SPEC-0001` AC-R9), because the defect it catches is invisible in any single
+step and only appears after accumulation.
+
+**The original policy's conservation criterion contradicted its own
+quantization rule.** Both are now derived from the same fact — derived quantities
+are never quantized — so they cannot disagree.
+
+### 5. Exact state hash
+
+Two hashes, with different jobs:
 
 ```
-f([H+]) = C_B + [H+] - Kw/[H+] - C_A*Ka/(Ka + [H+]) = 0
+replayHash  = SHA-256( canonicalJson( quantized( canonicalState ) ) )
+scienceHash = SHA-256( canonicalJson( quantized( derivedScience ) ) )
 ```
 
-Solved by bracketed bisection, which uses only `+ - * /` and comparisons. No
-`pow`, no `log`, no `sqrt` in the root-find. `Ka` is stored as a value
-(e.g. `1.8001e-5`), never as a pKa from which `10^-pKa` must be computed.
+- **`replayHash`** covers the independent state and defines replay equality and
+  persistence identity. A mismatch means the *inputs* diverged — the strongest
+  possible signal, and it is what the event log is folded against.
+- **`scienceHash`** covers derived observables and is a **verification artifact**.
+  It is what detects a solver regression, since derived values are recomputed
+  rather than replayed (`ADR-0002`). It is not persisted as truth.
 
-This is not a compromise on rigour: the spike shows bisection reproduces an
-independent closed form to better than 0.0001 pH, and the formulation is *more*
-robust than the Henderson–Hasselbalch approximation it replaces, which diverges
-by 0.65 pH at 1e-6 M.
+`canonicalJson` sorts keys, uses the specified shortest round-trip number
+formatting, and must additionally:
 
-### 2. Ratios, not logarithms, at the observable boundary
+- **normalize `-0` to `0`** — IEEE 754 distinguishes them and a sign that appears
+  or vanishes depending on which side of a subtraction a value landed on would
+  silently change a hash;
+- **reject `NaN` and `±Infinity`** rather than serializing them.
 
-The indicator response is `[In⁻]/[HIn] = Ka_in / [H⁺]` — one division. The
-colour model consumes that ratio directly. No `log10` is needed to decide how
-pink the solution is, which is chemically correct: the ratio *is* the governing
-quantity, and pH is a derived presentation of its negative logarithm.
+Excluded from both hashes: wall-clock, the present cursor position, visual and
+animation state, camera, hover, and any presentation clock.
 
-### 3. Transcendental functions only in the presentation layer
-
-`Math.log10` is permitted for *displaying* a pH number and for *drawing* axis
-labels. It is downstream of the quantized scientific state, and its output is
-never written back into the world. This is a bright line: a `Math.log10` call in
-`packages/sci` or `packages/world` is a defect.
-
-### 4. Quantize state at the world boundary
-
-Every scientific quantity is quantized **before** it enters `WorldState`:
-
-```ts
-const QUANTUM = 12;   // significant decimal digits
-quantize(v) = Number(v.toPrecision(QUANTUM));
-```
-
-Rationale: implementation-approximated operations still occur in the boundary
-correction (the Davies equation needs `sqrt(I)`), and their worst-case error is
-~1e-16 relative. Rounding to 12 significant digits (relative resolution 1e-12)
-absorbs four orders of magnitude of headroom. `toPrecision` is algorithmically
-specified by ECMAScript for exact decimal conversion and is deterministic.
-
-**Stated honestly: this is not a mathematical proof.** If a value lands within
-~1e-16 relative of a 12th-digit rounding boundary, a cross-engine ulp difference
-could flip it. This is an accepted residual risk, for three reasons: it requires
-an exact tie; its consequence is one unit in the 12th significant digit, far
-below any display precision; and it surfaces as a loud hash mismatch in tests
-rather than as a silent wrong answer.
-
-### 5. Replay equivalence, precisely stated
+### 6. Replay equality, precisely
 
 | Scope | Requirement |
 |---|---|
-| Same engine, same version, same config | **Byte-identical** quantized state at every boundary. |
-| Different engines, same config | Equal after quantization, modulo the documented tie exception in §4. |
-| Different solver id or version | **Not required to match.** The runtime must refuse to treat them as equivalent, not silently substitute. |
+| Same engine, same version, same config | **Bit-identical** canonical and derived state. |
+| Different engines | Equal after quantization, for both hashes, because every transcendental in the hot path is our own deterministic implementation. |
+| Different solver id or version | **Not required to match**, and the runtime must refuse to treat them as equivalent rather than silently substituting (`ADR-0003`, `ADR-0008`). |
 
-The third row is the one most likely to be violated by a well-meaning future
-change. Swapping the solver under an existing world must fail loudly.
-
-### 6. State hash definition
-
-```
-stateHash = SHA-256( canonicalJson( {
-  schemaVersion,
-  solverConfig: { id, version, parameters },
-  world: <structural state: vessels, apparatus, attachments>,
-  science: <quantized species amounts, concentrations, T, P>
-} ) )
-```
-
-Excluded from the hash, by construction:
-
-- wall-clock timestamps and any `Date` value;
-- visual state, animation state, camera, hover, focus;
-- the current `sequence` pointer and the branch's present position;
-- any renderer or presentation clock (`ADR-0006`).
-
-`canonicalJson` sorts object keys and fixes number formatting, so that two
-structurally identical states hash identically regardless of construction order.
-It must additionally:
-
-- **normalize `-0` to `0`.** IEEE-754 distinguishes them; `Object.is(-0, 0)` is
-  false, and a sign that appears or disappears depending on which side of a
-  subtraction a value landed on will silently change a hash. This is a real and
-  easily-missed source of replay divergence.
-- **reject `NaN` and `±Infinity`** rather than serializing them. A non-finite
-  value reaching world state is a solver defect, and it should fail at the
-  boundary rather than produce a stable-looking hash of `null`.
-- **serialize numbers via the shortest round-trip representation**, which
-  ECMAScript specifies exactly, rather than via any locale- or
-  precision-formatted string.
+The cross-engine row is now a *stronger* claim than the original policy made,
+which is a direct consequence of putting correctness first: deriving the physics
+properly is what made engine-independence provable rather than hoped for.
 
 ### 7. Randomness
 
-- **There is no randomness in v0.** No Monte Carlo, no stochastic kinetics.
-- If randomness is ever introduced, it must be a seeded PRNG whose *algorithm
-  and seed* are recorded in the genesis event, and whose stream position is
-  derivable from the event sequence. `Math.random()` is banned in
-  `packages/sci`, `packages/world`, and `packages/ace`.
-- **Visual-only stochastic animation does not participate in world truth.** A
-  bubbling animation may flicker nondeterministically; the *presence* and *rate*
-  of gas evolution are scientific state and are deterministic. This split is
-  mandatory and testable.
+- No randomness in v0.
+- If introduced, it must be a seeded PRNG whose algorithm and seed are in the
+  genesis event, with stream position derivable from the event sequence.
+  `Math.random()` is banned in `packages/sci`, `packages/world`, `packages/ace`.
+- **Visual-only stochastic animation does not participate in world truth.** The
+  *presence* and *rate* of a visual effect are scientific state and deterministic;
+  frame-level flicker is presentation state and is excluded from both hashes.
 
 ### 8. Model parameters are part of replay identity
 
-`Kw`, `Ka` values, the Davies `A` parameter, the activity model choice, and the
-quantization precision are all recorded in the genesis event's solver
-configuration. A reference case that changes `Ka` is a different world.
+`Kw`, `Ka`, the Davies `A` and `b`, `γ_neutral`, the activity model choice, and
+the quantization precision are recorded in the genesis event. A reference case
+that changes `Ka` is a different world.
 
 ## Alternatives considered
 
-**Use `Math.log`/`Math.pow` freely and accept cross-engine drift.** Rejected.
-It makes `GOAL.md` §5.4 unachievable and would mean replay tests pass only on the
-developer's machine — the exact "tests pass for the wrong reason" failure in
-`CLAUDE.md` §16.
+**Keep the `+ - * /`-only constraint and simplify the chemistry to fit it.**
+Rejected by owner review, correctly. This is the pattern the priority order
+forbids: a convenience constraint selecting a physical model.
 
-**Arbitrary-precision decimal arithmetic throughout.** Rejected. Ten to a
-hundred times slower, and it does not actually remove the problem: `sqrt` and
-`log` in an arbitrary-precision library are also approximations, just different
-ones. Quantization solves the real requirement — reproducible *accepted* state —
-at a fraction of the cost.
+**Use native `Math.log10` and accept cross-engine drift.** Rejected. The drift
+would be ~1 ulp *here*, but it is unspecified, and `GOAL.md` §5.4 requires replay
+as a product capability, not a best effort on the developer's machine.
 
-**Pin one browser engine and declare determinism only there.** Rejected. Users
-have many browsers, and `GOAL.md` targets Chinese high-school students on
-whatever device they own. A determinism guarantee that depends on the user's
-browser is not a guarantee.
+**Use native `Math.log10` plus a tolerance-based "approximately equal" hash.**
+Rejected as the primary mechanism: approximate equality makes it impossible to
+say whether a divergence is a bug or expected drift. Retained as a *diagnostic*
+that reports how far apart two states are when a hash mismatches.
 
-**Hash raw doubles and accept that cross-engine replay fails.** Rejected. It
-destroys the reproducible-bug-report and counterfactual-comparison use cases that
-`GOAL.md` §5.4 names as core.
+**Quantize everything, including species, and define conservation on the
+quantized state.** Rejected on measurement: 4.00e-12 drift, accumulating, with
+no mechanism to correct it.
 
-**Compute a tolerance-based "approximately equal" instead of a hash.** Rejected
-as the *primary* mechanism: approximate equality makes it impossible to say
-whether a divergence is a bug or expected drift. Retained as a *diagnostic* when
-a hash mismatch occurs, to report how far apart two states are.
+**Verify correctness against a higher-precision reference and skip quantization
+entirely.** Rejected. Quantization exists so the *hash* is meaningful; without
+it, a hash mismatch cannot distinguish a real divergence from ulp noise.
 
 ## Consequences
 
 ### Positive
-- Determinism is a property of the formulation, not of a lucky test environment.
-- The solve is more robust than the textbook approximation it replaces, so
-  determinism costs nothing in accuracy — it improves accuracy.
-- Bug reports become reproducible across machines, which is what makes the
-  event-sourcing investment in `ADR-0002` pay off.
+- The scientific model is chosen for correctness, and reproducibility is achieved
+  *within* it rather than by constraining it.
+- Engine-independence is stronger than before, because it rests on our own
+  deterministic implementations rather than on engine behaviour.
+- The quantization policy and the conservation criterion are now derived from one
+  fact, so they cannot contradict each other.
+- Conservation is measured, not asserted, and the wrong design is caught by a
+  regression test.
 
 ### Negative
-- The solver's shape is constrained by the numeric policy: no `pow` in the hot
-  path, which rules out some otherwise-natural formulations (e.g. solving in pH
-  space, or using `10^-pKa` directly).
-- Every quantity crossing into world state needs an explicit quantization call.
-  Missing one is a silent replay defect, so this needs a test rather than
+- ~1 ulp of accuracy is traded for engine-independence in `log10`/`exp`.
+- `detExp10` is domain-restricted until its argument reduction is improved at M4.
+- Every value crossing into canonical state must pass through the quantization
+  boundary; missing one is a silent defect, so it needs a test rather than
   vigilance.
-- 12 significant digits is a judgement. It is documented and is part of solver
-  configuration, but it is a choice, not a derivation.
+- `detLog10`/`detExp10` are code we own, test, and must maintain. The alternative
+  was depending on unspecified engine behaviour.
 
 ### Neutral
-- pH display precision must be derived from the model tolerance in `ADR-0003`
-  (≈0.02 pH), not chosen for looks. The UI must not show more decimals than the
-  model can justify — otherwise the product commits the `GOAL.md` §5.2
-  "precise-looking numbers" error in the presentation layer.
+- 12 significant digits remains a judgement, now with a measured basis (four
+  orders of magnitude above the 1 ulp divergence) rather than an assumption.
 
 ## Reversibility
 
-**Hard.** Quantization precision and hash composition are persisted-format
-properties. Changing them invalidates every existing state hash and every saved
-reference case. This is precisely why it is an ADR written before any code.
+**Hard in one direction, easy in the other.** Quantization precision, hash
+composition, and the canonical/derived split are persisted-format properties;
+changing them invalidates every existing hash and reference case.
 
-The *safe* direction of change is making the policy stricter, not looser.
+Adopting native `Math.log10` later would be *easier* than the current policy, and
+would only be justified if every engine the product supports were verified
+correctly rounded — which is not a property we can rely on from the spec.
 
 ## Open questions
 
-1. Is 12 significant digits the right precision? Too high fails to absorb
-   cross-engine drift; too low loses real precision. **Leaning: 12, validated at
-   M2 by a test that solves the same case under both an exact-op path and a
-   perturbed path and asserts the quantized results match.** Owner confirmation
-   not required unless the M2 test fails.
-2. Does the titration curve need its own quantization policy? Individual points
-   are quantized states, but the *curve* is a sequence and a future smoothing or
-   interpolation step would introduce new numerics. **Leaning: the observable
-   layer owns curve interpolation and it never writes back to the world, so it is
-   outside replay identity.** Confirm at M5.
-3. Should the state hash include a hash of the *event log* as well as the
-   resulting state? Including both detects divergence earlier; including only
-   state keeps the hash smaller. **Leaning: state hash only, with the event log
-   separately hashed for integrity.** Confirm at M8.
+1. Is 1.5 ulp acceptable for `detLog10`, or is a better polynomial warranted?
+   **Leaning: acceptable.** It is nine orders of magnitude below the pH tolerance,
+   and the alternative is engine-dependent behaviour. Revisit only if a future
+   model amplifies `log10` error.
+2. Should `detExp10`'s two-part reduction (Cody–Waite) be done at M4 or deferred?
+   **Leaning: at M4**, because a domain-restricted function that refuses outside
+   its range is a correctness feature, and shipping the restricted version is
+   acceptable only if the restriction is tested.
+3. Should `scienceHash` be recomputed on every replay in production, or only in
+   tests? **Leaning: tests and on-demand diagnostics**, not on every load, since
+   the canonical hash is what replay equality needs. Confirm at M8.

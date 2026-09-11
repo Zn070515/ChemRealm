@@ -25,16 +25,48 @@ originality check in its review checklist.
 | Property | Rule | Rationale |
 |---|---|---|
 | Projection | **Orthographic, straight-on.** No perspective convergence. | Volumetric readings (burette graduations, meniscus position) must be readable as a true side elevation. Perspective makes a reading ambiguous. |
-| Camera | Fixed. No orbiting in the core experiment view. | A student reading a burette cannot be looking at it from an angle. Orbit belongs in a separate inspection view if ever needed. |
+| Camera | Fixed. No orbiting in the core experiment view. | A student reading a burette cannot be looking at it from an angle. Orbit belongs in a separate inspection view if ever used. |
 | Up axis | Screen up = world up. | Meniscus, liquid surface, and gravity must agree. |
-| Scale | **One world unit = one millilitre of liquid volume** in apparatus geometry. Declared explicitly. | Liquid level computation (`ADR-0006`) must not carry a fudge factor. If a flask's geometry is decorative rather than volumetric, it does not carry this scale and must be marked `non_volumetric` in its asset metadata. |
+| **Coordinate unit** | **Millimetre (mm) — a LENGTH.** | Geometry coordinates are lengths. See the correction note below. |
 
-The scale rule matters more than it looks. A conical flask drawn to look right
-is not the same object as a conical flask whose interior volume is a known
-function of height. `ADR-0006` requires the observable model to compute liquid
-level from volume; that is only possible with declared geometry. **Assets must
-publish their interior volume profile, or declare themselves non-volumetric and
-accept that liquid level is approximate.**
+### Correction: geometry coordinates are lengths, not volumes
+
+An earlier version of this document said "one world unit = one millilitre of
+liquid volume in apparatus geometry". **That was a dimensional error** (owner
+review finding P2-1): a geometry coordinate is a length-like quantity, and mL is
+a volume. Encoding volume into a length axis produces a scale factor that is
+correct only for one vessel cross-section — that is, it works for a straight
+cylinder and is silently wrong for everything else, including the conical flask
+this slice depends on.
+
+**The corrected contract:**
+
+1. **Geometry uses millimetres.** Every coordinate, stroke width, and offset is a
+   length (`ADR-0004` type `Millimetre`).
+2. **Volumetric vessels expose an explicit volume profile**, as two monotone
+   functions over fill height:
+
+   ```
+   V(h) -> Litre        volume contained at fill height h
+   h(V) -> Millimetre   fill height for volume V  (inverse of V(h))
+   ```
+
+   Both are declared per vessel, sourced from the authoring tool or measured from
+   the asset. They are the *only* permitted route from volume to height.
+
+3. **The observable layer calls `h(V)`.** It never multiplies a volume by a
+   fudge factor, and it never assumes a cylindrical cross-section
+   (`ADR-0006`).
+4. **Assets that cannot publish a profile are marked `non_volumetric`** and
+   accept an approximate liquid level. A beaker drawn for decoration is allowed;
+   a beaker pretending to be volumetric is not.
+
+Why this matters more than it looks: a conical flask drawn to look right is not
+the same object as a conical flask whose interior volume is a known function of
+height. The first cannot support a liquid-level readout at all. The second can,
+and the difference is invisible until someone checks the curve against a real
+titration — which is exactly the kind of failure `GOAL.md` §17 says must be
+caught, not shipped.
 
 ## 2. Materials
 
@@ -111,8 +143,11 @@ Every item is pass/fail. Any fail blocks the stage (`GOAL.md` §16 Gate D).
       side-by-side screenshot, not a written claim.
 
 **Geometry and correctness**
-- [ ] Every volumetric asset publishes an interior volume profile.
+- [ ] Every volumetric asset publishes `V(h)` **and** `h(V)`, and the two are
+      mutually consistent within a stated tolerance.
 - [ ] Non-volumetric assets are explicitly marked in metadata.
+- [ ] No coordinate, stroke, or offset carries a volume; all are `mm`.
+- [ ] Liquid level is obtained by calling `h(V)`, never by scaling a volume.
 - [ ] Meniscus concave and read at the bottom.
 - [ ] Projection is orthographic; no perspective convergence.
 

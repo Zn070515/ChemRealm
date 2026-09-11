@@ -1,18 +1,33 @@
 # Research: scientific solver landscape for the acid-base slice
 
-- **Date:** 2026-09-11
+- **Date:** 2026-09-11 (revised after owner review remediation)
 - **Status:** Investigation complete. Informs `ADR-0003`. Not itself a decision.
 - **Question:** which scientific software, if any, should back the acid-base
   titration slice and the later Al(III)/Fe(III) stress cases?
+
+> **Revision note.** Two conclusions from the first version were corrected after
+> owner review, and one was made more precise:
+>
+> 1. **The molality basis is now matched to PHREEQC**, not merely nominated. The
+>    original recommended molality for correctness but did not note that PHREEQC
+>    also works in molality — which is what makes the oracle comparison test the
+>    physics rather than a convention difference.
+> 2. **The reference values in the table below changed.** Self-consistent
+>    activity (§1) moves the strong-acid figure, and one secondary source value
+>    (8.87) was wrong (§5).
+> 3. **A third reference case was added**: the taught `−lg c(H⁺)` and the
+>    thermodynamic pH are different quantities for the same solution. This is now
+>    the single most consequential scientific fact for the product, and the
+>    original version of this document did not mention it at all.
 
 ## Summary
 
 For the bounded domain of acid-base titration in dilute aqueous solution at
 25 °C, **a hand-written exact solver is justified and more defensible than
-adopting a general speciation package.** The spike
-(`spikes/solver-validation`) demonstrates it: the exact charge-balance solve
-reproduces an independent closed form to <0.0001 pH and IUPAC-traceable acetate
-buffer standards to within 0.012 pH.
+adopting a general speciation package.** `spikes/activity-equilibrium`
+demonstrates it: the self-consistent activity solve reproduces analytic activity
+relations to better than 1e-9 pH and IUPAC-traceable acetate buffer standards to
+within 0.012 pH, on the same **molality** basis PHREEQC uses internally.
 
 PHREEQC remains the right tool for the *later* multi-component cases. It is not
 needed now, and putting it on the runtime path would force a server, contradicting
@@ -22,29 +37,47 @@ Two candidate libraries are actively harmful for this project and are ruled out.
 
 ## 1. The rigorous formulation
 
-For a monoprotic acid HA (analytical concentration `C_A`) plus strong base giving
-`C_B` sodium, in water:
+For a monoprotic acid HA (analytical **molality** `m_A,tot`) plus strong base
+giving `m_Na` sodium, in water:
 
 ```
-charge balance:    C_B + [H+] = [OH-] + [A-]
-mass balance:      C_A = [HA] + [A-]
-acid dissociation: Ka = [H+][A-] / [HA]
-water:             Kw = [H+][OH-]
+charge balance:    m_Na + m_H = m_OH + m_A + m_Cl
+mass balance:      m_A,tot  = m_HA + m_A
+acid dissociation: Ka = a_H·a_A / a_HA
+water:             Kw = a_H·a_OH
+activities:        a_i = γ_i · (m_i / m°),   m° = 1 mol/kg
+ionic strength:    I = 0.5 · Σ m_i z_i²
+Davies:            log₁₀γᵢ = −A z_i² ( √I/(1+√I) − b I )
 ```
 
-Eliminating `[A-]` and `[HA]` gives one equation in `[H+]`, which is a cubic in
-the general case and reduces to a quadratic for a fully dissociated acid. The
-left-hand side
+**Activities are not optional and not post-hoc.** `Ka` and `Kw` are defined on
+activities; substituting concentrations into them silently redefines the
+constants. Substituting the *conditional* constants
+`Kw_c = Kw/(γ_H γ_OH)` and `Ka_c = Ka·γ_HA/(γ_H γ_A)` into the charge balance
+recovers a single scalar equation:
 
 ```
-f([H+]) = C_B + [H+] - Kw/[H+] - C_A*Ka/(Ka + [H+])
+m_Na + m_H − Kw_c/m_H − m_A,tot·Ka_c/(Ka_c + m_H) = 0
 ```
 
-is **strictly increasing** in `[H+]`, since `f' = 1 + Kw/[H+]² + C_A*Ka/(Ka+[H+])² > 0`.
-The root is therefore unique and a bracketed method converges unconditionally.
-No initial guess is required and no convergence failure is possible inside the
-physical bracket — a materially better numerical position than the modified
-Newton–Raphson on log-activities that general packages must use.
+The scalar structure is convenient, but `Kw_c` and `Ka_c` **depend on `I`, which
+depends on the speciation, which depends on them.** An implementation that treats
+them as constants — the superseded `spikes/solver-validation` did exactly this —
+is solving a different, inconsistent model. The correct problem has two unknowns,
+`(m_H, I)`, solved simultaneously.
+
+For fixed `I` the residual is **strictly increasing** in `m_H` (its derivative is
+`1 + Kw_c/m_H² + m_A,tot·Ka_c/(Ka_c+m_H)² > 0`), so a bracketed method converges
+without an initial guess — a materially better numerical position than the
+modified Newton–Raphson on log-activities that general packages must use. With
+`I` coupled, monotonicity is **numerically verified over the sampled domain**
+rather than proven analytically, and is stated as such.
+
+**Standard state and scale.** Solute standard state is the hypothetical ideal
+unit-molality solution; solvent is pure water with `a_w = 1`. Molality (mol/kg
+water) is chosen because it is the basis on which thermodynamic `Ka` and `Kw` are
+tabulated and the basis PHREEQC uses. Molarity is a presentation quantity. Full
+treatment in `docs/science/quantity-ontology.md`.
 
 ### Where Henderson–Hasselbalch fails
 
@@ -122,11 +155,28 @@ merely adequate, it is *more* reproducible than the alternatives.
 
 | Anchor | Value at 25 °C | Provenance | Usable as |
 |---|---|---|---|
-| Acetate buffer, 0.1 M HOAc / 0.1 M NaOAc | pH 4.644 ± 0.003 | IUPAC-traceable, reproduced in GOST 8.134-98 | Primary reference case |
-| Acetate buffer, 0.01 M / 0.01 M | pH 4.713 | Same | Primary reference case |
-| Half-equivalence | pH ≈ pKa | Analytical identity, asymptotic | Approximate check only |
-| Strong acid/base excess regimes | Closed form | Elementary derivation | Independent cross-check |
-| 0.1 M HOAc equivalence | pH 8.72 | Textbook closed form `7 + ½(pKa + log C)` | Cross-check (agreement to 0.0001) |
+| Acetate buffer, 0.1 mol/kg HOAc / 0.1 mol/kg NaOAc | **pH 4.644 ± 0.003** | IUPAC-traceable, reproduced in GOST 8.134-98 | Primary reference case |
+| Acetate buffer, 0.01 mol/kg / 0.01 mol/kg | **pH 4.713** | Same | Primary reference case |
+| Half-equivalence | `pH = pKa + log₁₀ γ_A` | Analytic activity identity | Correct form (NOT `pH = pKa`) |
+| Strong acid/base, acid excess | `pH = −log₁₀ m_H − log₁₀ γ_H` | Analytic activity relation | Independent cross-check |
+| Strong acid/base, base excess | `pH = 14 + log₁₀ m_OH + log₁₀ γ_OH` | Analytic activity relation | Independent cross-check |
+| **0.1 M HCl — taught quantity** | **`−lg c(H⁺) = 1.0000`** | Definition of the taught quantity | Separate reference case |
+| **0.1 M HCl — thermodynamic pH** | **pH 1.1064** | `−log₁₀ a(H⁺)`, γ_H = 0.7815 | Separate reference case |
+| 0.1 M HOAc equivalence | pH 8.72 | Textbook closed form `7 + ½(pKa + log C)` | Cross-check only — see below |
+
+**The two 0.1 M HCl rows are not a mistake and not a rounding artifact.** They
+are two different physical quantities that both get called "pH" in different
+contexts. `SPEC-0001` REF-5 and REF-6 keep them side by side precisely so a
+future contributor cannot "fix" one to agree with the other. Full treatment in
+`docs/science/quantity-ontology.md`.
+
+**Activity functions are no longer post-hoc.** The analytic relations above are
+what the self-consistent solve reproduces to <1e-9 pH; they are identities that
+verify the activity coupling is wired correctly, not independent validation of
+the model. Only the IUPAC buffer values and the M4 oracle validate the model.
+Note in particular that **activity enters base-excess regimes through `γ_OH`, not
+`γ_H`** — the original version of this document's corresponding spike had that
+sign wrong.
 
 **Important distinction:** the ±0.003 on the IUPAC buffer value is the
 *uncertainty of the standard itself*, not the accuracy our model can claim

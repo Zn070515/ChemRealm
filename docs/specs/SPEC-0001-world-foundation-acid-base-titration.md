@@ -1,11 +1,16 @@
 # SPEC-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** S1 — Specified (draft for owner acceptance)
-- **Date:** 2026-09-11
+- **Status:** S1 — Specified (revision 2, for owner re-review)
+- **Date:** 2026-09-11 (revised after owner review remediation)
 - **Owner:** Project owner
-- **Supersedes:** nothing (first spec)
-- **Related ADRs:** 0001, 0002, 0003, 0004, 0005, 0006, 0007 (all `Proposed`, all load-bearing here)
-- **Related evidence:** `spikes/solver-validation/`, `docs/research/scientific-solver-landscape.md`
+- **Supersedes:** revision 1 of this spec
+- **Related ADRs:** 0001, 0002, 0003, 0004 (rev), 0005, 0006, 0007 (rev), 0008, 0009 — all `Proposed`, all load-bearing here
+- **Related evidence:** `spikes/activity-equilibrium/` (scientific formulation),
+  `spikes/numeric-policy/` (determinism + branded types),
+  `spikes/solver-validation/` (SUPERSEDED — concentration-only formulation)
+- **Supporting docs:** `docs/science/quantity-ontology.md` (authoritative quantity
+  definitions), `docs/research/scientific-solver-landscape.md`,
+  `docs/visual/apparatus-standard.md`
 - **Plan:** `docs/plans/PLAN-0001-world-foundation-acid-base-titration.md`
 
 ---
@@ -28,13 +33,19 @@ Two facts shape everything below.
 
 **First, the scientific core is cheap here, if we do not over-build it.** An
 investigation completed on 2026-09-11 (`docs/research/scientific-solver-landscape.md`)
-and a spike (`spikes/solver-validation/`) established that the exact equilibrium
-solve for a monoprotic acid plus strong base is a single scalar root-find on the
-charge balance. A ~120-line implementation reproduces an independent closed form
-to better than 0.0001 pH, reproduces IUPAC-traceable acetate buffer standards to
-within 0.012 pH, and conserves charge to 6.9e-18 mol/L. The heavy general-purpose
-speciation packages are not required for this domain, and two candidate libraries
-(`iapws`, and `pyEQL` which pulls it in) are GPL-3 contamination to be avoided.
+and two spikes established that the exact equilibrium solve for a monoprotic acid
+plus strong base — with activity coefficients participating *inside* the
+equilibrium constraints, on the molality basis — is a two-unknown root-find
+solved by nested bisection. Roughly 150 lines reproduce analytic activity
+relations to better than 1e-9 pH, reproduce IUPAC-traceable acetate buffer
+standards to within 0.012 pH, and conserve charge to 1.4e-17 mol/kg
+(`spikes/activity-equilibrium`, 18/18). The heavy general-purpose speciation
+packages are not required for this domain, and two candidate libraries (`iapws`,
+and `pyEQL` which pulls it in) are GPL-3 contamination to be avoided.
+
+An earlier spike solved a **concentration-only** balance and applied activity
+afterwards; it is superseded and must not be cited as evidence for the
+formulation above.
 
 **Second, the runtime architecture is expensive, and this slice is where it gets
 decided.** Event sourcing, deterministic replay, branch isolation, observables
@@ -125,7 +136,7 @@ Every one of these is visible to the learner, never silent:
 
 | Condition | Behaviour |
 |---|---|
-| Model out of domain (T ≠ 25 °C, I > 0.5 mol/L, unmodelled species) | The affected quantity is shown as unavailable with the reason. The world does not produce a number. |
+| Model out of domain (T ≠ 25 °C, `I_m` > 0.5 mol/kg, unmodelled species) | The affected quantity is shown as unavailable with the reason. The world does not produce a number. |
 | Solver not converged | Reported as a defect-class error with the residual. Must be unreachable for valid inputs; if reachable, it is a P0 bug. |
 | Invalid action (deliver more than the burette holds) | Rejected before commit, with a reason. No event is emitted. |
 | Storage full | Warned before the failing write. Existing worlds are never corrupted. |
@@ -206,50 +217,111 @@ Aqueous single phase, dilute, closed system. Species represented in v0:
 indicator species when an indicator is present (`HIn`, `In⁻`) — but see the
 indicator approximation below, which is labelled.
 
-### Governing model
+### Governing model — activities participate IN the equilibrium
 
-The exact equilibrium system, **not an approximation**:
+**Revised 2026-09-11 (owner review P1-1).** The previous version of this section
+stated an activity-based mass-action model and then solved a concentration-only
+residual, applying the Davies equation afterwards as a display correction. That
+was not what it said it was. The formulation below is self-consistent: activity
+coefficients are solved *with* the speciation, not after it.
 
-```
-charge balance:    [Na⁺] + [H⁺] = [OH⁻] + [A⁻] + [Cl⁻]
-mass balance:      C_A = [HA] + [A⁻]
-dissociation:      Ka = γ_H[H⁺]·γ_A[A⁻] / (γ_HA[HA])
-water:             Kw = γ_H[H⁺]·γ_OH[OH⁻]
-```
-
-Reducing to a single equation in `[H⁺]` for the monoprotic case:
+Scale is **molality (mol/kg water)** throughout. See
+`docs/science/quantity-ontology.md` for why, and `ADR-0004` for the types.
 
 ```
-f([H⁺]) = C_B + [H⁺] − Kw/[H⁺] − C_A·Ka/(Ka + [H⁺]) = 0
+charge balance   m_Na + m_H = m_OH + m_A + m_Cl
+mass balance     m_HA,tot  = m_HA + m_A
+Ka               Ka = a_H·a_A / a_HA = γ_H·m_H·γ_A·m_A / (γ_HA·m_HA)
+Kw               Kw = a_H·a_OH       = γ_H·m_H·γ_OH·m_OH
+ionic strength   I  = 0.5 · Σ m_i z_i²
+Davies           log₁₀γᵢ = −A·zᵢ²·( √I/(1+√I) − b·I )
+                 A = 0.509 (mol/kg)^-½,  b = 0.3,  25 °C
+neutral species  γ_HA = 1   (bounded approximation — see below)
 ```
 
-`f` is strictly increasing, so the root is unique and a bracketed method
-converges unconditionally from a fixed bracket. v0 uses bisection, which requires
-no initial guess, cannot fail to converge inside the physical bracket, and uses
-only exactly-specified IEEE-754 operations (`ADR-0007`).
+`Ka` and `Kw` are **thermodynamic** constants on the molality basis and are
+dimensionless, because `a_i = γ_i·(m_i/m°)` with `m° = 1 mol/kg`.
+
+**Why this is a loop, not an equation.** Substituting the *conditional* constants
+
+```
+Kw_c = Kw / (γ_H·γ_OH)          Ka_c = Ka·γ_HA / (γ_H·γ_A)
+```
+
+into the charge balance gives exactly the familiar scalar form:
+
+```
+m_Na + m_H − Kw_c/m_H − m_A,tot·Ka_c/(Ka_c + m_H) = 0
+```
+
+The scalar structure was always right. **What was wrong is that `Kw_c` and `Ka_c`
+depend on `I`, which depends on the speciation, which depends on them.** The
+earlier formulation froze them as constants. v0 solves the two unknowns `(m_H, I)`
+simultaneously, by nested bisection.
+
+**Numerical structure** (derived and measured in `spikes/activity-equilibrium`):
+
+- Bracketing uses the ideal (γ = 1) root and expands by factors of 3, 10, 100,
+  1000, smallest first. A wide fixed bracket is *not* usable: far from the root,
+  `m_OH = Kw_c/m_H` becomes enormous and the implied `I` leaves the Davies
+  domain, so the residual cannot be evaluated at all.
+- The outer residual was found **strictly increasing** in `m_H` on all seven
+  regimes sampled. This is **numerically verified, not analytically proven**, and
+  is stated as such.
+- The inner ionic-strength loop is a damped fixed point. M4 replaces it with a
+  bracketed inner solve so convergence is guaranteed rather than observed.
+
+**M4 task:** replace the inner fixed point with a bracketed solve, and re-verify
+monotonicity across a wider sweep including the domain boundary.
 
 **Why not Henderson–Hasselbalch.** It is not merely less accurate; it is
 measurably wrong inside the range where it is commonly taught. At 1e-6 M acetic
-acid, HH gives pH 5.37 and the exact solve gives 6.02 — a 0.65 pH error
-(`spikes/solver-validation`, finding F5). A pedagogical view may *display* the
-HH shortcut and say so. The scientific state never comes from it.
+acid, HH gives pH 5.37 and the exact solve gives 6.02 — a 0.65 pH error. A
+pedagogical view may *display* the HH shortcut and say so. The scientific state
+never comes from it.
 
-### Activity model
+**Activity coefficients are mandatory, not an enhancement.** Concentration-only
+chemistry gives 4.7449 for the 0.1 mol/kg acetate buffer against an accepted
+4.644. The 0.10 pH gap *is* the activity coefficient.
 
-Concentration-only chemistry gives pH 4.7449 for the 0.1 M acetate buffer; the
-accepted value is 4.644. The gap is the ion activity coefficient. **An activity
-model is mandatory, not an enhancement.**
+Demonstrated agreement with IUPAC-traceable buffer standards with the full
+self-consistent solve: **0.0061 pH at 0.1 mol/kg, 0.0112 pH at 0.01 mol/kg**
+(tolerance ±0.02). The residual is the Davies model against the
+Bates–Guggenheim convention with ion-specific size parameters.
 
-v0 uses the **Davies equation**:
+**On `γ_HA = 1`.** Neglecting the Setchenow salting term for the neutral acid
+would contribute roughly `+0.02` to `log10 γ_HA` at I = 0.1, moving the buffer
+result from 4.6379 to 4.6579. Both lie inside the ±0.02 band. **Measured,
+bounded, and recorded — not an unexamined default** (spike finding F6).
 
-```
-log₁₀γᵢ = −A·zᵢ²·( √I/(1+√I) − 0.3·I ),   A = 0.5085 at 25 °C in water
-```
+### Two hydrogen-ion numbers that must never be conflated
 
-Demonstrated agreement with IUPAC-traceable buffer standards: 0.006 pH at 0.1 M,
-0.012 pH at 0.01 M. Davies is a general-purpose model; the IUPAC values use the
-Bates–Guggenheim convention with ion-specific size parameters, which is the
-source of the residual.
+**This is the most consequential consequence of P1-1 for the product.**
+
+| Quantity | Definition | Value for 0.1 M HCl | Used by |
+|---|---|---|---|
+| Taught quantity | `−lg c(H⁺)` | **0.9993** | high-school view |
+| Thermodynamic pH | `pH = −log₁₀ a(H⁺)` (IUPAC) | **1.1064** | scientific view |
+
+Charge balance forces `m_H = m_Cl` for a pure strong acid, so the activity
+coefficient shifts the *activity* of the hydrogen ion by exactly
+`−log10(γ_H) = +0.107` at I = 0.10. The familiar "pH of 0.1 M HCl is 1.0000" is a
+statement about **concentration**, not about pH.
+
+`GOAL.md` §5.1 permits a teaching view to prefer the school heuristic. It does
+not permit falsifying the underlying state. Therefore:
+
+- **v0 computes and stores both.** They are distinct types (`Ph` vs a taught
+  quantity) and are never silently identified (`ADR-0004`).
+- The taught view shows `−lg c(H⁺)`, **labelled as the textbook definition**.
+- The scientific view shows `pH = −log₁₀ a(H⁺)` and the activity coefficient.
+- The **difference is presented as a teaching asset**, not hidden — the gap
+  between concentration and activity is exactly the kind of thing `GOAL.md` §1
+  ("Visible") wants made inspectable, and it is a real step from high-school
+  heuristics toward the model underneath.
+
+**This is a product decision, not a technical one, and it is flagged for owner
+confirmation in Open questions.**
 
 ### Validity domain and refusal
 
@@ -258,13 +330,20 @@ The solver **must refuse** rather than extrapolate. In scope:
 | Constraint | Supported | On violation |
 |---|---|---|
 | Temperature | 298.15 K exactly | `MODEL_OUT_OF_DOMAIN` |
-| Ionic strength | ≤ 0.5 mol/L | `MODEL_OUT_OF_DOMAIN` |
+| Ionic strength (**molality basis**, `I_m`) | ≤ 0.5 mol/kg | `MODEL_OUT_OF_DOMAIN` |
 | Acid | monoprotic, strong (HCl) or weak (CH₃COOH) | `MODEL_OUT_OF_DOMAIN` |
 | Base | strong monoprotic (NaOH) | `MODEL_OUT_OF_DOMAIN` |
 | Solvent | water | `MODEL_OUT_OF_DOMAIN` |
 | Phase | single aqueous liquid | `MODEL_OUT_OF_DOMAIN` |
-| Concentration | ≥ 1e-9 mol/L and ≤ 0.5 mol/L total analyte | `MODEL_OUT_OF_DOMAIN` |
+| Total solute | ≥ 1e-9 mol/kg and ≤ 0.5 mol/kg | `MODEL_OUT_OF_DOMAIN` |
+| Species set | closed: `H₂O, H⁺, OH⁻, HA, A⁻, Na⁺, Cl⁻` (+ indicator) | `MODEL_OUT_OF_DOMAIN` |
 | Pressure | 1 atm assumed; not a model variable | documented assumption |
+
+Note the unit: `I_m` in **mol/kg**, not mol/L (`ADR-0004`). The two bases are
+distinct types precisely so this cannot be confused silently. The domain check
+runs **before** the solve on the input totals, **and** is re-checked on the
+converged `I_m` — a solution that converges outside the activity model's range is
+refused, not returned (`GOAL.md` §5.2).
 
 `MODEL_OUT_OF_DOMAIN` is a normal return value, not an exception (`ADR-0003`).
 The UI shows the affected quantity as unavailable with the reason. **It never
@@ -278,11 +357,20 @@ shows a number computed outside the domain.**
    model-inspection view, because it is also a genuine teaching point.
 2. **Instantaneous equilibrium.** No kinetics.
 3. **Ideal mixing on transfer.** Delivered volume mixes completely and
-   immediately; total volume is additive.
-4. **Volume additivity.** `V_total = ΣV`. Volume contraction on mixing is not
-   modelled; the error is small at these concentrations and is stated.
+   immediately.
+4. **Volume additivity is a DISPLAY approximation only.** The mixture volume is
+   estimated by volume additivity; volume contraction on mixing is not modelled.
+   This affects the reported molarity, the burette-vessel level, and the liquid
+   height — **never the thermodynamics**, which run on molality derived from
+   conserved amounts and water mass (`docs/science/quantity-ontology.md`).
+   Bounded and labelled; M4 measures the bound over the supported domain.
 5. **Constant pressure.** 1 atm; no pressure dependence.
 6. **The indicator is modelled as monoprotic** even where it is not (see below).
+7. **Neutral-species activity is unity** (`γ_HA = 1`), neglecting the Setchenow
+   term. Bounded at `+0.02` in `log10 γ` at I = 0.1; inside tolerance (F6).
+8. **Water activity is unity** (`a_w = 1`). Standard dilute-solution convention;
+   valid over the supported domain. Not valid at high solute concentration, which
+   the domain check excludes.
 
 ### Indicator model — empirical, labelled, and range-limited
 
@@ -291,11 +379,15 @@ Phenolphthalein's pink is not derivable from the equilibrium model at this
 fidelity. Per `GOAL.md` §12 it must therefore be labelled `empirical`, never
 `calculated`.
 
-The model:
+The model, now activity-consistent (`P1-1`):
 
 ```
-[In⁻]/[HIn] = Ka_in / [H⁺]        (a ratio — one division, no logarithm, per ADR-0007)
+m_In⁻ / m_HIn = Ka_in · γ_HIn / (a_H · γ_In)
 ```
+
+with `γ_HIn = 1` (neutral species) and `γ_In` from Davies at the solution's
+`I_m`. Note that the ratio depends on the hydrogen-ion **activity**, not its
+molality — which is the correct coupling and is why `P1-1` changed this line too.
 
 The ratio drives a declared colour mixing between the acid-form and base-form
 colours, with a stated transition interval. There is **no `if pH > 8.2 then pink`
@@ -319,101 +411,146 @@ second transition above pH ~12. The micro/symbolic inspection view says so.
 
 ### Unit conventions
 
-Canonical internal units per `ADR-0004`: mol, L, mol/L, K, kPa, s. Serialized
-forms carry `{value, unit}`. `Ka` and `Kw` are stored as values, never as pKa
-from which a power would have to be computed (`ADR-0007` §1).
+The authoritative ontology is `docs/science/quantity-ontology.md`; the
+representation rules are `ADR-0004`. For this slice:
+
+| Quantity | Canonical unit |
+|---|---|
+| amount | mol |
+| water mass | kg |
+| volume | L |
+| **geometry length** | **mm** |
+| molality — **all thermodynamics** | mol/kg water |
+| molarity — taught view, display, reagent labels | mol/L solution |
+| ionic strength (molality basis) | mol/kg |
+| activity, activity coefficient, mole fraction, pH | dimensionless |
+| temperature / pressure / time | K / kPa / s |
+
+Serialized forms carry `{value, unit}`; **a missing or unknown unit is a
+validation error, never a default**. `Ka` and `Kw` are stored as thermodynamic
+**dimensionless** values. Conditional constants are derived at the converged `I`
+and are never stored as though they were thermodynamic.
 
 ### Constants and provenance
 
-| Constant | v0 value | Source status |
-|---|---|---|
-| `Kw` (25 °C) | 1.0e-14 | Standard; primary source to be pinned at M4 |
-| `Ka`(CH₃COOH) | 1.8001e-5 (pKa 4.7447) | Derived from Ka = 1.8e-5. **See open question 1.** |
-| HCl | treated as fully dissociated | Model choice, not a constant |
-| NaOH | treated as fully dissociated | Model choice, not a constant |
-| Davies `A` (25 °C) | 0.5085 | Standard; primary source to be pinned at M4 |
-| Indicator `Ka_in` | see table | **Provisional**, see above |
+| Constant | v0 value | Basis | Source status |
+|---|---|---|---|
+| `Kw` (25 °C) | 1.0e-14 | molality, dimensionless | Standard; primary source to be pinned at M4 |
+| `Ka`(CH₃COOH) | 1.8001e-5 (pKa 4.7447) | molality, dimensionless | Derived from Ka = 1.8e-5. **Open question 1.** |
+| HCl | fully dissociated | model choice | Not a constant |
+| NaOH | fully dissociated | model choice | Not a constant |
+| Davies `A` (25 °C) | **0.509 (mol/kg)^-½** | **molality basis** | Standard; primary source to be pinned at M4 |
+| Davies `b` | 0.3 kg/mol | molality basis | Empirical; primary source to be pinned at M4 |
+| `γ_HA` (neutral) | 1.0 | molality basis | **Approximation**, bounded at +0.02 `log10 γ` at I=0.1 (F6) |
+| `a_w` | 1.0 | convention | Valid over the supported domain only |
+| Indicator `Ka_in` | see table | molality, dimensionless | **Provisional**, see above |
 
-All enter the genesis event's solver configuration and are hashed into replay
-identity.
+**`A` changed from 0.5085 to 0.509** because the basis changed from molarity to
+molality. The two differ by 0.1 %, far below tolerance — but the change is
+recorded because an undeclared basis change is exactly the class of silent error
+this review was about.
+
+All of the above enter the genesis event's `solverConfig` and are hashed into
+replay identity (`ADR-0007` §8). A change to any of them is a new solver version
+(`ADR-0008` open decision 2).
 
 ### Expected precision and tolerance
 
-**Established by the spike:**
+**Re-established against the self-consistent formulation** (2026-09-11). The
+previous table was measured against the concentration-only solve and is
+superseded. Reference values come from `spikes/activity-equilibrium`.
 
 | Regime | Demonstrated agreement | Stated tolerance |
 |---|---|---|
-| Strong acid / strong base (non-stoichiometric) | <0.0001 pH vs independent closed form | ±0.005 pH |
-| Buffer region, 0.1 M and 0.01 M | 0.006 and 0.012 pH vs IUPAC | ±0.02 pH |
-| Dilute strong acid (1e-8 M) | 0.0005 pH vs closed form | ±0.005 pH |
+| Buffer region, 0.1 mol/kg and 0.01 mol/kg | 0.0061 and 0.0112 pH vs IUPAC | ±0.02 pH |
+| Strong acid / base, excess regimes | <1e-9 pH vs analytic activity relation | ±0.005 pH |
+| Half-equivalence vs `pKa + log10 γ_A` | 0.0005 pH | ±0.005 pH |
+| Dilute strong acid (1e-8 mol/kg) | 0.0003 pH vs full balance | ±0.005 pH |
+| Molality vs molarity scale choice | worst 0.00077 pH over the domain | (below tolerance) |
 
 **Stated model tolerance for v0: ±0.02 pH.**
 
-**Explicit gap.** The weak-acid **equivalence region** was NOT independently
-validated by the spike. The spike's equivalence check compared the numerical
-solve against a textbook closed form and found agreement to 0.0001 pH — but that
-validates the *solver*, not the *closed form's* assumptions. There is no
-independent reference for this region yet. **This is a real gap, it is where the
-pedagogically interesting chemistry lives, and it is closed at M4 by the PHREEQC
-oracle and not by another hand-derived formula.**
+**Explicit gap (unchanged, and now more precisely stated).** The weak-acid
+**equivalence region** still has no *independent* reference. The spike's
+equivalence figures come from analytic relations and a textbook closed form —
+both of which validate the solver's *arithmetic*, not the model's *assumptions*.
+The gap is real, it is where the pedagogically interesting chemistry lives, and
+it is closed at M4 by the PHREEQC oracle and **not** by another hand-derived
+formula.
 
 **Caveat on the oracle comparison (AC-S6).** PHREEQC ships curated log K
-databases whose values differ from ours — for example, `pKa` for acetic acid
-varies between databases and between textbook printings (see Open question 1).
-An oracle comparison therefore compares *two models*, not the solver against
-truth, and a systematic offset may legitimately reflect the constant choice
-rather than an error.
+databases whose values differ from ours, and — the point that changed with P1-1 —
+PHREEQC works in **molality**, so the comparison is now like-for-like on the
+scale as well as the constants. An oracle comparison still compares *two models*,
+not the solver against truth; a systematic offset may legitimately reflect the
+constant choice rather than an error.
 
 M4 must therefore:
 
-1. align the oracle's constants to the solver's where the database permits, and
-   document every constant it could not align;
+1. align the oracle's constants **and its activity convention** to the solver's
+   where the database permits, and document every constant it could not align;
 2. **report a systematic offset as a finding, never tune it away by adjusting
    our constants to match the oracle.** Adjusting our physics to agree with a
    database is the "make the test pass" failure `AGENTS.md` §16 prohibits;
-3. treat a *non-systematic* (shape) disagreement — a divergence that appears only
-   in one region of the curve — as a genuine defect requiring investigation
-   before M4 closes.
+3. treat a *non-systematic* (shape) disagreement — a divergence appearing in only
+   one region of the curve — as a genuine defect requiring investigation before
+   M4 closes.
 
 **Display consequence.** The UI shows at most **2 decimal places** of pH, derived
-from the ±0.02 tolerance. Showing more would be the exact "precise-looking
-numbers" failure `GOAL.md` §5.2 prohibits.
+from the ±0.02 tolerance. The taught quantity `−lg c(H⁺)` and the thermodynamic
+`pH` are displayed as **separately labelled** values and never interchangeably.
 
 ### Reference cases
 
-Independently reproducible, no UI required. Full expected values in
-`spikes/solver-validation/README.md`.
+Independently reproducible, no UI required. Full expected values and derivation
+routes in `spikes/activity-equilibrium/README.md`.
 
 | ID | Input | Expected | Source | Tol |
 |---|---|---|---|---|
-| REF-1 | 0.1 M HOAc + 0.1 M NaOAc, 25 °C | pH 4.644 | IUPAC-traceable (GOST 8.134-98) | ±0.02 |
-| REF-2 | 0.01 M HOAc + 0.01 M NaOAc, 25 °C | pH 4.713 | same | ±0.02 |
-| REF-3 | 0.1 M HCl, 0.0 / 0.5 / 0.9 eq NaOH | 1.0000 / 1.4771 / 2.2788 | Independent closed form | ±0.005 |
-| REF-4 | 0.1 M HCl, 1.0 eq NaOH | pH 7.0000 | Full charge balance | ±0.0005 |
-| REF-5 | 0.1 M HCl, 1.1 / 1.5 eq NaOH | 11.6778 / 12.3010 | Independent closed form | ±0.005 |
-| REF-6 | 1e-8 M HCl | pH 6.9788 | Independent closed form | ±0.005 |
-| REF-7 | 0.1 M HOAc, 1.0 eq NaOH | pH 8.7219 | Textbook closed form `7+½(pKa+logC)` | ±0.03 |
-| REF-8 | Charge conservation across a sweep | max \|imbalance\| < 1e-15 mol/L | Invariant | — |
+| REF-1 | 0.1 mol/kg HOAc + 0.1 mol/kg NaOAc, 25 °C | pH 4.644 | IUPAC-traceable (GOST 8.134-98) | ±0.02 |
+| REF-2 | 0.01 mol/kg HOAc + 0.01 mol/kg NaOAc, 25 °C | pH 4.713 | same | ±0.02 |
+| REF-3 | Strong acid/base, **acid** excess (f = 0.0, 0.5, 0.9) | `−log10(m_H) − log10(γ_H)` | analytic activity relation | ±1e-9 |
+| REF-4 | Strong acid/base, **base** excess (f = 1.1, 1.5) | `14 + log10(m_OH) + log10(γ_OH)` | analytic activity relation | ±1e-9 |
+| REF-5 | 0.1 M HCl, no base — **taught quantity** | `−lg c(H⁺)` = 1.0000 | definition of the taught quantity | ±0.01 |
+| REF-6 | 0.1 M HCl, no base — **thermodynamic pH** | pH 1.1064 | `−log10 a(H⁺)` | ±0.02 |
+| REF-7 | 1e-8 mol/kg HCl | pH 6.978 | Full balance incl. water | ±0.02 |
+| REF-8 | Half-equivalence, 0.05 / 0.1 mol/kg | pH = `pKa + log10(γ_A)` | analytic activity identity | ±0.005 |
+| REF-9 | Charge conservation across a sweep | max \|imbalance\| < 1e-14 mol/kg | Invariant | — |
+| REF-10 | Molality vs molarity over the domain | max difference ≤ 0.001 pH | Measured bound (F5) | — |
 
-**Rule: reference values are never generated by the code under test.** This rule
-is not theoretical — the spike's first run produced two wrong reference values
-from sloppy hand-computation, and they were caught only because the references
-came from an independent route (finding F7).
+**REF-5 and REF-6 are deliberately both present.** They are the two numbers that
+look alike and are not, and having them side by side in the reference set is what
+stops a future contributor from "fixing" one to match the other.
+
+**REF-3 and REF-4 are analytic identities, not independent validation.** They
+confirm the activity coupling is wired correctly (they caught a sign error in
+this spike's own reference), but they cannot validate the model. Only REF-1,
+REF-2, and the M4 oracle do that.
+
+**Rule: reference values are never generated by the code under test.** This is
+not theoretical. This spike's first run produced three wrong reference values,
+and its *analytic* reference had the wrong ion in the base-excess branch
+(finding F4). All were caught only because the references came from independent
+routes (`AGENTS.md` §8).
 
 ### Verification routes
 
-1. **Independent closed form** — for the strong acid/base regimes.
-2. **Published standards** — IUPAC-traceable buffer values.
-3. **PHREEQC oracle** — test-time only, run as its own CLI in batch mode with
-   `phreeqc.dat`. Provides independent multi-component validation and is the
-   designated closing mechanism for the equivalence-region gap.
-   **Fallback if PHREEQC proves infeasible to install:** the equivalence-region
-   gap stays open, downgrades to a weaker oracle (literature anchors only), and
-   the tolerance table above is annotated accordingly. It does not get quietly
-   dropped.
-4. **Invariants** — charge balance, element balance (`Na`, `Cl`, and acid-group
-   totals), mass balance, phase consistency, computed on every reference case.
-
+1. **Analytic relations** — charge balance fixes `m_H` in acid excess and `m_OH`
+   in base excess, independently of activity. Verified to <1e-9 pH.
+2. **Published standards** — IUPAC-traceable buffer values. The only route that
+   validates the *activity model itself* rather than the arithmetic.
+3. **PHREEQC oracle** — test-time only, driven as its own CLI in batch mode with
+   `phreeqc.dat`, in molality. Designated closing mechanism for the
+   equivalence-region gap.
+   **Fallback if PHREEQC proves infeasible:** the gap stays open, the oracle
+   downgrades to literature anchors only, and the tolerance table above is
+   annotated accordingly. It does not get quietly dropped.
+4. **Invariants** — charge balance, element balance (`Na`, `Cl`, acid-group
+   totals), mass balance, phase consistency, on every reference case, **on the
+   unquantized solver state** with the tolerances in `ADR-0007` §4.
+5. **Numeric-policy checks** — that `detLog10`/`detExp10` meet their stated
+   accuracy against arbitrary-precision references, and that conservation
+   survives canonicalization (`spikes/numeric-policy`).
 ## World/event design
 
 ### WorldState
@@ -428,16 +565,45 @@ WorldState {
   vessels: Vessel[]
   apparatus: Apparatus[]
   attachments: Attachment[]
-  chemistry: { byVessel: Record<VesselId, ScientificState> }
+  canonical: { byVessel: Record<VesselId, CanonicalContents> }
+}
+
+CanonicalContents {
+  waterMass: Kilogram                       // the conserved solvent quantity
+  materials: { materialId, amount: Mol }[]  // the conserved solute quantities
 }
 ```
 
-`Vessel { id, kind, capacity: Litre, contents: { materialId, amount: Mol, phase }[], geometryRef, position }`
+`Vessel { id, kind, capacity: Litre, contents: CanonicalContents, geometryRef, position }`
 
 `Apparatus { id, kind, position, state }` — a burette's `state` carries
 `initialVolume: Litre`; its reading is **derived**, not stored.
 
 `Attachment { childId, parentId, portId }`
+
+### Three levels of state, never conflated
+
+This is the fix for owner finding P1-2 and it is load-bearing (`ADR-0007` §3):
+
+| Level | Contents | Quantized | Persisted | Purpose |
+|---|---|---|---|---|
+| **Solver state** | full speciation, unquantized float64 | no | no | conservation validation |
+| **Canonical state** | `n_i` (mol), `m_w` (kg), world structure | yes | yes | defines replay equality |
+| **Derived science** | molalities, activities, `γ`, `I_m`, `pH`, species | no | no | recomputed on demand |
+
+Species, activities, and ionic strength are **derived and never quantized
+independently**. The measured consequence (`spikes/numeric-policy`): quantizing
+independent per-vessel quantities drifts `4.0e-12` over 100 transfers, while
+quantizing the transfer amount once drifts `1.4e-15` — a ~3000× difference, and
+the wrong choice is invisible in any single step.
+
+Two hashes follow from the split:
+
+- **`replayHash`** over the canonical state — defines replay equality and
+  persistence identity.
+- **`scienceHash`** over the derived science — a verification artifact that
+  detects a solver regression, since derived values are recomputed rather than
+  replayed.
 
 ### Explicit design decision: observable state is NOT persisted
 
@@ -478,7 +644,7 @@ change any computed result. This is tested (AC-R5).
 
 Sequence number is the sole ordering authority. Wall-clock timestamps exist only
 as event `meta`, and are excluded from state hashes and replay identity
-(`ADR-0002`, `ADR-0007` §6). There is no physical-time simulation: equilibria are
+(`ADR-0002`, `ADR-0007` §5). There is no physical-time simulation: equilibria are
 instantaneous, so world time is logical.
 
 ### Events (v0)
@@ -510,15 +676,16 @@ content. It becomes real when kinetics arrive.
 ### Reducer
 
 - Pure. No `Date.now()`, no `Math.random()`, no unordered iteration.
-- Quantizes all scientific output before it enters state (`ADR-0007` §4).
+- Quantizes **only canonical independent state** (amounts, water mass, and the
+  transfer amount in the event payload). Derived species, activities, and ionic
+  strength are never quantized independently (`ADR-0007` §3).
 - Rejects events whose `seq` is not `state.sequence + 1`. Replay is strictly
   sequential.
 
 ### Replay, undo/redo, branch
 
 - **Replay:** from genesis, fold the log. Defined over quantized state
-  (`ADR-0007` §5). Requirement: same quantized state hash at every committed
-  boundary.
+  (`ADR-0007` §§5–6). Requirement: same `replayHash` at every committed boundary.
 - **Undo/redo:** a cursor move over the log, not a mutation. Undo affects only
   the current branch.
 - **Branch:** `worldId` + lineage. The parent log is immutable and never appended
@@ -586,10 +753,13 @@ Governed by `docs/visual/apparatus-standard.md`. Assets are authored at M6 again
 that standard. **No placeholder art ships**, because nothing ships in this round
 and M6 is a gate rather than a task.
 
-Scene convention: orthographic, fixed camera, one world unit = one millilitre of
-liquid volume. **Every volumetric asset must publish its interior volume profile**,
-because `ObservableModel` computes liquid level from volume. Assets that cannot
-publish one are marked `non_volumetric` and accept approximate liquid level.
+Scene convention: orthographic, fixed camera, **geometry coordinates in
+millimetres (a length)**. **Every volumetric asset must publish `V(h)` and its
+inverse `h(V)`**, because `ObservableModel` obtains liquid level by calling
+`h(V)` — never by scaling a volume into a geometry axis. Assets that cannot
+publish a profile are marked `non_volumetric` and accept approximate liquid
+level. See `docs/visual/apparatus-standard.md` for the corrected contract
+(finding P2-1).
 
 ### Performance targets
 
@@ -643,11 +813,32 @@ A wrong prediction has **at least five** plausible explanations:
 hypotheses with uncertainty and narrows only with repeated, varied evidence. It
 must not label a learner with a trait (`GOAL.md` §8, `AGENTS.md` §12).
 
-### Intervention policy (v0 — deliberately minimal)
+### Architecture: four policy objects, not fixed control flow
+
+**Revised 2026-09-11 (owner review P2-2).** The previous version of this section
+wrote the v0 tuning values — 5 prompts, 3 correct, the escalation rule, the
+hypothesis list — directly into the control flow. Those are **unvalidated
+judgements**, and making them structural would mean that changing a guess
+requires changing the architecture. Full rationale in `ADR-0009`.
+
+The control loop is four named abstractions:
+
+```
+EvidenceModel      interaction record → EvidenceEvent | nothing
+BeliefUpdater      evidence + prior belief → posterior belief (with uncertainty)
+InterventionPolicy belief + world context → InterventionIntent
+FadingPolicy       evidence history → scaffold level
+```
+
+Everything below is **one configuration** of them (`aceV0Policy`), labelled
+experimental and replaceable without touching any interface.
+
+### Intervention policy (v0 configuration — deliberately minimal)
 
 Ordered by escalation. **None of them reveals the answer.**
 
-1. **Do nothing.** Always the default. One wrong prediction is not actionable.
+1. **Do nothing.** Always the default, and a first-class intent. One wrong
+   prediction is not actionable.
 2. **Offer a representation switch.** Surface the micro composition view at the
    problem point. This is *noticing* support, not answer-giving.
 3. **Offer a contrasting case.** Fork the world and show the same volume added
@@ -655,9 +846,10 @@ Ordered by escalation. **None of them reveals the answer.**
 4. **Escalate only if the learner asks, or after two consecutive predictions
    with the same *signed* error** — the specific trigger for hypothesis 1 or 2.
 
-Never: state the correct pH; state the misconception; auto-fill a prediction.
+The escalation rule is **policy data, not code structure**. Never: state the
+correct pH; state the misconception; auto-fill a prediction.
 
-### Scaffold fading and challenge mode
+### Scaffold fading and challenge mode (v0 configuration)
 
 - The prediction prompt is presented on the first 5 deliveries.
 - After 3 consecutive predictions within tolerance, it becomes an optional
@@ -665,6 +857,26 @@ Never: state the correct pH; state the misconception; auto-fill a prediction.
 - **Challenge mode disables prediction prompts, hints, and contrast offers
   entirely.** ACE still records evidence but never intervenes. Challenge mode
   must remain fully usable — the product is a simulation, not a course.
+
+`FadingPolicy` is a separate object from `InterventionPolicy`, because fading is
+a property of the learner's trajectory while intervention responds to current
+belief. Conflating them makes either impossible to tune independently
+(`ADR-0009`).
+
+### This slice does not claim educational efficacy
+
+**What it establishes:** that the control loop exists, that its boundaries hold,
+and that a learner can complete the whole experiment with ACE entirely disabled.
+
+**What it does not establish, and what must never be claimed on its behalf:**
+that any intervention improves learning; that the hypothesis set is correct or
+complete; that the fading schedule is appropriate; that the evidence model
+identifies what it claims to. `GOAL.md` §5.8 — watching an animation is not
+understanding, and by the same token a well-structured control loop is not
+pedagogy.
+
+No learning-science claim is made anywhere in this spec, and none may be inferred
+from the existence of these abstractions.
 
 ### ACE boundaries
 
@@ -797,11 +1009,19 @@ Enumerated with the detection that makes each one non-silent.
 | 8 | Local-only data accidentally uploads | Network inspection (AC-P2) |
 | 9 | Content file silently falls back to defaults | Content validation raises; no default path exists |
 | 10 | Indicator colour wrong at high pH (monoprotic approximation) | Stated validity range; out-of-range flag; test above pH 12 |
-| 11 | Quantization tie flips a hash across engines | Documented residual risk (`ADR-0007` §4); surfaces as a loud hash mismatch |
+| 11 | Quantization tie flips a hash across engines | Documented residual risk (`ADR-0007` §3); surfaces as a loud hash mismatch, not a silent wrong answer |
 | 12 | A snapshot is treated as truth | Replay with snapshots deleted (AC-R5) |
 | 13 | Solver version drift silently applied to an old world | Replay refuses mismatched solver; re-solve is separately labelled (AC-R6) |
 | 14 | Burette reading drifts from vessel state | Reading is derived; test asserts `reading == initial − Σ delivered` |
 | 15 | Volume unit confusion (mL/L, factor 1000) | Branded types (`ADR-0004`) make it a compile error; round-trip property test |
+| 16 | Activity applied **post-hoc** rather than inside the equilibrium — the defect this review found | The coupled solve is the only path; REF-3/REF-4 verify the coupling; a post-hoc implementation cannot reproduce both excess regimes |
+| 17 | Molarity/molality or the two ionic-strength bases silently mixed | Distinct opaque types (AC-U2); static check (AC-S8) |
+| 18 | Taught `−lg c(H⁺)` reported as thermodynamic pH, or vice versa | Distinct types (AC-S9); REF-5 and REF-6 sit side by side in the reference set |
+| 19 | Cross-engine variation in a transcendental flips a hash | `detLog10`/`detExp10` replace the native calls (AC-S10); perturbed-path replay (AC-R3) |
+| 20 | Derived quantities quantized independently, breaking conservation | AC-R9 design guard, which **requires the wrong strategy to fail** |
+| 21 | An ACE tuning value becomes structural, so a guess cannot be corrected | AC-A7 replaces the whole policy object without touching the control loop |
+| 22 | An old world silently re-solved under a new solver version | `ADR-0008` tiers; a mismatched solver is refused, never substituted |
+| 23 | `detExp10` evaluated outside its validated domain, degrading silently to 32.5 ulp | Domain assertion at the call site; AC-S10 requires refusal outside |
 
 ## Test plan
 
@@ -809,9 +1029,11 @@ Mapped one-to-one to acceptance criteria. Nothing below is "add tests later".
 
 | Type | Coverage |
 |---|---|
-| Unit — scientific | REF-1..REF-8; invariants; domain refusal; adversarial cases |
+| Unit — scientific | REF-1..REF-10; invariants; domain refusal; adversarial cases |
 | Property | Charge/element/mass conservation over randomized valid inputs; unit round-trip |
-| Oracle | PHREEQC CLI comparison over a swept titration; disagreement reported, not averaged |
+| Numeric policy | `detLog10`/`detExp10` accuracy vs arbitrary-precision references; conservation after canonicalization; the AC-R9 design guard; `-0`/`NaN` hash handling |
+| Compile | Branded vs opaque arithmetic fixtures (`tsc --noEmit`); ionic-strength base separation |
+| Oracle | PHREEQC CLI comparison over a swept titration, in molality with aligned constants; disagreement reported, not averaged |
 | Unit — runtime | Every reducer; event schema validation; quantization |
 | Integration | Command → validate → event → reduce → state, for each v0 command |
 | Replay | Full-log replay hash at every boundary; snapshot-deleted replay |
@@ -832,13 +1054,17 @@ Binary and verifiable. Every criterion maps to an evidence method.
 
 | ID | Criterion | Evidence |
 |---|---|---|
-| AC-S1 | REF-1..REF-5, REF-7, REF-8 pass within stated tolerances | `pytest tools/oracle`, `vitest packages/sci` |
-| AC-S2 | Charge balance residual < 1e-15 mol/L across the reference sweep | invariant test output |
+| AC-S1 | REF-1..REF-10 pass within stated tolerances, on the **self-consistent molality-basis** formulation | `vitest packages/sci`, `pytest tools/oracle` |
+| AC-S2 | Charge balance residual < 1e-14 mol/kg on the **unquantized solver state** across the reference sweep | invariant test output |
 | AC-S3 | Na, Cl, and acid-group element totals conserved across a 100-transfer sequence | conservation test + state dump |
-| AC-S4 | Inputs outside the validity domain return `MODEL_OUT_OF_DOMAIN` and produce no number | domain test matrix |
-| AC-S5 | The 1e-6 M acetic acid case matches the exact solve, and the HH divergence is reproduced | adversarial test |
-| AC-S6 | The PHREEQC oracle agrees with the runtime solver within ±0.02 pH over the swept curve, **including the equivalence region** | oracle comparison report; see the constants caveat below |
-| AC-S7 | `Ka`, `Kw`, Davies `A`, and indicator constants are traced to citable sources in `docs/research/` | provenance review; **currently open — see Open questions** |
+| AC-S4 | Inputs outside the validity domain return `MODEL_OUT_OF_DOMAIN` and produce no number — checked **both** before the solve and on the converged `I_m` | domain test matrix |
+| AC-S5 | The 1e-6 mol/kg acetic acid case matches the exact solve, and the HH divergence (0.65 pH) is reproduced | adversarial test |
+| AC-S6 | The PHREEQC oracle agrees within ±0.02 pH over the swept curve, **including the equivalence region**, with constants **and the molality basis** aligned | oracle comparison report; see the caveat above |
+| AC-S7 | `Ka`, `Kw`, Davies `A` and `b`, `γ_HA`, `a_w`, and the indicator constants are traced to citable sources in `docs/research/constants-provenance.md` | provenance review; **currently open — see Open questions** |
+| AC-S8 | Every thermodynamic calculation runs on the **molality** basis; no `MolPerLitre` value reaches scientific-core internals | static check + type test on the `packages/sci` public surface |
+| AC-S9 | `−lg c(H⁺)` (taught) and `pH = −log₁₀ a(H⁺)` (thermodynamic) are distinct types, both computed, neither assignable to the other | compile fixture + named reference cases REF-5/REF-6 |
+| AC-S10 | `detLog10` and `detExp10` meet their stated accuracy (≤1.5 ulp in domain) against arbitrary-precision references, and refuse outside their validated domain | `spikes/numeric-policy` promoted to a package test |
+| AC-S11 | The outer residual is strictly increasing in `m_H` across a sweep **including the domain boundary**, machine-checked | monotonicity sweep test |
 
 ### Runtime
 
@@ -846,12 +1072,15 @@ Binary and verifiable. Every criterion maps to an evidence method.
 |---|---|---|
 | AC-R1 | Replaying the serialized log produces the same quantized state hash at every committed boundary | replay test |
 | AC-R2 | Replay is byte-identical on a second run in the same engine | repeat-run test |
-| AC-R3 | Replaying the same log under a perturbed arithmetic path yields the same quantized hash | quantization test (`ADR-0007` open question 1) |
+| AC-R3 | Replaying the same log under a perturbed arithmetic path yields the same quantized hash | cross-engine proxy test (`ADR-0007` §6) |
 | AC-R4 | After arbitrary child-branch operations, the parent's state hash is unchanged | branch-isolation test |
 | AC-R5 | Deleting all snapshots and replaying yields identical results | snapshot-independence test |
 | AC-R6 | Replay under a mismatched solver version is refused; re-solve is offered and labelled as a new world | solver-identity test |
 | AC-R7 | 500-event replay completes in < 2 s | benchmark |
 | AC-R8 | World export → import round-trips to an identical state hash | persistence test |
+| AC-R9 | **Design guard.** Conservation after canonicalization ≤ 1e-13 relative over 100 transfers, **and** the "quantize each vessel independently" strategy demonstrably fails this threshold (measured 4.0e-12 vs 1.4e-15) | regression test derived from `spikes/numeric-policy` |
+| AC-R10 | The reducer quantizes **only** canonical independent state; no derived quantity is ever quantized independently | static check + review of the single quantization call site |
+| AC-R11 | `canonicalJson` normalizes `-0` to `0` and rejects `NaN`/`±Infinity` | unit test with the adversarial values |
 
 ### Representation
 
@@ -860,9 +1089,10 @@ Binary and verifiable. Every criterion maps to an evidence method.
 | AC-V1 | `packages/render` has no import path to `packages/sci`; the build fails if one is added | dependency-rule test (deliberate violation fixture) |
 | AC-V2 | Indicator colour is continuous in the computed ratio, with no threshold branch | observable-model unit test |
 | AC-V3 | No hard-coded chemical colour literal exists in the render path | lint / grep-based test fixture |
-| AC-V4 | Liquid level is computed from volume and the vessel's published volume profile | observable-model test against a fixture |
+| AC-V4 | Liquid level is obtained by calling the vessel's declared `h(V)`; `V(h)` and `h(V)` are mutually consistent within a stated tolerance | observable-model test against a fixture |
 | AC-V5 | Screenshots at all four named viewports match the approved baseline | visual regression + owner review |
 | AC-V6 | pH is displayed to at most 2 decimal places | DOM assertion in Playwright |
+| AC-V7 | No geometry coordinate, stroke, or offset carries a volume; all are `Millimetre` | type check + `docs/visual/apparatus-standard.md` review checklist |
 
 ### ACE
 
@@ -873,6 +1103,18 @@ Binary and verifiable. Every criterion maps to an evidence method.
 | AC-A3 | After one wrong prediction, ≥2 learner hypotheses remain with non-zero uncertainty | ACE model test |
 | AC-A4 | Scaffold fades after 3 consecutive in-tolerance predictions | ACE state test |
 | AC-A5 | In challenge mode, no intervention of any kind is emitted, and the flow remains usable | Playwright challenge-mode flow |
+| AC-A6 | `packages/ace` has no import path to `packages/render` or `packages/sci`; interventions leave ACE only as `InterventionIntent` data | dependency-rule test with a deliberate violation fixture |
+| AC-A7 | Replacing `aceV0Policy` with a second, different policy object requires **no change to the control loop** | run the loop against two policies; assert identical code path |
+| AC-A8 | No reachable `InterventionIntent` path constructs a value containing the correct pH | structural assertion over all policy branches |
+| AC-A9 | `BeliefUpdater` retains an explicit `unknown` mass after one wrong prediction (it cannot be forced to a point estimate) | ACE model test |
+
+### Units and representation
+
+| ID | Criterion | Evidence |
+|---|---|---|
+| AC-U1 | Branded types reject a plain `number` and cross-unit assignment; opaque types additionally reject arithmetic on the value itself | `tsc --noEmit` on the fixture files, as in `spikes/numeric-policy` |
+| AC-U2 | `IonicStrengthMolal` and `IonicStrengthMolar` cannot be assigned to or compared with each other | compile fixture |
+| AC-U3 | Every serialized quantity carries a unit; a missing or unknown unit is a rejection, not a default | schema round-trip + negative test |
 
 ### Privacy
 
@@ -933,6 +1175,31 @@ Only questions that genuinely need the owner.
    It is what the student is taught, and showing it labelled alongside the exact
    solve is unusually good teaching. Showing it unlabelled would be misinformation.
    **Recommendation: show it, labelled, with the exact solve adjacent.**
+5. **(New, from P1-1 — the most consequential product decision in this spec.)
+   How should the product present thermodynamic pH vs the taught `−lg c(H⁺)`?**
+   For 0.1 M HCl these are **1.1064** and **0.9993**. A Chinese high-school
+   student shown "pH = 1.11" for 0.1 M HCl will reasonably believe the software is
+   wrong, because the syllabus defines pH as `−lg c(H⁺)`. Three options:
+   - **(a) Show the taught quantity by default, with the thermodynamic pH one
+     click away and the difference explained.** Honest, syllabus-aligned, and
+     turns the gap into a teaching asset (`GOAL.md` §5.1, §1).
+   - **(b) Show both side by side always.** Maximally honest, but likely to
+     confuse a student who only needs the syllabus quantity.
+   - **(c) Show the thermodynamic pH as "the" pH.** Scientifically defensible and
+     pedagogically hostile; contradicts `GOAL.md` §3's obligation not to design
+     only for advanced students.
+
+   **Recommendation: (a).** The display-precision rule and the labeling language
+   depend on this choice, so it must be settled before M5. This is a product
+   decision, not a technical one, and the spec does not make it unilaterally.
+6. **(New, from P1-2.)** Should `detLog10`/`detExp10` be implemented in
+   TypeScript as in the spike, or via a WASM/fdlibm build? The spike shows the
+   TypeScript route is feasible at 1.5 ulp; WASM would be faster but adds a build
+   artifact and a second toolchain. **Recommendation: TypeScript**, consistent
+   with keeping the v0 runtime free of extra native artifacts. Confirm at M4.
+7. **(New, from P2-3.)** `ADR-0008` lists five open decisions on persisted-world
+   solver compatibility, including the version support window. These need owner
+   input before M8, not now.
 
 ## What this spec does not claim
 
@@ -941,3 +1208,22 @@ been evaluated. The `±0.02` tolerance is established by an isolated spike for t
 buffer and strong-acid regimes only, and **the weak-acid equivalence region
 remains independently unvalidated**. Nothing here should be read as a claim that
 acid-base titration works.
+
+### What changed in the 2026-09-11 revision
+
+Owner review found six real defects. Each was fixed in place rather than
+noted for later:
+
+| Finding | What was wrong | Where fixed |
+|---|---|---|
+| **P1-1** | The spec claimed an activity model but solved concentration-only, applying Davies post-hoc | §Governing model rewritten to a self-consistent `(m_H, I)` solve; REF table rebuilt; `spikes/activity-equilibrium` |
+| **P1-2** | Reproducibility was ranked above correctness, and it constrained the physics | `ADR-0007` rewritten; priority order stated; `detLog10`/`detExp10` replace native calls; canonical/derived state split |
+| **P1-3** | Molarity, molality, activity, and ionic strength were conflated | `docs/science/quantity-ontology.md` created; `ADR-0004` rewritten |
+| **P1-4** | The branded-type guarantee was false as written | Tested by compilation; split into opaque vs branded; `ADR-0004` states the real guarantee |
+| **P2-1** | A geometry axis carried a volume (mL) | `docs/visual/apparatus-standard.md` corrected to `mm` + `V(h)`/`h(V)` |
+| **P2-2** | ACE tuning guesses were structural | `ADR-0009`; four abstractions; `aceV0Policy` as data; explicit non-claim on efficacy |
+| **P2-3** | No policy for a world whose solver version is gone | `ADR-0008`; three availability tiers |
+
+**The equivalence-region gap is unchanged and is still open.** The revision did
+not close it; it made it more precisely stated. Only the M4 PHREEQC oracle can
+close it.

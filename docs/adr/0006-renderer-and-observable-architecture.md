@@ -58,10 +58,10 @@ Renderer               packages/render/pixi
 | Visual element | Owner | Notes |
 |---|---|---|
 | Glassware geometry, stroke, highlights | Renderer | Pure drawing |
-| Liquid level in a vessel | ObservableModel | Derived from volume and vessel geometry |
+| Liquid level in a vessel | ObservableModel | Derived by calling the vessel's declared `h(V)`; never by scaling a volume into a geometry axis |
 | Liquid fill geometry | Renderer | Consumes level from RenderState |
 | Indicator colour | ObservableModel | Empirical model, see below |
-| pH readout text | ObservableModel (value) + Renderer (formatting) | Precision rule from `ADR-0007` |
+| pH readout text | ObservableModel (value) + Renderer (formatting) | Precision rule from `ADR-0004` §5 and `SPEC-0001` |
 | pH-volume curve points | ObservableModel | Derived from the scientific state sequence |
 | Curve axes, gridlines, labels | Renderer | Pure presentation |
 | Burette reading | ObservableModel | Derived: `initial − Σ delivered` |

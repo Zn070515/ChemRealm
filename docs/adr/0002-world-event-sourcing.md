@@ -90,17 +90,32 @@ explicit model assumption, not an accident.
 
 ### Replay
 
-Replay is defined over **quantized** scientific state (`ADR-0007`), not raw
-doubles:
+Replay is defined over the **quantized canonical state** (`ADR-0007` §§3–5), not
+raw doubles:
 
 > Replaying a serialized event log from the same genesis world, the same schema
-> version, and the same solver configuration produces the same accepted world
-> state hash at every committed event boundary.
+> version, and the same solver configuration produces the same `replayHash` at
+> every committed event boundary.
+
+**What the canonical state is** (revised 2026-09-11): the **independent**
+conserved quantities only — material amounts and water mass — plus world
+structure. Species concentrations, activities, and ionic strength are **derived**
+and are never quantized independently. Quantizing derived quantities separately
+accumulates conservation drift; the spike measured `4.0e-12` for that approach
+against `1.4e-15` for quantizing independent amounts (`spikes/numeric-policy`).
+
+A second hash, `scienceHash`, covers the derived science and exists to detect a
+solver regression — since the reducer **recomputes** chemistry rather than
+replaying stored answers.
 
 Replay equivalence is *conditional on solver identity*. A world solved by
 solver `acidbase-exact@1.0.0` is not replay-equivalent under
 `phreeqc-adapter@2.1.0`, and the runtime must refuse to silently substitute one.
 The solver identity is part of the genesis event and therefore part of the log.
+
+**What happens when that solver version no longer ships** is a separate question
+the original model of this ADR left open; it is answered by `ADR-0008`'s three
+availability tiers.
 
 ### Snapshots
 

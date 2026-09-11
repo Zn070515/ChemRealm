@@ -1,0 +1,10 @@
+{
+  "name": "chemrealm-spike-numeric-policy",
+  "private": true,
+  "type": "module",
+  "description": "SPIKE - not a production path. Tests the branded-type guarantee (P1-4) and the deterministic-numeric policy (P1-2).",
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.9.2"
+  }
+}

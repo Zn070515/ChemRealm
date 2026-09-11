@@ -1,11 +1,19 @@
 # PLAN-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** Ready to execute (pending `SPEC-0001` acceptance)
-- **Date:** 2026-09-11
+- **Status:** Ready to execute (pending `SPEC-0001` acceptance, revision 2)
+- **Date:** 2026-09-11 (revised after owner review remediation)
 - **Implements:** `docs/specs/SPEC-0001-world-foundation-acid-base-titration.md`
-- **Related ADRs:** 0001–0007, all `Proposed`
+- **Related ADRs:** 0001–0009, all `Proposed`. Load-bearing here: 0004 (revised),
+  0007 (revised), 0008, 0009.
 - **Audience:** an agent that did not participate in the design. Nothing below
   assumes prior context beyond the repository documents.
+
+> **Revision note.** M1, M2, M4, M8, and M9 changed materially after owner
+> review. The scientific formulation is now **self-consistent in activity** and
+> on the **molality** basis; the numeric policy now permits the transcendentals
+> the model needs and ships deterministic implementations of them; canonical
+> state stores independent amounts rather than species. **An agent executing an
+> earlier copy of this plan would build the wrong thing.**
 
 ## How to read this plan
 
@@ -22,9 +30,18 @@ S3. There is no point in this plan where S2 is allowed to be reported as done.
 
 ## Prerequisite
 
-`SPEC-0001` and ADRs 0001–0007 must be `Accepted` before M0 begins. Building
+`SPEC-0001` and ADRs 0001–0009 must be `Accepted` before M0 begins. Building
 against a `Proposed` ADR is exactly the "assume the decision is made" failure the
 ADR status vocabulary exists to prevent.
+
+Additionally, the owner must resolve before their milestones:
+
+| Before | Decision needed |
+|---|---|
+| M4 | `SPEC-0001` open question 1 — which acetic acid `Ka` is authoritative (enters replay identity) |
+| M4 | `SPEC-0001` open question 6 — TypeScript vs WASM for `detLog10`/`detExp10` |
+| M5 | `SPEC-0001` open question 5 — how the product presents thermodynamic pH vs the taught `−lg c(H⁺)` |
+| M8 | `ADR-0008`'s five open decisions, especially the solver version support window |
 
 ## Milestone map
 
@@ -162,31 +179,56 @@ All of them. This is the milestone that creates the public surface.
 
 ### Implementation
 
-1. Branded quantity types per ADR-0004: `Mol`, `Litre`, `MolPerLitre`, `Kelvin`,
-   `Kilopascal`, `Gram`, `Second`, `IonicStrength`, plus `Ph` as a
-   **non-arithmetic** type with no operators defined.
-2. Constructors that reject `NaN`, infinities, and negative values for
-   non-negative quantities. `litre(-1)` throws.
-3. **One** conversion module. No `* 1000` anywhere else in the repository.
-   Round-trip conversions for every supported unit.
-4. zod schemas for every contract above, with `schemaVersion` fields.
-5. `parseQuantity` **rejects a missing unit** and **rejects an unknown unit**.
-   Neither falls back to a default (`SPEC-0001` AC-C2).
-6. JSON Schema emission into `packages/schema/dist/json-schema/` for the Python
-   oracle. Add a CI check that the emitted artifact is current.
-7. A no-op `1 → 1` migration registered in a migration registry, so the harness
-   exists before it is needed (`SPEC-0001` §Rollout/migration).
+**Read `docs/science/quantity-ontology.md` first.** It defines the quantities;
+this milestone defines their representation.
+
+1. **Two representations, chosen by whether arithmetic is meaningful**
+   (`ADR-0004` §2, informed by the `spikes/numeric-policy` measurements):
+   - **Opaque** (`interface` with a `unique symbol` key, not `number & …`):
+     `Ph`, `Activity`, `ActivityCoefficient`, `IonicStrengthMolal`,
+     `IonicStrengthMolar`, `MoleFraction`. Arithmetic on these must be a **type
+     error**, verified by a compile fixture.
+   - **Branded** (`number & { __unit }`): `Mol`, `Kilogram`, `Litre`,
+     `Millimetre`, `MolPerKilogram`, `MolPerLitre`, `Kelvin`, `Kilopascal`,
+     `Second`.
+   Each branded unit needs a **distinct brand key**. The spike found a real bug
+   where `Mol` and `Litre` shared a symbol and became mutually assignable.
+2. **Named operators** returning branded types (`sumAmounts`, `scaleVolume`, …)
+   so arithmetic results can be stored. No scientific-core public signature
+   accepts a bare `number` where a physical quantity is meant.
+3. Constructors reject `NaN`, infinities, and negatives where non-physical.
+4. **One** conversion module. No `* 1000` elsewhere. Round-trip conversions for
+   every unit, including the molality↔molarity path, which needs a **sourced
+   solution density from the scenario** — never an invented model.
+5. zod schemas for every contract, with `schemaVersion`.
+6. `parseQuantity` rejects a missing **and** an unknown unit. No defaults
+   (`SPEC-0001` AC-U3).
+7. JSON Schema emission for the Python oracle, with a CI drift check.
+8. A no-op `1 → 1` migration in a registry, so the harness predates its need.
 
 ### Tests and evidence
 
 | Test | Proves |
 |---|---|
-| Unit round-trip property test for every unit | Conversion module is correct |
-| `litre(-1)`, `molPerLitre(NaN)` throw | Constructors validate |
-| `parseQuantity` rejects `{}` and `{"value":1,"unit":"furlong"}` | AC-C2 |
-| Quantity arithmetic is unavailable for `Ph` (compile-failure fixture) | pH cannot be misused |
+| Unit round-trip property test for every unit, incl. molality↔molarity | Conversion module is correct |
+| Compile fixture: `Ph + Ph` and `Ph / 2` are type errors | AC-U1 — opaque truly blocks arithmetic |
+| Compile fixture: `molA + litreB` **is legal**; its result cannot be stored as a quantity | AC-U1 — the branded guarantee is the honest one, not the overstated one |
+| Compile fixture: `IonicStrengthMolal` vs `IonicStrengthMolar` neither assignable nor comparable | AC-U2 |
+| Compile fixture: `Mol` and `Litre` are not mutually assignable | Catches the shared-brand-key bug |
+| `litre(-1)`, `molPerKilogram(NaN)` throw | Constructors validate |
+| `parseQuantity` rejects `{}` and `{"value":1,"unit":"furlong"}` | AC-U3 |
+| `Millimetre` is the geometry type; no volume-typed geometry field exists | AC-V7 |
 | Golden JSON Schema snapshot | Contract drift is visible in review |
 | Migration registry runs `1 → 1` on a fixture world | Harness works |
+
+### Note on what this milestone does **not** claim
+
+Branded types do **not** prevent unit-mixing arithmetic; the spike measured that
+they do not. The guarantee is that a plain number cannot be assigned to a
+quantity, cross-unit assignment is blocked, and arithmetic results cannot be
+stored back without an explicit conversion — plus the API-boundary rule above.
+Writing the guarantee any more strongly would be a false claim in the document
+whose job is preventing false claims.
 
 ### Stop condition
 
@@ -229,28 +271,34 @@ M4 can supply the real one without touching this package.
 
 ### Implementation
 
-1. `quantize(v) = Number(v.toPrecision(12))` in `hash.ts`, applied at the
-   world boundary (ADR-0007 §4). One implementation, one call site per quantity.
-2. `canonicalJson`: sorted keys, fixed number formatting. Test against two
-   structurally identical states built in different orders.
-3. Reducer enforces `event.seq === state.sequence + 1`; strict sequential replay.
-4. `stateHash` excludes wall-clock, cursor position, and all presentation fields
-   (ADR-0007 §6).
-5. `branch.ts` freezes the fork-point state and returns a child whose reduction
-   path allocates. Add a **runtime** assertion in dev builds that the parent
-   object graph is unchanged after a child mutation — a test that only compares
-   hashes at the end can miss a transient mutation.
-6. Snapshot policy with the invariant that snapshots are a cache: replay must
-   produce identical results with snapshots deleted.
-7. Move the `TransferCommitted` handling behind an injected solver interface so
-   M2 is testable before M4 exists.
+1. **`CanonicalContents` is the quantized persisted state**: `waterMass` and
+   material `amount`s only. Species, activities, and ionic strength are
+   **derived** and never quantized independently (`ADR-0007` §3). This is the
+   fix for the conservation defect the spike measured.
+2. `quantize(v) = Number(v.toPrecision(12))`, **one** call site, applied to
+   canonical independent state and to the transfer amount in the event payload.
+3. `canonicalJson`: sorted keys, specified shortest round-trip formatting,
+   **normalize `-0` to `0`**, **reject `NaN`/`±Infinity`**.
+4. Reducer enforces `event.seq === state.sequence + 1`; strict sequential replay.
+5. **Two hashes** (`ADR-0007` §5): `replayHash` over canonical state,
+   `scienceHash` over derived science. Exclude wall-clock, cursor, presentation.
+6. `branch.ts` freezes the fork-point state; add a **runtime** dev assertion that
+   the parent object graph is unchanged after a child mutation — an end-of-test
+   hash comparison can miss a transient mutation.
+7. Snapshot policy with the invariant that snapshots are a cache.
+8. `TransferCommitted` handling goes behind an **injected** solver interface, so
+   M2 is testable with a stub before M4 exists.
 
 ### Tests and evidence
 
 | Test | Proves |
 |---|---|
 | Replay of a 500-event log: hash identical at every boundary, run twice | AC-R1, AC-R2 |
-| Same log replayed through a **perturbed arithmetic path** (e.g. an extra `+0.0` and a different but mathematically equivalent grouping) yields the same quantized hash | AC-R3 — this is the actual cross-engine proxy |
+| Same log replayed through a **perturbed arithmetic path** (an extra `+0.0`, a different but equivalent grouping) yields the same quantized hash | AC-R3 — the cross-engine proxy |
+| **Conservation after canonicalization ≤ 1e-13 over 100 transfers** | AC-R9 |
+| **The "quantize each vessel independently" strategy FAILS the above** (measured 4.0e-12 vs 1.4e-15) | AC-R9 design guard — the wrong design must be caught here, not in production |
+| Static check: no derived quantity passes through the quantization call site | AC-R10 |
+| `canonicalJson` normalizes `-0`, rejects `NaN`/`Infinity` | AC-R11 |
 | Fork, mutate child heavily, assert parent hash unchanged | AC-R4 |
 | Replay with all snapshots deleted | AC-R5 |
 | 500-event replay under 2 s | AC-R7 |
@@ -360,38 +408,70 @@ identity.
 
 ### Implementation
 
-1. Port the spike's formulation. **Constraint (ADR-0007 §1): the root-find uses
-   only `+ - * /` and comparisons.** No `Math.pow`, no `Math.log`, no `sqrt`.
-   `sqrt` appears only in Davies, in the activity correction.
-2. `Ka` stored as a value; never derive `10^-pKa`. Add a lint ban on `Math.pow`
-   and `Math.log` inside `packages/sci` (the log calls belong to presentation).
-3. Constants pinned with sources into `docs/research/constants-provenance.md`,
-   resolving `SPEC-0001` AC-S7 and open question 1. **Owner sign-off required**
-   before M4 closes, since these enter replay identity.
-4. Reference cases loaded from `packages/sci/test/reference/*.json`. **These files
-   are hand-authored from the published sources and are never written by the code
-   under test** — the spike's own harness produced two wrong reference values on
-   the first run (finding F7), and only the independent derivation caught them.
-5. PHREEQC oracle: drive the **PHREEQC CLI in batch mode**, generating `.pqi`
-   input and parsing the selected output. Do not use `phreeqpython` — its license
-   is unverified (`docs/research/scientific-solver-landscape.md`). Vendor the
-   database locally rather than fetching at runtime.
-6. Cross-check the TS solver against PHREEQC over a **swept titration curve**
-   including the equivalence region. **Report disagreement; never average it.**
+**This milestone was re-scoped by the P1-1 and P1-2 remediation. Read the revised
+`SPEC-0001` §Scientific design and `spikes/activity-equilibrium/README.md` before
+starting; the concentration-only formulation they describe is superseded.**
+
+1. Implement the **self-consistent** solve: unknowns `(m_H, I)`, nested
+   bisection, activity coefficients inside the equilibrium constraints.
+   **Molality basis throughout.**
+2. `deterministic-math.ts`: `detLog10` and `detExp10`, built only from
+   `+ - * /` and exactly-specified integer operations. Port from
+   `spikes/numeric-policy/check.ts`. **Improve `detExp10`'s argument reduction
+   to a two-part Cody–Waite constant** and re-measure: the spike's single-constant
+   version is 1.5 ulp in domain but **32.5 ulp outside it**. Until improved, the
+   function must **refuse** outside its validated domain.
+3. `Math.sqrt` is permitted directly — correctly rounded since the July 2024 spec
+   change, measured at 0.000 ulp. Lint-ban native `Math.log10`, `Math.pow`, and
+   `Math.exp` inside `packages/sci` and `packages/world`.
+4. Inner ionic-strength loop: replace the spike's damped fixed point with a
+   **bracketed** solve, so convergence is guaranteed rather than observed.
+5. Constants pinned with sources into `docs/research/constants-provenance.md`,
+   resolving AC-S7 and open question 1. **Owner sign-off required** — these enter
+   replay identity. Note `A` changed 0.5085 → **0.509** with the basis change.
+6. Reference cases from `packages/sci/test/reference/*.json`, **hand-authored from
+   published sources and never written by the code under test.** The spike's first
+   run produced three wrong reference values and had the wrong ion in its
+   base-excess analytic relation (F4) — all caught only by independent derivation.
+7. PHREEQC oracle: **CLI in batch mode**, in **molality** with constants aligned.
+   Not `phreeqpython` (license unverified). Vendor the database locally.
+8. Cross-check over a swept curve including the equivalence region. **Report
+   disagreement; never average it.**
+9. **Both hydrogen-ion quantities** (`−lg c(H⁺)` and `pH = −log10 a(H⁺)`) emitted
+   as distinct types and covered by REF-5 and REF-6.
 
 ### Tests and evidence
 
 | Test | Proves |
 |---|---|
-| REF-1..REF-8 within stated tolerances | AC-S1 |
-| Charge residual < 1e-15 mol/L over the sweep | AC-S2 |
+| REF-1..REF-10 within stated tolerances | AC-S1 |
+| Charge residual < 1e-14 **mol/kg** over the sweep, on the unquantized solver state | AC-S2 |
 | Element totals (Na, Cl, acid group) conserved over 100 transfers | AC-S3 |
-| Domain matrix: T≠25 °C, I=0.6, polyprotic, non-aqueous → `MODEL_OUT_OF_DOMAIN` | AC-S4 |
-| 1e-6 M acetic acid: exact solve matched; HH divergence (0.65 pH) reproduced and asserted | AC-S5 |
-| PHREEQC vs TS within ±0.02 pH **including the equivalence region** | AC-S6 |
+| Domain matrix: T≠25 °C, `I_m`=0.6, polyprotic, non-aqueous → `MODEL_OUT_OF_DOMAIN`; **and the converged `I_m` re-checked** | AC-S4 |
+| 1e-6 mol/kg acetic acid: exact solve matched; HH divergence (0.65 pH) reproduced | AC-S5 |
+| PHREEQC vs TS within ±0.02 pH **including the equivalence region**, in molality with aligned constants | AC-S6 |
 | Every constant has a citable source in `constants-provenance.md` | AC-S7 |
-| Indicator ratio is continuous across the transition; no threshold branch | AC-V2 precursor |
+| No `MolPerLitre` value reaches `packages/sci` internals | AC-S8 |
+| `−lg c(H⁺)` and `pH` are distinct types; REF-5 and REF-6 both pass and differ by the expected amount | AC-S9 |
+| `detLog10`/`detExp10` ≤1.5 ulp in domain vs arbitrary-precision; **refuse outside domain** | AC-S10 |
+| Outer residual strictly increasing in `m_H` across a sweep including the domain boundary | AC-S11 |
+| Indicator ratio is activity-coupled, continuous across the transition, no threshold branch | AC-V2 precursor |
 | Above pH 12, the monoprotic indicator approximation reports reduced validity | `SPEC-0001` failure mode 10 |
+
+### Stop condition (revised)
+
+AC-S1 through AC-S11 evaluated.
+
+**Three specific conditions require stopping rather than proceeding:**
+
+1. **If a post-hoc activity correction can reproduce REF-3 and REF-4** (both
+   excess regimes, to <1e-9), the self-consistent solve is not actually being
+   exercised and M4 is not doing what it claims. Investigate before continuing.
+2. **If PHREEQC disagrees beyond ±0.02 pH in the equivalence region**, stop and
+   investigate. A disagreement is a finding, not an inconvenience.
+3. **If `detExp10` cannot be brought within 2 ulp across the full band it is
+   called on**, either widen the reduction or narrow the domain — but say which,
+   and test the refusal.
 
 ### The PHREEQC fallback
 
@@ -450,7 +530,7 @@ packages/render/src/state/scene.ts            ObservableModel → RenderState
 1. `level.ts` consumes a vessel's published interior volume profile
    (`docs/visual/apparatus-standard.md` §1). Fixture vessels provide profiles.
 2. `color.ts` consumes `Ka_in / [H⁺]` — **one division, no logarithm**
-   (ADR-0007 §2). Colour mixing between declared acid-form and base-form
+   (`SPEC-0001` §Indicator model). Colour mixing between declared acid-form and base-form
    endpoints. No threshold branch.
 3. `burette.ts` derives `reading = initialVolume − Σ delivered`. Add the
    invariant test that it always equals that expression (failure mode 14).
@@ -645,13 +725,19 @@ IndexedDB record shapes; `chemrealm.export` v1; migration registry entries.
 | Test | Proves |
 |---|---|
 | Fork, mutate child heavily, parent hash unchanged, in the browser | AC-R4 end to end |
-| Reload the page; world replays to the same hash | Persistence |
-| Export → import → identical state hash | AC-R8 |
+| Reload the page; world replays to the same `replayHash` | Persistence |
+| Export → import → identical `replayHash` | AC-R8 |
 | Export bundle contains no identifier field and declares evidence inclusion | AC-P4 |
 | IndexedDB inspection: no identifier, name, or contact field in any store | AC-P3 |
 | Replay under a mismatched solver version is refused; re-solve offered and labelled as a new world | AC-R6 |
+| **Tier B**: with the creating solver version deliberately made unavailable, the world opens marked `re-solved`, keeps both provenance records, and does not overwrite the original | `ADR-0008` §2 |
+| **Tier C**: with the model unsupported entirely, the world opens read-only, states why, and remains exportable | `ADR-0008` §2 |
 | Simulated quota exhaustion leaves existing worlds intact | No-corruption requirement |
 | Migration failure leaves the world untouched and reports it | Loud, non-destructive failure |
+
+**Before starting M8, the five open decisions in `ADR-0008` must be settled by
+the owner** — in particular the solver version support window, which determines
+how often Tier B is reached in practice.
 
 ### Stop condition
 
@@ -673,10 +759,12 @@ importantly — demonstrates the *restraint* the loop requires.
 ### Files and modules
 
 ```
-packages/ace/src/evidence.ts       evidence event types
-packages/ace/src/hypotheses.ts     the ≥5 hypotheses, with uncertainty
-packages/ace/src/policy.ts         intervention selection and escalation
-packages/ace/src/fade.ts           scaffold-fading state machine
+packages/ace/src/evidence.ts       EvidenceModel: interaction -> EvidenceEvent | nothing
+packages/ace/src/belief.ts         BeliefUpdater: belief over hypotheses, WITH uncertainty
+packages/ace/src/intent.ts         InterventionIntent (plain data)
+packages/ace/src/intervention.ts   InterventionPolicy
+packages/ace/src/fade.ts           FadingPolicy (separate from intervention)
+packages/ace/src/v0Policy.ts       aceV0Policy - the experimental configuration
 packages/ace/src/store.ts          ACE-local persistence (separate DB)
 apps/web/src/panels/predict.ts     prediction UI
 apps/web/src/panels/contrast.ts    branch-based contrasting case
@@ -684,28 +772,43 @@ apps/web/src/panels/contrast.ts    branch-based contrasting case
 
 ### Contracts changed
 
-ACE evidence events. **No world contract changes** — this is a boundary test.
+`EvidenceEvent`, the belief representation, `InterventionIntent`, `AcePolicy`.
+**No world contract changes** — this milestone is a boundary test.
 
 ### Implementation
 
-1. Evidence events per `SPEC-0001` §Learning design. Never written to the world log.
-2. Hypothesis set with **explicit uncertainty**. The model must be able to
-   represent "I don't know which of five things happened", because that is the
-   honest state after one wrong prediction.
-3. Intervention escalation: nothing → representation switch → contrasting branch
-   → escalate only on learner request or two consecutive same-signed errors.
-   **No intervention reveals the answer.**
-4. Fading: prompt on the first 5 deliveries; after 3 consecutive in-tolerance
-   predictions, becomes an opt-in toggle defaulting off.
-5. **Challenge mode: no intervention of any kind, fully usable.**
-6. ACE reads world state; it never calls the solver to produce an answer for the
-   learner and never writes to the world log.
-7. **ACE emits `InterventionIntent` as plain data; `apps/web` maps it to UI.**
-   ACE must not import `packages/render` (ADR-0001, `forbidden: ace → render`).
-   The app decides whether to honour an intent and may decline. This keeps every
-   intervention assertable as a data structure rather than as a rendered widget,
-   which is what makes AC-A5 ("challenge mode emits zero interventions")
-   mechanically checkable.
+**Read `ADR-0009` first.** The four abstractions are the deliverable; the v0
+numbers are not.
+
+1. `EvidenceModel` is the **only** place the `GOAL.md` §8 evidence/noise rule
+   lives, and it must be able to return **nothing**. A learner playing freely
+   produces no learner inference by construction, not by a downstream filter.
+2. `BeliefUpdater` returns a belief that can express **`unknown` as a first-class
+   state**. If the type cannot say "I do not know which of these happened", the
+   honest state after one wrong prediction cannot be stored and the system is
+   forced to guess. No point estimates; no permanent labels (`GOAL.md` §8).
+3. `InterventionPolicy` returns **data**, never a rendering action. Escalation:
+   nothing → representation switch → contrasting branch → only on learner request
+   or two consecutive same-signed errors. **No reachable path contains the
+   correct answer.**
+4. `FadingPolicy` is **separate** from intervention. v0: prompt on the first 5
+   deliveries; after 3 consecutive in-tolerance predictions it becomes an opt-in
+   toggle defaulting off.
+5. **All of the above numbers live in `aceV0Policy`,** with a comment stating
+   they are an unvalidated guess. Changing them must not touch the loop.
+6. **Challenge mode: no intervention of any kind, fully usable.**
+7. ACE reads world state; it never calls the solver for the learner and never
+   writes to the world log.
+8. **ACE emits `InterventionIntent` as plain data; `apps/web` maps it to UI.**
+   `ace → render` and `ace → sci` are forbidden imports (`ADR-0001`). The app
+   decides whether to honour an intent and may decline.
+
+### What M9 does not claim
+
+The slice proves the control loop exists and its boundaries hold. It does **not**
+prove that any intervention improves learning, that the hypothesis set is correct
+or complete, or that the fading schedule is appropriate. No learning-science
+claim may be attached to this milestone (`GOAL.md` §5.8, `ADR-0009`).
 
 ### Tests and evidence
 
@@ -717,7 +820,10 @@ ACE evidence events. **No world contract changes** — this is a boundary test.
 | 3 consecutive in-tolerance predictions flip the prompt to optional | AC-A4 |
 | Challenge mode emits zero interventions and the flow completes | AC-A5 |
 | Sandbox play (10 random deliveries, no prediction) produces zero learner inference | `GOAL.md` §8 low-information rule |
-| No intervention path contains the correct pH value | No-answer-reveal, asserted structurally |
+| No reachable `InterventionIntent` path contains the correct pH | AC-A8 — asserted structurally, not by review |
+| `packages/ace` has no import path to `packages/render` or `packages/sci` | AC-A6, with a deliberate violation fixture |
+| **Running the loop against a second, different `aceV0Policy` requires no code change** | AC-A7 — this is the test that proves the tuning values are data, not structure |
+| `BeliefUpdater` retains an explicit `unknown` mass after one wrong prediction | AC-A9 |
 
 ### Stop condition
 
@@ -745,8 +851,17 @@ write down what is *not* verified.
 3. Re-run the full regression suite; confirm no test was weakened to reach green.
 4. Confirm every temporary scaffold is either removed or explicitly excluded
    from acceptance.
-5. Decide the fate of `spikes/solver-validation/`: keep as documentation, or
-   delete now that M4 supersedes it. **Record the decision either way.**
+5. **Promote the spikes, and record the decision for each.** A spike is not
+   evidence once production code exists — the production test is. For each:
+
+   | Spike | Action |
+   |---|---|
+   | `spikes/activity-equilibrium/` | Its reference cases become `packages/sci/test/reference/*.json` and its checks become package tests. **Keep the directory** as the derivation record for the tolerance table. |
+   | `spikes/numeric-policy/` | Its checks become package tests (AC-S10, AC-R9, AC-R11, AC-U1/U2), **including the design guard that the wrong quantization strategy must fail.** Keep the directory as the measurement record. |
+   | `spikes/solver-validation/` | **Superseded by M4 and already banner-marked.** Keep only as the origin record for the "references must not come from the code under test" rule. Do not cite it as scientific evidence. |
+
+   **A spike result must never be the only evidence for an acceptance criterion**
+   once the corresponding milestone has closed.
 6. Update ADR statuses from `Proposed` to `Accepted` where implementation has
    confirmed them; mark superseded any that were decided differently than
    expected.

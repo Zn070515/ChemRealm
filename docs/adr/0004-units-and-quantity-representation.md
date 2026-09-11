@@ -1,173 +1,241 @@
 # ADR-0004: Units and quantity representation
 
-- **Status:** Proposed
+- **Status:** Proposed (revised 2026-09-11 after owner review)
 - **Date:** 2026-09-11
 - **Deciders:** Project owner
-- **Related:** `GOAL.md` §12; `CLAUDE.md` §8.2; `AGENTS.md` §9, §19; `SPEC-0001`
+- **Related:** `GOAL.md` §12; `CLAUDE.md` §8.2; `AGENTS.md` §9, §19;
+  `docs/science/quantity-ontology.md`; `ADR-0003`; `ADR-0007`; `SPEC-0001`
 - **Blocks:** `PLAN-0001` M1, M3, M5
+- **Supersedes:** the original ADR-0004 of the same date
 
 ## Context
 
-`CLAUDE.md` §8.2 states that scientific quantities must use explicit units at
-boundaries and must not rely on comments such as "temperature is K". `GOAL.md`
-§12 requires values to carry unit, source, range, uncertainty, model, and version.
+Two findings from owner review invalidated parts of the original version.
 
-The failure mode is not exotic. It is:
+**P1-3 — the ontology was too coarse.** The original treated "concentration" and
+"ionic strength" primarily as `mol/L`, while the project claimed a thermodynamic
+activity model on the molality basis and planned PHREEQC validation in molality.
+Molarity, molality, and activity are three different quantities, and ionic
+strength has a *basis*. At this slice's concentrations the discrepancy is ~0.2 %
+— invisible against a ±0.02 pH tolerance, which is exactly what makes it
+dangerous, because it would survive every test here and fail at higher
+concentration or against PHREEQC.
 
-- a volume stored in mL in the event payload and consumed as L by the solver,
-  producing a pH curve that is wrong by a factor of 1000 and *looks* like a
-  plausible curve;
-- a temperature in °C reaching a model expecting K;
-- two places in the codebase disagreeing about whether "concentration" means
-  analytical (total) or free equilibrium concentration.
+**P1-4 — the branded-type guarantee was overstated.** The original claimed that
+`type Mol = number & Brand` makes unit-mixing and pH-averaging "unavailable".
+That was tested by compilation, not assumed. Result
+(`spikes/numeric-policy`, `brands_number.ts`):
 
-The domain needs a small, closed set of quantities. For this slice: amount
-(mol), volume (L), concentration (mol/L), temperature (K), pressure (kPa),
-mass (g), pH (dimensionless, and conventionally *not* a concentration), and
-dimensionless ratios. That set will grow slowly.
+```
+error TS2578: Unused '@ts-expect-error' directive.   (lines 47, 50, 53)
+```
+
+All three arithmetic claims were **false**. `molA + litreB`, `molA + molA`, and
+`(pH₁ + pH₂) / 2` all compile under branding. Branding blocks the *assignment* of
+a bare number to a quantity, and blocks cross-unit assignment, and prevents
+storing an arithmetic result back as a quantity — but it does not block the
+arithmetic. `a + b` is legal TypeScript whose type is simply `number`.
+
+The same spike showed that an **opaque** representation does block it
+(`brands_opaque.ts`, exit 0, every directive used).
+
+The domain needs a small closed set of quantities. For this slice: amount,
+mass, volume, length, molality, molarity, temperature, pressure, time, activity,
+activity coefficient, ionic strength (two bases), mole fraction, and pH.
 
 ## Decision
 
-**Canonical internal units, branded types in memory, `{value, unit}` tuples in
-every serialized form, and exactly one conversion module.**
+**`docs/science/quantity-ontology.md` is the authoritative definition of every
+scientific quantity.** This ADR governs how those quantities are *represented*,
+not what they mean. Where the two disagree, the ontology wins and this ADR is
+wrong.
 
-### Canonical units
+### 1. Canonical internal units
 
-| Quantity | Canonical unit | Symbol |
+| Quantity | Canonical unit | Type |
 |---|---|---|
-| amount | mole | mol |
-| volume | litre | L |
-| concentration | mole per litre | mol/L |
-| temperature | kelvin | K |
-| pressure | kilopascal | kPa |
-| mass | gram | g |
-| time | second | s |
-| pH | dimensionless | — |
-| ionic strength | mole per litre | mol/L |
+| amount | mol | `Mol` |
+| mass of water | kg | `Kilogram` |
+| volume | L | `Litre` |
+| **length (geometry)** | **mm** | `Millimetre` |
+| molality | mol/kg water | `MolPerKilogram` |
+| molarity | mol/L solution | `MolPerLitre` |
+| temperature | K | `Kelvin` |
+| pressure | kPa | `Kilopascal` |
+| time | s | `Second` |
+| activity | dimensionless | `Activity` |
+| activity coefficient | dimensionless | `ActivityCoefficient` |
+| ionic strength (molality basis) | mol/kg | `IonicStrengthMolal` |
+| ionic strength (molarity basis) | mol/L | `IonicStrengthMolar` |
+| mole fraction | dimensionless | `MoleFraction` |
+| pH | dimensionless | `Ph` |
 
-**Litres and mol/L, not m³ and mol/m³.** This is a deliberate departure from
-strict SI coherence. Every source the project must agree with — IUPAC buffer
-standards, CRC Ka/Kw tables, PHREEQC output, textbook worked examples, the
-spike's own reference values — is expressed in mol/L. Adopting mol/m³ would put
-a 1000× conversion at every comparison against literature, which is precisely
-where a silent factor-of-1000 error would hide best. The unit is declared
-explicitly everywhere, so "not SI-coherent" costs nothing and removes a
-recurring error source. Recorded here because a future reader will otherwise
-wonder why.
+**Two bases for ionic strength are separate types, not one.** The numeric
+difference between them is under tolerance, so a mix-up would be *invisible at
+runtime*. That is precisely when the compiler must carry the distinction, because
+no test will.
 
-### In memory: branded types
+**Length is a length.** A geometry coordinate is not a volume; the original
+"one world unit = one millilitre" statement was a dimensional error (finding
+P2-1). Vessels expose a volume profile `V(h)` and its inverse instead. Corrected
+in `docs/visual/apparatus-standard.md`.
 
-```ts
-type Mol = number & { readonly __unit: "mol" };
-type Litre = number & { readonly __unit: "L" };
-type MolPerLitre = number & { readonly __unit: "mol/L" };
-type Kelvin = number & { readonly __unit: "K" };
-```
+### 2. Two representations, chosen by whether arithmetic is meaningful
 
-Plain `number` is not assignable to these without an explicit construction. A
-function taking `Litre` cannot be called with a `MolPerLitre`. This makes
-unit confusion a compile error rather than a silent numerical defect.
+This is the corrected answer to P1-4.
 
-Constructors are explicit and validated:
+**Opaque types — arithmetic is a compile error.**
 
 ```ts
-litre(0.05)          // ok
-litre(-0.05)         // throws: negative volume is not a physical quantity
-molPerLitre(NaN)     // throws
+declare const phBrand: unique symbol;
+export interface Ph {
+  readonly [phBrand]: true;
+  readonly value: number;
+}
 ```
 
-`pH` is deliberately **not** a concentration type and has no arithmetic
-operations defined. You may not average two pH values, add a pH to a
-concentration, or store pH where a concentration is expected. pH is a
-projective, logarithmic scale; the fact that it is representable as a float is
-not permission to treat it as one. Calculations happen in concentration space
-and are converted to pH only for presentation (`ADR-0007`).
+Used for: `Ph`, `Activity`, `ActivityCoefficient`, `IonicStrengthMolal`,
+`IonicStrengthMolar`, `MoleFraction`.
 
-### In serialized form: tagged tuples
+These are quantities where arithmetic is **conceptually wrong** — averaging two
+pH values, adding two activities, or adding two activity coefficients — and where
+a mistake is subtle enough to survive review. Verified by compilation:
+`p1 + p2` and `p1 / 2` are both type errors. The value is reachable only through
+explicit unwrapping (`p.value`), which is visible at every site.
 
-Every persisted event payload, world file, and content file carries:
+**Branded numbers — arithmetic is legal, and the guarantee is stated honestly.**
+
+```ts
+export type Mol = number & { readonly __unit: "mol" };
+export type Litre = number & { readonly __unit: "L" };
+```
+
+Used for: `Mol`, `Kilogram`, `Litre`, `Millimetre`, `MolPerKilogram`,
+`MolPerLitre`, `Kelvin`, `Kilopascal`, `Second`.
+
+Branding is chosen here because arithmetic **is** meaningful for these
+quantities — adding two volumes is legitimate, scaling a mass is legitimate — so
+blocking it would be wrong, not safe. What branding actually provides, verified:
+
+- a bare `number` cannot be assigned to a quantity type;
+- a `Mol` cannot be assigned to a `Litre`;
+- `molA + molA` has type `number`, so its result **cannot be stored back** as a
+  `Mol` without an explicit conversion.
+
+What it does **not** provide: it does not stop `molA + litreB` from being written.
+That is a documented gap, not a claimed guarantee.
+
+**The gap is closed at the API boundary, not by the type.** No function in the
+scientific core, world runtime, or observable layer accepts a bare `number` in a
+position that means a physical quantity. Arithmetic on branded quantities goes
+through named operators that return the branded type:
+
+```ts
+export function sumAmounts(...parts: Mol[]): Mol;
+export function scaleVolume(v: Litre, factor: number): Litre;
+```
+
+A raw `+` between two quantities therefore produces a value that no downstream
+signature will accept. The mistake becomes a compile error one line later rather
+than never.
+
+**A bug found while building this test is worth recording:** the first version gave
+`Mol` and `Litre` the *same* brand symbol, making them structurally identical and
+mutually assignable. It was caught only because the test asserted the assignment
+*should* fail. A branded-type scheme with a copy-paste error in the brand key
+silently provides nothing — which is why the unit round-trip and cross-unit
+compile tests are acceptance criteria (M1), not optional.
+
+### 3. Serialized forms carry tagged tuples
 
 ```json
 { "value": 0.05, "unit": "L" }
 ```
 
-never a bare `0.05`. Ingest converts to canonical units via the conversion
-module and rejects unknown or mismatched units. A content file that says
-`"unit": "mL"` is converted; one that omits the unit is a validation error, not
-a default.
+Never a bare `0.05`. Ingest converts to canonical units and **rejects an unknown
+or missing unit** — a missing unit is a validation error, not a default.
 
-### One conversion module
+### 4. One conversion module
 
-All conversion factors live in exactly one module in `packages/schema`. No
-inline `* 1000` or `/ 1000` anywhere else in the codebase. Enforced by review
-and, where practical, a lint rule banning raw numeric literals near quantity
-construction.
+All conversion factors live in exactly one module. No inline `* 1000` anywhere.
+Conversions between molality and molarity require a solution density, which is an
+**explicit, sourced scenario input**, never a model the project invents.
+
+### 5. Display precision derives from model precision
+
+The UI shows at most 2 decimals of pH, derived from the ±0.02 pH model tolerance
+(`SPEC-0001`). Showing more is the "precise-looking numbers" failure `GOAL.md`
+§5.2 prohibits. Formatting belongs to the presentation layer; the scientific
+layer owns the canonical value and its unit.
 
 ## Alternatives considered
 
-**Full SI canonical units (m³, mol/m³).** Rejected for the reason in the
-Decision: it maximizes distance from every reference the project must agree
-with, and concentrates the resulting conversions exactly where errors are least
-visible. Reconsider only if a future model's library demands SI internally — and
-then the conversion belongs inside that adapter, not in the world schema.
+**Branded numbers everywhere, with the guarantee as originally written.**
+Rejected: it was tested and the guarantee does not exist. Keeping the wording
+would have been a false claim in a document whose entire purpose is preventing
+false claims.
 
-**A general-purpose quantity library (`js-quantities`, `unitful`, UOM).**
-Rejected at v0. The unit set is small and closed, the operations needed are
-mostly construction and comparison, and adding a dependency for a closed set of
-eight units buys complexity (`GOAL.md` §19: narrow validated slices, adapters
-over vendor lock-in). **Explicitly reconsider if the unit set grows past roughly
-twenty quantities or if dimensional analysis of compound units becomes
-necessary** — at that point a library is cheaper than hand-rolled algebra.
+**Opaque types everywhere.** Rejected as the sole approach. It truly controls
+arithmetic, but for quantities like volume and mass the arithmetic is legitimate,
+and forcing `.value` unwrapping at every site adds ceremony without adding
+safety. The split is by whether arithmetic is conceptually meaningful.
 
-**Plain `number` with naming conventions (`volumeLitres`, `concMolPerLitre`).**
-Rejected. The convention is unenforced, invisible to the compiler, and fails
-silently. This is the exact pattern `CLAUDE.md` §8.2 prohibits.
+**A general-purpose quantity library.** Still rejected at v0 for the same reason
+as before: the unit set is small and closed, and the missing capability
+(enforcing arithmetic) is not something those libraries provide either. Revisit
+if the unit set grows past ~20 quantities or compound-unit algebra is needed.
 
-**Store quantities as strings (`"0.05 L"`).** Rejected. Parsing at every access,
-no type safety, and it invites locale and formatting bugs into the scientific
-layer.
+**Full SI canonical units (m³, mol/m³).** Still rejected: it maximizes distance
+from every reference the project must agree with — IUPAC buffer standards, CRC
+tables, PHREEQC output, textbook worked examples — and concentrates the resulting
+conversions exactly where errors are least visible. Reconsider only if a future
+model's library demands SI internally, and then the conversion belongs inside
+that adapter.
 
-**Let the renderer decide display units.** Rejected, but the presentation layer
-must still own *formatting*. The boundary: the scientific layer owns the
-canonical value and its unit; the representation layer owns how many decimals to
-show and in what display unit, derived from the model's stated precision
-(`ADR-0007`).
+**Plain `number` with naming conventions.** Still rejected; unenforced and
+invisible to the compiler, which is what `CLAUDE.md` §8.2 prohibits.
 
 ## Consequences
 
 ### Positive
-- Unit confusion becomes a type error at build time.
-- Serialized worlds and events are self-describing: a file from six months ago
-  can be read without reading the code that wrote it.
-- pH cannot silently participate in arithmetic it does not support.
+- Unit confusion is a compile error at the assignment boundary, and mixing
+  molality with molarity or the two ionic-strength bases cannot be represented
+  at all.
+- pH, activity, and activity coefficients cannot participate in arithmetic.
+- Serialized worlds are self-describing: a file from six months ago is readable
+  without the code that wrote it.
+- The gap in the branded guarantee is documented, bounded, and closed at the API
+  boundary rather than papered over.
 
 ### Negative
-- Branded types require explicit construction at ingest boundaries, which is
-  friction, and friction is the point — but it is real friction.
-- The conversion module is a single point of failure and must be well tested,
-  including a round-trip property test for every supported unit.
-- Comparisons and arithmetic on branded types need small helper functions;
-  TypeScript will not do `litreA + litreB` without them.
+- Two representation styles coexist, so a contributor must know which applies.
+  Mitigated by the rule being simple: *is arithmetic meaningful here?*
+- Opaque types require `.value` unwrapping, which is friction — deliberately, at
+  the sites where a mistake would be subtle.
+- The conversion module is a single point of failure and needs a round-trip
+  property test for every supported unit, plus the molality↔molarity path.
 
 ### Neutral
-- `packages/schema` grows slightly beyond pure schema into quantity primitives.
-  Acceptable: units are part of the contract.
+- `packages/schema` now carries quantity primitives rather than pure schema.
+  Accepted: units are part of the contract.
 
 ## Reversibility
 
-**Moderate.** Changing canonical units is a format migration because serialized
-values carry explicit units — the migration is therefore *possible* but not
-free. Adding new quantities is trivial and expected. The decision to keep pH
-non-arithmetic is easy to reverse (add operations later) and should stay until
-there is a concrete reason.
+**Moderate.** Changing canonical units is a format migration, since serialized
+values carry explicit units — possible, but not free. Adding quantities is
+trivial and expected. Moving a type between branded and opaque is a local change
+with compile-time-visible fallout, which is the cheap direction.
 
 ## Open questions
 
-1. Does the solvent volume need its own type distinct from a vessel's capacity?
-   A vessel has a capacity (a fixed geometric property) and a current liquid
-   volume (state). Both are litres. **Leaning: same type, different field
-   names, no new type** — the distinction is semantic, not dimensional. Confirm
-   at M1.
-2. Should ionic strength be a branded type or a plain `MolPerLitre`? It is
-   dimensionally a concentration. **Leaning: branded, because confusing ionic
-   strength with an analytical concentration is a plausible and quiet mistake.**
+1. Should the two ionic-strength types also forbid *comparison* across bases, or
+   only arithmetic? Comparison is where a silent mix-up would be genuinely
+   confusing. **Leaning: forbid it — `IonicStrengthMolal` and
+   `IonicStrengthMolar` compare only within themselves.**
+2. Should a vessel track water **mass** explicitly, or derive it from volume and
+   a density model? **Leaning: track the mass.** It is the conserved quantity,
+   and deriving it would reintroduce a density model into the thermodynamic path
+   that molality was chosen specifically to avoid. Confirm at M1.
+3. Does a vessel's `capacity` (fixed geometry) need a distinct type from its
+   current `liquidVolume` (state)? **Leaning: no — same type, different field
+   names.** The distinction is semantic, not dimensional. Confirm at M1.

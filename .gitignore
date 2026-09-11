@@ -27,6 +27,8 @@ blob-report/
 
 # Spikes
 spikes/**/out/
+spikes/**/vectors.json
+spikes/**/node_results.json
 
 # Local environment
 .env

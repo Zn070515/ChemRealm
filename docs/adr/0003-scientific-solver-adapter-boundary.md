@@ -25,7 +25,7 @@ A technology investigation (2026-09-11, recorded in
 - The exact titration solve is a single scalar root-find on the charge balance.
   A 200-line implementation reproduces an independent closed form to <0.0001 pH
   and reproduces IUPAC acetate buffer standards to within 0.012 pH
-  (`spikes/solver-validation`).
+  (`spikes/activity-equilibrium`).
 - **PHREEQC** (USGS, public domain) is a legitimate long-term oracle and
   eventual adapter for multi-component speciation.
 - **Reaktoro** ships conda-only with no clean Windows pip wheel and adds
@@ -89,7 +89,8 @@ Three properties make this load-bearing rather than decorative:
 An in-repository TypeScript adapter implementing the exact charge-balance
 formulation validated in the spike. Scope is fixed by `SPEC-0001` §Scientific
 Design: monoprotic acids (strong and weak), strong bases, water at 25 °C,
-activity via Davies, ionic strength ≤ 0.5 mol/L. Outside that: refuse.
+activity via Davies on the **molality** basis, ionic strength `I_m` ≤ 0.5 mol/kg.
+Outside that: refuse.
 
 ### Deferred: `phreeqc-adapter`
 
@@ -176,9 +177,16 @@ intentional — it is `GOAL.md` §5.3.
    PHREEQC-over-HTTP adapter is async; a pure local solve is sync. Deciding
    async now costs a little ergonomics and avoids a breaking change later.
    **Leaning: async from the start.** Confirm at M3.
-3. Activity model for v0: Davies is validated in the spike to ±0.02 pH against
-   IUPAC buffers. SIT or Pitzer would be more accurate at higher ionic strength
-   but are out of scope. Is ±0.02 pH acceptable for the first slice, given the
-   UI must then never display more than 2 decimal places of pH? **Leaning: yes,
-   with a display-precision rule derived from the model tolerance rather than
-   chosen by taste.**
+3. ~~Activity model for v0~~ — **RESOLVED 2026-09-11.** Davies on the
+   **molality** basis, participating **inside** the equilibrium constraints, with
+   the two ionic-strength bases kept as distinct types. Demonstrated to
+   ±0.02 pH against IUPAC buffers with the self-consistent solve
+   (`spikes/activity-equilibrium`). The ±0.02 figure is accepted; the display
+   rule is 2 decimal places, derived from it. SIT or Pitzer would be more
+   accurate at higher ionic strength and remain out of scope. See
+   `docs/science/quantity-ontology.md`.
+4. **What happens to a persisted world whose solver version no longer ships?**
+   Not answerable within this ADR — it is `ADR-0008`, which defines three
+   availability tiers (exact replay / re-solve / archive). The adapter registry
+   must be able to report *which* tiers are available for a given world, which
+   is a small addition to the interface above. Confirm at M3.
