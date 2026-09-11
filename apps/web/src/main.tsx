@@ -1,4 +1,4 @@
-import { SCHEMA_VERSION } from "@chemrealm/schema";
+import { CURRENT_SCHEMA_VERSION } from "@chemrealm/schema";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -14,6 +14,6 @@ if (container === null) {
 // and it gives dependency-cruiser a real edge to analyse.
 createRoot(container).render(
   <StrictMode>
-    <App schemaVersion={SCHEMA_VERSION} />
+    <App schemaVersion={CURRENT_SCHEMA_VERSION} />
   </StrictMode>,
 );

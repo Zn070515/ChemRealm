@@ -1,34 +1,34 @@
 /**
- * `packages/schema` — the single source of truth for every cross-boundary
+ * `@chemrealm/schema` — the SINGLE SOURCE OF TRUTH for every cross-boundary
  * contract (`ADR-0001` rule 1).
  *
- * M0 STATUS: this is a **placeholder that proves the toolchain**, not the
- * contract set. It exists so that `pnpm build` has something real to compile,
- * so the `apps/web -> packages/schema` workspace link is exercised, and so the
- * dependency rules have an edge to analyse.
+ * No other package defines a persisted or wire shape. zod schemas are authored
+ * here; `json-schema.ts` emits JSON Schema so the Python side validates against
+ * the same contract rather than hand-mirroring types.
  *
- * `PLAN-0001` M1 owns the real contract surface: branded and opaque quantity
- * types, `{value, unit}` parsing, `WorldState`, the event union, the
- * `SolverAdapter` result envelope, and JSON Schema emission for the Python
- * oracle. Do not grow this file into M1's work.
- */
-import { z } from "zod";
-
-/** Schema version of every persisted record. Bumped only by a migration. */
-export const SCHEMA_VERSION = 1;
-
-/**
- * The `{value, unit}` tuple that every serialized scientific quantity uses
- * (`ADR-0004`). This is the smallest genuine contract in the project, which is
- * why it is the one M0 keeps: it proves zod is wired without pre-empting M1.
+ * AUTHORITY ORDER when documents disagree:
  *
- * Note what is deliberately absent — no canonical-unit enforcement, no branded
- * types, no conversion module. A missing unit is *rejected here*; an unknown
- * unit is not yet distinguished, and M1 owns that.
+ *   1. `docs/science/quantity-ontology.md` — what a quantity MEANS
+ *   2. `docs/specs/SPEC-0001-*.md` — the system's behaviour
+ *   3. `docs/adr/` — why the representation looks like this
+ *   4. this package — how it is represented
+ *
+ * A disagreement is a defect in this package, not a reason to update the
+ * ontology.
+ *
+ * WHAT IS DELIBERATELY ABSENT: no solver, no reducer, no arithmetic beyond unit
+ * conversion, no I/O. This package describes shapes; the cores give them
+ * behaviour. `packages/sci` must not be importable from here, and neither must
+ * anything else — `schema` is a leaf (`.dependency-cruiser.cjs`).
  */
-export const QuantitySchema = z.object({
-  value: z.number(),
-  unit: z.string().min(1),
-});
 
-export type Quantity = z.infer<typeof QuantitySchema>;
+export * from "./units.js";
+export * from "./quantity.js";
+export * from "./scientific.js";
+export * from "./world.js";
+export * from "./events.js";
+export * from "./commands.js";
+export * from "./content.js";
+export * from "./export.js";
+export * from "./migrate.js";
+export * from "./json-schema.js";

@@ -1,4 +1,4 @@
-import { SCHEMA_VERSION } from "@chemrealm/schema";
+import { CURRENT_SCHEMA_VERSION } from "@chemrealm/schema";
 import { describe, expect, it } from "vitest";
 
 import { App } from "./App.js";
@@ -19,7 +19,7 @@ import { App } from "./App.js";
  */
 describe("apps/web placeholder", () => {
   it("resolves the workspace link to packages/schema", () => {
-    expect(SCHEMA_VERSION).toBe(1);
+    expect(CURRENT_SCHEMA_VERSION).toBe(1);
   });
 
   it("exposes the app component", () => {
