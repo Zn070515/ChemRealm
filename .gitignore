@@ -4,8 +4,12 @@ node_modules/
 
 # Build output
 dist/
+dist-types/
 build/
 *.tsbuildinfo
+
+# Transient scratch trees created by tools/check_dependency_rules.mjs
+.tmp-depcruise-guard/
 
 # Python
 __pycache__/

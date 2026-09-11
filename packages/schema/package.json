@@ -1,0 +1,22 @@
+{
+  "name": "@chemrealm/schema",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "SINGLE SOURCE OF TRUTH for every cross-boundary contract (ADR-0001 rule 1).",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -b"
+  },
+  "dependencies": {
+    "zod": "^4.1.12"
+  }
+}

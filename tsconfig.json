@@ -1,0 +1,8 @@
+{
+  "//": "Solution file. `tsc -b` walks the references below, so a package boundary is enforced by the compiler and not only by the linter (ADR-0001 rule 2).",
+  "files": [],
+  "references": [
+    { "path": "packages/schema" },
+    { "path": "apps/web" }
+  ]
+}

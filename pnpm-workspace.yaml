@@ -1,0 +1,22 @@
+# TypeScript workspace only.
+#
+# Python is deliberately NOT a member (ADR-0001 rule 4): one workspace per
+# language. The Python project lives at the repository root (`pyproject.toml`,
+# `.venv`) and is driven by `uv`, never by pnpm.
+#
+# ADR-0001 rule 5: directories appear when their first real content lands.
+# M0 creates `packages/schema` and `apps/web`; the remaining core packages are
+# added by the milestones that give them content.
+
+packages:
+  - "packages/*"
+  - "apps/*"
+
+# Install scripts are denied by default; each exception is named and justified.
+# pnpm refuses to run an unlisted postinstall, which is the right default for a
+# project whose whole point is supply-chain visibility.
+#
+#   esbuild — Vite's bundler. Its install step links the platform-specific
+#             binary; without it `vite build` cannot run. Apache-2.0.
+allowBuilds:
+  esbuild: true
