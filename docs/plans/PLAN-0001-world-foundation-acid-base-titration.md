@@ -1,6 +1,10 @@
 # PLAN-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** Ready to execute (pending `SPEC-0001` acceptance, **revision 6**)
+- **Status:** **Approved to execute** — owner, 2026-09-11, at `SPEC-0001` revision 6
+- **Authorized next:** `M0 — Repository Foundation`. Completing M0's code is
+  **S2**; M0 reaches **S3** only when its CI, dependency-rule fixture, Python
+  toolchain, coverage-checker fixture, and no-CDN/no-backend checks are in the
+  evidence packet.
 - **Coverage check:** `uv run python tools/check_acceptance_coverage.py` — every `AC-*` in
   `SPEC-0001` is required to appear in at least one milestone here. Run it after
   editing either document.

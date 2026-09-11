@@ -1,6 +1,8 @@
 # ADR-0001: Repository and workspace strategy
 
-- **Status:** Proposed
+- **Status:** **Accepted** — owner, 2026-09-11 (baseline `8310c685`)
+- **Deferred decisions:** see the ADR's own `## Open questions` / `## Open decisions`;
+  acceptance covers the decision, not the deferred sub-questions.
 - **Date:** 2026-09-11
 - **Deciders:** Project owner
 - **Related:** `GOAL.md` §19, `CLAUDE.md` §13, `AGENTS.md` §19, `SPEC-0001`

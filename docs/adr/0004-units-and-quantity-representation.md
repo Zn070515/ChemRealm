@@ -1,6 +1,8 @@
 # ADR-0004: Units and quantity representation
 
-- **Status:** Proposed (revised 2026-09-11 after owner review)
+- **Status:** **Accepted** — owner, 2026-09-11 (baseline `8310c685`)
+- **Deferred decisions:** see the ADR's own `## Open questions` / `## Open decisions`;
+  acceptance covers the decision, not the deferred sub-questions.
 - **Date:** 2026-09-11
 - **Deciders:** Project owner
 - **Related:** `GOAL.md` §12; `CLAUDE.md` §8.2; `AGENTS.md` §9, §19;

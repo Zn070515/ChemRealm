@@ -1,6 +1,8 @@
 # ADR-0008: Persisted-world solver compatibility
 
-- **Status:** Proposed
+- **Status:** **Accepted** — owner, 2026-09-11 (baseline `8310c685`)
+- **Deferred decisions:** see the ADR's own `## Open questions` / `## Open decisions`;
+  acceptance covers the decision, not the deferred sub-questions.
 - **Date:** 2026-09-11
 - **Deciders:** Project owner
 - **Related:** `GOAL.md` §5.4, §9; `ADR-0002`; `ADR-0003`; `ADR-0005`; `ADR-0007`;

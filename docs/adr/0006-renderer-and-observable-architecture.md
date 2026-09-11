@@ -1,6 +1,8 @@
 # ADR-0006: Renderer and observable architecture
 
-- **Status:** Proposed
+- **Status:** **Accepted** — owner, 2026-09-11 (baseline `8310c685`)
+- **Deferred decisions:** see the ADR's own `## Open questions` / `## Open decisions`;
+  acceptance covers the decision, not the deferred sub-questions.
 - **Date:** 2026-09-11
 - **Deciders:** Project owner
 - **Related:** `GOAL.md` §5.3, §5.7, §6.3, §15; `CLAUDE.md` §10; `AGENTS.md` §14

@@ -1,6 +1,11 @@
 # SPEC-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** S1 — Specified (**revision 6**, for owner re-review)
+- **Status:** **Accepted** — S1 passed. Owner, 2026-09-11.
+- **Accepted baseline:** commit `8310c685`, `SPEC-0001` revision 6
+- **Acceptance scope:** the specification and its acceptance criteria. Deferred
+  items listed under Open questions remain open and must be resolved before the
+  milestone that names them. Acceptance does **not** assert that any criterion
+  has been demonstrated — that is what the S3 evidence packet is for.
 - **Date:** 2026-09-11 (round 5: event-sourced identity, genesis resolution, contract closure)
 - **Owner:** Project owner
 - **Supersedes:** revisions 1–5 of this spec

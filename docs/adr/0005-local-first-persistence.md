@@ -1,6 +1,8 @@
 # ADR-0005: Local-first persistence and export
 
-- **Status:** Proposed
+- **Status:** **Accepted** — owner, 2026-09-11 (baseline `8310c685`)
+- **Deferred decisions:** see the ADR's own `## Open questions` / `## Open decisions`;
+  acceptance covers the decision, not the deferred sub-questions.
 - **Date:** 2026-09-11
 - **Deciders:** Project owner
 - **Related:** `GOAL.md` §5.5, §9, §10; `CLAUDE.md` §12; `AGENTS.md` §13; `SPEC-0001`

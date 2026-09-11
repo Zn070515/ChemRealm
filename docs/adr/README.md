@@ -13,23 +13,28 @@ scientifically consequential, format-defining, or dependency-defining
 | `Superseded by ADR-XXXX` | Replaced. Kept for history; do not edit except to mark supersession. |
 | `Rejected` | Considered and declined. Kept so the question is not re-litigated from scratch. |
 
-All ADRs created in this round are **`Proposed`**. None becomes `Accepted` until
-the owner accepts `SPEC-0001`, because each of them is a load-bearing assumption
-of that spec. Treating them as already-accepted would be a false completion claim.
+**All nine ADRs were accepted by the owner on 2026-09-11**, at baseline commit
+`8310c685`, together with `SPEC-0001` revision 6. Acceptance covers each ADR's
+*decision*; every ADR that carries an `## Open questions` or `## Open decisions`
+section keeps those explicitly open, and they must be resolved before the
+milestone each one names.
+
+If an accepted decision is later found to be wrong, the ADR is **superseded by a
+new ADR**, not quietly edited.
 
 ## Index
 
 | ADR | Title | Status | Blocks |
 |---|---|---|---|
-| [0001](0001-repository-and-workspace-strategy.md) | Repository and workspace strategy | Proposed | M0 |
-| [0002](0002-world-event-sourcing.md) | World event sourcing and branch model | Proposed | M1, M2, M8 |
-| [0003](0003-scientific-solver-adapter-boundary.md) | Scientific solver adapter boundary | Proposed | M3, M4 |
-| [0004](0004-units-and-quantity-representation.md) | Units and quantity representation | Proposed **(revised)** | M1, M3, M5 |
-| [0005](0005-local-first-persistence.md) | Local-first persistence and export | Proposed | M8 |
-| [0006](0006-renderer-and-observable-architecture.md) | Renderer and observable architecture | Proposed | M5, M6, M7 |
-| [0007](0007-deterministic-numeric-and-replay-policy.md) | Deterministic numeric and replay policy | Proposed **(revised)** | M2, M4, M8 |
-| [0008](0008-persisted-world-solver-compatibility.md) | Persisted-world solver compatibility | Proposed **(new)** | M8 |
-| [0009](0009-ace-control-loop-architecture.md) | ACE control-loop architecture | Proposed **(new)** | M9 |
+| [0001](0001-repository-and-workspace-strategy.md) | Repository and workspace strategy | **Accepted** | M0 |
+| [0002](0002-world-event-sourcing.md) | World event sourcing and branch model | **Accepted** | M1, M2, M8 |
+| [0003](0003-scientific-solver-adapter-boundary.md) | Scientific solver adapter boundary | **Accepted** | M3, M4 |
+| [0004](0004-units-and-quantity-representation.md) | Units and quantity representation | **Accepted** (revised) | M1, M3, M5 |
+| [0005](0005-local-first-persistence.md) | Local-first persistence and export | **Accepted** | M8 |
+| [0006](0006-renderer-and-observable-architecture.md) | Renderer and observable architecture | **Accepted** | M5, M6, M7 |
+| [0007](0007-deterministic-numeric-and-replay-policy.md) | Deterministic numeric and replay policy | **Accepted** (revised) | M2, M4, M8 |
+| [0008](0008-persisted-world-solver-compatibility.md) | Persisted-world solver compatibility | **Accepted** (new) | M8 |
+| [0009](0009-ace-control-loop-architecture.md) | ACE control-loop architecture | **Accepted** (new) | M9 |
 
 > **Revision note (2026-09-11, owner review remediation).** ADR-0004 and ADR-0007
 > were rewritten rather than amended: the original ADR-0004 overstated what
