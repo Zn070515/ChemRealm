@@ -31,7 +31,7 @@
 
 import { z } from "zod";
 
-import { SerializedQuantitySchema } from "./quantity.js";
+import { quantityOfDimension } from "./quantity.js";
 import {
   ApparatusIdSchema,
   CURRENT_SCHEMA_VERSION,
@@ -59,10 +59,10 @@ export const EventEnvelopeShape = {
  * never reads `content/`. `solverConfig` is the single record of what was
  * RESOLVED and USED; the snapshot carries only what the scenario REQUIRED.
  */
-export const WorldCreatedSchema = z.object({
+export const WorldCreatedSchema = z.strictObject({
   ...EventEnvelopeShape,
   type: z.literal("WorldCreated"),
-  payload: z.object({
+  payload: z.strictObject({
     worldId: WorldIdSchema,
     scenarioSnapshot: ScenarioSnapshotSchema,
     /** The snapshot's checksum, verified on load: hash(snapshot) === this. */
@@ -73,20 +73,20 @@ export const WorldCreatedSchema = z.object({
   }),
 });
 
-export const ApparatusPlacedSchema = z.object({
+export const ApparatusPlacedSchema = z.strictObject({
   ...EventEnvelopeShape,
   type: z.literal("ApparatusPlaced"),
-  payload: z.object({
+  payload: z.strictObject({
     apparatusId: ApparatusIdSchema,
     kind: z.string().min(1),
     position: PositionSchema,
   }),
 });
 
-export const ApparatusAttachedSchema = z.object({
+export const ApparatusAttachedSchema = z.strictObject({
   ...EventEnvelopeShape,
   type: z.literal("ApparatusAttached"),
-  payload: z.object({
+  payload: z.strictObject({
     childId: z.union([ApparatusIdSchema, VesselIdSchema]),
     parentId: z.union([ApparatusIdSchema, VesselIdSchema]),
     portId: z.string().min(1),
@@ -101,13 +101,13 @@ export const ApparatusAttachedSchema = z.object({
  * resolved inventory. This also matches what a learner actually does — dispense
  * a volume.
  */
-export const MaterialChargedSchema = z.object({
+export const MaterialChargedSchema = z.strictObject({
   ...EventEnvelopeShape,
   type: z.literal("MaterialCharged"),
-  payload: z.object({
+  payload: z.strictObject({
     vesselId: VesselIdSchema,
     materialId: MaterialIdSchema,
-    volume: SerializedQuantitySchema,
+    volume: quantityOfDimension("volume"),
   }),
 });
 
@@ -120,13 +120,13 @@ export const MaterialChargedSchema = z.object({
  * implementation was correct and the spec's pseudocode was not, which is why
  * the rule is stated as a rule.
  */
-export const TransferCommittedSchema = z.object({
+export const TransferCommittedSchema = z.strictObject({
   ...EventEnvelopeShape,
   type: z.literal("TransferCommitted"),
-  payload: z.object({
+  payload: z.strictObject({
     fromVesselId: VesselIdSchema,
     toVesselId: VesselIdSchema,
-    volume: SerializedQuantitySchema,
+    volume: quantityOfDimension("volume"),
     mechanism: z.enum(["burette", "pipette", "poured"]),
   }),
 });
@@ -137,10 +137,10 @@ export const TransferCommittedSchema = z.object({
  * `forkStateHash` pins the point the child diverged from, so replay can verify
  * the shared prefix rather than trusting it.
  */
-export const WorldBranchedSchema = z.object({
+export const WorldBranchedSchema = z.strictObject({
   ...EventEnvelopeShape,
   type: z.literal("WorldBranched"),
-  payload: z.object({
+  payload: z.strictObject({
     childWorldId: WorldIdSchema,
     parentWorldId: WorldIdSchema,
     forkSequence: z.number().int().nonnegative(),

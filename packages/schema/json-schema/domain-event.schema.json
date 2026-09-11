@@ -76,7 +76,10 @@
                         "additionalProperties": false,
                         "properties": {
                           "unit": {
-                            "minLength": 1,
+                            "enum": [
+                              "kg/L",
+                              "g/mL"
+                            ],
                             "type": "string"
                           },
                           "value": {
@@ -125,7 +128,10 @@
                                   "additionalProperties": false,
                                   "properties": {
                                     "unit": {
-                                      "minLength": 1,
+                                      "enum": [
+                                        "mol",
+                                        "mmol"
+                                      ],
                                       "type": "string"
                                     },
                                     "value": {
@@ -155,7 +161,11 @@
                             "additionalProperties": false,
                             "properties": {
                               "unit": {
-                                "minLength": 1,
+                                "enum": [
+                                  "kg",
+                                  "g",
+                                  "mg"
+                                ],
                                 "type": "string"
                               },
                               "value": {
@@ -213,7 +223,10 @@
                       "additionalProperties": false,
                       "properties": {
                         "unit": {
-                          "minLength": 1,
+                          "enum": [
+                            "K",
+                            "degC"
+                          ],
                           "type": "string"
                         },
                         "value": {
@@ -248,7 +261,11 @@
                         "additionalProperties": false,
                         "properties": {
                           "unit": {
-                            "minLength": 1,
+                            "enum": [
+                              "L",
+                              "mL",
+                              "uL"
+                            ],
                             "type": "string"
                           },
                           "value": {
@@ -293,10 +310,6 @@
                       "vesselId": {
                         "minLength": 1,
                         "type": "string"
-                      },
-                      "volumeProfileRef": {
-                        "minLength": 1,
-                        "type": "string"
                       }
                     },
                     "required": [
@@ -304,7 +317,6 @@
                       "kind",
                       "capacity",
                       "geometryRef",
-                      "volumeProfileRef",
                       "position"
                     ],
                     "type": "object"
@@ -571,7 +583,11 @@
               "additionalProperties": false,
               "properties": {
                 "unit": {
-                  "minLength": 1,
+                  "enum": [
+                    "L",
+                    "mL",
+                    "uL"
+                  ],
                   "type": "string"
                 },
                 "value": {
@@ -649,7 +665,11 @@
               "additionalProperties": false,
               "properties": {
                 "unit": {
-                  "minLength": 1,
+                  "enum": [
+                    "L",
+                    "mL",
+                    "uL"
+                  ],
                   "type": "string"
                 },
                 "value": {

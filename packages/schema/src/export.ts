@@ -27,7 +27,6 @@
 import { z } from "zod";
 
 import { EventLogSchema } from "./events.js";
-import { SerializedQuantitySchema } from "./quantity.js";
 import { SolverConfigSchema } from "./scientific.js";
 import {
   CURRENT_SCHEMA_VERSION,
@@ -44,13 +43,13 @@ export const EXPORT_FORMAT_VERSION = 1;
  * One link in the chain from genesis to the exported branch tip. The last entry
  * describes the exported world itself.
  */
-export const LineageLinkSchema = z.object({
+export const LineageLinkSchema = z.strictObject({
   worldId: WorldIdSchema,
   lineage: LineageSchema,
 });
 export type LineageLink = z.infer<typeof LineageLinkSchema>;
 
-export const ExportBundleSchema = z.object({
+export const ExportBundleSchema = z.strictObject({
   format: z.literal(EXPORT_FORMAT),
   formatVersion: z.literal(EXPORT_FORMAT_VERSION),
   schemaVersion: z.literal(CURRENT_SCHEMA_VERSION),
@@ -74,7 +73,7 @@ export const ExportBundleSchema = z.object({
 
   /** Explicitly states whether learner evidence is in this bundle. */
   includesLearnerEvidence: z.boolean(),
-  learnerEvidence: z.array(z.object({}).passthrough()).optional(),
+  learnerEvidence: z.array(z.strictObject({}).passthrough()).optional(),
 
   createdAt: z.string().optional(),
 });
@@ -96,5 +95,3 @@ export const FORBIDDEN_BUNDLE_FIELDS = [
   "ipAddress",
 ] as const;
 
-/** Serialized quantity is re-exported so bundle consumers need one import. */
-export { SerializedQuantitySchema };

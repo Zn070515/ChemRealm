@@ -14,7 +14,7 @@
 
 import { z } from "zod";
 
-import { SerializedQuantitySchema } from "./quantity.js";
+import { quantityOfDimension } from "./quantity.js";
 
 /**
  * A material as the AUTHOR writes it: molarity plus density, both sourced.
@@ -25,42 +25,51 @@ import { SerializedQuantitySchema } from "./quantity.js";
  * activity, hence the model pH. A scenario without a declared density is a
  * validation error, never a default (`SPEC-0001` AC-S15).
  */
-export const MaterialDefinitionSchema = z.object({
+export const MaterialDefinitionSchema = z.strictObject({
   materialId: z.string().min(1),
   label: z.string().min(1),
   /** Aqueous solution or pure solvent; solids are out of scope for v0. */
   phase: z.literal("aqueous"),
   solutes: z.array(
-    z.object({
+    z.strictObject({
       soluteId: z.string().min(1),
-      concentration: SerializedQuantitySchema,
+      // A reagent is specified volumetrically; the taught and lab convention
+      // is mol/L. Molality is accepted too because a scenario may declare it.
+      concentration: quantityOfDimension("molarity", "molality"),
       /** Sourced. Feeds `waterMass`, so it is a scientific input. */
-      molarMass: SerializedQuantitySchema,
+      molarMass: quantityOfDimension("molarMass"),
       /** Whether the solute is fully dissociated at these concentrations. */
       fullyDissociated: z.boolean(),
     }),
   ),
   /** Sourced. Feeds `waterMass` via the resolved inventory. */
-  density: SerializedQuantitySchema,
+  density: quantityOfDimension("density"),
 });
 export type MaterialDefinition = z.infer<typeof MaterialDefinitionSchema>;
 
-export const VesselDefinitionSchema = z.object({
+export const VesselDefinitionSchema = z.strictObject({
   vesselId: z.string().min(1),
   kind: z.enum(["conicalFlask", "beaker", "burette", "volumetricFlask"]),
-  capacity: SerializedQuantitySchema,
+  capacity: quantityOfDimension("volume"),
   /**
-   * Publishes `V(h)` and its inverse. Without a profile the vessel cannot carry
-   * a liquid-level readout at all — a conical flask drawn to "look right" is
-   * not the same object as one whose interior volume is a known function of
-   * height (`docs/visual/apparatus-standard.md`).
+   * The apparatus asset. ONE reference, not two.
+   *
+   * An earlier version used `volumeProfileRef` here while `world.ts` used
+   * `geometryRef`, and the resolved snapshot carried BOTH — two names for one
+   * thing, which is how a resolver ends up inventing a value for whichever one
+   * the content failed to supply.
+   *
+   * The referenced asset publishes `V(h)` and its inverse. Without a profile a
+   * vessel cannot carry a liquid-level readout at all — a conical flask drawn
+   * to "look right" is not the same object as one whose interior volume is a
+   * known function of height (`docs/visual/apparatus-standard.md`).
    */
-  volumeProfileRef: z.string().min(1),
-  position: z.object({ unit: z.literal("mm"), x: z.number(), y: z.number() }),
+  geometryRef: z.string().min(1),
+  position: z.strictObject({ unit: z.literal("mm"), x: z.number(), y: z.number() }),
   initialContents: z.array(
-    z.object({
+    z.strictObject({
       materialId: z.string().min(1),
-      volume: SerializedQuantitySchema,
+      volume: quantityOfDimension("volume"),
     }),
   ),
 });
@@ -74,8 +83,8 @@ export type VesselDefinition = z.infer<typeof VesselDefinitionSchema>;
  * earlier revision said "solverConfig wins if they disagree", which degrades a
  * requirement into a comment.
  */
-export const ModelRequirementsSchema = z.object({
-  temperature: SerializedQuantitySchema,
+export const ModelRequirementsSchema = z.strictObject({
+  temperature: quantityOfDimension("temperature"),
   solvent: z.literal("water"),
   phase: z.literal("aqueous"),
   activityCorrected: z.boolean(),
@@ -84,7 +93,7 @@ export const ModelRequirementsSchema = z.object({
 });
 export type ModelRequirements = z.infer<typeof ModelRequirementsSchema>;
 
-export const ScenarioSchema = z.object({
+export const ScenarioSchema = z.strictObject({
   /** Bumped whenever the content changes; part of the content hash. */
   contentVersion: z.number().int().positive(),
   scenarioRef: z.string().min(1),
@@ -93,7 +102,7 @@ export const ScenarioSchema = z.object({
   materials: z.array(MaterialDefinitionSchema).min(1),
   vessels: z.array(VesselDefinitionSchema).min(1),
   apparatus: z.array(
-    z.object({
+    z.strictObject({
       kind: z.string().min(1),
       state: z.record(z.string(), z.unknown()),
     }),

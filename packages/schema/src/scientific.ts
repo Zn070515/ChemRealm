@@ -33,7 +33,7 @@ export const ProvenanceCategorySchema = z.enum([
 ]);
 export type ProvenanceCategory = z.infer<typeof ProvenanceCategorySchema>;
 
-export const ProvenanceSchema = z.object({
+export const ProvenanceSchema = z.strictObject({
   /** e.g. "acidbase-monoprotic-davies". Names the MODEL, not a quality claim. */
   modelId: z.string().min(1),
   modelVersion: z.string().min(1),
@@ -47,14 +47,14 @@ export const ProvenanceSchema = z.object({
 });
 export type Provenance = z.infer<typeof ProvenanceSchema>;
 
-export const ModelDescriptorSchema = z.object({
+export const ModelDescriptorSchema = z.strictObject({
   id: z.string().min(1),
   version: z.string().min(1),
   /** Free text shown in the model-inspection view. */
   description: z.string(),
   /** The domain the model claims. Outside it, the solver must refuse. */
-  validity: z.object({
-    temperatureKelvin: z.object({ min: z.number(), max: z.number() }),
+  validity: z.strictObject({
+    temperatureKelvin: z.strictObject({ min: z.number(), max: z.number() }),
     ionicStrengthMolalMax: z.number().positive(),
     species: z.array(z.string()),
     solvent: z.string(),
@@ -71,7 +71,7 @@ export type ModelDescriptor = z.infer<typeof ModelDescriptorSchema>;
  * both are carried so the boundary conversion is explicit rather than assumed
  * (`ADR-0007`, `SPEC-0001` AC-U5).
  */
-export const SpeciesStateSchema = z.object({
+export const SpeciesStateSchema = z.strictObject({
   symbol: z.string().min(1),
   /** m̂ = m/m°, dimensionless. */
   reducedMolality: z.number().nonnegative(),
@@ -84,7 +84,7 @@ export const SpeciesStateSchema = z.object({
 });
 export type SpeciesState = z.infer<typeof SpeciesStateSchema>;
 
-export const ValidityStatusSchema = z.object({
+export const ValidityStatusSchema = z.strictObject({
   inDomain: z.boolean(),
   /** Present only when `inDomain` is false. A refusal carries its reason. */
   reason: z.string().optional(),
@@ -94,7 +94,7 @@ export const ValidityStatusSchema = z.object({
 });
 export type ValidityStatus = z.infer<typeof ValidityStatusSchema>;
 
-export const IndicatorStateSchema = z.object({
+export const IndicatorStateSchema = z.strictObject({
   indicatorId: z.string().min(1),
   /**
    * m(In⁻)/m(HIn). A SCIENTIFIC output, because computing it needs `Ka_in`, an
@@ -105,7 +105,7 @@ export const IndicatorStateSchema = z.object({
 });
 export type IndicatorState = z.infer<typeof IndicatorStateSchema>;
 
-export const ScientificStateSchema = z.object({
+export const ScientificStateSchema = z.strictObject({
   species: z.array(SpeciesStateSchema),
   ionicStrengthMolal: z.number().nonnegative(),
   ionicStrengthReduced: z.number().nonnegative(),
@@ -126,17 +126,17 @@ export type ScientificState = z.infer<typeof ScientificStateSchema>;
  * value rather than an exception.
  */
 export const SolverOutcomeSchema = z.discriminatedUnion("status", [
-  z.object({ status: z.literal("OK"), state: ScientificStateSchema }),
-  z.object({
+  z.strictObject({ status: z.literal("OK"), state: ScientificStateSchema }),
+  z.strictObject({
     status: z.literal("MODEL_OUT_OF_DOMAIN"),
     reason: z.string().min(1),
   }),
-  z.object({
+  z.strictObject({
     status: z.literal("NOT_CONVERGED"),
     residual: z.number(),
     iterations: z.number().int().nonnegative(),
   }),
-  z.object({
+  z.strictObject({
     status: z.literal("INVALID_INPUT"),
     violations: z.array(z.string()),
   }),
@@ -144,7 +144,7 @@ export const SolverOutcomeSchema = z.discriminatedUnion("status", [
 export type SolverOutcome = z.infer<typeof SolverOutcomeSchema>;
 
 /** The solver identity that participates in replay identity (`ADR-0007` §8). */
-export const SolverConfigSchema = z.object({
+export const SolverConfigSchema = z.strictObject({
   id: z.string().min(1),
   version: z.string().min(1),
   parameters: z.record(z.string(), z.number()),

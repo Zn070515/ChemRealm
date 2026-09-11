@@ -18,7 +18,7 @@
 
 import { z } from "zod";
 
-import { SerializedQuantitySchema } from "./quantity.js";
+import { quantityOfDimension } from "./quantity.js";
 import {
   ApparatusIdSchema,
   MaterialIdSchema,
@@ -27,35 +27,35 @@ import {
 } from "./world.js";
 
 export const CommandSchema = z.discriminatedUnion("type", [
-  z.object({
+  z.strictObject({
     type: z.literal("PlaceApparatus"),
     apparatusId: ApparatusIdSchema,
     kind: z.string().min(1),
     position: PositionSchema,
   }),
-  z.object({
+  z.strictObject({
     type: z.literal("AttachApparatus"),
     childId: z.union([ApparatusIdSchema, VesselIdSchema]),
     parentId: z.union([ApparatusIdSchema, VesselIdSchema]),
     portId: z.string().min(1),
   }),
-  z.object({
+  z.strictObject({
     type: z.literal("ChargeVessel"),
     vesselId: VesselIdSchema,
     materialId: MaterialIdSchema,
-    volume: SerializedQuantitySchema,
+    volume: quantityOfDimension("volume"),
   }),
   /**
    * The learner-facing "add titrant". Named for the intent; the event it
    * produces is `TransferCommitted`, because that is the fact.
    */
-  z.object({
+  z.strictObject({
     type: z.literal("DeliverTitrant"),
     fromVesselId: VesselIdSchema,
     toVesselId: VesselIdSchema,
-    volume: SerializedQuantitySchema,
+    volume: quantityOfDimension("volume"),
   }),
-  z.object({
+  z.strictObject({
     type: z.literal("BranchWorld"),
     fromSequence: z.number().int().nonnegative(),
   }),

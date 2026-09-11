@@ -113,6 +113,39 @@ export function dimensionOf(unit: UnitSymbol): Dimension {
   return UNIT_TABLE[unit].dimension;
 }
 
+/** Every unit of one dimension, as the non-empty tuple `z.enum` wants. */
+export function unitsOfDimension(dimension: Dimension): [UnitSymbol, ...UnitSymbol[]] {
+  const units = UNIT_SYMBOLS.filter((u) => UNIT_TABLE[u].dimension === dimension);
+  if (units.length === 0) {
+    throw new Error(`quantity: no units registered for dimension ${dimension}`);
+  }
+  return units as [UnitSymbol, ...UnitSymbol[]];
+}
+
+/**
+ * A `{value, unit}` pair CONSTRAINED to one or more dimensions.
+ *
+ * WHY THIS EXISTS. `QuantitySchema` alone accepts any recognised unit. That
+ * makes it accept `{value: 25, unit: "mL"}` in a field called `temperature` and
+ * `{value: 5, unit: "mol"}` in a field called `capacity` — verified, not
+ * hypothesised. Both were accepted, and the emitted JSON Schema inherited the
+ * hole, so the Python side would have accepted them too.
+ *
+ * Being explicit about units does not prevent dimension confusion; only
+ * checking the dimension does. This is the function that checks it, and every
+ * field whose dimension is known must use it.
+ */
+export function quantityOfDimension(
+  ...dimensions: [Dimension, ...Dimension[]]
+) {
+  const units = dimensions.flatMap((d) => unitsOfDimension(d));
+  return z.object({
+    value: z.number().finite(),
+    unit: z.enum(units as unknown as [UnitSymbol, ...UnitSymbol[]]),
+  });
+}
+
+
 /**
  * Convert a serialized quantity to its canonical unit.
  *

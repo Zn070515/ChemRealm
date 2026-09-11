@@ -238,12 +238,14 @@ describe("standard state — reduced vs physical (AC-U5)", () => {
 });
 
 describe("ionic strength bases are distinct quantities (AC-U2)", () => {
-  it("does not treat molal and molar ionic strength as the same number type", () => {
+  it("uses distinct brand symbols, so the two bases cannot be confused", () => {
     const molal = ionicStrengthMolal(0.1);
     const molar = ionicStrengthMolar(0.1);
-    // Same numeric value, different physical quantity. They cannot be compared
-    // or assigned across — see units.guarantees.ts.
-    expect(molal.value).toBe(molar.value);
+    // Numerically equal, physically different. The only thing preventing a
+    // mix-up is that the brands differ, so that is what this asserts — a
+    // copy-paste error in the brand key then fails a test instead of silently
+    // making the two types interchangeable. (The numeric-policy spike hit
+    // precisely that bug once.)
     expect(Object.getOwnPropertySymbols(molal)).not.toEqual(
       Object.getOwnPropertySymbols(molar),
     );
@@ -257,18 +259,17 @@ describe("bad conversions fail loudly rather than returning a number", () => {
     ).toThrow(RangeError);
   });
 
-  it("refuses a negative molar mass via the constructor", () => {
+  it("refuses a negative value at a quantity constructor", () => {
     expect(() => molPerKilogram(-1)).toThrow(RangeError);
   });
 
-  it("exports the standard molality as a quantity, not a bare 1", () => {
-    expect(STANDARD_MOLALITY).toBe(1);
-    expect(typeof STANDARD_MOLALITY).toBe("number");
-  });
-
-  it("keeps MolPerKilogram and ReducedMolality separate at the type level", () => {
-    // A runtime assertion cannot test this (m° = 1 makes them equal); this
-    // documents the intent next to the numeric identity above.
+  it("states, as a NEGATIVE result, that runtime cannot separate the two scales", () => {
+    // Recorded deliberately. At m° = 1 mol/kg the two are numerically
+    // identical, so no runtime assertion distinguishes them — which is exactly
+    // why the separation must be carried by the TYPES (AC-U5) and tested in
+    // units.guarantees.ts. An `expect(mHat).not.toBe(m)` here would fail on
+    // correct code, and deleting it while pretending the property was tested
+    // would be worse.
     const m: MolPerKilogram = molPerKilogram(1);
     const mHat: ReducedMolality = reduceMolality(m);
     expect(mHat.value).toBe(m);

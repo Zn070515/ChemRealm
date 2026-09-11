@@ -21,7 +21,7 @@
 
 import { z } from "zod";
 
-import { SerializedQuantitySchema } from "./quantity.js";
+import { quantityOfDimension } from "./quantity.js";
 import { SolverConfigSchema } from "./scientific.js";
 
 export const WorldIdSchema = z.string().min(1);
@@ -42,7 +42,7 @@ export const HashSchema = z.string().min(1);
  *
  * Length, never volume: see `docs/visual/apparatus-standard.md`.
  */
-export const PositionSchema = z.object({
+export const PositionSchema = z.strictObject({
   unit: z.literal("mm"),
   x: z.number().finite(),
   y: z.number().finite(),
@@ -57,28 +57,31 @@ export type Position = z.infer<typeof PositionSchema>;
  * would depend on it. Freezing the resolved inventory means `MaterialCharged`
  * reduces to `contents = volume × inventory` with no lookup of any kind.
  */
-export const MaterialSnapshotSchema = z.object({
+export const MaterialSnapshotSchema = z.strictObject({
   materialId: MaterialIdSchema,
   /** What the scenario author wrote, kept for inspection. */
   sourceDefinition: z.string(),
-  density: SerializedQuantitySchema,
+  density: quantityOfDimension("density"),
   composition: z.array(
-    z.object({
+    z.strictObject({
       soluteId: z.string().min(1),
       molPerLitre: z.number().nonnegative(),
     }),
   ),
   molarMasses: z.array(
-    z.object({
+    z.strictObject({
       soluteId: z.string().min(1),
       kilogramsPerMol: z.number().positive(),
     }),
   ),
   /** FROZEN at genesis. This is what `MaterialCharged` multiplies by volume. */
-  resolvedInventoryPerLitre: z.object({
-    waterMass: SerializedQuantitySchema,
+  resolvedInventoryPerLitre: z.strictObject({
+    waterMass: quantityOfDimension("mass"),
     soluteAmounts: z.array(
-      z.object({ soluteId: z.string().min(1), amount: SerializedQuantitySchema }),
+      z.strictObject({
+        soluteId: z.string().min(1),
+        amount: quantityOfDimension("amount"),
+      }),
     ),
   }),
 });
@@ -92,26 +95,26 @@ export type MaterialSnapshot = z.infer<typeof MaterialSnapshotSchema>;
  * different things answering different questions, and storing both would
  * recreate the double-source-of-truth problem just removed from `Vessel`.
  */
-export const ScenarioSnapshotSchema = z.object({
+export const ScenarioSnapshotSchema = z.strictObject({
   scenarioRef: z.string().min(1),
   materials: z.array(MaterialSnapshotSchema),
   vessels: z.array(
-    z.object({
+    z.strictObject({
       vesselId: VesselIdSchema,
       kind: z.string().min(1),
-      capacity: SerializedQuantitySchema,
+      capacity: quantityOfDimension("volume"),
+      /** The asset, which publishes V(h)/h(V). One reference, not two —
+       *  see the note in `content.ts`. */
       geometryRef: z.string().min(1),
-      /** Published V(h)/h(V) profile reference; see apparatus-standard.md. */
-      volumeProfileRef: z.string().min(1),
       position: PositionSchema,
     }),
   ),
   apparatusDefaults: z.array(
-    z.object({ kind: z.string().min(1), state: z.record(z.string(), z.unknown()) }),
+    z.strictObject({ kind: z.string().min(1), state: z.record(z.string(), z.unknown()) }),
   ),
   /** A constraint on what may be used, not a record of what was used. */
-  modelRequirements: z.object({
-    temperature: SerializedQuantitySchema,
+  modelRequirements: z.strictObject({
+    temperature: quantityOfDimension("temperature"),
     species: z.array(z.string()),
     solvent: z.string(),
     phase: z.string(),
@@ -121,11 +124,11 @@ export const ScenarioSnapshotSchema = z.object({
 export type ScenarioSnapshot = z.infer<typeof ScenarioSnapshotSchema>;
 
 /** Per-vessel conserved and operational state. Three fields. Nothing else. */
-export const CanonicalContentsSchema = z.object({
-  waterMass: SerializedQuantitySchema,
-  liquidVolume: SerializedQuantitySchema,
+export const CanonicalContentsSchema = z.strictObject({
+  waterMass: quantityOfDimension("mass"),
+  liquidVolume: quantityOfDimension("volume"),
   materials: z.array(
-    z.object({ materialId: MaterialIdSchema, amount: SerializedQuantitySchema }),
+    z.strictObject({ materialId: MaterialIdSchema, amount: quantityOfDimension("amount") }),
   ),
 });
 export type CanonicalContents = z.infer<typeof CanonicalContentsSchema>;
@@ -133,16 +136,16 @@ export type CanonicalContents = z.infer<typeof CanonicalContentsSchema>;
 /**
  * STRUCTURE ONLY. No `contents` field, by design — see the file header.
  */
-export const VesselSchema = z.object({
+export const VesselSchema = z.strictObject({
   id: VesselIdSchema,
   kind: z.string().min(1),
-  capacity: SerializedQuantitySchema,
+  capacity: quantityOfDimension("volume"),
   geometryRef: z.string().min(1),
   position: PositionSchema,
 });
 export type Vessel = z.infer<typeof VesselSchema>;
 
-export const ApparatusSchema = z.object({
+export const ApparatusSchema = z.strictObject({
   id: ApparatusIdSchema,
   kind: z.string().min(1),
   position: PositionSchema,
@@ -151,14 +154,14 @@ export const ApparatusSchema = z.object({
 });
 export type Apparatus = z.infer<typeof ApparatusSchema>;
 
-export const AttachmentSchema = z.object({
+export const AttachmentSchema = z.strictObject({
   childId: z.union([ApparatusIdSchema, VesselIdSchema]),
   parentId: z.union([ApparatusIdSchema, VesselIdSchema]),
   portId: z.string().min(1),
 });
 export type Attachment = z.infer<typeof AttachmentSchema>;
 
-export const LineageSchema = z.object({
+export const LineageSchema = z.strictObject({
   parentWorldId: WorldIdSchema.nullable(),
   forkSequence: z.number().int().nonnegative().nullable(),
   forkStateHash: HashSchema.nullable(),
@@ -171,7 +174,7 @@ export const CURRENT_SCHEMA_VERSION = 1;
  * `sequence` is the present cursor and is NOT hashed. Wall-clock time appears
  * nowhere here: sequence is the sole ordering authority (`ADR-0002` §Time).
  */
-export const WorldStateSchema = z.object({
+export const WorldStateSchema = z.strictObject({
   schemaVersion: z.literal(CURRENT_SCHEMA_VERSION),
   worldId: WorldIdSchema,
   lineage: LineageSchema,
@@ -181,7 +184,7 @@ export const WorldStateSchema = z.object({
   vessels: z.array(VesselSchema),
   apparatus: z.array(ApparatusSchema),
   attachments: z.array(AttachmentSchema),
-  canonical: z.object({
+  canonical: z.strictObject({
     byVessel: z.record(VesselIdSchema, CanonicalContentsSchema),
   }),
 });

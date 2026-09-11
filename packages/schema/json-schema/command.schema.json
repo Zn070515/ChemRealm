@@ -109,7 +109,11 @@
           "additionalProperties": false,
           "properties": {
             "unit": {
-              "minLength": 1,
+              "enum": [
+                "L",
+                "mL",
+                "uL"
+              ],
               "type": "string"
             },
             "value": {
@@ -150,7 +154,11 @@
           "additionalProperties": false,
           "properties": {
             "unit": {
-              "minLength": 1,
+              "enum": [
+                "L",
+                "mL",
+                "uL"
+              ],
               "type": "string"
             },
             "value": {

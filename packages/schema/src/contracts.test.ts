@@ -24,7 +24,7 @@ describe("AC-R15 — contents live in exactly one place", () => {
     expect(Object.keys(shape)).not.toContain("canonical");
   });
 
-  it("rejects a vessel that tries to carry its own contents", () => {
+  it("REJECTS a vessel that tries to carry its own contents", () => {
     const withContents = {
       id: "flask",
       kind: "conicalFlask",
@@ -33,10 +33,12 @@ describe("AC-R15 — contents live in exactly one place", () => {
       position: { unit: "mm", x: 0, y: 0 },
       contents: { waterMass: { value: 1, unit: "kg" } },
     };
-    // Zod strips unknown keys by default rather than failing, so assert that
-    // the key does not SURVIVE — which is the property that matters.
-    const parsed = VesselSchema.parse(withContents) as Record<string, unknown>;
-    expect(parsed).not.toHaveProperty("contents");
+    // This test previously asserted the key was STRIPPED — which is zod's
+    // default, and is the defect rather than the property. On a persisted
+    // format, silently dropping an unknown field is how a newer world's data
+    // disappears without anyone being told. ADR-0005 requires a downgrade to be
+    // REFUSED, and a schema that strips cannot refuse anything.
+    expect(VesselSchema.safeParse(withContents).success).toBe(false);
   });
 
   it("places contents under canonical.byVessel", () => {
@@ -124,7 +126,7 @@ describe("AC-C1 — content declares a scenario and cannot express chemistry", (
         vesselId: "flask",
         kind: "conicalFlask",
         capacity: { value: 0.25, unit: "L" },
-        volumeProfileRef: "flask-250",
+        geometryRef: "flask-250",
         position: { unit: "mm", x: 0, y: 0 },
         initialContents: [{ materialId: "hcl-0.1", volume: { value: 0.025, unit: "L" } }],
       },
@@ -203,6 +205,111 @@ describe("AC-R8 — the migration harness exists before it is needed", () => {
   it("reports a broken chain instead of returning a half-migrated record", () => {
     const result = migrate({ schemaVersion: 0 }, CURRENT_SCHEMA_VERSION);
     expect(result.status).toBe("NO_PATH");
+  });
+});
+
+describe("boundary shapes REJECT unknown keys rather than stripping them", () => {
+  it("refuses an event carrying a field the schema does not know", () => {
+    const result = DomainEventSchema.safeParse({
+      seq: 1,
+      schemaVersion: CURRENT_SCHEMA_VERSION,
+      type: "ApparatusPlaced",
+      payload: { apparatusId: "b", kind: "burette", position: { unit: "mm", x: 0, y: 0 } },
+      somethingUnexpected: true,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("emits additionalProperties:false, so the Python side refuses too", () => {
+    const json = JSON.stringify(generateJsonSchemas()["world-state"]);
+    expect(json).toContain('"additionalProperties":false');
+  });
+});
+
+describe("dimension coherence — the contract cannot express dimensional nonsense", () => {
+  // Found by PROBING, not by reading. `SerializedQuantitySchema` accepts any
+  // registered unit, so the first version of this contract happily accepted
+  // `temperature: {value: 25, unit: "mL"}` and `capacity: {value: 5, unit: "mol"}`,
+  // and the emitted JSON Schema inherited the hole, so the Python side would
+  // have accepted them too. Being explicit about units does not prevent
+  // dimension confusion; only checking the dimension does (ADR-0004).
+  const valid = {
+    contentVersion: 1,
+    scenarioRef: "x",
+    title: "x",
+    materials: [
+      {
+        materialId: "m",
+        label: "m",
+        phase: "aqueous" as const,
+        solutes: [
+          {
+            soluteId: "HCl",
+            concentration: { value: 0.1, unit: "mol/L" },
+            molarMass: { value: 36.46, unit: "g/mol" },
+            fullyDissociated: true,
+          },
+        ],
+        density: { value: 1.002, unit: "kg/L" },
+      },
+    ],
+    vessels: [
+      {
+        vesselId: "v",
+        kind: "conicalFlask" as const,
+        capacity: { value: 0.25, unit: "L" },
+        geometryRef: "g",
+        geometryRef: "g",
+        position: { unit: "mm" as const, x: 0, y: 0 },
+        initialContents: [],
+      },
+    ],
+    apparatus: [],
+    modelRequirements: {
+      temperature: { value: 298.15, unit: "K" },
+      solvent: "water" as const,
+      phase: "aqueous" as const,
+      activityCorrected: true,
+      species: ["H2O"],
+    },
+  };
+
+  /** Re-parse the scenario with one quantity swapped to a wrong dimension. */
+  const acceptsIf = (swap: (s: Record<string, Record<string, unknown>>) => void) => {
+    const copy = structuredClone(valid) as unknown as Record<string, Record<string, unknown>>;
+    swap(copy);
+    return ScenarioSchema.safeParse(copy).success;
+  };
+
+  it("accepts the well-formed scenario", () => {
+    expect(ScenarioSchema.safeParse(valid).success).toBe(true);
+  });
+
+  it("rejects a VOLUME field holding an AMOUNT", () => {
+    expect(
+      acceptsIf((s) => {
+        (s.vessels[0] as Record<string, unknown>)["capacity"] = { value: 5, unit: "mol" };
+      }),
+    ).toBe(false);
+  });
+
+  it("rejects a density declared in mol/L", () => {
+    expect(
+      acceptsIf((s) => {
+        (s.materials[0] as Record<string, unknown>)["density"] = { value: 1, unit: "mol/L" };
+      }),
+    ).toBe(false);
+  });
+
+  it("rejects a temperature declared in millilitres", () => {
+    expect(
+      acceptsIf((s) => {
+        (s.modelRequirements as Record<string, unknown>)["temperature"] = {
+          value: 25,
+          unit: "mL",
+        };
+      }),
+    ).toBe(false);
   });
 });
 
