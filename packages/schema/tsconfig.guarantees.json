@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "//": "Type-checks the compile-time guarantee fixtures. NOT part of `tsc -b`: these files are excluded from the package build so they never reach dist, and `noEmit` means this project has no output to reference. Run via `pnpm verify:guarantees`.",
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "noUnusedLocals": false
+  },
+  "include": ["src/**/*.guarantees.ts", "src/**/*.ts"],
+  "exclude": ["src/**/*.test.ts"]
+}

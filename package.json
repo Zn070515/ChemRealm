@@ -15,7 +15,10 @@
     "guards": "node tools/check_dependency_rules.mjs",
     "artifacts": "node tools/check_build_artifacts.mjs",
     "lint": "eslint .",
-    "test:browser": "playwright test"
+    "test:browser": "playwright test",
+    "verify:guarantees": "tsc -p packages/schema/tsconfig.guarantees.json",
+    "verify:schema-artifacts": "node packages/schema/scripts/emit-json-schema.mjs --check",
+    "emit:schema": "node packages/schema/scripts/emit-json-schema.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
