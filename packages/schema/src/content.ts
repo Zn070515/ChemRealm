@@ -17,8 +17,40 @@ import { z } from "zod";
 import { quantityOfDimension } from "./quantity.js";
 
 /**
- * A material as the AUTHOR writes it: molarity plus density, both sourced.
- * Resolution into a frozen inventory happens once, at genesis (`world.ts`).
+ * A solute, on ONE named composition scale.
+ *
+ * The scale is in the FIELD NAME, not inferred from the unit. An earlier version
+ * had a single field called `concentration` that accepted either mol/L or
+ * mol/kg — which is anti-pattern 1 of `docs/science/quantity-ontology.md`:
+ * "naming a variable `concentration` when it holds a molality". Both scales are
+ * still supported; neither is anonymous.
+ */
+export const SoluteDefinitionSchema = z.discriminatedUnion("basis", [
+  z.strictObject({
+    soluteId: z.string().min(1),
+    basis: z.literal("molarity"),
+    /** `c`, mol per litre of SOLUTION. The reagent-label and volumetric convention. */
+    amountConcentration: quantityOfDimension("molarity"),
+    /** Sourced. Feeds `waterMass`, so it is a scientific input. */
+    molarMass: quantityOfDimension("molarMass"),
+    /** Whether the solute is fully dissociated at these concentrations. */
+    fullyDissociated: z.boolean(),
+  }),
+  z.strictObject({
+    soluteId: z.string().min(1),
+    basis: z.literal("molality"),
+    /** `m`, mol per kilogram of WATER. */
+    molality: quantityOfDimension("molality"),
+    molarMass: quantityOfDimension("molarMass"),
+    fullyDissociated: z.boolean(),
+  }),
+]);
+export type SoluteDefinition = z.infer<typeof SoluteDefinitionSchema>;
+
+/**
+ * A material as the AUTHOR writes it: a composition on a named scale, plus
+ * density, both sourced. Resolution into a frozen inventory happens once, at
+ * genesis (`world.ts`).
  *
  * Density is required rather than optional because it is a scientific input,
  * not an implementation detail: it sets `waterMass`, hence molality, hence
@@ -30,19 +62,12 @@ export const MaterialDefinitionSchema = z.strictObject({
   label: z.string().min(1),
   /** Aqueous solution or pure solvent; solids are out of scope for v0. */
   phase: z.literal("aqueous"),
-  solutes: z.array(
-    z.strictObject({
-      soluteId: z.string().min(1),
-      // A reagent is specified volumetrically; the taught and lab convention
-      // is mol/L. Molality is accepted too because a scenario may declare it.
-      concentration: quantityOfDimension("molarity", "molality"),
-      /** Sourced. Feeds `waterMass`, so it is a scientific input. */
-      molarMass: quantityOfDimension("molarMass"),
-      /** Whether the solute is fully dissociated at these concentrations. */
-      fullyDissociated: z.boolean(),
-    }),
-  ),
-  /** Sourced. Feeds `waterMass` via the resolved inventory. */
+  solutes: z.array(SoluteDefinitionSchema),
+  /**
+   * Sourced. Feeds `waterMass` via the resolved inventory — and, when a solute
+   * is declared on the molality scale, is what converts it to the snapshot's
+   * molarity basis (`molalityToMolarity`).
+   */
   density: quantityOfDimension("density"),
 });
 export type MaterialDefinition = z.infer<typeof MaterialDefinitionSchema>;

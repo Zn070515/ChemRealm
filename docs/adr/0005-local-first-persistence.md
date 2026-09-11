@@ -69,18 +69,31 @@ Export produces a single self-describing, versioned bundle:
   "format": "chemrealm.export",
   "formatVersion": 1,
   "schemaVersion": "…",
-  "solverConfig": { "id": "acidbase-monoprotic-davies", "version": "…", "parameters": { } },
-  "world": { },
+  "lineage": [ { "worldId": "…", "lineage": { } } ],
   "events": [ ],
+  "includesLearnerEvidence": false,
   "learnerEvidence": [ ],
   "createdAt": "…"
 }
 ```
 
+**Correction (2026-09-11, conformance finding R2).** This sketch previously
+also carried `"solverConfig"` at the top level and a `"world"` object, and the
+implementation added `scenarioSnapshot` and `contentHash` beside them. All four
+duplicated what `WorldCreated.payload` already carries, with nothing checking
+the copies agreed — the second-source-of-truth defect this project removed from
+`Vessel.contents`, reappearing at a portability boundary. A field `no producer
+ever wrote` (`world`) is worse still: no consumer could rely on it. The bundle
+now carries the log and nothing the log already says.
+
 Requirements:
 
 - **Self-describing.** Schema version and solver configuration travel with the
-  data, so a bundle is interpretable without the code that produced it.
+  data, so a bundle is interpretable without the code that produced it. They
+  travel *inside* the log — `events[0]` is `WorldCreated`, and
+  `events[0].payload` carries `scenarioSnapshot`, `contentHash`, and
+  `solverConfig`. Removing the top-level copies does not weaken this
+  requirement; it removes a way for it to become false.
 - **Complete or explicitly partial.** A bundle that omits learner evidence says
   so in a field, rather than being silently narrower than the user expects.
 - **No identifiers.** No device id, no install id, no fingerprint. A bundle is

@@ -22,19 +22,25 @@
  * literally that would forbid the `worldId` that flattened export requires, so
  * the rule is stated precisely: no PERSONAL, DEVICE, or CROSS-SESSION TRACKING
  * identifier. World ids are content, not identity.
+ *
+ * WHERE GENESIS FACTS LIVE. A bundle carries the log and nothing that the log
+ * already says. An earlier version also copied `scenarioSnapshot`,
+ * `contentHash`, and `solverConfig` to the top level, where they duplicated
+ * `WorldCreated.payload` with nothing checking the two agreed — the same
+ * second-source-of-truth defect this project removed from `Vessel.contents`.
+ * The complete log from genesis already makes the bundle self-contained
+ * (`AC-R17`), so a consumer reads them from `events[0]`:
+ *
+ *     events[0].type === "WorldCreated"
+ *     events[0].payload.{worldId, scenarioSnapshot, contentHash, solverConfig}
+ *
+ * Making them look convenient to read at the top level is what let them drift.
  */
 
 import { z } from "zod";
 
 import { EventLogSchema } from "./events.js";
-import { SolverConfigSchema } from "./scientific.js";
-import {
-  CURRENT_SCHEMA_VERSION,
-  HashSchema,
-  LineageSchema,
-  ScenarioSnapshotSchema,
-  WorldIdSchema,
-} from "./world.js";
+import { CURRENT_SCHEMA_VERSION, LineageSchema, WorldIdSchema } from "./world.js";
 
 export const EXPORT_FORMAT = "chemrealm.export";
 export const EXPORT_FORMAT_VERSION = 1;
@@ -62,14 +68,11 @@ export const ExportBundleSchema = z.strictObject({
 
   /**
    * The COMPLETE event log from genesis, not a branch suffix. This is what
-   * makes the bundle replayable on a machine that has never seen the parent.
+   * makes the bundle replayable on a machine that has never seen the parent,
+   * and `events[0]` is the genesis — see the header. Nothing here restates what
+   * the log already carries.
    */
   events: EventLogSchema,
-
-  /** Self-contained genesis, so replay never reads `content/` (AC-R12). */
-  scenarioSnapshot: ScenarioSnapshotSchema,
-  contentHash: HashSchema,
-  solverConfig: SolverConfigSchema,
 
   /** Explicitly states whether learner evidence is in this bundle. */
   includesLearnerEvidence: z.boolean(),

@@ -78,64 +78,135 @@
           },
           "solutes": {
             "items": {
-              "additionalProperties": false,
-              "properties": {
-                "concentration": {
+              "oneOf": [
+                {
                   "additionalProperties": false,
                   "properties": {
-                    "unit": {
-                      "enum": [
-                        "mol/L",
-                        "mmol/L",
-                        "mol/kg"
+                    "amountConcentration": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "unit": {
+                          "enum": [
+                            "mol/L",
+                            "mmol/L"
+                          ],
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "value",
+                        "unit"
                       ],
+                      "type": "object"
+                    },
+                    "basis": {
+                      "const": "molarity",
                       "type": "string"
                     },
-                    "value": {
-                      "type": "number"
+                    "fullyDissociated": {
+                      "type": "boolean"
+                    },
+                    "molarMass": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "unit": {
+                          "enum": [
+                            "kg/mol",
+                            "g/mol"
+                          ],
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "value",
+                        "unit"
+                      ],
+                      "type": "object"
+                    },
+                    "soluteId": {
+                      "minLength": 1,
+                      "type": "string"
                     }
                   },
                   "required": [
-                    "value",
-                    "unit"
+                    "soluteId",
+                    "basis",
+                    "amountConcentration",
+                    "molarMass",
+                    "fullyDissociated"
                   ],
                   "type": "object"
                 },
-                "fullyDissociated": {
-                  "type": "boolean"
-                },
-                "molarMass": {
+                {
                   "additionalProperties": false,
                   "properties": {
-                    "unit": {
-                      "enum": [
-                        "kg/mol",
-                        "g/mol"
-                      ],
+                    "basis": {
+                      "const": "molality",
                       "type": "string"
                     },
-                    "value": {
-                      "type": "number"
+                    "fullyDissociated": {
+                      "type": "boolean"
+                    },
+                    "molality": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "unit": {
+                          "enum": [
+                            "mol/kg"
+                          ],
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "value",
+                        "unit"
+                      ],
+                      "type": "object"
+                    },
+                    "molarMass": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "unit": {
+                          "enum": [
+                            "kg/mol",
+                            "g/mol"
+                          ],
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "value",
+                        "unit"
+                      ],
+                      "type": "object"
+                    },
+                    "soluteId": {
+                      "minLength": 1,
+                      "type": "string"
                     }
                   },
                   "required": [
-                    "value",
-                    "unit"
+                    "soluteId",
+                    "basis",
+                    "molality",
+                    "molarMass",
+                    "fullyDissociated"
                   ],
                   "type": "object"
-                },
-                "soluteId": {
-                  "minLength": 1,
-                  "type": "string"
                 }
-              },
-              "required": [
-                "soluteId",
-                "concentration",
-                "molarMass",
-                "fullyDissociated"
-              ],
-              "type": "object"
+              ]
             },
             "type": "array"
           }

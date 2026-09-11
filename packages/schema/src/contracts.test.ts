@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { ScenarioSchema } from "./content.js";
+import { ScenarioSchema, SoluteDefinitionSchema } from "./content.js";
 import { FORBIDDEN_BUNDLE_FIELDS, ExportBundleSchema } from "./export.js";
 import { DomainEventSchema, WorldBranchedSchema, WorldCreatedSchema } from "./events.js";
 import { MIGRATIONS, migrate } from "./migrate.js";
@@ -114,7 +114,8 @@ describe("AC-C1 — content declares a scenario and cannot express chemistry", (
         solutes: [
           {
             soluteId: "HCl",
-            concentration: { value: 0.1, unit: "mol/L" },
+            basis: "molarity",
+            amountConcentration: { value: 0.1, unit: "mol/L" },
             molarMass: { value: 36.4609, unit: "g/mol" },
             fullyDissociated: true,
           },
@@ -162,7 +163,10 @@ describe("AC-C1 — content declares a scenario and cannot express chemistry", (
   });
 });
 
-describe("AC-P3 / AC-P4 — no identity in persisted or exported shapes", () => {
+// `AC-P4`, not `AC-P3`. `AC-P3` is "IndexedDB contains no identifier, name, or
+// contact field", evidenced by storage inspection at M8. This block tests the
+// EXPORT schema, which is `AC-P4`.
+describe("AC-P4 — no tracking identifier in the export bundle, and lineage present", () => {
   it("lists the fields a bundle must never carry", () => {
     expect(FORBIDDEN_BUNDLE_FIELDS.length).toBeGreaterThan(0);
   });
@@ -185,7 +189,14 @@ describe("AC-P3 / AC-P4 — no identity in persisted or exported shapes", () => 
   });
 });
 
-describe("AC-R8 — the migration harness exists before it is needed", () => {
+// NOT `AC-R8`. That criterion is "world export → import round-trips to an
+// identical state hash" (`SPEC-0001` AC-R8), a persistence test that lands with
+// the store. This block tests the migration harness, which `SPEC-0001`
+// §Rollout/migration requires to exist before it is needed. The earlier label
+// attached a criterion to a test that did not test it — which is the failure
+// mode `CLAUDE.md` §16 calls "tests passing only because assertions were
+// weakened", arriving through the label rather than the assertion.
+describe("the migration harness exists before it is needed", () => {
   it("registers a no-op 1 -> 1 so the runner is exercised every run", () => {
     expect(MIGRATIONS.some((m) => m.from === 1 && m.to === 1)).toBe(true);
   });
@@ -281,7 +292,8 @@ describe("dimension coherence — the contract cannot express dimensional nonsen
         solutes: [
           {
             soluteId: "HCl",
-            concentration: { value: 0.1, unit: "mol/L" },
+            basis: "molarity",
+            amountConcentration: { value: 0.1, unit: "mol/L" },
             molarMass: { value: 36.46, unit: "g/mol" },
             fullyDissociated: true,
           },
@@ -294,7 +306,6 @@ describe("dimension coherence — the contract cannot express dimensional nonsen
         vesselId: "v",
         kind: "conicalFlask" as const,
         capacity: { value: 0.25, unit: "L" },
-        geometryRef: "g",
         geometryRef: "g",
         position: { unit: "mm" as const, x: 0, y: 0 },
         initialContents: [],
@@ -400,5 +411,91 @@ describe("JSON Schema emission is deterministic", () => {
     ]) {
       expect(names).toContain(required);
     }
+  });
+});
+
+describe("the export bundle restates nothing the log already says", () => {
+  it("carries no copy of a genesis field", () => {
+    // `events[0]` is `WorldCreated`, which carries these already. An earlier
+    // version duplicated them at the bundle's top level and nothing checked the
+    // copies agreed — the second-source-of-truth defect this project removed
+    // from `Vessel.contents`. `world` is listed too: `ADR-0005` sketched it,
+    // nothing ever produced it, and a field no producer writes is a field no
+    // consumer can rely on.
+    const names = Object.keys(ExportBundleSchema.shape as Record<string, unknown>);
+    for (const duplicate of [
+      "scenarioSnapshot",
+      "contentHash",
+      "solverConfig",
+      "world",
+    ]) {
+      expect(names).not.toContain(duplicate);
+    }
+  });
+
+  it("keeps the fields that are genuinely the bundle's own", () => {
+    const names = Object.keys(ExportBundleSchema.shape as Record<string, unknown>);
+    for (const own of [
+      "format",
+      "formatVersion",
+      "schemaVersion",
+      "lineage",
+      "events",
+      "includesLearnerEvidence",
+    ]) {
+      expect(names).toContain(own);
+    }
+  });
+});
+
+describe("a solute declares its composition scale by name", () => {
+  const base = {
+    soluteId: "HCl",
+    molarMass: { value: 36.4609, unit: "g/mol" },
+    fullyDissociated: true,
+  };
+
+  it("accepts a molarity-basis solute", () => {
+    expect(
+      SoluteDefinitionSchema.safeParse({
+        ...base,
+        basis: "molarity",
+        amountConcentration: { value: 0.1, unit: "mol/L" },
+      }).success,
+    ).toBe(true);
+  });
+
+  it("accepts a molality-basis solute", () => {
+    // Still supported: a scenario may legitimately declare molality, and the
+    // required density gives `molalityToMolarity` the inputs it needs.
+    expect(
+      SoluteDefinitionSchema.safeParse({
+        ...base,
+        basis: "molality",
+        molality: { value: 0.1, unit: "mol/kg" },
+      }).success,
+    ).toBe(true);
+  });
+
+  it("REJECTS the anonymous `concentration` field it replaced", () => {
+    // Anti-pattern 1 of `docs/science/quantity-ontology.md`: a field named
+    // `concentration` that could be holding a molality. The scale is now in the
+    // field name rather than inferred from the unit.
+    expect(
+      SoluteDefinitionSchema.safeParse({
+        ...base,
+        concentration: { value: 0.1, unit: "mol/L" },
+      }).success,
+    ).toBe(false);
+  });
+
+  it("REJECTS a scale that contradicts its own field name", () => {
+    expect(
+      SoluteDefinitionSchema.safeParse({
+        ...base,
+        basis: "molarity",
+        amountConcentration: { value: 0.1, unit: "mol/kg" },
+      }).success,
+    ).toBe(false);
   });
 });
