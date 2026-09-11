@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * Emit JSON Schema artifacts into `packages/schema/dist/json-schema/`.
+ * Emit JSON Schema artifacts into `packages/schema/json-schema/` — COMMITTED,
+ * not under `dist/`. See the note on `OUT` below.
  *
  * Run with `--check` to verify the working copy is current WITHOUT writing.
  * That mode is what makes drift visible in CI: a schema change that was not
@@ -92,4 +93,4 @@ mkdirSync(OUT, { recursive: true });
 for (const [file, contents] of rendered) {
   writeFileSync(join(OUT, file), contents, "utf8");
 }
-console.log(`wrote ${rendered.size} JSON Schema artifacts to dist/json-schema/`);
+console.log(`wrote ${rendered.size} JSON Schema artifacts to ${OUT}`);
