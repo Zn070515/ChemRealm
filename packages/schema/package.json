@@ -12,9 +12,11 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "build": "tsc -b"
+    "build": "tsc -b && node scripts/emit-json-schema.mjs"
   },
   "dependencies": {
     "zod": "^4.1.12"
