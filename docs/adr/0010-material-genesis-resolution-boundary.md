@@ -2,7 +2,7 @@
 
 - **Status:** **Accepted** — M1 Final Closure. Owner, 2026-09-11.
 - **Date:** 2026-09-11
-- **Deciders:** Project owner review pending
+- **Deciders:** Project owner
 - **Related:** `SPEC-0001` revision 9, `ADR-0003`, `ADR-0004`, `PLAN-0001`
 - **Enables:** M2 genesis/reducer implementation within the v0 boundary
 
