@@ -1,11 +1,9 @@
 # ADR-0003: Scientific solver adapter boundary
 
-- **Status:** **Accepted baseline; amendment proposed** — M1 Final Closure, owner review
-  pending
-- **Deferred decisions:** the M1 Final Closure source-data provenance amendment below is
-  pending owner review. Otherwise see the ADR's own `## Open questions` /
-  `## Open decisions`; acceptance covers the decision, not deferred
-  sub-questions.
+- **Status:** **Accepted** — M1 Final Closure source-data provenance amendment
+  accepted. Owner, 2026-09-11.
+- **Deferred decisions:** see the ADR's own `## Open questions` / `## Open
+  decisions`; acceptance covers the decision, not deferred sub-questions.
 - **Date:** 2026-09-11
 - **Deciders:** Project owner
 - **Related:** `GOAL.md` §5.1, §5.2, §6.1, §14; `CLAUDE.md` §4.5, §8; `AGENTS.md` §2, §9
@@ -86,7 +84,7 @@ shortcut that flattens a result into a bare value is a place provenance is lost.
 
 Three properties make this load-bearing rather than decorative:
 
-### Proposed amendment — solver provenance is not source-data provenance
+### Amendment — solver provenance is not source-data provenance (accepted)
 
 `Provenance` belongs to a solver result and answers which model, version,
 activity model, and pinned parameters produced the state. It is not a citation
@@ -97,8 +95,8 @@ confidence category, and optional tagged measurement conditions. The record's
 `soluteId` identifies the composition or molar-mass datum it accompanies; there
 is no aggregate target list whose coverage can be ambiguous. Neither type may be
 substituted for the other merely because both contain a `category` field. This
-distinction is the M1 Final Closure amendment proposed for owner review; until
-accepted, it is not a new runtime milestone authorization.
+distinction is accepted as part of M1 Final Closure. It authorizes no runtime
+milestone beyond the plan's explicit gates.
 
 ### What `ScientificState` contains — and what it does not
 

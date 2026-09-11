@@ -1,10 +1,10 @@
 # ADR-0001: Repository and workspace strategy
 
-- **Status:** **Accepted baseline; amendment proposed** — M1 Final Closure, owner review
-  pending
-- **Deferred decisions:** the M1 Final Closure artifact-location amendment below is pending
-  owner review. Any later format decision gets a new ADR or an explicit
-  amendment rather than an unresolved question in an accepted record.
+- **Status:** **Accepted** — M1 Final Closure artifact-location amendment
+  accepted. Owner, 2026-09-11.
+- **Deferred decisions:** none for the accepted artifact-location amendment.
+  Any later format decision gets a new ADR or an explicit amendment rather than
+  an unresolved question in an accepted record.
 - **Date:** 2026-09-11
 - **Deciders:** Project owner
 - **Related:** `GOAL.md` §19, `CLAUDE.md` §13, `AGENTS.md` §19, `SPEC-0001`
@@ -179,16 +179,15 @@ Changing the TypeScript package manager is trivial. Changing the schema
 source-of-truth language would be a meaningful migration, which is why it is
 recorded above as the identified alternative rather than left implicit.
 
-## Proposed amendment — M1 Final Closure (owner review pending)
+## Amendment — M1 Final Closure (accepted)
 
-1. **Candidate decision: JSON Schema artifacts are committed at
+1. **Decision: JSON Schema artifacts are committed at
    `packages/schema/json-schema/`.** The build/emitter regenerates them, and
    `pnpm verify:schema-artifacts` fails on stale, missing, or orphaned files.
    This keeps the Python oracle runnable without a Node toolchain while retaining
    a deterministic drift check. The old `dist/json-schema/` path and the
-   "generate on demand" leaning would be superseded if this amendment is
-   accepted.
+   "generate on demand" leaning are superseded.
 
-The implementation, generated artifacts, and evidence packet use this candidate
-path so the proposal is testable. They do not turn it into an accepted decision;
-M1 S3 owner review is still required.
+The implementation, generated artifacts, and evidence packet use this path.
+The owner accepted this amendment with M1 S3 verification at implementation
+commit `295908ec` and CI run `34611467104`.

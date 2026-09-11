@@ -1,23 +1,22 @@
 # PLAN-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** **M1 Final Closure candidate for owner review** — the original plan
+- **Status:** **M1 S3 Verified / Accepted; M2 authorized** — the original plan
   was approved on 2026-09-11 at `SPEC-0001` revision 6; the current contract
-  candidate is revision 9.
+  is revision 9.
 - **Completed:** `M0 — Repository foundation` reached **S3 — Verified** on
   2026-09-11. Evidence: `docs/evidence/M0.md`, commits `1f3dfee`/`565a2e8`,
   CI run `34595967023` (13/13 gate steps on a clean `ubuntu-latest` checkout).
-- **Authorized next:** `M1 — Final Closure`. The implementation is **S2**; it
-  reaches **S3** only when the owner accepts the final-closure contract and its
-  evidence packet. **M2 is not authorized** on the strength of M1 being written.
+- **Authorized next:** `M2 — Event runtime and replay`. `M1 — Schema and units`
+  is **S3 — Verified / Accepted** with evidence in `docs/evidence/M1.md`.
 - **Coverage check:** `uv run python tools/check_acceptance_coverage.py` — every `AC-*` in
   `SPEC-0001` is required to appear in at least one milestone here. Run it after
   editing either document.
 - **Date:** 2026-09-11 (revised for M1 Final Closure)
 - **Implements:** `docs/specs/SPEC-0001-world-foundation-acid-base-titration.md`
 - **Related ADRs:** 0001–0009 were accepted at the baseline; ADR-0001 and
-  ADR-0003 have M1 Final Closure amendments pending owner review, plus ADR-0010
-  (**Proposed — M1 Final Closure candidate**). Load-bearing here: 0004
-  (revised), 0007 (revised), 0008, 0009, and 0010's M2 basis-boundary gate.
+  ADR-0003 M1 Final Closure amendments and ADR-0010 are accepted with M1 S3.
+  Load-bearing here: 0004 (revised), 0007 (revised), 0008, 0009, and ADR-0010's
+  M2 basis-boundary gate.
 - **Audience:** an agent that did not participate in the design. Nothing below
   assumes prior context beyond the repository documents.
 
@@ -32,8 +31,7 @@
 > construction; every resolved snapshot datum is canonical, carries its own
 > `DataProvenance`, and is required structurally; export contracts are aligned
 > with the v1 schema; and v0 rejects mixed composition bases until the Scientific
-> Reality Core owns the joint resolver. The candidate remains S2 pending owner
-> review.
+> Reality Core owns the joint resolver. M1 is S3 verified and M2 is authorized.
 
 ## How to read this plan
 
@@ -217,6 +215,8 @@ Delete the M0 files. Nothing is persisted and nothing depends on them.
 
 ## M1 — Schema and units
 
+**Status:** **S3 — Verified / Accepted**, 2026-09-11 · evidence
+`docs/evidence/M1.md` · implementation `295908ec` · CI `34611467104`
 **Target stage:** S3
 **Addresses:** ADR-0001, ADR-0004; `SPEC-0001` AC-C1, AC-C2, AC-R15, AC-R16, AC-R21, AC-P4, AC-U1..AC-U5, AC-V7
 

@@ -15,11 +15,12 @@ scientifically consequential, format-defining, or dependency-defining
 | `Rejected` | Considered and declined. Kept so the question is not re-litigated from scratch. |
 
 **All nine baseline ADRs were accepted by the owner on 2026-09-11**, at baseline
-commit `8310c685`, together with `SPEC-0001` revision 6. The M1 Final Closure amendments
-shown below are proposals pending owner review; they do not retroactively alter
-that acceptance. Acceptance covers each ADR's *decision*; every ADR that carries
-an `## Open questions` or `## Open decisions` section keeps those explicitly
-open, and they must be resolved before the milestone each one names.
+commit `8310c685`, together with `SPEC-0001` revision 6. The M1 Final Closure
+amendments to ADR-0001 and ADR-0003, and new ADR-0010, were accepted by the owner
+with M1 S3 at implementation commit `295908ec` (CI run `34611467104`). Acceptance
+covers each ADR's *decision*; every ADR that carries an `## Open questions` or
+`## Open decisions` section keeps those explicitly open, and they must be
+resolved before the milestone each one names.
 
 If an accepted decision is later found to be wrong, the ADR is **superseded by a
 new ADR**, not quietly edited.
@@ -28,16 +29,16 @@ new ADR**, not quietly edited.
 
 | ADR | Title | Status | Blocks |
 |---|---|---|---|
-| [0001](0001-repository-and-workspace-strategy.md) | Repository and workspace strategy | **Accepted; amendment proposed** | M0 |
+| [0001](0001-repository-and-workspace-strategy.md) | Repository and workspace strategy | **Accepted** (M1 amendment) | M0 |
 | [0002](0002-world-event-sourcing.md) | World event sourcing and branch model | **Accepted** | M1, M2, M8 |
-| [0003](0003-scientific-solver-adapter-boundary.md) | Scientific solver adapter boundary | **Accepted; amendment proposed** | M3, M4 |
+| [0003](0003-scientific-solver-adapter-boundary.md) | Scientific solver adapter boundary | **Accepted** (M1 amendment) | M3, M4 |
 | [0004](0004-units-and-quantity-representation.md) | Units and quantity representation | **Accepted** (revised) | M1, M3, M5 |
 | [0005](0005-local-first-persistence.md) | Local-first persistence and export | **Accepted** | M8 |
 | [0006](0006-renderer-and-observable-architecture.md) | Renderer and observable architecture | **Accepted** | M5, M6, M7 |
 | [0007](0007-deterministic-numeric-and-replay-policy.md) | Deterministic numeric and replay policy | **Accepted** (revised) | M2, M4, M8 |
 | [0008](0008-persisted-world-solver-compatibility.md) | Persisted-world solver compatibility | **Accepted** (new) | M8 |
 | [0009](0009-ace-control-loop-architecture.md) | ACE control-loop architecture | **Accepted** (new) | M9 |
-| [0010](0010-material-genesis-resolution-boundary.md) | Material genesis composition-basis boundary | **Proposed** — M1 Final Closure candidate | M2 |
+| [0010](0010-material-genesis-resolution-boundary.md) | Material genesis composition-basis boundary | **Accepted** (M1) | M2 |
 
 > **Revision note (2026-09-11, owner review remediation).** ADR-0004 and ADR-0007
 > were rewritten rather than amended: the original ADR-0004 overstated what

@@ -1,11 +1,11 @@
 # SPEC-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** **Accepted** — S1 passed. Owner, 2026-09-11.
+- **Status:** **Accepted** — S1 baseline and M1 S3 contract amendments
+  accepted. Owner, 2026-09-11.
 - **Accepted baseline:** commit `8310c685`, `SPEC-0001` revision 6
-- **Current revision:** **9** — M1 Final Closure candidate. Revision 7 was the
-  last owner-approved amendment; revisions 8–9 record the contract closure
-  needed for owner review before M1 can pass S3. See "Amendments since
-  acceptance" below.
+- **Current revision:** **9** — M1 S3 VERIFIED / ACCEPTED. Revision 7 was the
+  last previously owner-approved amendment; revisions 8–9 are now accepted
+  contract amendments. See "Amendments since acceptance" below.
 - **Acceptance scope:** the specification and its acceptance criteria. Deferred
   items listed under Open questions remain open and must be resolved before the
   milestone that names them. Acceptance does **not** assert that any criterion
@@ -24,14 +24,16 @@
 | Revision | Date | Change | Approval |
 |---|---|---|---|
 | 7 | 2026-09-11 | `CanonicalContents` conserves **components**, not materials (M1 contract remediation item 1). `AC-R21` added to carry that contract; `AC-S3` and `AC-R14` wording aligned to it. Round 6's claim at §"Round 6" that this file was "unchanged at revision 6" corrected. | Owner, 2026-09-11 |
-| 8 | 2026-09-11 | M1 Contract Closure R2 candidate: all persisted `MaterialSnapshot` scientific inputs are tagged quantities; source-data provenance is distinct from solver/model provenance; v0 material definitions reject mixed bases and more than one molality solute until the joint resolver is implemented. | Pending owner review |
-| 9 | 2026-09-11 | M1 Final Closure candidate: material snapshot provenance follows each datum; snapshot scientific quantities are persisted only in canonical units; export wording is aligned with the v1 bundle contract (`events[0]` carries solver config, lineage ids are allowed, and learner evidence has no v1 payload). | Pending owner review |
+| 8 | 2026-09-11 | M1 Contract Closure R2: all persisted `MaterialSnapshot` scientific inputs are tagged quantities; source-data provenance is distinct from solver/model provenance; v0 material definitions reject mixed bases and more than one molality solute until the joint resolver is implemented. | Owner, 2026-09-11 |
+| 9 | 2026-09-11 | M1 Final Closure: material snapshot provenance follows each datum; snapshot scientific quantities are persisted only in canonical units; export wording is aligned with the v1 bundle contract (`events[0]` carries solver config, lineage ids are allowed, and learner evidence has no v1 payload). | Owner, 2026-09-11 |
 
 A revision bump is recorded here rather than only in the body because the header
 is what a reader checks before deciding whether the file they are reading is the
 file that was accepted. Leaving "accepted at revision 6" in place while the body
 had changed made `git diff` the only way to find out.
-- **Related ADRs:** 0001–0009 were accepted at the baseline; ADR-0001 and ADR-0003 have M1 Final Closure amendments pending owner review, plus ADR-0010 (**Proposed — M1 Final Closure candidate**) for the v0 genesis basis boundary
+- **Related ADRs:** 0001–0009 were accepted at the baseline; ADR-0001 and
+  ADR-0003 M1 Final Closure amendments and ADR-0010's v0 genesis basis boundary
+  are accepted as part of M1 S3.
 - **Related evidence:** `spikes/activity-equilibrium/` (scientific formulation),
   `spikes/numeric-policy/` (determinism + branded types),
   `spikes/solver-validation/` (SUPERSEDED — concentration-only formulation)

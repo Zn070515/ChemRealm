@@ -1,10 +1,10 @@
 # ADR-0010: Material genesis composition-basis boundary
 
-- **Status:** **Proposed — M1 Final Closure candidate**
+- **Status:** **Accepted** — M1 Final Closure. Owner, 2026-09-11.
 - **Date:** 2026-09-11
 - **Deciders:** Project owner review pending
 - **Related:** `SPEC-0001` revision 9, `ADR-0003`, `ADR-0004`, `PLAN-0001`
-- **Blocks:** M2 genesis/reducer implementation until accepted
+- **Enables:** M2 genesis/reducer implementation within the v0 boundary
 
 ## Context
 
@@ -84,6 +84,6 @@ content.
 
 ## Open questions
 
-None for the v0 boundary. Owner acceptance of this proposed ADR is required
-before M2 is authorized; the scientific joint resolver remains a future stage
-decision, not an implicit implementation task.
+None for the v0 boundary. Owner acceptance is recorded as part of M1 S3, so M2
+is authorized within this boundary. The scientific joint resolver remains a
+future stage decision, not an implicit implementation task.
