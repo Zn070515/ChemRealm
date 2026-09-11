@@ -10,8 +10,8 @@
   editing either document.
 - **Date:** 2026-09-11 (revised after owner review remediation)
 - **Implements:** `docs/specs/SPEC-0001-world-foundation-acid-base-titration.md`
-- **Related ADRs:** 0001–0009, all `Proposed`. Load-bearing here: 0004 (revised),
-  0007 (revised), 0008, 0009.
+- **Related ADRs:** 0001–0009, **all `Accepted`, 2026-09-11**. Load-bearing here:
+  0004 (revised), 0007 (revised), 0008, 0009.
 - **Audience:** an agent that did not participate in the design. Nothing below
   assumes prior context beyond the repository documents.
 
@@ -40,6 +40,9 @@ S3. There is no point in this plan where S2 is allowed to be reported as done.
 `SPEC-0001` and ADRs 0001–0009 must be `Accepted` before M0 begins. Building
 against a `Proposed` ADR is exactly the "assume the decision is made" failure the
 ADR status vocabulary exists to prevent.
+
+**Satisfied 2026-09-11** at baseline `8310c685`: `SPEC-0001` accepted at
+revision 6 and all nine ADRs accepted. Milestones may proceed.
 
 Additionally, the owner must resolve before their milestones:
 

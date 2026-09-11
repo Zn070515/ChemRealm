@@ -14,7 +14,7 @@
   stop condition), machine-checked by `tools/check_acceptance_coverage.py`,
   which runs in CI from M0. The check distinguishes "mentioned somewhere" from
   "claimed and evidenced"; the weaker form passed while criteria were unmapped.
-- **Related ADRs:** 0001, 0002, 0003, 0004 (rev), 0005, 0006, 0007 (rev), 0008, 0009 — all `Proposed`, all load-bearing here
+- **Related ADRs:** 0001, 0002, 0003, 0004 (rev), 0005, 0006, 0007 (rev), 0008, 0009 — **all `Accepted`, 2026-09-11**, all load-bearing here
 - **Related evidence:** `spikes/activity-equilibrium/` (scientific formulation),
   `spikes/numeric-policy/` (determinism + branded types),
   `spikes/solver-validation/` (SUPERSEDED — concentration-only formulation)
