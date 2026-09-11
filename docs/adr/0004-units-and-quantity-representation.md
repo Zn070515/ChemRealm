@@ -73,6 +73,16 @@ wrong.
 | **reduced ionic strength** | **dimensionless** | `ReducedIonicStrength` |
 | mole fraction | dimensionless | `MoleFraction` |
 | pH | dimensionless | `Ph` |
+| **equilibrium constant (thermodynamic)** | **dimensionless** | `ThermodynamicConstant` |
+
+**`ThermodynamicConstant` is its own type, not a `number` and not an
+`Activity`** (added 2026-09-11). The ontology names three kinds of equilibrium
+constant that must never be interchanged and calls storing one as another
+anti-pattern 5: a *thermodynamic* `Ka`/`Kw` is a property of the configuration,
+while a *conditional* one is derived inside the equilibrium loop at a converged
+ionic strength. With both as `number`, storing one where the other belongs is an
+assignment TypeScript accepts and nothing else catches. Strictly positive —
+`Ka = 0` is not a state, and `log10 Ka` is undefined there.
 
 **Dimensionless quantities carry the unit ONE when serialized** (added
 2026-09-11). Seven of the rows above are dimensionless — reduced molality,

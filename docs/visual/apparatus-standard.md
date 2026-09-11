@@ -1,6 +1,9 @@
 # Apparatus visual standard — v1
 
-- **Status:** Proposed. Becomes binding when `SPEC-0001` is accepted.
+- **Status:** **Binding.** `SPEC-0001` was accepted 2026-09-11, which is the
+  condition this line named, so the M6 gate in §6 is now a real gate rather than
+  a proposal. Repointed from "Proposed" during the M1 contract remediation's
+  document audit.
 - **Scope:** 2D / 2.5D experiment view. Governs all apparatus entering a release path.
 - **Related:** `GOAL.md` §5.7, §15; `CLAUDE.md` §4.7, §10; `AGENTS.md` §14; `ADR-0006`
 

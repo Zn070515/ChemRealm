@@ -208,7 +208,7 @@ Delete the M0 files. Nothing is persisted and nothing depends on them.
 ## M1 — Schema and units
 
 **Target stage:** S3
-**Addresses:** ADR-0001, ADR-0004; `SPEC-0001` AC-C1, AC-C2, AC-R15, AC-R16, AC-P4, AC-U1..AC-U5, AC-V7
+**Addresses:** ADR-0001, ADR-0004; `SPEC-0001` AC-C1, AC-C2, AC-R15, AC-R16, AC-R21, AC-P4, AC-U1..AC-U5, AC-V7
 
 ### Purpose
 
@@ -254,10 +254,14 @@ this milestone defines their representation.
    - **Opaque** (`interface` with a `unique symbol` key, **not** `number & …`):
      `Ph`, `Activity`, `ActivityCoefficient`, `MoleFraction`,
      `IonicStrengthMolal`, `IonicStrengthMolar`, `ReducedIonicStrength`,
-     **`ReducedMolality`** (dimensionless, distinct from `MolPerKilogram`).
+     **`ReducedMolality`** (dimensionless, distinct from `MolPerKilogram`),
+     **`ThermodynamicConstant`** (`Ka`/`Kw` — strictly positive, and its own
+     type so that a CONDITIONAL constant cannot be stored where a standard-state
+     one belongs; ontology anti-pattern 5).
      Raw operators must be a **type error**, verified by a compile fixture; the
      **defined** operations are supplied as named functions
-     (`ratioActivity`, `differencePh`, `sumMoleFractions`).
+     (`ratioActivity`, `differencePh`, `sumMoleFractions`, and the per-basis
+     ionic-strength sum/scale/compare set).
    - **Branded** (`number & { __unit }`): `Mol`, `Kilogram`, `Litre`,
      `Millimetre`, `MolPerKilogram`, `MolPerLitre`, `Kelvin`, `Kilopascal`,
      `Second`.
@@ -296,6 +300,13 @@ this milestone defines their representation.
 | Compile fixture: `ReducedMolality` and `MolPerKilogram` are not assignable | AC-U5 — the standard-state distinction is a compile-time barrier, because `m0 = 1` makes it invisible numerically |
 | Compile fixture: `ReducedIonicStrength` is not assignable to either dimensioned ionic-strength type | AC-U4 |
 | Schema test: `Vessel` has no `contents` field; contents exist only under `canonical.byVessel` | AC-R15 |
+| Schema test: `CanonicalContents` carries `componentAmounts`, carries **no** material identifier, and the recipe-level `soluteId` is absent from it; the emitted artifact is checked too | AC-R21 |
+| Compile fixture: `amount: state.modelPh` does not typecheck, and neither does an `Activity` standing in for an `ActivityCoefficient` | The domain types at the Scientific API boundary are quantities, not bare numbers — the guarantee the DTO/domain split exists to provide |
+| `parseSolveRequest` / `parseScientificState` go through the constructors, and a DTO with `{value, unit:"mol/kg"}` where a dimensionless quantity belongs is REJECTED | A dimensionless quantity is not interchangeable with a dimensioned one across the wire |
+| Meta-test: every object that declares `properties` in **every** emitted artifact also sets `additionalProperties: false`; the runtime rejects the same nested unknown key | TypeScript and Python agree on unknown fields, in both directions |
+| Compile fixture: summing ionic strength across bases does not compile | AC-U2 — one generic `sumIonicStrength` would have accepted `I_m + I_c` silently |
+| `activityCoefficient(0)` and `thermodynamicConstant(0)` throw | γ > 0 and `Ka > 0` are physical invariants, not defaults |
+| Export-schema test: a bundle claiming `includesLearnerEvidence: true`, and one carrying a **nested** learner identifier, are both REJECTED | AC-P4 — the check is recursive, not top-level |
 | Schema test: the `ScenarioSnapshot` type has no solver-config field; it carries `modelRequirements` | AC-R16 |
 | Content-schema test: a scenario carries no equilibrium arithmetic | AC-C1 |
 | Negative content test: an unknown species or unit fails loudly, with no default | AC-C2 |
@@ -361,7 +372,12 @@ M4 can supply the real one without touching this package.
 ### Implementation
 
 1. **`CanonicalContents` is per-vessel, and contains exactly three things:**
-   **`waterMass`, `liquidVolume`, and material `amount`s.** Nothing else.
+   **`waterMass`, `liquidVolume`, and component `amount`s.** Nothing else.
+
+   **`amount`s are COMPONENTS, not materials** (`AC-R21`, spec revision 7). An
+   earlier revision of this step said "material amounts"; a material is a
+   reagent recipe and is not a conserved quantity, so it cannot be what a vessel
+   conserves. A material identifier must not appear in conserved world state.
 
    **`scenarioSnapshot` is NOT part of it.** It is world-level genesis state and
    lives on `WorldState` (`WorldCreated` writes it). Putting it in
@@ -375,7 +391,7 @@ M4 can supply the real one without touching this package.
      scenarioSnapshot                 // world-level, from genesis
      canonical: {
        byVessel: {
-         vesselA: { waterMass, liquidVolume, materials }
+         vesselA: { waterMass, liquidVolume, componentAmounts }
          vesselB: { waterMass, liquidVolume, materials }
        }
      }

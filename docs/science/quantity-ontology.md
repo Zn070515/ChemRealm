@@ -1,6 +1,11 @@
 # Scientific quantity ontology
 
-- **Status:** Proposed. Becomes binding when `SPEC-0001` is accepted.
+- **Status:** **Binding.** `SPEC-0001` was accepted 2026-09-11, which is the
+  condition this line named. Repointed from "Proposed" when the M1 contract
+  remediation audited documents against the implementation — the file had been
+  binding by its own wording while still announcing that it was not, and
+  `packages/schema/src/units.ts` says the ontology wins on meaning, so a reader
+  had to decide for themselves whether that clause had force.
 - **Addresses:** owner remediation finding **P1-3**
 - **Related:** `ADR-0004`, `ADR-0003`, `SPEC-0001`, `spikes/activity-equilibrium`
 

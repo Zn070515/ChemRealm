@@ -17,7 +17,7 @@ than on exam-keyword scripts.
 | [`CLAUDE.md`](CLAUDE.md) | Operating rules for coding agents, including the version-control workflow (§21). |
 | [`AGENTS.md`](AGENTS.md) | Cross-agent execution discipline; the S0–S4 stage gates. |
 | [`docs/adr/`](docs/adr/) | Nine accepted architecture decisions. |
-| [`docs/specs/`](docs/specs/) | `SPEC-0001`, accepted at revision 6. |
+| [`docs/specs/`](docs/specs/) | `SPEC-0001`. Accepted at revision 6; at revision 7 after one owner-approved amendment, listed in its header. |
 | [`docs/plans/`](docs/plans/) | `PLAN-0001`, approved to execute. |
 | [`docs/science/quantity-ontology.md`](docs/science/quantity-ontology.md) | Authoritative definition of every scientific quantity. |
 

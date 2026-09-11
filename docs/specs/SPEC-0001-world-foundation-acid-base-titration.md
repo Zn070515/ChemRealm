@@ -2,6 +2,11 @@
 
 - **Status:** **Accepted** — S1 passed. Owner, 2026-09-11.
 - **Accepted baseline:** commit `8310c685`, `SPEC-0001` revision 6
+- **Current revision:** **7** — amended after acceptance with owner approval
+  during the M1 contract remediation. See "Amendments since acceptance" below.
+  Revision 6 is what was accepted; revision 7 is what the implementation is
+  built against, and the difference is listed here rather than left for a
+  reader to reconstruct with `git diff`.
 - **Acceptance scope:** the specification and its acceptance criteria. Deferred
   items listed under Open questions remain open and must be resolved before the
   milestone that names them. Acceptance does **not** assert that any criterion
@@ -9,11 +14,22 @@
 - **Date:** 2026-09-11 (round 5: event-sourced identity, genesis resolution, contract closure)
 - **Owner:** Project owner
 - **Supersedes:** revisions 1–5 of this spec
-- **Coverage:** all 70 acceptance criteria below are both **claimed** by a
+- **Coverage:** all 71 acceptance criteria below are both **claimed** by a
   `PLAN-0001` milestone (`**Addresses:**`) and **evidenced** in it (a test or
   stop condition), machine-checked by `tools/check_acceptance_coverage.py`,
   which runs in CI from M0. The check distinguishes "mentioned somewhere" from
   "claimed and evidenced"; the weaker form passed while criteria were unmapped.
+
+### Amendments since acceptance
+
+| Revision | Date | Change | Approval |
+|---|---|---|---|
+| 7 | 2026-09-11 | `CanonicalContents` conserves **components**, not materials (M1 contract remediation item 1). `AC-R21` added to carry that contract; `AC-S3` and `AC-R14` wording aligned to it. Round 6's claim at §"Round 6" that this file was "unchanged at revision 6" corrected. | Owner, 2026-09-11 |
+
+A revision bump is recorded here rather than only in the body because the header
+is what a reader checks before deciding whether the file they are reading is the
+file that was accepted. Leaving "accepted at revision 6" in place while the body
+had changed made `git diff` the only way to find out.
 - **Related ADRs:** 0001, 0002, 0003, 0004 (rev), 0005, 0006, 0007 (rev), 0008, 0009 — **all `Accepted`, 2026-09-11**, all load-bearing here
 - **Related evidence:** `spikes/activity-equilibrium/` (scientific formulation),
   `spikes/numeric-policy/` (determinism + branded types),
@@ -877,6 +893,15 @@ needs total-Na or total-acetate, the component list is defined at the component
 level; the FORMAT does not change. That is the point of paying for the correct
 name now.
 
+**Component → element.** `AC-S3` and `AC-R14` are stated in terms of element
+totals (Na, Cl, acid-group), and a `componentId` is not an element: `HCl` as a
+component supplies both H and Cl. The composition of a component is chemical
+knowledge, so it is declared by the layer that owns the chemical model rather
+than embedded in the conserved state — `AC-R21` fixes that obligation and the
+shape of the inventory, and deliberately does **not** fix the bridge's final
+form, because nothing before M4 needs it and inventing it here would be
+guessing. For v0 the mapping is one-for-one, so no bridge exists yet.
+
 `Apparatus { id, kind, position, state }` — a burette's `state` carries
 `initialVolume: Litre`; its reading is **derived**, not stored.
 
@@ -1571,7 +1596,7 @@ Binary and verifiable. Every criterion maps to an evidence method.
 |---|---|---|
 | AC-S1 | REF-1..REF-10 pass within stated tolerances, on the **self-consistent molality-basis** formulation | `vitest packages/sci`, `pytest tools/oracle` |
 | AC-S2 | Charge balance residual < 1e-14 mol/kg on the **unquantized solver state** across the reference sweep | invariant test output |
-| AC-S3 | Na, Cl, and acid-group element totals conserved across a 100-transfer sequence | conservation test + state dump |
+| AC-S3 | Na, Cl, and acid-group totals conserved across a 100-transfer sequence. The conserved world state is a **component** inventory (`AC-R21`); these totals are read through the component→element composition the model declares | conservation test + state dump |
 | AC-S4 | Inputs outside the validity domain return `MODEL_OUT_OF_DOMAIN` and produce no number — checked **both** before the solve and on the converged `I_m` | domain test matrix |
 | AC-S5 | The 1e-6 mol/kg acetic acid case matches the exact solve, and the HH divergence (0.65 pH) is reproduced | adversarial test |
 | AC-S6 | The PHREEQC oracle agrees within ±0.02 pH over the swept curve, **including the equivalence region**, with constants **and the molality basis** aligned | oracle comparison report; see the caveat above |
@@ -1602,13 +1627,14 @@ Binary and verifiable. Every criterion maps to an evidence method.
 | AC-R11 | `canonicalJson` normalizes `-0` to `0` and rejects `NaN`/`±Infinity` | unit test with the adversarial values |
 | AC-R12 | **Replay completeness.** Delete or corrupt every file under `content/`, then replay a serialized world: `replayHash` is unchanged. The log is self-contained | test that moves `content/` aside and replays |
 | AC-R13 | `liquidVolume` is updated only by transfer and enters `replayHash`; a change in it changes the hash | hash-diff test over a transfer |
-| AC-R14 | Transfer is element- and volume-conserving over 100 steps under the homogeneous-mixture assumption | conservation test (spike §N promoted) |
+| AC-R14 | Transfer is **component**- and volume-conserving over 100 steps under the homogeneous-mixture assumption. **Element** totals (AC-S3) are conserved as a consequence, through the component→element composition declared by the model (`AC-R21`) | conservation test (spike §N promoted) |
 | AC-R15 | `WorldState` has exactly **one** location for vessel contents; `Vessel` carries no `contents` field | schema test + review |
 | AC-R16 | `scenarioSnapshot` carries model **requirements**, never a resolved `solverConfig`; exactly one resolved solver config exists per world | schema test: the snapshot type has no solver-config field |
 | AC-R17 | **Branch export is self-contained.** Exporting a branch emits the **complete** event log from genesis (flattened), with lineage metadata — not just the branch's suffix. A bundle imported on a machine with no parent replays to the same `replayHash` | round-trip test that exports a child, discards the parent, and replays |
 | AC-R18 | Transfer deltas are computed from the pre-transfer snapshot: a test that interleaves read/write fails | unit test asserting the order-independence of the transfer update |
 | AC-R19 | **World identity is event-sourced.** `WorldCreated` carries `worldId`; `WorldBranched` carries `childWorldId`, `parentWorldId`, `forkSequence`, `forkStateHash`. Replaying a flattened genesis-to-tip log reconstructs the final `worldId` and full `lineage` from the log alone, with nothing regenerated | replay test: fold a flattened child log, compare reconstructed identity to the live world's |
 | AC-R20 | **Requirements constrain, they do not lose.** A scenario whose `modelRequirements` cannot be satisfied by any available solver **rejects world creation** with a stated reason. It never resolves to a solver the scenario did not ask for | negative test: a scenario requiring a temperature outside every shipped solver's domain fails to create, with the reason recorded |
+| AC-R21 | **The conserved quantity is a chemical component, not a material.** `CanonicalContents` holds `componentAmounts: { componentId, amount }[]`, and **no material identifier appears anywhere in conserved world state** — material identity stops at genesis. Two materials supplying the same component are indistinguishable after mixing, and a material holding two components has no `n(material)`. The **component→element** composition that `AC-S3` checks is declared by the layer that owns the chemical model, not inferred from a `componentId`; for v0 the genesis resolver maps a material's solutes to components one-for-one, so no mapping is needed yet, and this criterion fixes the *shape* rather than that mapping's home | schema test: `CanonicalContents` has `componentAmounts` and no material identifier, on both sides of the language boundary |
 
 ### Representation
 
@@ -1862,8 +1888,14 @@ stops that second class of defect recurring.
 ### Round 6 (2026-09-11) — execution-level closure
 
 Round 6 found **no scientific, world-model, or ACE defects**. Both blockers were
-execution-level, and `SPEC-0001` itself is **unchanged at revision 6** — the
-fixes were in `PLAN-0001`, `CLAUDE.md`, `ADR-0001`, and the coverage tool.
+execution-level, and `SPEC-0001` was **unchanged at revision 6** at that time —
+the fixes were in `PLAN-0001`, `CLAUDE.md`, `ADR-0001`, and the coverage tool.
+
+> **Amended 2026-09-11.** The sentence above was true when written and is no
+> longer: the M1 contract remediation that closed owner finding P1-1 changed the
+> `CanonicalContents` contract in this file and added `AC-R21`, taking it to
+> revision 7. Recorded here rather than deleted, because a history section that
+> silently rewrites itself is worth less than one that says what changed.
 
 | Finding | What was wrong | Where fixed |
 |---|---|---|
