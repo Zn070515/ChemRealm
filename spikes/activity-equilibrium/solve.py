@@ -136,9 +136,15 @@ class Solution:
 
 
 class Mixture:
-    """Mixing is on the conserved quantities: water mass and amounts. Volume is
-    additive, which is a labelled PRESENTATION approximation; it affects the
-    reported molarity and never the thermodynamics."""
+    """Mixing is on the conserved quantities: water mass and amounts.
+
+    Volume is additive. That is an OPERATIONAL approximation, not a display one
+    (finding P1-4): liquidVolume sets the volume fraction f = dV/V moved on the
+    NEXT transfer, so it shapes later canonical composition and hence later
+    molality. The equilibrium algebra never consumes a molarity -- but the
+    approximation still propagates into the thermodynamics through metering.
+    Acceptable at these concentrations; described honestly rather than called
+    'display-only'."""
 
     def __init__(self, label, water_mass_kg, amounts, volume_l):
         self.label = label
@@ -254,9 +260,10 @@ def ideal_root(mh_na, mh_cl, mh_tot, ka):
 
 
 # ------------------------------------------------------------ the solve
-# Solved entirely in REDUCED molality. Physical molalities are produced at the
-# boundary. No pH and no molarity here: those are the projection layer's job.
-def solve(mh_na, mh_cl, mh_tot, ka):
+# Solved entirely in REDUCED molality. Callers holding PHYSICAL molalities must
+# go through solve_physical(); the boundary is crossed in exactly two places.
+# No pH and no molarity here: those are the projection layer's job.
+def solve_reduced(mh_na, mh_cl, mh_tot, ka):
     m0 = ideal_root(mh_na, mh_cl, mh_tot, ka)
     lo = hi = None
     for span in (3.0, 10.0, 100.0, 1000.0):
@@ -301,6 +308,17 @@ def solve(mh_na, mh_cl, mh_tot, ka):
         "in_proposed_envelope": i <= I_PROPOSED_ENVELOPE_MAX,
     }
 
+def solve_physical(m_na, m_cl, m_ha_tot, ka):
+    """Entry point for callers holding PHYSICAL molalities (mol/kg).
+
+    Wrapping rather than overloading keeps the physical/reduced boundary visible
+    at every call site. The spike's call sites used to pass physical values
+    straight into the reduced core -- numerically identical because m0 = 1
+    mol/kg, which is precisely why a NUMERIC test cannot catch the mistake.
+    Standard-state type safety is a compile-time property (SPEC AC-U5)."""
+    return solve_reduced(reduce_molality(m_na), reduce_molality(m_cl),
+                         reduce_molality(m_ha_tot), ka)
+
 
 # ---------------------------------------------------- ScientificProjection
 # The ONLY place molarity and the taught quantity are produced. Both need the
@@ -329,8 +347,8 @@ def solve_mixture(mixture, ka):
     m_ha_tot = (mixture.amounts.get("HOAc", 0.0)
                 + mixture.amounts.get("NaOAc", 0.0)) / m_w
     # the core works in REDUCED molality; physical values are returned alongside
-    r = solve(reduce_molality(m_na), reduce_molality(m_cl),
-              reduce_molality(m_ha_tot), ka)
+    r = solve_reduced(reduce_molality(m_na), reduce_molality(m_cl),
+                      reduce_molality(m_ha_tot), ka)
     return r, (m_na, m_cl, m_ha_tot)
 
 
@@ -367,7 +385,7 @@ def main():
     print("   IUPAC-traceable: pH 4.644 (0.1 mol/kg) and 4.713 (0.01 mol/kg)")
     for c, ref in ((0.1, 4.644), (0.01, 4.713)):
         m_na, m_ha_tot = c, 2.0 * c
-        r = solve(m_na, 0.0, m_ha_tot, ka)
+        r = solve_physical(m_na, 0.0, m_ha_tot, ka)
         print(f"\n   {c} mol/kg HOAc+NaOAc   I = {r['I_m']:.4f}"
               f"   g_H = {r['gamma_H']:.4f}   in envelope: {r['in_proposed_envelope']}")
         report(f"acetate buffer {c} mol/kg vs IUPAC",
@@ -457,7 +475,7 @@ def main():
         ph_true = -math.log10(r_true["a_H"])
         # deliberately wrong: treat the molarity as if it were a molality
         # (HCl alone: sodium is zero, chloride carries the acid)
-        r_wrong = solve(0.0, c, 0.0, STRONG)
+        r_wrong = solve_physical(0.0, c, 0.0, STRONG)
         ph_wrong = -math.log10(r_wrong["a_H"])
         d = abs(ph_wrong - ph_true)
         worst_sens = max(worst_sens, d)
@@ -474,7 +492,7 @@ def main():
              (0.05, 0.05, 0.0, STRONG), (0.05, 0.0, 0.1, ka),
              (0.0, 0.0, 0.001, ka), (0.1, 0.1, 0.0, STRONG)]
     for m_na, m_cl, m_ha, k in cases:
-        r = solve(m_na, m_cl, m_ha, k)
+        r = solve_physical(m_na, m_cl, m_ha, k)
         if r is None:
             continue
         worst_chg = max(worst_chg, abs(r["residual"]))
@@ -501,7 +519,7 @@ def main():
 
     # ---------------------------------------------------------------- I
     print("\n-- I. Sensitivity to the g_HA = 1 approximation --")
-    r = solve(0.1, 0.0, 0.2, ka)
+    r = solve_physical(0.1, 0.0, 0.2, ka)
     ph = -math.log10(r["a_H"])
     print(f"     log10(g_HA) = 0    : pH_model = {ph:.4f}  (IUPAC 4.644, d {ph - 4.644:+.4f})")
     print(f"     log10(g_HA) = +0.02: pH_model = {ph + 0.02:.4f}  (d {ph + 0.02 - 4.644:+.4f})")
@@ -545,7 +563,7 @@ def main():
 
     # ---------------------------------------------------------------- L
     print("\n-- L. Reduced ionic strength: Davies is dimensionally legal (P1-F) --")
-    r = solve(0.1, 0.0, 0.2, ka)
+    r = solve_physical(0.1, 0.0, 0.2, ka)
     print(f"   I_m   = {r['I_m']:.6f} mol/kg          (physical quantity)")
     print(f"   I_hat = {r['I_hat']:.6f}  dimensionless (= I_m / m°)")
     print("   Davies evaluates sqrt(I_hat)/(1+sqrt(I_hat)). Every term is a pure")
@@ -554,7 +572,7 @@ def main():
           abs(r["I_hat"] - r["I_m"] / M_STANDARD_MOLALITY) < 1e-15)
 
     print("\n  -- L2. Ka/Kw conditional constants are dimensionless (P1-1 round 4) --")
-    r = solve(0.1, 0.0, 0.2, ka)
+    r = solve_physical(0.1, 0.0, 0.2, ka)
     kw_c, ka_c = r["Kw_cond"], r["Ka_cond"]
     mh_h, mh_oh, mh_a, mh_tot = r["mh_H"], r["mh_OH"], r["mh_A"], 0.2
     print(f"   Kw_cond = {kw_c:.6e}   Ka_cond = {ka_c:.6e}   (pure numbers)")
@@ -576,7 +594,7 @@ def main():
     print("\n-- M. Indicator equilibrium belongs to the SCIENTIFIC CORE (P1-C) --")
     print("   The renderer receives a ratio; it never computes one.\n")
     ka_in = 10.0 ** -9.4                       # phenolphthalein, provisional
-    r = solve(0.05, 0.0, 0.1, ka)
+    r = solve_physical(0.05, 0.0, 0.1, ka)
     print(f"   solution I_m = {r['I_m']:.4f}   gamma_In = {gamma(-1, r['I_m']):.4f}")
     prev, crossed, mono = None, False, True
     for d in (-2.0, -1.0, -0.5, -0.1, 0.0, 0.5, 1.0, 2.0):

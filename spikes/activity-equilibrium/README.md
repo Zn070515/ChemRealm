@@ -12,6 +12,7 @@
 | 3 | **Round-2 fixes.** `−lg c(H⁺)` was being computed from a molality (P1-1); "thermodynamic pH" renamed to activity-based model pH (P1-2); computational domain separated from a proposed validation envelope (P1-3). |
 | 4 | **Round-3 fixes.** Indicator equilibrium moved into the scientific layer (P1-C); `present()` renamed `project()` as a named `ScientificProjection` (P1-D); envelope downgraded to **proposed** (P1-E); **reduced** ionic strength `Î = I_m/m°` so Davies is dimensionally legal (P1-F); transfer semantics — `liquidVolume` as tracked state, homogeneous-fraction mixing — demonstrated (P1-A). |
 | 5 | **Round-4 fix.** The whole algebra now runs in **reduced molality** `m̂ = m/m°`. Previously `m_OH = Kw_c/m_H` divided a dimensionless constant by a *physical* molality — `dimensionless / (mol/kg)` — correct only because `m° = 1 mol/kg` numerically (P1-1). |
+| 6 | **Round-5 fix.** The reduced core is renamed `solve_reduced`, and every physical input now crosses an explicit **`solve_physical()`** boundary. The old call sites passed physical values straight into a reduced core — numerically identical at `m° = 1`, which is exactly why a **numeric** test cannot catch a standard-state error (P2-1). Transfer/mixing docstrings corrected: volume additivity is an **operational** approximation, not a display-only one (P1-4). |
 
 ## P1-1 — the defect this revision fixes
 
