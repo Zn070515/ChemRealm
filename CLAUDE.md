@@ -622,6 +622,31 @@ through. If a hook fails, fix the underlying cause.
 
 ## 21.5 Environment notes
 
+### Python: use the project-local `.venv`, never the global interpreter
+
+This repository has its own virtual environment at `.venv/` (CPython 3.12,
+created with `uv venv --seed`). It is gitignored.
+
+**Install nothing into a global Python environment.** Anything this project
+needs goes into `.venv`.
+
+```powershell
+.\.venv\Scripts\Activate.ps1              # or:
+.\.venv\Scripts\python.exe tools\check_acceptance_coverage.py
+
+uv pip install <package>                  # resolves against .venv
+```
+
+Do not use the bare `python` / `py` on PATH for project work: on this machine it
+resolves to a global install (3.10–3.13 are all present) and would silently put
+project dependencies somewhere shared. The scripts under `tools/` and `spikes/`
+are standard-library-only today and run under `.venv` unchanged.
+
+`PLAN-0001` M0 creates `tools/oracle` as a `uv`-managed project; it uses this
+same interpreter.
+
+### Git
+
 Local git config for this repository carries an HTTP proxy (a local VPN
 endpoint) and a GitHub noreply commit email. Both are set with `--local` scope,
 so they apply only here and require no per-command flags. Do not move them to
