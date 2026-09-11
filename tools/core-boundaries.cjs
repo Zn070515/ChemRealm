@@ -12,8 +12,9 @@
  * A hand-maintained list of "everything that must not happen" fails silently
  * and in the direction that matters. So the forbidden set is now DERIVED from
  * the allowed set, and both `.dependency-cruiser.cjs` and the guard read the
- * same module. Adding a fifth core to `CORES` produces its nine new forbidden
- * edges automatically.
+ * same module. Adding a fifth core to `CORES` produces its eight new forbidden
+ * edges automatically -- four outbound, four inbound. (The count is
+ * n*(n-1) for n cores: 4 gives 12, 5 gives 20.)
  *
  * The guard builds a violating fixture for every edge listed here and asserts
  * depcruise rejects it by name. A rule nobody has seen fire is not evidence

@@ -1,10 +1,13 @@
 # PLAN-0001 — World Foundation & Acid-Base Titration
 
 - **Status:** **Approved to execute** — owner, 2026-09-11, at `SPEC-0001` revision 6
-- **Authorized next:** `M0 — Repository Foundation`. Completing M0's code is
-  **S2**; M0 reaches **S3** only when its CI, dependency-rule fixture, Python
-  toolchain, coverage-checker fixture, and no-CDN/no-backend checks are in the
-  evidence packet.
+- **Completed:** `M0 — Repository foundation` reached **S3 — Verified** on
+  2026-09-11. Evidence: `docs/evidence/M0.md`, commits `1f3dfee`/`565a2e8`,
+  CI run `34595967023` (13/13 gate steps on a clean `ubuntu-latest` checkout).
+- **Authorized next:** `M1 — Schema and Units`. Completing M1's code is **S2**;
+  it reaches **S3** only when its own evidence packet exists. **M2 does not
+  start on the strength of M1 being written** — the owner reviews the
+  implementation first.
 - **Coverage check:** `uv run python tools/check_acceptance_coverage.py` — every `AC-*` in
   `SPEC-0001` is required to appear in at least one milestone here. Run it after
   editing either document.
@@ -76,6 +79,7 @@ adapter → observable → renderer → ACE → persistence → end-to-end → d
 
 ## M0 — Repository foundation
 
+**Status:** **S3 — Verified**, 2026-09-11 · evidence `docs/evidence/M0.md`
 **Target stage:** S3
 **Addresses:** ADR-0001; `SPEC-0001` AC-P1, AC-P5, AC-V1
 
@@ -185,7 +189,9 @@ None. M0 adds the mechanism by which contracts will be enforced.
 | **`uv run python tools/check_acceptance_coverage.py` passes; and exits 1 both when a criterion is deliberately dropped from an `Addresses:` line and when its evidence row is deliberately removed (fixtures, then reverted)** | AC coverage is machine-checked and the check bites on all three conditions, `UNEVIDENCED` included |
 | CI green on a clean checkout | Both toolchains coexist (ADR-0001's central claim) |
 | Build artifact inspection: the emitted HTML references no server API route | AC-P1 — there is no backend to route to |
-| Build-output check fails on a third-party origin (fixture, then reverted) | AC-P5 — self-hosted assets, no CDN or font service |
+| Static scan of the build output for third-party load positions | AC-P5 preventive guard — fast, no browser |
+| **`pnpm test:browser`: load the built page in Chromium, capture every request, assert each is same-origin** | AC-P5 acceptance evidence — the network inspection the spec asks for |
+| Both of the above, each proven to FAIL on an injected `fonts.googleapis.com` stylesheet (fixture, then reverted) | The checks bite; a guard nobody has seen fire is not a guard |
 
 ### Stop condition
 
