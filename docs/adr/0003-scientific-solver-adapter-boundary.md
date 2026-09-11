@@ -63,11 +63,23 @@ interface SolverAdapter {
 }
 
 type SolveResult =
-  | { status: "OK";             state: ScientificState; provenance: Provenance }
+  | { status: "OK";             state: ScientificState }   // provenance lives INSIDE state
   | { status: "MODEL_OUT_OF_DOMAIN"; reason: string; nearestSupported: ModelDescriptor }
   | { status: "NOT_CONVERGED";  residual: number; iterations: number }
   | { status: "INVALID_INPUT";  violations: readonly InputViolation[] };
 ```
+
+**Correction (2026-09-11, owner-approved).** The OK branch was sketched above as
+`{ state, provenance }`, with provenance a SIBLING of state. The implementation
+puts it inside `ScientificState`, and that is now the decision:
+
+> A caller that writes `const state = result.state;` silently drops a sibling
+> provenance, and "provenance follows the number" is the entire point of
+> `GOAL.md` §12. Carrying it twice would be the second-source-of-truth defect
+> this project removed from `Vessel.contents`.
+
+This is also why no `getPh(): number` shortcut exists (see below): every
+shortcut that flattens a result into a bare value is a place provenance is lost.
 
 Three properties make this load-bearing rather than decorative:
 
@@ -80,19 +92,35 @@ disagreed about this, which would have forced an implementing agent to guess.
 
 ```
 ScientificState {
-  reducedMolality: { symbol, value: ReducedMolality }[]   // the algebra's native variable
-  molality:        { symbol, value: MolPerKilogram }[]    // = reducedMolality × m°
-  amount:          { symbol, value: Mol }[]
-  gamma:           { symbol, value: ActivityCoefficient }[]
-  activity:        { symbol, value: Activity }[]
-  ionicStrength:   { molal: IonicStrengthMolal,
-                     reduced: ReducedIonicStrength }
-  modelPh:         ActivityBasedModelPh      // -log10 a(H+), under a named model
-  indicators:      { indicatorId, protonationRatio: number }[]
-  validity:        ValidityStatus
-  provenance:      Provenance
+  species: [
+    { symbol,
+      reducedMolality: ReducedMolality,   // the algebra's native variable
+      molality:        MolPerKilogram,    // = reducedMolality × m°
+      amount:          Mol,
+      activityCoefficient: ActivityCoefficient,
+      activity:        Activity }
+  ]
+  ionicStrengthMolal:    IonicStrengthMolal
+  ionicStrengthReduced:  ReducedIonicStrength
+  modelPh:               Ph          // -log10 a(H+), under a named model
+  indicators:            { indicatorId, protonationRatio: number }[]
+  validity:              ValidityStatus
+  provenance:            Provenance
 }
 ```
+
+**Correction (2026-09-11, owner-approved): per-species records, not parallel
+arrays.** The block above previously listed five parallel arrays, each keyed by
+`symbol`. The implementation uses one record per species, and that is now the
+decision:
+
+> Attribute-parallel storage invites silent misalignment. Two arrays that must
+> stay the same length fail by *slipping*, not by erroring: a species dropped
+> from one array shifts every later entry, and nothing in the type system
+> notices. One record per entity cannot drift out of step with itself.
+
+It also means adding a per-species field is a local change rather than a sixth
+array that has to be kept aligned with five others.
 
 **Why reduced molality is a first-class output** (round 4, finding P1-1). `Kw` is
 dimensionless, so `m_OH = Kw_c / m_H` divides a pure number by a dimensioned

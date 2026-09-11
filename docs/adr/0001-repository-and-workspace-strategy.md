@@ -105,6 +105,21 @@ Rules that make this more than a directory listing:
    simultaneously instructing "never use bare `python`" and "run `py tools/…`".
 5. **Directories are created when their first real content lands**, not in
    advance. `PLAN-0001` M0 creates only what M0 needs.
+6. **A contract that crosses a language boundary is VERSIONED.** (Added
+   2026-09-11, M1 contract remediation item 6.) `schemaVersion` is not
+   decoration on types that only TypeScript reads; it is required for the ones
+   the Python side validates. Every root contract emitted by `json-schema.ts` —
+   `world-state`, `domain-event`, `command`, `scenario`, `scientific-state`,
+   `solve-result`, `export-bundle` — carries an explicit version, as does every
+   event inside an `event-log`. Nested objects inherit their root's version
+   rather than repeating it, which is why `species[].schemaVersion` does not
+   exist and `scientific-state.schemaVersion` does.
+
+   The reason is cost, not tidiness. `command`, `scientific-state` and
+   `solve-result` were unversioned while already being emitted and consumed.
+   Adding a version to a format nobody has stored yet costs one line; adding it
+   after a worker, a WASM module, the oracle, and a save-file tool have all
+   begun exchanging that format costs a migration.
 
 ## Alternatives considered
 

@@ -74,6 +74,21 @@ wrong.
 | mole fraction | dimensionless | `MoleFraction` |
 | pH | dimensionless | `Ph` |
 
+**Dimensionless quantities carry the unit ONE when serialized** (added
+2026-09-11). Seven of the rows above are dimensionless — reduced molality,
+activity, activity coefficient, reduced ionic strength, mole fraction, pH, and
+`Ka`/`Kw`. Rule 3 below says a serialized quantity always carries its unit, and
+a dimensionless quantity has none, so the first version of this ADR offered no
+way to serialize one except as a bare number: the first exception to the rule,
+and one that would have left `quantityOfDimension` unable to constrain them at
+all.
+
+The resolution is ISO 80000's unit one: `"1"` is registered as the canonical
+unit of a `dimensionless` dimension, so every quantity crosses a boundary as
+`{ value, unit }` without exception. `{"value": 0.7815, "unit": "1"}` is an
+activity coefficient; `{"value": 0.7815, "unit": "mol/kg"}` is a molality. The
+contract can now tell those apart, and before this it could not.
+
 **Two bases for ionic strength are separate types, not one.** The numeric
 difference between them is under tolerance, so a mix-up would be *invisible at
 runtime*. That is precisely when the compiler must carry the distinction, because
@@ -203,6 +218,50 @@ compile tests are acceptance criteria (M1), not optional.
 
 Never a bare `0.05`. Ingest converts to canonical units and **rejects an unknown
 or missing unit** — a missing unit is a validation error, not a default.
+
+**One written exception: a vector block declares its unit once** (formalized
+2026-09-11). `Position` is
+
+```json
+{ "unit": "mm", "x": 1, "y": 2 }
+```
+
+not two tagged tuples. The reason is that a position is not one quantity but a
+pair of coordinates that necessarily share a unit: carrying `unit` twice per
+point would add no information while making every content file harder to read.
+The unit is declared ONCE for the block, so no number in it is unit-ambiguous —
+which is the property the rule above exists to protect.
+
+This was implemented with a comment explaining it as a "deliberate deviation"
+while the ADR still stated the unqualified rule. An exception that exists only
+in a code comment is one the next reader cannot find and the next implementer
+cannot rely on, so it is recorded here.
+
+**An object at a boundary is STRICT, and strict means the same thing on both
+sides** (added 2026-09-11). Every persisted, exported, or cross-language object
+refuses unknown keys. An earlier version was strict in the emitted JSON Schema
+and permissive at parse time, and the divergence runs in the direction that
+hurts:
+
+```
+z.object({...}).parse({ value: 1, unit: "L", surprise: "oops" })
+  -> { value: 1, unit: "L" }        // accepted, key silently dropped
+quantity.schema.json
+  -> "additionalProperties": false  // Python rejects the same input
+```
+
+zod emits `additionalProperties: false` for a plain `z.object` while *stripping*
+at parse time, so the two sides of "one source of truth" disagreed without
+anything failing. A fixture that passes on one side and fails on the other is
+the symptom; a key that disappears on one side and is refused on the other is
+the disease.
+
+Two deliberate exceptions exist, both `z.record` rather than `z.object`, so the
+invariant "every object that declares `properties` closes them" holds without an
+allow-list that rots: an apparatus kind's `state` (its shape is authored per
+kind), and the `parameters` bags on `Provenance` and `SolverConfig` (replay
+records, pinned by value rather than by name). Both are recorded as decisions at
+their definitions.
 
 ### 4. One conversion module
 
