@@ -15,6 +15,7 @@
 import { z } from "zod";
 
 import { quantityOfDimension } from "./quantity.js";
+import { CURRENT_SCHEMA_VERSION } from "./world.js";
 
 /**
  * A solute, on ONE named composition scale.
@@ -119,6 +120,14 @@ export const ModelRequirementsSchema = z.strictObject({
 export type ModelRequirements = z.infer<typeof ModelRequirementsSchema>;
 
 export const ScenarioSchema = z.strictObject({
+  /**
+   * The SHAPE's version, from the same scheme as the persisted world
+   * (`world.ts`). Distinct from `contentVersion` below, which versions THIS
+   * content: a content file can be revised without the format changing, and the
+   * format can change without any lesson changing. An earlier version carried
+   * only `contentVersion`, which cannot express the second case.
+   */
+  schemaVersion: z.literal(CURRENT_SCHEMA_VERSION),
   /** Bumped whenever the content changes; part of the content hash. */
   contentVersion: z.number().int().positive(),
   scenarioRef: z.string().min(1),
@@ -129,12 +138,21 @@ export const ScenarioSchema = z.strictObject({
   apparatus: z.array(
     z.strictObject({
       kind: z.string().min(1),
+      /**
+       * DELIBERATELY OPEN — one of the few. An apparatus kind's state is
+       * authored per kind ("a burette carries `initialVolume`"), and closing it
+       * here would mean this file enumerating every apparatus the project will
+       * ever have. The per-kind shape belongs to the apparatus asset contract
+       * at M6. Named here rather than left to look like an oversight: the
+       * strictness invariant (see `contracts.test.ts`) exempts exactly this
+       * field, and the exemption is a written decision.
+       */
       state: z.record(z.string(), z.unknown()),
     }),
   ),
   modelRequirements: ModelRequirementsSchema,
   representation: z
-    .object({
+    .strictObject({
       /** Which inspection views the scenario opens by default. */
       defaultViews: z.array(z.enum(["macro", "micro", "symbolic"])),
     })

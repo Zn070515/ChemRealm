@@ -1,16 +1,21 @@
 import { describe, expect, it } from "vitest";
 
-import { ScenarioSchema, SoluteDefinitionSchema } from "./content.js";
+import { MaterialDefinitionSchema, ScenarioSchema, SoluteDefinitionSchema } from "./content.js";
 import { FORBIDDEN_BUNDLE_FIELDS, ExportBundleSchema } from "./export.js";
 import { DomainEventSchema, WorldBranchedSchema, WorldCreatedSchema } from "./events.js";
 import { MIGRATIONS, migrate } from "./migrate.js";
+import { QuantitySchema } from "./quantity.js";
 import {
   ScientificStateSchema,
+  SolveRequestSchema,
   SolveResultSchema,
+  SolverConfigSchema,
   SpeciesStateSchema,
+  parseSolveRequest,
 } from "./scientific.js";
 import {
   CURRENT_SCHEMA_VERSION,
+  CanonicalContentsSchema,
   PositionSchema,
   ScenarioSnapshotSchema,
   VesselSchema,
@@ -103,6 +108,7 @@ describe("AC-R19 — world identity is event-sourced", () => {
 
 describe("AC-C1 — content declares a scenario and cannot express chemistry", () => {
   const minimalScenario = {
+    schemaVersion: CURRENT_SCHEMA_VERSION,
     contentVersion: 1,
     scenarioRef: "hcl-naoh",
     title: "HCl vs NaOH",
@@ -281,6 +287,7 @@ describe("dimension coherence — the contract cannot express dimensional nonsen
   // have accepted them too. Being explicit about units does not prevent
   // dimension confusion; only checking the dimension does (ADR-0004).
   const valid = {
+    schemaVersion: CURRENT_SCHEMA_VERSION,
     contentVersion: 1,
     scenarioRef: "x",
     title: "x",
@@ -378,6 +385,7 @@ describe("scientific contract carries the model's identity and validity", () => 
 
   it("treats refusal as a normal outcome, not an exception", () => {
     const refused = SolveResultSchema.safeParse({
+      schemaVersion: 1,
       status: "MODEL_OUT_OF_DOMAIN",
       reason: "temperature outside the model's range",
     });
@@ -389,6 +397,64 @@ describe("scientific contract carries the model's identity and validity", () => 
     expect(json).toContain("MODEL_OUT_OF_DOMAIN");
     expect(json).toContain("NOT_CONVERGED");
     expect(json).not.toContain('"ph"');
+  });
+});
+
+describe("unknown-field behaviour is identical in TypeScript and in the artifact", () => {
+  /**
+   * THE DEFECT THIS PINS. A plain `z.object` STRIPS unknown keys at parse time,
+   * but zod emits `additionalProperties: false` for it. So the emitted contract
+   * rejected input the runtime accepted:
+   *
+   *     QuantitySchema.safeParse({ value: 1, unit: "L", surprise: "oops" })
+   *       -> { success: true, data: { value: 1, unit: "L" } }   // verified
+   *
+   * while `quantity.schema.json` said `additionalProperties: false`. Cross-
+   * language "one source of truth" fails in both directions; this is the
+   * direction where Python was STRICTER, which is the one that lets a fixture
+   * pass here and fail there.
+   */
+  function openObjects(node: unknown, path: string, out: string[]): void {
+    if (Array.isArray(node)) {
+      node.forEach((child, i) => openObjects(child, `${path}[${i}]`, out));
+      return;
+    }
+    if (node === null || typeof node !== "object") return;
+    const record = node as Record<string, unknown>;
+    if (record["type"] === "object" && record["properties"] !== undefined) {
+      // An object that declares properties must close them. A `z.record` emits
+      // no `properties`, so the deliberate extension points (`apparatus.state`,
+      // `provenance.parameters`, `solverConfig.parameters`, the `byVessel` map)
+      // are exempt by construction rather than by an allow-list that rots.
+      if (record["additionalProperties"] !== false) out.push(path);
+    }
+    for (const [key, value] of Object.entries(record)) {
+      openObjects(value, `${path}.${key}`, out);
+    }
+  }
+
+  it("closes every object that declares properties, in every artifact", () => {
+    const open: string[] = [];
+    for (const [name, schema] of Object.entries(generateJsonSchemas())) {
+      openObjects(schema, name, open);
+    }
+    expect(open).toEqual([]);
+  });
+
+  it("and the runtime agrees with the artifact it emits", () => {
+    // Top level.
+    expect(
+      QuantitySchema.safeParse({ value: 1, unit: "L", surprise: "oops" }).success,
+    ).toBe(false);
+    // Nested, one level in, which is where the hole was.
+    expect(
+      SolverConfigSchema.safeParse({
+        id: "x",
+        version: "1",
+        parameters: {},
+        surprise: 1,
+      }).success,
+    ).toBe(false);
   });
 });
 
@@ -445,6 +511,127 @@ describe("the export bundle restates nothing the log already says", () => {
     ]) {
       expect(names).toContain(own);
     }
+  });
+});
+
+describe("the conserved inventory is components, not materials", () => {
+  it("gives CanonicalContents no materials field", () => {
+    // A material is a reagent RECIPE. Two materials supplying the same solute
+    // are indistinguishable after mixing, and a material holding two solutes
+    // has no meaningful `n(material)` at all — so a materialId is not a
+    // conserved quantity and must not be one.
+    const names = Object.keys(
+      CanonicalContentsSchema.shape as Record<string, unknown>,
+    );
+    expect(names).not.toContain("materials");
+    expect(names).toContain("componentAmounts");
+    expect(names).toContain("waterMass");
+    expect(names).toContain("liquidVolume");
+  });
+
+  it("keeps the recipe fields at the recipe layer", () => {
+    // Both levels exist on purpose: the material says what a recipe SUPPLIES,
+    // the canonical contents say what the world CONSERVES.
+    const names = Object.keys(
+      MaterialDefinitionSchema.shape as Record<string, unknown>,
+    );
+    expect(names).toContain("solutes");
+    expect(names).toContain("density");
+  });
+});
+
+describe("the export bundle cannot carry learner identity", () => {
+  const bundle = (over: Record<string, unknown>) => ({
+    format: "chemrealm.export",
+    formatVersion: 1,
+    schemaVersion: CURRENT_SCHEMA_VERSION,
+    lineage: [
+      {
+        worldId: "w",
+        lineage: { parentWorldId: null, forkSequence: null, forkStateHash: null },
+      },
+    ],
+    events: [],
+    includesLearnerEvidence: false,
+    ...over,
+  });
+
+  it("accepts a bundle that carries no learner evidence", () => {
+    expect(ExportBundleSchema.safeParse(bundle({})).success).toBe(true);
+  });
+
+  it("REJECTS a bundle claiming learner evidence, because v1 has no such shape", () => {
+    // There is no M9 evidence schema yet, so the only truthful answer is
+    // `false`. Leaving the branch open would mean the later version inherits an
+    // arbitrary-JSON hole rather than designing one.
+    expect(
+      ExportBundleSchema.safeParse(bundle({ includesLearnerEvidence: true }))
+        .success,
+    ).toBe(false);
+  });
+
+  it("REJECTS a nested learner identifier, which the old passthrough accepted", () => {
+    // Verified before the fix: this exact bundle parsed successfully, because
+    // `z.array(z.strictObject({}).passthrough())` means "any key at all" and the
+    // AC-P4 test only ever looked at TOP-LEVEL field names.
+    expect(
+      ExportBundleSchema.safeParse(
+        bundle({
+          includesLearnerEvidence: true,
+          learnerEvidence: [
+            { learnerId: "123", email: "x@example.com", sessionId: "abc" },
+          ],
+        }),
+      ).success,
+    ).toBe(false);
+  });
+
+  it("has no forbidden identifier anywhere in the emitted artifact", () => {
+    // Recursive, not top-level: the defect was that the check stopped at depth
+    // 1 while the hole was at depth 2.
+    const json = JSON.stringify(generateJsonSchemas()["export-bundle"]);
+    for (const forbidden of FORBIDDEN_BUNDLE_FIELDS) {
+      expect(json).not.toContain(`"${forbidden}"`);
+    }
+  });
+});
+
+describe("DTOs parse into domain quantities, not bare numbers", () => {
+  const requestDto = {
+    schemaVersion: 1,
+    waterMass: { value: 0.998, unit: "kg" },
+    liquidVolume: { value: 0.05, unit: "L" },
+    solutes: [
+      {
+        soluteId: "HCl",
+        amount: { value: 0.005, unit: "mol" },
+        fullyDissociated: true,
+      },
+    ],
+    temperature: { value: 298.15, unit: "K" },
+    indicators: [{ indicatorId: "phenolphthalein", kaIn: { value: 1e-9, unit: "1" } }],
+  };
+
+  it("accepts the DTO, including a dimensionless quantity with the unit one", () => {
+    expect(SolveRequestSchema.safeParse(requestDto).success).toBe(true);
+  });
+
+  it("REJECTS a dimensionless quantity carrying a dimensioned unit", () => {
+    // The point of registering ISO 80000's unit one: `Ka` is dimensionless, and
+    // `{value: 1e-9, unit: "mol/kg"}` would otherwise be an untraceable mix-up.
+    const broken = structuredClone(requestDto);
+    broken.indicators[0]!.kaIn = { value: 1e-9, unit: "mol/kg" };
+    expect(SolveRequestSchema.safeParse(broken).success).toBe(false);
+  });
+
+  it("parses through the constructors, so the domain type holds quantities", () => {
+    const req = parseSolveRequest(SolveRequestSchema.parse(requestDto));
+    expect(req.waterMass).toBeCloseTo(0.998, 15);
+    expect(req.liquidVolume).toBeCloseTo(0.05, 15);
+    expect(req.solutes[0]!.amount).toBeCloseTo(0.005, 15);
+    // Absent `Ka` means the model treats it as fully dissociated; it must not
+    // become a zero that a later reader mistakes for a real constant.
+    expect(req.solutes[0]!.ka).toBeUndefined();
   });
 });
 

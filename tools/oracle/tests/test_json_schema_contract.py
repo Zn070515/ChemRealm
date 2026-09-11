@@ -45,6 +45,22 @@ from jsonschema.exceptions import ValidationError
 REPO_ROOT = Path(__file__).resolve().parents[3]
 ARTIFACT_DIR = REPO_ROOT / "packages" / "schema" / "json-schema"
 
+# Mirrors FORBIDDEN_BUNDLE_FIELDS in packages/schema/src/export.ts. Duplicated
+# on purpose: this is the Python side's own statement of what it refuses to
+# receive, and a list imported from the artifact could not notice the list
+# shrinking.
+FORBIDDEN_BUNDLE_FIELDS = [
+    "deviceId",
+    "installId",
+    "userId",
+    "learnerId",
+    "email",
+    "phone",
+    "fingerprint",
+    "sessionId",
+    "ipAddress",
+]
+
 # `json-schema.ts`'s `JSON_SCHEMA_SOURCES`, listed here so a contract that
 # silently stops being emitted fails this test rather than going unnoticed.
 EXPECTED_ARTIFACTS = [
@@ -94,6 +110,7 @@ SOLUTE = {
 }
 
 VALID_SCENARIO = {
+    "schemaVersion": 1,
     "contentVersion": 1,
     "scenarioRef": "hcl-naoh",
     "title": "HCl vs NaOH",
@@ -239,6 +256,16 @@ class TestQuantity:
     def test_accepts_a_registered_unit(self):
         assert is_valid("quantity", VALID_QUANTITY)
 
+    def test_accepts_a_dimensionless_quantity_carrying_the_unit_one(self):
+        """`{ value, unit: "1" }` — how a dimensionless quantity crosses.
+
+        Activity, activity coefficient, mole fraction, reduced molality and
+        reduced ionic strength have no unit, and before the `dimensionless`
+        dimension existed the only way to send one was a bare number — the first
+        exception to "a serialized quantity ALWAYS carries its unit".
+        """
+        assert is_valid("quantity", {"value": 0.7815, "unit": "1"})
+
     def test_REJECTS_an_unknown_unit(self):
         """The defect that motivated routing this through `z.enum`.
 
@@ -298,6 +325,25 @@ class TestScenario:
         broken["ka"] = 1.8e-5
         assert not is_valid("scenario", broken)
 
+    def test_REJECTS_an_unknown_key_one_level_down(self):
+        """Parity with the TypeScript side, at the depth the hole was at.
+
+        A plain `z.object` STRIPS unknown keys while emitting
+        `additionalProperties: false`, so TypeScript accepted-and-dropped what
+        this validator refuses. `contracts.test.ts` has the mirror assertion on
+        `SolverConfigSchema`; both must reject the same input or the "one source
+        of truth" claim is false in one direction.
+        """
+        broken = copy.deepcopy(VALID_SCENARIO)
+        broken["modelRequirements"]["surprise"] = 1
+        assert not is_valid("scenario", broken)
+
+    def test_REJECTS_a_scenario_with_no_schema_version(self):
+        """`contentVersion` versions the content, `schemaVersion` the shape."""
+        broken = copy.deepcopy(VALID_SCENARIO)
+        del broken["schemaVersion"]
+        assert not is_valid("scenario", broken)
+
     def test_REJECTS_the_anonymous_concentration_field(self):
         """The field a solute declared before it named its scale.
 
@@ -352,6 +398,31 @@ class TestExportBundle:
         broken = copy.deepcopy(VALID_BUNDLE)
         broken["userId"] = "u-1"
         assert not is_valid("export-bundle", broken)
+
+    def test_REJECTS_a_bundle_claiming_learner_evidence(self):
+        """v1 has no evidence shape, so the only truthful answer is `false`.
+
+        The previous schema admitted `learnerEvidence: [{...}]` with
+        `passthrough()`, which accepts any key at all.
+        """
+        broken = copy.deepcopy(VALID_BUNDLE)
+        broken["includesLearnerEvidence"] = True
+        assert not is_valid("export-bundle", broken)
+
+    def test_REJECTS_a_nested_learner_identifier(self):
+        """The hole the AC-P4 test could not see, because it stopped at depth 1."""
+        broken = copy.deepcopy(VALID_BUNDLE)
+        broken["includesLearnerEvidence"] = True
+        broken["learnerEvidence"] = [
+            {"learnerId": "123", "email": "x@example.com", "sessionId": "abc"}
+        ]
+        assert not is_valid("export-bundle", broken)
+
+    def test_no_forbidden_identifier_name_appears_anywhere_in_the_artifact(self):
+        """Recursive, not top-level: that is the whole point of the fix."""
+        text = (ARTIFACT_DIR / "export-bundle.schema.json").read_text(encoding="utf-8")
+        for forbidden in FORBIDDEN_BUNDLE_FIELDS:
+            assert f'"{forbidden}"' not in text
 
     @pytest.mark.parametrize(
         "name", ["quantity", "scenario", "export-bundle", "world-state"]

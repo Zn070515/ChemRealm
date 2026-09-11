@@ -835,9 +835,9 @@ Vessel {
 }                                       // NO contents field. See P1-B.
 
 CanonicalContents {
-  waterMass:    Kilogram                     // conserved solvent
-  liquidVolume: Litre                        // operational physical state
-  materials:    { materialId, amount: Mol }[]  // conserved solutes
+  waterMass:        Kilogram                      // conserved solvent
+  liquidVolume:     Litre                         // operational physical state
+  componentAmounts: { componentId, amount: Mol }[] // conserved components
 }
 ```
 
@@ -846,6 +846,36 @@ CanonicalContents {
 same chemistry in two places, which is the exact "second source of truth" this
 project forbids everywhere else (`CLAUDE.md` §9, `ADR-0002`). `Vessel` is now
 structure only; contents live **only** in `canonical.byVessel`.
+
+**Correction (2026-09-11, owner review P1-1; owner-approved clarification).**
+This block previously read
+
+```
+materials: { materialId, amount: Mol }[]  // conserved solutes
+```
+
+which is self-contradictory: a `materialId` names a reagent RECIPE, and a
+recipe is not a conserved physical quantity. Two materials supplying the same
+solute are indistinguishable once mixed, yet that shape kept two separate
+"material amounts"; and a material holding two solutes (a buffer of CH₃COOH +
+CH₃COONa) has no meaningful `n(material)` to store at all.
+
+What conserves, transfers, and enters the replay hash is the amount of each
+chemical COMPONENT. Four levels, kept distinct:
+
+| Level | What it is | Where |
+|---|---|---|
+| `MaterialDefinition` | authored reagent recipe | `content.ts` |
+| `MaterialSnapshot` | resolved genesis recipe | `world.ts` |
+| **component inventory** | **conserved world truth** | `CanonicalContents` |
+| `SpeciesState` | equilibrium-derived instantaneous state | `scientific.ts` |
+
+For v0 the genesis resolution maps a material's solutes to components
+one-for-one, because in this slice each solute *is* the component it supplies —
+`HCl` as a defined component, exactly as PHREEQC treats it. When a later slice
+needs total-Na or total-acetate, the component list is defined at the component
+level; the FORMAT does not change. That is the point of paying for the correct
+name now.
 
 `Apparatus { id, kind, position, state }` — a burette's `state` carries
 `initialVolume: Litre`; its reading is **derived**, not stored.

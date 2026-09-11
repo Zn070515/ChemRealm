@@ -74,9 +74,24 @@ export const ExportBundleSchema = z.strictObject({
    */
   events: EventLogSchema,
 
-  /** Explicitly states whether learner evidence is in this bundle. */
-  includesLearnerEvidence: z.boolean(),
-  learnerEvidence: z.array(z.strictObject({}).passthrough()).optional(),
+  /**
+   * WHETHER this bundle carries learner evidence. In v1 the answer is always
+   * `false`, expressed as a literal.
+   *
+   * The previous shape was `learnerEvidence: z.array(z.strictObject({})
+   * .passthrough()).optional()`, sitting beside a `FORBIDDEN_BUNDLE_FIELDS` list
+   * and an AC-P4 test that inspected only the TOP-LEVEL field names. Verified
+   * before the fix: a bundle carrying `learnerEvidence: [{ learnerId: "123",
+   * email: "x@example.com", sessionId: "abc" }]` parsed successfully.
+   * `passthrough()` means "any key at all", so the bundle AC-P4 exists to
+   * prevent was the one the schema invited.
+   *
+   * M9 defines `EvidenceEvent` and its privacy-safe export form. Until then
+   * there is nothing truthful to put here, and a hole left open "for later" is
+   * how the later version inherits it. v1 states `false` and carries no
+   * payload; M9 adds the `true` branch together with a `formatVersion` bump.
+   */
+  includesLearnerEvidence: z.literal(false),
 
   createdAt: z.string().optional(),
 });

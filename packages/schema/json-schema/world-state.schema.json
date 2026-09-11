@@ -102,28 +102,7 @@
           "additionalProperties": {
             "additionalProperties": false,
             "properties": {
-              "liquidVolume": {
-                "additionalProperties": false,
-                "properties": {
-                  "unit": {
-                    "enum": [
-                      "L",
-                      "mL",
-                      "uL"
-                    ],
-                    "type": "string"
-                  },
-                  "value": {
-                    "type": "number"
-                  }
-                },
-                "required": [
-                  "value",
-                  "unit"
-                ],
-                "type": "object"
-              },
-              "materials": {
+              "componentAmounts": {
                 "items": {
                   "additionalProperties": false,
                   "properties": {
@@ -147,18 +126,39 @@
                       ],
                       "type": "object"
                     },
-                    "materialId": {
+                    "componentId": {
                       "minLength": 1,
                       "type": "string"
                     }
                   },
                   "required": [
-                    "materialId",
+                    "componentId",
                     "amount"
                   ],
                   "type": "object"
                 },
                 "type": "array"
+              },
+              "liquidVolume": {
+                "additionalProperties": false,
+                "properties": {
+                  "unit": {
+                    "enum": [
+                      "L",
+                      "mL",
+                      "uL"
+                    ],
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "value",
+                  "unit"
+                ],
+                "type": "object"
               },
               "waterMass": {
                 "additionalProperties": false,
@@ -185,7 +185,7 @@
             "required": [
               "waterMass",
               "liquidVolume",
-              "materials"
+              "componentAmounts"
             ],
             "type": "object"
           },

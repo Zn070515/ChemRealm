@@ -50,7 +50,7 @@ export const EventEnvelopeShape = {
   schemaVersion: z.literal(CURRENT_SCHEMA_VERSION),
   /** Wall-clock, for human reading only. Never hashed, never an ordering key. */
   meta: z
-    .object({ recordedAt: z.string().optional() })
+    .strictObject({ recordedAt: z.string().optional() })
     .optional(),
 };
 

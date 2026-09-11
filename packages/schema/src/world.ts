@@ -74,7 +74,14 @@ export const MaterialSnapshotSchema = z.strictObject({
       kilogramsPerMol: z.number().positive(),
     }),
   ),
-  /** FROZEN at genesis. This is what `MaterialCharged` multiplies by volume. */
+  /**
+   * FROZEN at genesis. This is what `MaterialCharged` multiplies by volume.
+   *
+   * RECIPE LEVEL, deliberately: this says what the material SUPPLIES. What the
+   * world then CONSERVES is a component inventory keyed by `componentId`
+   * (`CanonicalContents`), and the mapping from here to there is the genesis
+   * resolver's job. v0 maps one-for-one; see the note on `CanonicalContents`.
+   */
   resolvedInventoryPerLitre: z.strictObject({
     waterMass: quantityOfDimension("mass"),
     soluteAmounts: z.array(
@@ -123,13 +130,55 @@ export const ScenarioSnapshotSchema = z.strictObject({
 });
 export type ScenarioSnapshot = z.infer<typeof ScenarioSnapshotSchema>;
 
-/** Per-vessel conserved and operational state. Three fields. Nothing else. */
+/**
+ * One conserved chemical component in a vessel.
+ *
+ * A COMPONENT, not a material and not a species. See the note on
+ * `CanonicalContentsSchema`.
+ */
+export const ComponentAmountSchema = z.strictObject({
+  componentId: z.string().min(1),
+  amount: quantityOfDimension("amount"),
+});
+export type ComponentAmount = z.infer<typeof ComponentAmountSchema>;
+
+/**
+ * Per-vessel conserved and operational state. Three fields. Nothing else.
+ *
+ * THE CONSERVED QUANTITY IS A COMPONENT, NOT A MATERIAL (M1 contract
+ * remediation item 1, owner-approved 2026-09-11; this corrects an accepted
+ * `SPEC-0001` sketch, which is recorded in that document).
+ *
+ * An earlier version stored `materials: [{ materialId, amount }]`. A material is
+ * a reagent RECIPE — "0.100 M HCl, density …, composition …" — and no such
+ * thing is conserved:
+ *
+ *   - Two materials that supply the same solute are indistinguishable once
+ *     mixed, yet the old shape kept two separate "material amounts" for them.
+ *   - A material holding two solutes (a buffer of CH₃COOH + CH₃COONa) has no
+ *     meaningful `n(buffer-material)` to store at all.
+ *
+ * What transfers, conserves, and enters the state hash is the amount of each
+ * chemical component. Material identity is a genesis-time fact and stops at
+ * this boundary.
+ *
+ * FOUR LEVELS, kept distinct on purpose:
+ *
+ *   MaterialDefinition   authored reagent recipe            (content.ts)
+ *   MaterialSnapshot     resolved genesis recipe            (below)
+ *   componentAmounts     conserved world truth              (here)
+ *   SpeciesState         equilibrium-derived instant        (scientific.ts)
+ *
+ * For v0 the genesis resolution maps a material's solutes to components
+ * one-for-one, because in this slice each solute IS the component it supplies
+ * (`HCl` as a defined component, exactly as PHREEQC treats it). When a later
+ * slice needs total-Na or total-acetate, the component list is defined at the
+ * component level — the FORMAT does not change.
+ */
 export const CanonicalContentsSchema = z.strictObject({
   waterMass: quantityOfDimension("mass"),
   liquidVolume: quantityOfDimension("volume"),
-  materials: z.array(
-    z.strictObject({ materialId: MaterialIdSchema, amount: quantityOfDimension("amount") }),
-  ),
+  componentAmounts: z.array(ComponentAmountSchema),
 });
 export type CanonicalContents = z.infer<typeof CanonicalContentsSchema>;
 

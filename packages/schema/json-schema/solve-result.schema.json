@@ -4,6 +4,10 @@
     {
       "additionalProperties": false,
       "properties": {
+        "schemaVersion": {
+          "const": 1,
+          "type": "number"
+        },
         "state": {
           "additionalProperties": false,
           "properties": {
@@ -29,15 +33,61 @@
               "type": "array"
             },
             "ionicStrengthMolal": {
-              "minimum": 0,
-              "type": "number"
+              "additionalProperties": false,
+              "properties": {
+                "unit": {
+                  "enum": [
+                    "mol/kg"
+                  ],
+                  "type": "string"
+                },
+                "value": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "value",
+                "unit"
+              ],
+              "type": "object"
             },
             "ionicStrengthReduced": {
-              "minimum": 0,
-              "type": "number"
+              "additionalProperties": false,
+              "properties": {
+                "unit": {
+                  "enum": [
+                    "1"
+                  ],
+                  "type": "string"
+                },
+                "value": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "value",
+                "unit"
+              ],
+              "type": "object"
             },
             "modelPh": {
-              "type": "number"
+              "additionalProperties": false,
+              "properties": {
+                "unit": {
+                  "enum": [
+                    "1"
+                  ],
+                  "type": "string"
+                },
+                "value": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "value",
+                "unit"
+              ],
+              "type": "object"
             },
             "provenance": {
               "additionalProperties": false,
@@ -89,29 +139,109 @@
               ],
               "type": "object"
             },
+            "schemaVersion": {
+              "const": 1,
+              "type": "number"
+            },
             "species": {
               "items": {
                 "additionalProperties": false,
                 "properties": {
                   "activity": {
-                    "minimum": 0,
-                    "type": "number"
+                    "additionalProperties": false,
+                    "properties": {
+                      "unit": {
+                        "enum": [
+                          "1"
+                        ],
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "value",
+                      "unit"
+                    ],
+                    "type": "object"
                   },
                   "activityCoefficient": {
-                    "minimum": 0,
-                    "type": "number"
+                    "additionalProperties": false,
+                    "properties": {
+                      "unit": {
+                        "enum": [
+                          "1"
+                        ],
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "value",
+                      "unit"
+                    ],
+                    "type": "object"
                   },
-                  "amountMol": {
-                    "minimum": 0,
-                    "type": "number"
+                  "amount": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "unit": {
+                        "enum": [
+                          "mol",
+                          "mmol"
+                        ],
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "value",
+                      "unit"
+                    ],
+                    "type": "object"
                   },
                   "molality": {
-                    "minimum": 0,
-                    "type": "number"
+                    "additionalProperties": false,
+                    "properties": {
+                      "unit": {
+                        "enum": [
+                          "mol/kg"
+                        ],
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "value",
+                      "unit"
+                    ],
+                    "type": "object"
                   },
                   "reducedMolality": {
-                    "minimum": 0,
-                    "type": "number"
+                    "additionalProperties": false,
+                    "properties": {
+                      "unit": {
+                        "enum": [
+                          "1"
+                        ],
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "value",
+                      "unit"
+                    ],
+                    "type": "object"
                   },
                   "symbol": {
                     "minLength": 1,
@@ -122,7 +252,7 @@
                   "symbol",
                   "reducedMolality",
                   "molality",
-                  "amountMol",
+                  "amount",
                   "activityCoefficient",
                   "activity"
                 ],
@@ -151,6 +281,7 @@
             }
           },
           "required": [
+            "schemaVersion",
             "species",
             "ionicStrengthMolal",
             "ionicStrengthReduced",
@@ -167,6 +298,7 @@
         }
       },
       "required": [
+        "schemaVersion",
         "status",
         "state"
       ],
@@ -189,8 +321,23 @@
               "additionalProperties": false,
               "properties": {
                 "ionicStrengthMolalMax": {
-                  "exclusiveMinimum": 0,
-                  "type": "number"
+                  "additionalProperties": false,
+                  "properties": {
+                    "unit": {
+                      "enum": [
+                        "mol/kg"
+                      ],
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "value",
+                    "unit"
+                  ],
+                  "type": "object"
                 },
                 "phase": {
                   "type": "string"
@@ -204,14 +351,48 @@
                   },
                   "type": "array"
                 },
-                "temperatureKelvin": {
+                "temperature": {
                   "additionalProperties": false,
                   "properties": {
                     "max": {
-                      "type": "number"
+                      "additionalProperties": false,
+                      "properties": {
+                        "unit": {
+                          "enum": [
+                            "K",
+                            "degC"
+                          ],
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "value",
+                        "unit"
+                      ],
+                      "type": "object"
                     },
                     "min": {
-                      "type": "number"
+                      "additionalProperties": false,
+                      "properties": {
+                        "unit": {
+                          "enum": [
+                            "K",
+                            "degC"
+                          ],
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "value",
+                        "unit"
+                      ],
+                      "type": "object"
                     }
                   },
                   "required": [
@@ -222,7 +403,7 @@
                 }
               },
               "required": [
-                "temperatureKelvin",
+                "temperature",
                 "ionicStrengthMolalMax",
                 "species",
                 "solvent",
@@ -247,12 +428,17 @@
           "minLength": 1,
           "type": "string"
         },
+        "schemaVersion": {
+          "const": 1,
+          "type": "number"
+        },
         "status": {
           "const": "MODEL_OUT_OF_DOMAIN",
           "type": "string"
         }
       },
       "required": [
+        "schemaVersion",
         "status",
         "reason"
       ],
@@ -269,12 +455,17 @@
         "residual": {
           "type": "number"
         },
+        "schemaVersion": {
+          "const": 1,
+          "type": "number"
+        },
         "status": {
           "const": "NOT_CONVERGED",
           "type": "string"
         }
       },
       "required": [
+        "schemaVersion",
         "status",
         "residual",
         "iterations"
@@ -284,6 +475,10 @@
     {
       "additionalProperties": false,
       "properties": {
+        "schemaVersion": {
+          "const": 1,
+          "type": "number"
+        },
         "status": {
           "const": "INVALID_INPUT",
           "type": "string"
@@ -311,6 +506,7 @@
         }
       },
       "required": [
+        "schemaVersion",
         "status",
         "violations"
       ],

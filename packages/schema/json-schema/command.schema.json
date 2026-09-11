@@ -33,12 +33,17 @@
           ],
           "type": "object"
         },
+        "schemaVersion": {
+          "const": 1,
+          "type": "number"
+        },
         "type": {
           "const": "PlaceApparatus",
           "type": "string"
         }
       },
       "required": [
+        "schemaVersion",
         "type",
         "apparatusId",
         "kind",
@@ -77,12 +82,17 @@
           "minLength": 1,
           "type": "string"
         },
+        "schemaVersion": {
+          "const": 1,
+          "type": "number"
+        },
         "type": {
           "const": "AttachApparatus",
           "type": "string"
         }
       },
       "required": [
+        "schemaVersion",
         "type",
         "childId",
         "parentId",
@@ -96,6 +106,10 @@
         "materialId": {
           "minLength": 1,
           "type": "string"
+        },
+        "schemaVersion": {
+          "const": 1,
+          "type": "number"
         },
         "type": {
           "const": "ChargeVessel",
@@ -128,6 +142,7 @@
         }
       },
       "required": [
+        "schemaVersion",
         "type",
         "vesselId",
         "materialId",
@@ -141,6 +156,10 @@
         "fromVesselId": {
           "minLength": 1,
           "type": "string"
+        },
+        "schemaVersion": {
+          "const": 1,
+          "type": "number"
         },
         "toVesselId": {
           "minLength": 1,
@@ -173,6 +192,7 @@
         }
       },
       "required": [
+        "schemaVersion",
         "type",
         "fromVesselId",
         "toVesselId",
@@ -188,12 +208,17 @@
           "minimum": 0,
           "type": "integer"
         },
+        "schemaVersion": {
+          "const": 1,
+          "type": "number"
+        },
         "type": {
           "const": "BranchWorld",
           "type": "string"
         }
       },
       "required": [
+        "schemaVersion",
         "type",
         "fromSequence"
       ],

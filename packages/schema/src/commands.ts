@@ -26,20 +26,33 @@ import {
   VesselIdSchema,
 } from "./world.js";
 
+/**
+ * Version of the command shape.
+ *
+ * Commands are emitted as JSON Schema (`json-schema.ts`) and validated by the
+ * Python side, so they are a wire format rather than an internal TypeScript
+ * type. An unversioned wire format cannot be migrated later without guesswork
+ * (M1 contract remediation item 6).
+ */
+export const COMMAND_SCHEMA_VERSION = 1;
+
 export const CommandSchema = z.discriminatedUnion("type", [
   z.strictObject({
+    schemaVersion: z.literal(COMMAND_SCHEMA_VERSION),
     type: z.literal("PlaceApparatus"),
     apparatusId: ApparatusIdSchema,
     kind: z.string().min(1),
     position: PositionSchema,
   }),
   z.strictObject({
+    schemaVersion: z.literal(COMMAND_SCHEMA_VERSION),
     type: z.literal("AttachApparatus"),
     childId: z.union([ApparatusIdSchema, VesselIdSchema]),
     parentId: z.union([ApparatusIdSchema, VesselIdSchema]),
     portId: z.string().min(1),
   }),
   z.strictObject({
+    schemaVersion: z.literal(COMMAND_SCHEMA_VERSION),
     type: z.literal("ChargeVessel"),
     vesselId: VesselIdSchema,
     materialId: MaterialIdSchema,
@@ -50,12 +63,14 @@ export const CommandSchema = z.discriminatedUnion("type", [
    * produces is `TransferCommitted`, because that is the fact.
    */
   z.strictObject({
+    schemaVersion: z.literal(COMMAND_SCHEMA_VERSION),
     type: z.literal("DeliverTitrant"),
     fromVesselId: VesselIdSchema,
     toVesselId: VesselIdSchema,
     volume: quantityOfDimension("volume"),
   }),
   z.strictObject({
+    schemaVersion: z.literal(COMMAND_SCHEMA_VERSION),
     type: z.literal("BranchWorld"),
     fromSequence: z.number().int().nonnegative(),
   }),

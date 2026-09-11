@@ -48,9 +48,12 @@ import {
   sumIonicStrengthMolar,
   sumReducedIonicStrength,
   thermodynamicConstant,
+  type Activity,
   type ActivityCoefficient,
+  type Ph,
   type ThermodynamicConstant,
 } from "./units.js";
+import type { ScientificState, SpeciesState } from "./scientific.js";
 
 // ---------------------------------------------------------------------------
 // OPAQUE — raw arithmetic is a compile error
@@ -67,7 +70,15 @@ export function opaqueGuarantees(): void {
   void (a / 2);
 
   // @ts-expect-error — a bare number is not a Ph.
-  void ((1) as unknown as { value: number }) satisfies Ph extends never ? never : unknown;
+  //
+  // This assertion was PRESENT BUT EMPTY until the dimensionless-unit work.
+  // `Ph` was not imported, so the directive was suppressing the resulting
+  // `Cannot find name 'Ph'` error and the `satisfies` expression evaluated to
+  // `unknown`, which nothing can fail. Importing `type Ph` made the directive
+  // unused, TypeScript reported TS2578, and the fixture — which claimed to test
+  // a guarantee — turned out to have been testing a typo.
+  const barePh: Ph = 1;
+  void barePh;
 
   const actA = activity(0.5);
   const actB = activity(0.5);
@@ -243,4 +254,45 @@ export function thermodynamicConstantGuarantees(): void {
   void asMolality;
 
   void ka.value;
+}
+
+// ---------------------------------------------------------------------------
+// THE SCIENTIFIC DOMAIN — the barrier holds at the boundary that matters most
+// ---------------------------------------------------------------------------
+
+export function scientificDomainGuarantees(): void {
+  const species = {} as SpeciesState;
+  const state = {} as ScientificState;
+
+  // @ts-expect-error — `amount: state.modelPh` is EXACTLY the substitution that
+  // used to typecheck, when every domain field was a bare `number`. A pH stored
+  // as an amount, silently, all the way into a solver is the mistake the whole
+  // quantity apparatus exists to prevent, and the boundary it happens at is
+  // this one.
+  const confused: Mol = state.modelPh;
+  void confused;
+
+  // @ts-expect-error — and the reverse.
+  const confusedBack: Ph = species.amount;
+  void confusedBack;
+
+  // @ts-expect-error — an arithmetic RESULT is a plain number, so it cannot be
+  // stored back as a quantity without an explicit operator.
+  const stored: Mol = species.amount * 2;
+  void stored;
+
+  // @ts-expect-error — an activity coefficient is not an activity, though both
+  // are dimensionless and both sit near 1 in dilute solution.
+  const crossed: Activity = species.activityCoefficient;
+  void crossed;
+
+  // @ts-expect-error — reduced molality is dimensionless; physical molality is
+  // mol/kg. They are numerically identical at m° = 1 and must still be distinct
+  // (AC-U5), including here.
+  const acrossStandardState: MolPerKilogram = species.reducedMolality;
+  void acrossStandardState;
+
+  // A domain field IS a quantity, so this must compile.
+  const ok: MolPerKilogram = species.molality;
+  void ok;
 }

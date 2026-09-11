@@ -796,15 +796,8 @@
       "type": "number"
     },
     "includesLearnerEvidence": {
+      "const": false,
       "type": "boolean"
-    },
-    "learnerEvidence": {
-      "items": {
-        "additionalProperties": {},
-        "properties": {},
-        "type": "object"
-      },
-      "type": "array"
     },
     "lineage": {
       "items": {
