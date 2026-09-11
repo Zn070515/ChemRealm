@@ -208,7 +208,7 @@ Delete the M0 files. Nothing is persisted and nothing depends on them.
 ## M1 — Schema and units
 
 **Target stage:** S3
-**Addresses:** ADR-0001, ADR-0004; `SPEC-0001` AC-C1, AC-C2, AC-R8, AC-R15, AC-R16, AC-P3, AC-U1..AC-U5, AC-V7
+**Addresses:** ADR-0001, ADR-0004; `SPEC-0001` AC-C1, AC-C2, AC-R15, AC-R16, AC-P4, AC-U1..AC-U5, AC-V7
 
 ### Purpose
 
@@ -299,8 +299,10 @@ this milestone defines their representation.
 | Schema test: the `ScenarioSnapshot` type has no solver-config field; it carries `modelRequirements` | AC-R16 |
 | Content-schema test: a scenario carries no equilibrium arithmetic | AC-C1 |
 | Negative content test: an unknown species or unit fails loudly, with no default | AC-C2 |
+| Export-schema test: the bundle carries no tracking identifier, and does carry `lineage` and an explicit `includesLearnerEvidence` | AC-P4 |
 | Golden JSON Schema snapshot | Contract drift is visible in review |
-| Migration registry runs `1 → 1` on a fixture world | Harness works |
+| **Python test loads the committed artifact and validates a fixture against it; a second fixture that violates the contract is REJECTED** | M1 stop condition — `ADR-0001` rule 1's "one source of truth" is demonstrated, not asserted |
+| Migration registry runs `1 → 1` on a fixture world | The migration harness exists before it is needed (`SPEC-0001` §Rollout/migration). **Not `AC-R8`** — that criterion is the export→import round-trip to an identical state hash, evidenced at M2/M8 |
 
 ### Note on what this milestone does **not** claim
 
@@ -323,7 +325,13 @@ truth" claim rather than asserting it.
 ## M2 — Event runtime and replay
 
 **Target stage:** S3
-**Addresses:** ADR-0002, ADR-0007; `SPEC-0001` AC-R1..AC-R16, AC-R18..AC-R19
+**Addresses:** ADR-0002, ADR-0007; `SPEC-0001` AC-R1..AC-R5, AC-R7, AC-R9..AC-R16, AC-R18..AC-R19
+
+`AC-R6` (solver-identity refusal) and `AC-R8` (export → import round-trip) are
+**not** claimed here. Both were inside the `AC-R1..AC-R16` range and the evidence
+for each lands elsewhere — `AC-R6` at M3 (registry foundation) and M8, `AC-R8` at
+M8. A range that sweeps in criteria another milestone evidences reads as M2
+coverage that M2 does not have.
 
 ### Purpose
 
@@ -636,7 +644,12 @@ If PHREEQC cannot be installed and driven in CI:
 ## M5 — Observable state
 
 **Target stage:** S3
-**Addresses:** ADR-0006, ADR-0007; `SPEC-0001` AC-V1..AC-V4, AC-V6, AC-V8, AC-V9
+**Addresses:** ADR-0006, ADR-0007; `SPEC-0001` AC-V2..AC-V4, AC-V6, AC-V8, AC-V9
+
+`AC-V1` (`packages/render` has no import path to `packages/sci`) is **not**
+claimed here. It was inside the `AC-V1..AC-V4` range; the rule is created and
+first evidenced at M0, and re-verified at M6 once real render code lands. M5
+produces no render code to violate it.
 
 ### Purpose
 

@@ -20,15 +20,26 @@ weak a bar, and so is a criterion that is named but never evidenced.
     1. UNMAPPED    - defined in SPEC-0001, but no PLAN milestone claims it in an
                      `**Addresses:**` line.
     2. DANGLING    - referenced in PLAN-0001 but not defined in SPEC-0001.
-    3. UNEVIDENCED - a milestone claims the criterion in `**Addresses:**` but
-                     neither that milestone's test/evidence table nor its stop
-                     condition mentions it.
+    3. UNEVIDENCED - EVERY milestone that claims the criterion in its
+                     `**Addresses:**` line must also mention it under its own
+                     `### Tests and evidence` or `### Stop condition`. A
+                     milestone that claims without evidencing is reported, even
+                     if a different milestone does evidence it.
 
 UNEVIDENCED was a warning in the first version of this checker. That contradicts
 `CLAUDE.md`: "Each acceptance criterion MUST have a corresponding verification
 method." A criterion named in a header with no test behind it is exactly the
 "agent claims coverage, nothing verifies it" failure this tool exists to catch,
 so it fails the build like the other two.
+
+It was also checked with `any` rather than `all` over the claiming milestones,
+which is a weaker bar than it looks. A range like `AC-R1..AC-R16` sweeps in
+criteria whose evidence lands in a LATER milestone, and one other milestone
+carrying the evidence satisfied the check: M1 claimed `AC-R8`, whose test is a
+persistence round-trip at M8, and the check passed. Since `Addresses:` is what a
+reader uses to decide which milestone delivers a criterion, that is a coverage
+claim the milestone cannot honour — so it blocks.
+
 
 Usage:
     uv run python tools/check_acceptance_coverage.py
@@ -114,13 +125,18 @@ def main():
     # so the unparenthesised form computes claimed | (evidenced - defined) and
     # reports every correctly-defined criterion as dangling.
     dangling = sorted((set(claimed) | set(evidenced)) - set(defined), key=_key)
-    # claimed in a milestone whose tests/stop condition never mentions it
+    # Claimed by a milestone whose own tests/stop condition never mentions it.
+    # Per (criterion, milestone) pair, not per criterion: see the module
+    # docstring for why `any` was too weak.
     unevidenced = sorted(
         (
-            ac for ac, mids in claimed.items()
-            if ac in defined and not any(ac in sections[m][1] for m in mids)
+            (ac, mid)
+            for ac, mids in claimed.items()
+            if ac in defined
+            for mid in mids
+            if ac not in sections[mid][1]
         ),
-        key=_key,
+        key=lambda pair: (_key(pair[0]), int(pair[1][1:])),
     )
 
     print("SPEC-0001 acceptance-criterion coverage across PLAN-0001 milestones")
@@ -147,10 +163,12 @@ def main():
             print()
 
     if unevidenced:
-        print("  UNEVIDENCED -- blocking. Claimed in an Addresses line, but no test")
-        print("  or stop condition in the claiming milestone mentions it:")
-        for ac in unevidenced:
-            print(f"    {ac}   (claimed by {', '.join(claimed[ac])})")
+        print("  UNEVIDENCED -- blocking. Claimed in a milestone's Addresses line,")
+        print("  but that milestone's own tests/stop condition never mentions it:")
+        for ac, mid in unevidenced:
+            others = [m for m in claimed[ac] if m != mid]
+            note = f"  (evidenced elsewhere by {', '.join(others)})" if others else ""
+            print(f"    {ac:<7} claimed by {mid}{note}")
         print()
 
     ok = not unmapped and not dangling and not unevidenced
