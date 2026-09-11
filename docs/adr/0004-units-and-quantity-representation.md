@@ -122,8 +122,17 @@ export function multiplyActivity(a: Activity, b: Activity): Activity;
 export function ratioActivity(a: Activity, b: Activity): number;
 ```
 
-Used for: `Ph`, `Activity`, `ActivityCoefficient`, `IonicStrengthMolal`,
-`IonicStrengthMolar`, `MoleFraction`.
+Used for: `Ph`, `TeachingHydrogenIonExponent`, `Activity`,
+`ActivityCoefficient`, `IonicStrengthMolal`, `IonicStrengthMolar`,
+`ReducedIonicStrength`, `MoleFraction`, `ReducedMolality`.
+
+`TeachingHydrogenIonExponent` is `−lg c(H⁺)`, the syllabus quantity. It is opaque
+and separate from `Ph` because they are different numbers for the same solution
+(1.0000 vs 1.1064 at 0.1000 mol/L HCl), and `SPEC-0001` AC-S9 requires them not
+to be assignable. `ReducedMolality` and `ReducedIonicStrength` are here rather
+than in the branded list because the whole point of the m° convention is that a
+reduced quantity must not be interchangeable with its dimensioned counterpart,
+and brands cannot express that: `m° = 1` makes them numerically identical.
 
 Opaque is right here because the *set* of legal operations is small, specific, and
 easy to get wrong — `averagePh(p1, p2)` must not exist, while
@@ -138,8 +147,20 @@ export type Mol = number & { readonly __unit: "mol" };
 export type Litre = number & { readonly __unit: "L" };
 ```
 
-Used for: `Mol`, `Kilogram`, `Litre`, `Millimetre`, `MolPerKilogram`,
-`MolPerLitre`, `Kelvin`, `Kilopascal`, `Second`.
+Used for: `Mol`, `Gram`, `Kilogram`, `Litre`, `Millimetre`, `MolPerKilogram`,
+`MolPerLitre`, `Kelvin`, `Kilopascal`, `Second`, `KilogramsPerMol`,
+`KilogramsPerLitre`, `GramsPerMol`.
+
+`Gram`, `GramsPerMol` and `KilogramsPerLitre` are not canonical units — those
+are `Kilogram`, `KilogramsPerMol` and `KilogramsPerLitre`. They exist because a
+scenario declares a reagent's molar mass in `g/mol` and its density in `kg/L`,
+and the resolver must convert before it can call `molalityToMolarity`. The
+conversion module is where that happens, so it needs both ends as types.
+
+**This list and the one above fell out of step with §1 during rounds 4 and 5**,
+which added `ReducedMolality`, `ReducedIonicStrength` and the molar-mass types
+to the table but not here. An audit of M1 against these documents is what found
+it. If the two disagree, §1 is authoritative and these lists are wrong.
 
 Branding is chosen here because arithmetic **is** meaningful for these
 quantities — adding two volumes is legitimate, scaling a mass is legitimate — so

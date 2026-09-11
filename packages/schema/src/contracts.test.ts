@@ -6,11 +6,12 @@ import { DomainEventSchema, WorldBranchedSchema, WorldCreatedSchema } from "./ev
 import { MIGRATIONS, migrate } from "./migrate.js";
 import {
   ScientificStateSchema,
-  SolverOutcomeSchema,
+  SolveResultSchema,
   SpeciesStateSchema,
 } from "./scientific.js";
 import {
   CURRENT_SCHEMA_VERSION,
+  PositionSchema,
   ScenarioSnapshotSchema,
   VesselSchema,
   WorldStateSchema,
@@ -208,6 +209,41 @@ describe("AC-R8 — the migration harness exists before it is needed", () => {
   });
 });
 
+describe("AC-V7 — geometry is a length, never a volume", () => {
+  // PLAN-0001 M1 lists this test and it was missing until an audit of the
+  // implementation against the plan found it. "Millimetre" being present is not
+  // the same as "a volume cannot be written here".
+
+  it("accepts millimetres", () => {
+    expect(PositionSchema.safeParse({ unit: "mm", x: 0, y: 0 }).success).toBe(true);
+  });
+
+  it("REJECTS a position declared in a volume unit", () => {
+    // The original dimensional error: geometry carried millilitres, which is
+    // correct for a straight cylinder and silently wrong for the conical flask
+    // this slice actually needs (apparatus-standard.md).
+    expect(PositionSchema.safeParse({ unit: "L", x: 0, y: 0 }).success).toBe(false);
+    expect(PositionSchema.safeParse({ unit: "mL", x: 0, y: 0 }).success).toBe(false);
+  });
+
+  it("carries no volume field in the geometry block", () => {
+    const positionFields = Object.keys(PositionSchema.shape as Record<string, unknown>);
+    expect(positionFields).not.toContain("volume");
+    expect(positionFields).not.toContain("liquidVolume");
+    // The unit is declared ONCE for the block, so no coordinate is ambiguous.
+    expect(positionFields).toContain("unit");
+  });
+
+  it("declares capacity as a volume, because a capacity IS one", () => {
+    // The distinction is that a vessel's CAPACITY is genuinely a volume while
+    // its POSITION is genuinely a length. Both are checked, so neither is
+    // silently allowed to be the other.
+    const vesselFields = Object.keys(VesselSchema.shape as Record<string, unknown>);
+    expect(vesselFields).toContain("capacity");
+    expect(vesselFields).toContain("position");
+  });
+});
+
 describe("boundary shapes REJECT unknown keys rather than stripping them", () => {
   it("refuses an event carrying a field the schema does not know", () => {
     const result = DomainEventSchema.safeParse({
@@ -330,7 +366,7 @@ describe("scientific contract carries the model's identity and validity", () => 
   });
 
   it("treats refusal as a normal outcome, not an exception", () => {
-    const refused = SolverOutcomeSchema.safeParse({
+    const refused = SolveResultSchema.safeParse({
       status: "MODEL_OUT_OF_DOMAIN",
       reason: "temperature outside the model's range",
     });
@@ -338,7 +374,7 @@ describe("scientific contract carries the model's identity and validity", () => 
   });
 
   it("has no bare-number shortcut in the outcome union", () => {
-    const json = JSON.stringify(generateJsonSchemas()["solver-outcome"]);
+    const json = JSON.stringify(generateJsonSchemas()["solve-result"]);
     expect(json).toContain("MODEL_OUT_OF_DOMAIN");
     expect(json).toContain("NOT_CONVERGED");
     expect(json).not.toContain('"ph"');

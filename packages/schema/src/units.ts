@@ -74,6 +74,7 @@ function nonNegative(value: number, what: string): number {
  * way in is the constructor below. That is what "opaque" buys.
  */
 const phBrand = Symbol("chemrealm.Ph");
+const taughtPhBrand = Symbol("chemrealm.TeachingHydrogenIonExponent");
 const activityBrand = Symbol("chemrealm.Activity");
 const activityCoefficientBrand = Symbol("chemrealm.ActivityCoefficient");
 const moleFractionBrand = Symbol("chemrealm.MoleFraction");
@@ -92,6 +93,15 @@ const reducedMolalityBrand = Symbol("chemrealm.ReducedMolality");
  */
 export interface Ph {
   readonly [phBrand]: true;
+  readonly value: number;
+}
+
+/**
+ * `−lg c(H⁺)`, the syllabus quantity. See the constructor for why it is a
+ * separate type from `Ph` rather than a naming convention.
+ */
+export interface TeachingHydrogenIonExponent {
+  readonly [taughtPhBrand]: true;
   readonly value: number;
 }
 
@@ -136,6 +146,28 @@ export interface ReducedMolality {
 
 export function ph(value: number): Ph {
   return { [phBrand]: true, value: finite(value, "pH") };
+}
+
+/**
+ * The TAUGHT quantity, `−lg c(H⁺)`, in mol/L.
+ *
+ * DISTINCT FROM `Ph`, ON PURPOSE, and the distinction is the single most
+ * consequential fact about this project's chemistry:
+ *
+ *   For 0.1000 mol/L HCl:  −lg c(H⁺) = 1.0000   ← textbook "pH = 1"
+ *                          model pH   = 1.1064   ← −log10 a(H⁺)
+ *
+ * They are different numbers for the same solution. `SPEC-0001` AC-S9 requires
+ * them to be non-assignable, and this is the type that makes that true — the
+ * earlier version of this file referenced `TeachingHydrogenIonExponent` in a
+ * comment while no such type existed anywhere.
+ *
+ * The syllabus calls this "pH" and so does the default UI (`SPEC-0001` §Display
+ * decision); what is forbidden is deriving it from a molality rather than from
+ * a genuine `c(H⁺)`, or showing it unlabelled beside the model pH.
+ */
+export function taughtHydrogenIonExponent(value: number): TeachingHydrogenIonExponent {
+  return { [taughtPhBrand]: true, value: finite(value, "−lg c(H⁺)") };
 }
 
 /**

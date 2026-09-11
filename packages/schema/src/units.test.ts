@@ -25,6 +25,8 @@ import {
   molarityToMolality,
   molalityToMolarity,
   molPerKilogram,
+  kilogramsPerLitre,
+  kilogramsPerMol,
   molPerLitre,
   mol,
   moleFraction,
@@ -177,31 +179,35 @@ describe("unit table and canonical conversion", () => {
 });
 
 describe("molarity <-> molality — the conversion that needs a density", () => {
-  // Sourced scenario inputs, not invented models (ADR-0004 §4).
-  const M_HCl = 0.0364609; // kg/mol
-  const RHO_HCL_0_1M = 1.0020; // kg/L at 25 C
+  // Sourced scenario inputs, not invented models (ADR-0004 §4). Constructed
+  // through the real types rather than cast: the earlier version of this test
+  // wrote `M_HCl as never`, which bypassed the very types it was meant to
+  // protect — the test would have passed with the constructor validation
+  // deleted.
+  const M_HCl = kilogramsPerMol(0.0364609);
+  const RHO_HCL_0_1M = kilogramsPerLitre(1.0020);
 
   it("converts 0.1000 mol/L HCl and back", () => {
     const c = molPerLitre(0.1);
-    const m = molarityToMolality(c, M_HCl as never, RHO_HCL_0_1M as never);
+    const m = molarityToMolality(c, M_HCl, RHO_HCL_0_1M);
 
     // The spike measured 0.100165 mol/kg for this solution.
     expect(m).toBeCloseTo(0.100165, 5);
 
-    const back = molalityToMolarity(m, M_HCl as never, RHO_HCL_0_1M as never);
+    const back = molalityToMolarity(m, M_HCl, RHO_HCL_0_1M);
     expect(back).toBeCloseTo(0.1, 12);
   });
 
   it("shows the two scales are NOT interchangeable", () => {
     const c = molPerLitre(0.1);
-    const m = molarityToMolality(c, M_HCl as never, RHO_HCL_0_1M as never);
+    const m = molarityToMolality(c, M_HCl, RHO_HCL_0_1M);
     // 0.16% apart. Small enough to hide, which is why the types must not.
     expect(m).not.toBe(c);
   });
 
   it("refuses a solution where the solute exceeds the solution mass", () => {
     expect(() =>
-      molarityToMolality(molPerLitre(30), M_HCl as never, 1.0 as never),
+      molarityToMolality(molPerLitre(30), M_HCl, 1.0),
     ).toThrow(RangeError);
   });
 
@@ -255,7 +261,7 @@ describe("ionic strength bases are distinct quantities (AC-U2)", () => {
 describe("bad conversions fail loudly rather than returning a number", () => {
   it("refuses a non-positive solution mass", () => {
     expect(() =>
-      molalityToMolarity(molPerKilogram(1), (-1) as unknown as never, 1 as never),
+      molalityToMolarity(molPerKilogram(1), (-1) as unknown, 1),
     ).toThrow(RangeError);
   });
 

@@ -18,7 +18,7 @@ import { CommandSchema } from "./commands.js";
 import { DomainEventSchema, EventLogSchema } from "./events.js";
 import { ExportBundleSchema } from "./export.js";
 import { QuantitySchema } from "./quantity.js";
-import { ScientificStateSchema, SolverOutcomeSchema } from "./scientific.js";
+import { ScientificStateSchema, SolveResultSchema } from "./scientific.js";
 import { WorldStateSchema } from "./world.js";
 
 /**
@@ -34,7 +34,7 @@ export const JSON_SCHEMA_SOURCES = {
   "command": CommandSchema,
   "scenario": ScenarioSchema,
   "scientific-state": ScientificStateSchema,
-  "solver-outcome": SolverOutcomeSchema,
+  "solve-result": SolveResultSchema,
   "export-bundle": ExportBundleSchema,
 } as const;
 

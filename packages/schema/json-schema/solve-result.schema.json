@@ -175,6 +175,74 @@
     {
       "additionalProperties": false,
       "properties": {
+        "nearestSupported": {
+          "additionalProperties": false,
+          "properties": {
+            "description": {
+              "type": "string"
+            },
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "validity": {
+              "additionalProperties": false,
+              "properties": {
+                "ionicStrengthMolalMax": {
+                  "exclusiveMinimum": 0,
+                  "type": "number"
+                },
+                "phase": {
+                  "type": "string"
+                },
+                "solvent": {
+                  "type": "string"
+                },
+                "species": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "temperatureKelvin": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "max": {
+                      "type": "number"
+                    },
+                    "min": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "min",
+                    "max"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "temperatureKelvin",
+                "ionicStrengthMolalMax",
+                "species",
+                "solvent",
+                "phase"
+              ],
+              "type": "object"
+            },
+            "version": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "version",
+            "description",
+            "validity"
+          ],
+          "type": "object"
+        },
         "reason": {
           "minLength": 1,
           "type": "string"
@@ -222,7 +290,22 @@
         },
         "violations": {
           "items": {
-            "type": "string"
+            "additionalProperties": false,
+            "properties": {
+              "field": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "message": {
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "field",
+              "message"
+            ],
+            "type": "object"
           },
           "type": "array"
         }

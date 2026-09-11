@@ -36,7 +36,9 @@ import {
   type Litre,
   type Mol,
   type MolPerKilogram,
+  taughtHydrogenIonExponent,
   type ReducedMolality,
+  type TeachingHydrogenIonExponent,
 } from "./units.js";
 
 // ---------------------------------------------------------------------------
@@ -105,6 +107,28 @@ export function brandedGuarantees(): void {
   // block the arithmetic — `ADR-0004` says so explicitly, and the numeric-policy
   // spike measured it. Claiming otherwise would be a false guarantee.
   void (n + v);
+}
+
+// ---------------------------------------------------------------------------
+// THE TWO pH-LIKE QUANTITIES — different numbers, must not be interchangeable
+// ---------------------------------------------------------------------------
+
+export function hydrogenIonQuantityGuarantees(): void {
+  const modelPh = ph(1.1064);
+  const taught = taughtHydrogenIonExponent(1.0);
+
+  // For 0.1000 mol/L HCl these are 1.1064 and 1.0000. Same solution, different
+  // numbers. AC-S9 requires them not to be assignable in either direction.
+  // @ts-expect-error — model pH is not the taught quantity
+  const a: Ph = taught;
+  void a;
+
+  // @ts-expect-error — and the other direction
+  const b: TeachingHydrogenIonExponent = modelPh;
+  void b;
+
+  // @ts-expect-error — arithmetic is not defined on the taught quantity either.
+  void (taught + taught);
 }
 
 // ---------------------------------------------------------------------------

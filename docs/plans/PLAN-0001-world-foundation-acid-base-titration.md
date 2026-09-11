@@ -226,7 +226,15 @@ packages/schema/src/commands.ts       the Command union
 packages/schema/src/scientific.ts     ScientificState, Provenance, ModelDescriptor
 packages/schema/src/content.ts        scenario definition schema
 packages/schema/src/export.ts         chemrealm.export v1
-packages/schema/src/json-schema.ts    emits JSON Schema into dist/json-schema/
+packages/schema/src/json-schema.ts    emits JSON Schema into
+packages/schema/scripts/emit-json-schema.mjs   packages/schema/json-schema/ (COMMITTED)
+
+Note the artifact path: COMMITTED at `packages/schema/json-schema/`, not under
+`dist/`. `dist/` is gitignored, and a drift check against an uncommitted
+artifact is vacuous — regenerating during build would always make it
+"current". Committing also lets the Python side validate with no Node
+toolchain. This resolves `ADR-0001` open question 1, whose leaning had been
+self-contradictory. CI gates: `pnpm verify:schema-artifacts`.
 ```
 
 ### Contracts changed

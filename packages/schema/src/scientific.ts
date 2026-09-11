@@ -19,6 +19,8 @@
 
 import { z } from "zod";
 
+import { quantityOfDimension } from "./quantity.js";
+
 /**
  * `GOAL.md` §12's confidence categories. A pedagogical approximation must not
  * be mislabelled as a measured fact, which is why this is required rather than
@@ -125,11 +127,80 @@ export type ScientificState = z.infer<typeof ScientificStateSchema>;
  * number: every outcome is a tagged result, and validity is a normal return
  * value rather than an exception.
  */
-export const SolverOutcomeSchema = z.discriminatedUnion("status", [
+export const InputViolationSchema = z.strictObject({
+  field: z.string().min(1),
+  message: z.string().min(1),
+});
+export type InputViolation = z.infer<typeof InputViolationSchema>;
+
+/**
+ * What the scientific core is asked to solve (`ADR-0003`).
+ *
+ * PLAIN DATA. `ADR-0001` forbids `sci → world`, so this carries a species
+ * inventory rather than world state: the caller resolves materials into solutes
+ * before the core sees them. That keeps the core testable with no world, no
+ * storage, and no browser.
+ *
+ * This type was referenced by `ADR-0003` and listed by `SPEC-0001` from the
+ * start, and did not exist until an audit of the M1 implementation against
+ * those documents found the gap.
+ */
+export const SolveRequestSchema = z.strictObject({
+  /** Conserved solvent. */
+  waterMass: quantityOfDimension("mass"),
+  /** Operational: sets nothing thermodynamically, but a molarity needs it. */
+  liquidVolume: quantityOfDimension("volume"),
+  /**
+   * The inventory the equilibrium is solved over. `Ka` is absent for a strong
+   * acid: the model treats it as fully dissociated, which is a model choice
+   * recorded in the solver config rather than a constant.
+   */
+  solutes: z.array(
+    z.strictObject({
+      soluteId: z.string().min(1),
+      amountMol: z.number().nonnegative(),
+      /** Monoprotic acid dissociation constant, dimensionless and molality-based. */
+      kaDimensionless: z.number().positive().optional(),
+      /** Fully dissociated: no equilibrium for this solute. */
+      fullyDissociated: z.boolean(),
+    }),
+  ),
+  temperature: quantityOfDimension("temperature"),
+  /**
+   * Indicator constants. Part of the SCIENTIFIC input because computing the
+   * protonation ratio needs `Ka_in`, an activity and an activity coefficient
+   * (`ADR-0006`).
+   */
+  indicators: z.array(
+    z.strictObject({
+      indicatorId: z.string().min(1),
+      kaInDimensionless: z.number().positive(),
+    }),
+  ),
+});
+export type SolveRequest = z.infer<typeof SolveRequestSchema>;
+
+/**
+ * The solver's return envelope (`ADR-0003`). A caller cannot obtain a bare
+ * number: every outcome is a tagged result, and validity is a normal return
+ * value rather than an exception.
+ *
+ * DEVIATION FROM `ADR-0003`, recorded rather than silent: the ADR sketches the
+ * OK branch as `{ state, provenance }`, with provenance as a SIBLING of state.
+ * Provenance lives INSIDE `ScientificState` here. Carrying it twice would be
+ * the same double-source-of-truth defect this project removed from
+ * `Vessel.contents` and from genesis `solverConfig`.
+ */
+export const SolveResultSchema = z.discriminatedUnion("status", [
   z.strictObject({ status: z.literal("OK"), state: ScientificStateSchema }),
   z.strictObject({
     status: z.literal("MODEL_OUT_OF_DOMAIN"),
     reason: z.string().min(1),
+    /**
+     * What WOULD have been supported. `ADR-0003` requires this so a refusal
+     * tells the caller something actionable; a bare reason does not.
+     */
+    nearestSupported: ModelDescriptorSchema.optional(),
   }),
   z.strictObject({
     status: z.literal("NOT_CONVERGED"),
@@ -138,10 +209,10 @@ export const SolverOutcomeSchema = z.discriminatedUnion("status", [
   }),
   z.strictObject({
     status: z.literal("INVALID_INPUT"),
-    violations: z.array(z.string()),
+    violations: z.array(InputViolationSchema),
   }),
 ]);
-export type SolverOutcome = z.infer<typeof SolverOutcomeSchema>;
+export type SolveResult = z.infer<typeof SolveResultSchema>;
 
 /** The solver identity that participates in replay identity (`ADR-0007` §8). */
 export const SolverConfigSchema = z.strictObject({
