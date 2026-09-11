@@ -20,7 +20,6 @@ The platform is not intended to replace real experiments, teachers, textbooks, o
 
 This project is **not** merely:
 
-- a NOBOOK clone;
 - a chemistry animation collection;
 - a problem bank;
 - an AI answer generator;
@@ -28,6 +27,11 @@ This project is **not** merely:
 - a university chemistry encyclopedia;
 - a school management platform;
 - an online tutoring business.
+
+Where this project stands relative to NOBOOK-class products — what a mature
+virtual lab has genuinely earned, and what must not be copied — is studied in
+[`docs/research/from-nobook.md`](docs/research/from-nobook.md). That note is
+non-normative research: it informs decisions, it does not amend this file.
 
 It is a unified **Chemical World** with multiple projections.
 
