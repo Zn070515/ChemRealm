@@ -248,12 +248,145 @@ export function sumMoleFractions(parts: readonly MoleFraction[]): MoleFraction {
   return moleFraction(total);
 }
 
-/** Comparison is defined ONLY within one basis; see `IonicStrengthMolar`. */
+/**
+ * `x_A / x_B`. Defined, and the only multiplicative operation mole fraction has:
+ * `x_A · x_B` is not, which is why no `multiplyMoleFraction` exists.
+ */
+export function ratioMoleFraction(
+  numerator: MoleFraction,
+  denominator: MoleFraction,
+): number {
+  if (denominator.value === 0) {
+    throw new RangeError("ratioMoleFraction: denominator is zero");
+  }
+  return numerator.value / denominator.value;
+}
+
+// --- activity coefficient: multiply, divide, log10 --------------------------
+
+/**
+ * `γ_H · γ_A`. The ontology states this product "appears in every conditional
+ * constant" — `Ka_c = Ka · γ_HA / (γ_H · γ_A)` — so the algebra cannot be
+ * written without it.
+ */
+export function multiplyActivityCoefficient(
+  a: ActivityCoefficient,
+  b: ActivityCoefficient,
+): ActivityCoefficient {
+  return activityCoefficient(a.value * b.value);
+}
+
+/** `γ_A / γ_B`. */
+export function divideActivityCoefficient(
+  numerator: ActivityCoefficient,
+  denominator: ActivityCoefficient,
+): ActivityCoefficient {
+  if (denominator.value === 0) {
+    throw new RangeError("divideActivityCoefficient: denominator is zero");
+  }
+  return activityCoefficient(numerator.value / denominator.value);
+}
+
+/**
+ * `log10 γ`. Returns a plain `number`, matching `ratioActivity`: a logarithm is
+ * a coordinate the solver's arithmetic runs on directly, not a physical
+ * quantity with a unit of its own.
+ *
+ * DETERMINISM OBLIGATION. `ADR-0007` requires the replay path to use
+ * `detLog10`, not the native `Math.log10` used here. That function is created at
+ * M4 (`PLAN-0001` M4 step 2, `deterministic-math.ts`). Until then this is safe
+ * because nothing on the replay path calls it — but **when M4 lands, this call
+ * site must be routed through `detLog10`**, or a cross-engine replay can flip a
+ * hash (`SPEC-0001` risk 22). Recorded here rather than left to be rediscovered.
+ */
+export function log10ActivityCoefficient(g: ActivityCoefficient): number {
+  if (g.value === 0) {
+    throw new RangeError(
+      "log10ActivityCoefficient: log10 of zero is not defined",
+    );
+  }
+  return Math.log10(g.value);
+}
+
+// --- ionic strength: per basis, because comparison is defined only within one -
+
+/** `I_m` adds within its own basis. */
+export function sumIonicStrengthMolal(
+  ...parts: readonly IonicStrengthMolal[]
+): IonicStrengthMolal {
+  return ionicStrengthMolal(parts.reduce((a, b) => a + b.value, 0));
+}
+
+/** `k · I_m`. Part of `I = 0.5 · Σ m_i z_i²`. */
+export function scaleIonicStrengthMolal(
+  i: IonicStrengthMolal,
+  factor: number,
+): IonicStrengthMolal {
+  return ionicStrengthMolal(i.value * factor);
+}
+
+/**
+ * Comparison is defined ONLY within one basis (`IonicStrengthMolar`), so there
+ * are three of these and no cross-basis overload.
+ */
 export function compareIonicStrengthMolal(
   a: IonicStrengthMolal,
   b: IonicStrengthMolal,
 ): number {
   return a.value - b.value;
+}
+
+export function sumIonicStrengthMolar(
+  ...parts: readonly IonicStrengthMolar[]
+): IonicStrengthMolar {
+  return ionicStrengthMolar(parts.reduce((a, b) => a + b.value, 0));
+}
+
+export function scaleIonicStrengthMolar(
+  i: IonicStrengthMolar,
+  factor: number,
+): IonicStrengthMolar {
+  return ionicStrengthMolar(i.value * factor);
+}
+
+export function compareIonicStrengthMolar(
+  a: IonicStrengthMolar,
+  b: IonicStrengthMolar,
+): number {
+  return a.value - b.value;
+}
+
+export function sumReducedIonicStrength(
+  ...parts: readonly ReducedIonicStrength[]
+): ReducedIonicStrength {
+  return reducedIonicStrength(parts.reduce((a, b) => a + b.value, 0));
+}
+
+export function scaleReducedIonicStrength(
+  i: ReducedIonicStrength,
+  factor: number,
+): ReducedIonicStrength {
+  return reducedIonicStrength(i.value * factor);
+}
+
+export function compareReducedIonicStrength(
+  a: ReducedIonicStrength,
+  b: ReducedIonicStrength,
+): number {
+  return a.value - b.value;
+}
+
+// --- pH-like: compare and difference, never average -------------------------
+
+/**
+ * A three-way comparison, returning `-1 | 0 | 1` so it is directly usable as a
+ * sort comparator. `differencePh` returns the ΔpH itself; this returns only its
+ * sign, which is why the two are not duplicates despite both being "compare".
+ */
+export function comparePh(a: Ph, b: Ph): -1 | 0 | 1 {
+  if (a.value < b.value) return -1;
+  if (a.value > b.value) return 1;
+  return 0;
 }
 
 // ---------------------------------------------------------------------------

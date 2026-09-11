@@ -39,6 +39,15 @@ import {
   taughtHydrogenIonExponent,
   type ReducedMolality,
   type TeachingHydrogenIonExponent,
+  activityCoefficient,
+  divideActivityCoefficient,
+  log10ActivityCoefficient,
+  multiplyActivityCoefficient,
+  reducedIonicStrength,
+  sumIonicStrengthMolal,
+  sumIonicStrengthMolar,
+  sumReducedIonicStrength,
+  type ActivityCoefficient,
 } from "./units.js";
 
 // ---------------------------------------------------------------------------
@@ -160,6 +169,7 @@ export function standardStateGuarantees(): void {
 export function ionicStrengthGuarantees(): void {
   const molal = ionicStrengthMolal(0.1);
   const molar = ionicStrengthMolar(0.1);
+  const reduced = reducedIonicStrength(0.1);
 
   // @ts-expect-error — the two bases are different quantities.
   const crossed: typeof molar = molal;
@@ -168,4 +178,41 @@ export function ionicStrengthGuarantees(): void {
   // @ts-expect-error — and they cannot be compared, which is where a silent
   // mix-up would be most confusing: the numbers are nearly equal.
   void (molal === molar);
+
+  // @ts-expect-error — summing across bases must not compile either. A single
+  // generic `sumIonicStrength` would have accepted this silently.
+  void sumIonicStrengthMolal(molal, molar);
+
+  // @ts-expect-error — nor may a reduced value stand in for a dimensional one.
+  void sumIonicStrengthMolal(molal, reduced);
+
+  // Each basis sums within itself. These must compile.
+  void sumIonicStrengthMolal(molal, molal);
+  void sumIonicStrengthMolar(molar, molar);
+  void sumReducedIonicStrength(reduced, reduced);
+}
+
+// ---------------------------------------------------------------------------
+// ACTIVITY COEFFICIENT — multiplies and divides, never adds
+// ---------------------------------------------------------------------------
+
+export function activityCoefficientGuarantees(): void {
+  const g = activityCoefficient(0.8);
+
+  // @ts-expect-error — coefficients do not add.
+  void (g + g);
+
+  // @ts-expect-error — a bare number is not a coefficient.
+  const bare: ActivityCoefficient = 0.8;
+  void bare;
+
+  // @ts-expect-error — and an activity is not a coefficient, though both are
+  // dimensionless and both sit around 1.
+  const crossedWithActivity: ActivityCoefficient = activity(0.8);
+  void crossedWithActivity;
+
+  // The defined operations: multiply, divide, log10. These must compile.
+  void multiplyActivityCoefficient(g, g);
+  void divideActivityCoefficient(g, g);
+  void log10ActivityCoefficient(g);
 }

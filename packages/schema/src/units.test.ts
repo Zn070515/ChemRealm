@@ -40,6 +40,22 @@ import {
   sumAmounts,
   sumMoleFractions,
   sumVolumes,
+  activityCoefficient,
+  compareIonicStrengthMolar,
+  compareIonicStrengthMolal,
+  comparePh,
+  compareReducedIonicStrength,
+  divideActivityCoefficient,
+  log10ActivityCoefficient,
+  multiplyActivityCoefficient,
+  ratioMoleFraction,
+  reducedIonicStrength,
+  scaleIonicStrengthMolal,
+  scaleIonicStrengthMolar,
+  scaleReducedIonicStrength,
+  sumIonicStrengthMolal,
+  sumIonicStrengthMolar,
+  sumReducedIonicStrength,
   type MolPerKilogram,
   type ReducedMolality,
 } from "./units.js";
@@ -279,5 +295,97 @@ describe("bad conversions fail loudly rather than returning a number", () => {
     const m: MolPerKilogram = molPerKilogram(1);
     const mHat: ReducedMolality = reduceMolality(m);
     expect(mHat.value).toBe(m);
+  });
+});
+
+describe("every operation the ontology defines exists as a function", () => {
+  // `docs/science/quantity-ontology.md` lists which operations have defined
+  // physical meaning on each quantity, and states that the representation
+  // should EXPOSE them. An earlier version of `units.ts` repeated that table in
+  // its own header while supplying only some of the functions — so the header
+  // described a module that did not exist. Each case pins one row of the table.
+
+  it("multiplies and divides activity coefficients", () => {
+    // `γ_H · γ_A` is what `Ka_c = Ka · γ_HA / (γ_H · γ_A)` is built from.
+    const product = multiplyActivityCoefficient(
+      activityCoefficient(0.8),
+      activityCoefficient(0.5),
+    );
+    expect(product.value).toBeCloseTo(0.4, 15);
+    expect(
+      divideActivityCoefficient(activityCoefficient(0.8), activityCoefficient(0.5))
+        .value,
+    ).toBeCloseTo(1.6, 15);
+  });
+
+  it("refuses a zero activity coefficient as a divisor", () => {
+    expect(() =>
+      divideActivityCoefficient(activityCoefficient(1), activityCoefficient(0)),
+    ).toThrow(RangeError);
+  });
+
+  it("takes log10 of an activity coefficient, and refuses log10 of zero", () => {
+    expect(log10ActivityCoefficient(activityCoefficient(0.1))).toBeCloseTo(-1, 12);
+    expect(() => log10ActivityCoefficient(activityCoefficient(0))).toThrow(
+      RangeError,
+    );
+  });
+
+  it("ratios mole fractions; there is deliberately no product", () => {
+    expect(ratioMoleFraction(moleFraction(0.5), moleFraction(0.25))).toBe(2);
+    expect(() => ratioMoleFraction(moleFraction(0.5), moleFraction(0))).toThrow(
+      RangeError,
+    );
+  });
+
+  it("sums and scales ionic strength, once per basis", () => {
+    expect(
+      sumIonicStrengthMolal(ionicStrengthMolal(0.1), ionicStrengthMolal(0.2)).value,
+    ).toBeCloseTo(0.3, 15);
+    expect(scaleIonicStrengthMolal(ionicStrengthMolal(0.1), 0.5).value).toBeCloseTo(
+      0.05,
+      15,
+    );
+    expect(
+      sumIonicStrengthMolar(ionicStrengthMolar(0.1), ionicStrengthMolar(0.2)).value,
+    ).toBeCloseTo(0.3, 15);
+    expect(scaleIonicStrengthMolar(ionicStrengthMolar(0.1), 0.5).value).toBeCloseTo(
+      0.05,
+      15,
+    );
+    expect(
+      sumReducedIonicStrength(reducedIonicStrength(0.1), reducedIonicStrength(0.2))
+        .value,
+    ).toBeCloseTo(0.3, 15);
+    expect(
+      scaleReducedIonicStrength(reducedIonicStrength(0.1), 0.5).value,
+    ).toBeCloseTo(0.05, 15);
+  });
+
+  it("compares within each basis, and each basis has its own comparator", () => {
+    // Comparison across bases is undefined, so there is no overload that takes
+    // an `I_m` and an `I_c` — that is the point of naming three functions.
+    expect(
+      compareIonicStrengthMolal(ionicStrengthMolal(0.1), ionicStrengthMolal(0.2)),
+    ).toBeLessThan(0);
+    expect(
+      compareIonicStrengthMolar(ionicStrengthMolar(0.2), ionicStrengthMolar(0.1)),
+    ).toBeGreaterThan(0);
+    expect(
+      compareReducedIonicStrength(
+        reducedIonicStrength(0.1),
+        reducedIonicStrength(0.1),
+      ),
+    ).toBe(0);
+  });
+
+  it("compares pH while differencePh returns the magnitude", () => {
+    // The ontology lists "compare" and "difference" separately, and they are
+    // not the same operation: a comparator is usable for ordering, a ΔpH is a
+    // physical difference.
+    expect(comparePh(ph(7), ph(4))).toBe(1);
+    expect(comparePh(ph(4), ph(7))).toBe(-1);
+    expect(comparePh(ph(7), ph(7))).toBe(0);
+    expect(differencePh(ph(7), ph(4))).toBe(3);
   });
 });
