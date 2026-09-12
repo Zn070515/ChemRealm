@@ -139,7 +139,7 @@ describe("SolverAdapter contract", () => {
       descriptor,
       outcome: () => {
         invoked = true;
-        return { status: "OK", state: fakeState };
+        return { status: "OK", state: validState };
       },
     });
 

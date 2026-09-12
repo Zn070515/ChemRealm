@@ -91,11 +91,11 @@ type SolveResult =
    satisfies them. ADR-0008's Tier A/B/C replay, re-solve, and archive product
    workflows remain M8 scope.
 
-### M3 contract closure candidate (owner review pending)
+### M3 contract closure (accepted 2026-09-12)
 
 The implementation now makes the following additions explicit. They are a
-candidate amendment to the accepted decisions above and remain pending the
-owner's M3 S3 review.
+contract amendment to the accepted decisions above. The amendment was verified
+with the M3 S3 evidence packet at baseline `573c36f` (CI `34682646131`).
 
 1. **World Runtime and science have separate execution boundaries.**
    `packages/world` remains a synchronous, deterministic reducer and replay
@@ -122,7 +122,7 @@ owner's M3 S3 review.
    `WorldCreated`; incompatible or unavailable resolution returns a reason and
    no event. The builder does not invoke the async solver.
 
-### M3 Identity & Defensive Boundary Closure candidate (owner review pending)
+### M3 Identity & Defensive Boundary Closure (accepted 2026-09-12)
 
 The M3 closure implementation adds three runtime protections that are required
 before a scientific solver is allowed to produce persisted or rendered state:

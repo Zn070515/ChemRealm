@@ -1,12 +1,11 @@
 # SPEC-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** **Accepted** — S1 baseline and M1 S3 contract amendments
-  accepted. Owner, 2026-09-11.
+- **Status:** **Accepted** — S1 baseline, M1 S3, and M3 S3 contract
+  amendments accepted. Owner, 2026-09-12.
 - **Accepted baseline:** commit `8310c685`, `SPEC-0001` revision 6
-- **Current revision:** **11 candidate** — M3 Identity & Defensive Boundary
-  Closure is implemented pending owner S3 verification. Revisions 7–9 are
-  accepted contract amendments; revisions 10–11 are recorded for review and
-  are not self-accepted.
+- **Current revision:** **11 Accepted** — M3 Identity & Defensive Boundary
+  Closure was verified at implementation baseline `573c36f` with CI
+  `34682646131`. Revisions 7–11 are accepted contract amendments.
   See "Amendments since acceptance" below.
 - **Acceptance scope:** the specification and its acceptance criteria. Deferred
   items listed under Open questions remain open and must be resolved before the
@@ -28,8 +27,8 @@
 | 7 | 2026-09-11 | `CanonicalContents` conserves **components**, not materials (M1 contract remediation item 1). `AC-R21` added to carry that contract; `AC-S3` and `AC-R14` wording aligned to it. Round 6's claim at §"Round 6" that this file was "unchanged at revision 6" corrected. | Owner, 2026-09-11 |
 | 8 | 2026-09-11 | M1 Contract Closure R2: all persisted `MaterialSnapshot` scientific inputs are tagged quantities; source-data provenance is distinct from solver/model provenance; v0 material definitions reject mixed bases and more than one molality solute until the joint resolver is implemented. | Owner, 2026-09-11 |
 | 9 | 2026-09-11 | M1 Final Closure: material snapshot provenance follows each datum; snapshot scientific quantities are persisted only in canonical units; export wording is aligned with the v1 bundle contract (`events[0]` carries solver config, lineage ids are allowed, and learner evidence has no v1 payload). | Owner, 2026-09-11 |
-| 10 | 2026-09-12 | M3 Contract Closure candidate: World Runtime reduction/replay stays synchronous; async solving is composition-level orchestration; v0 binds one adapter, one model, and one exact `SolverConfig`; solute modes are discriminated; `MODEL_OUT_OF_DOMAIN` requires `nearestSupported`; incompatible requirements reject genesis before `WorldCreated`. | Owner review pending |
-| 11 | 2026-09-12 | M3 Identity & Defensive Boundary Closure candidate: decoded/cast request data always returns tagged `INVALID_INPUT`; adapter/model/config identity is defensively copied and deeply frozen across construction and registry boundaries; every `OK` result must carry provenance exactly matching the adapter model and solver configuration. | Owner review pending |
+| 10 | 2026-09-12 | M3 Contract Closure: World Runtime reduction/replay stays synchronous; async solving is composition-level orchestration; v0 binds one adapter, one model, and one exact `SolverConfig`; solute modes are discriminated; `MODEL_OUT_OF_DOMAIN` requires `nearestSupported`; incompatible requirements reject genesis before `WorldCreated`. | Owner, 2026-09-12 |
+| 11 | 2026-09-12 | M3 Identity & Defensive Boundary Closure: decoded/cast request data always returns tagged `INVALID_INPUT`; adapter/model/config identity is defensively copied and deeply frozen across construction and registry boundaries; every `OK` result must carry provenance exactly matching the adapter model and solver configuration. | Owner, 2026-09-12 |
 
 A revision bump is recorded here rather than only in the body because the header
 is what a reader checks before deciding whether the file they are reading is the

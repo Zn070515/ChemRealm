@@ -46,9 +46,10 @@ license includes a noncommercial restriction. Commercial use not covered by the
 applicable public license requires a separate written license; see
 [Commercial Licensing](COMMERCIAL-LICENSING.md).
 
-> **Status: M3 — Solver Adapter Contract (S2 implementation candidate).** The
-> repository builds, its architectural rules are enforced, and the current
-> solver boundary is implemented pending owner S3 verification. See the
+> **Status: M3 — Solver Adapter Contract (S3 verified / accepted); M4
+> authorized.** The repository builds, its architectural rules are enforced,
+> and the solver boundary is verified at baseline `573c36f` with CI
+> `34682646131`. See the
 > [M3 evidence packet](docs/evidence/M3.md), the
 > [SPEC-0001](docs/specs/SPEC-0001-world-foundation-acid-base-titration.md), and
 > the [milestone plan](docs/plans/PLAN-0001-world-foundation-acid-base-titration.md).

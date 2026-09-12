@@ -1,19 +1,19 @@
 # PLAN-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** **M0–M2 S3 Verified / Accepted; M3 S2 implementation candidate** — the original plan was approved
-  on 2026-09-11 at `SPEC-0001` revision 6; the current contract is revision 9.
+- **Status:** **M0–M3 S3 Verified / Accepted; M4 authorized** — the original plan was approved
+  on 2026-09-11 at `SPEC-0001` revision 6; the current contract is revision 11.
 - **Completed:** `M0 — Repository foundation` reached **S3 — Verified** on
   2026-09-11. Evidence: `docs/evidence/M0.md`, commits `1f3dfee`/`565a2e8`,
   CI run `34595967023` (13/13 gate steps on a clean `ubuntu-latest` checkout).
-- **Authorized:** `M3 — Solver adapter contract` is in progress as an S2
-  candidate. `M1 — Schema and units`
+- **Authorized:** `M4 — Acid-base reference engine and oracle validation` is
+  authorized. `M1 — Schema and units`
   is **S3 — Verified / Accepted** with evidence in `docs/evidence/M1.md`; `M2 —
   Event runtime and replay` is **S3 — Verified / Accepted** at baseline
   `778fadbd` with CI `34677042056` and evidence in `docs/evidence/M2.md`.
 - **Coverage check:** `uv run python tools/check_acceptance_coverage.py` — every `AC-*` in
   `SPEC-0001` is required to appear in at least one milestone here. Run it after
   editing either document.
-- **Date:** 2026-09-12 (revised for M2 acceptance and M3 authorization)
+- **Date:** 2026-09-12 (revised for M3 acceptance and M4 authorization)
 - **Implements:** `docs/specs/SPEC-0001-world-foundation-acid-base-titration.md`
 - **Related ADRs:** 0001–0009 were accepted at the baseline; ADR-0001 and
   ADR-0003 M1 Final Closure and M3 owner decisions, ADR-0001's M1 amendment,
@@ -476,12 +476,12 @@ the scientific engine is built means rebuilding both.
 
 ## M3 — Solver adapter contract
 
-**Status:** **S2 — Implemented Candidate / Owner Verification Pending** · evidence
-`docs/evidence/M3.md` · implementation baseline `1807979` plus M3 identity and
-defensive-boundary closure · CI pending for the final evidence baseline
-**Authorization:** Owner-authorized 2026-09-12 after M2 S3 acceptance at
-baseline `778fadbd` (CI `34677042056`)
-**Target stage:** S3
+**Status:** **S3 — Verified / Accepted** · evidence
+`docs/evidence/M3.md` · verified implementation baseline `573c36f`
+with CI `34682646131`
+**Authorization:** M4 authorized by owner 2026-09-12 after M3 S3 acceptance
+at baseline `573c36f` (CI `34682646131`)
+**Target stage:** S3 — complete
 **Addresses:** ADR-0003; `SPEC-0001` AC-R20, AC-S4
 
 ### Purpose
@@ -564,8 +564,8 @@ union.
 
 The interface can express every v0 scientific outcome and refusal, exact solver
 identity is ready for `WorldCreated`, and no world event can be emitted when
-requirements are unsatisfiable. M4 may begin only after owner S3 verification
-of the M3 evidence packet.
+requirements are unsatisfiable. M3 evidence is owner-verified at baseline
+`573c36f`; M4 is authorized.
 
 ---
 
