@@ -174,9 +174,9 @@ Expected: the current solver still declares and uses `EXPLORATORY_IONIC_STRENGTH
 
 - [x] **Step 2: Run original audit reproductions.** Confirm an HNO3 scenario cannot emit `WorldCreated` for the HCl-only model, old dissociation fields are refused, equivalent Celsius/Kelvin snapshots have equal hashes, `0.49` cases solve, and exact `0.5` cases return domain refusal without an extrapolated Davies evaluation.
 
-- [ ] **Step 3: Review and commit.** Run `git diff --check`, inspect staged diff/status, commit `Close M4 cross-system compatibility gaps before references`, and push `main` directly without force-push or pull request.
+- [x] **Step 3: Review and commit.** Run `git diff --check`, inspect staged diff/status, commit `Close M4 cross-system compatibility gaps before references`, and push `main` directly without force-push or pull request. Baseline: `fce95dad513e40ee07fc748dc608281a7a338337`.
 
-- [ ] **Step 4: Handoff.** Report current gate, exact local commands/counts, pushed commit and hosted CI state, remaining REF/PHREEQC work, and any unresolved owner decision. Do not label M4 S3 until independent scientific evidence is complete.
+- [x] **Step 4: Handoff.** Report current gate, exact local commands/counts, pushed commit and hosted CI state, remaining REF/PHREEQC work, and any unresolved owner decision. Do not label M4 S3 until independent scientific evidence is complete. Hosted CI: `34703646857` success; REF/PHREEQC remain not run.
 
 ## Acceptance matrix
 

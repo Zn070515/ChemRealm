@@ -6,9 +6,9 @@
 and PHREEQC execution. This packet does not claim independent scientific
 validation.
 
-**Implementation baseline:** to be pinned after the remediation commit; the
-hosted CI result is intentionally not claimed until that commit's workflow
-completes.
+**Implementation baseline:** `fce95dad513e40ee07fc748dc608281a7a338337` —
+Close M4 cross-system compatibility gaps before references. Hosted CI run
+`34703646857` completed successfully on this baseline.
 
 **Plan:** [`2026-09-12-m4-cross-system-compatibility-closure.md`](../superpowers/plans/2026-09-12-m4-cross-system-compatibility-closure.md)
 
