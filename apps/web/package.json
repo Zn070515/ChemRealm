@@ -2,6 +2,7 @@
   "name": "@chemrealm/web",
   "version": "0.0.0",
   "private": true,
+  "license": "PolyForm-Noncommercial-1.0.0",
   "type": "module",
   "description": "Composition root. The only place the four cores meet (ADR-0001 rule 2).",
   "scripts": {

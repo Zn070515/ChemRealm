@@ -1,32 +1,96 @@
-# ChemRealm
+<div align="center">
 
-A free, non-commercial, local-first interactive chemistry platform for Chinese
-high-school chemistry, built on one defensible Scientific Reality layer rather
-than on exam-keyword scripts.
+<h1>化境 · ChemRealm</h1>
 
-> **Status: M2 — Event Runtime and Replay (S2 implementation candidate).** The
-> repository builds, its architectural rules are enforced, and the deterministic
-> World Runtime is implemented pending owner S3 verification. See
-> `docs/specs/SPEC-0001-...md` for what the first vertical slice will be and
-> `docs/plans/PLAN-0001-...md` for the milestone order.
+<p><strong>交互式化学世界平台</strong> · <strong>An interactive platform for chemistry</strong></p>
+
+<p>
+  <a href="https://github.com/Zn070515/ChemRealm/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/Zn070515/ChemRealm/ci.yml?branch=main&label=CI" alt="CI status"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/code-PolyForm%20Noncommercial%201.0.0-6f42c1.svg" alt="Code: PolyForm Noncommercial 1.0.0"></a>
+  <a href="CONTENT-LICENSE.md"><img src="https://img.shields.io/badge/content-CC%20BY--NC--SA%204.0-0b7285.svg" alt="Content: CC BY-NC-SA 4.0"></a>
+  <a href="COMMERCIAL-LICENSING.md"><img src="https://img.shields.io/badge/distribution-source--available-1971c2.svg" alt="Source available"></a>
+</p>
+
+<p>
+  <img src="https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white" alt="TypeScript 5.9">
+  <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=20232A" alt="React 19">
+  <img src="https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white" alt="Vite 7">
+  <img src="https://img.shields.io/badge/Python-3.12+-3776AB?logo=python&logoColor=white" alt="Python 3.12 or newer">
+</p>
+
+<p>
+  <a href="#setup">快速开始 · Get started</a> ·
+  <a href="#read-these-first">架构文档 · Architecture</a> ·
+  <a href="#licensing">许可 · Licensing</a> ·
+  <a href="CONTRIBUTING.md">参与贡献 · Contributing</a>
+</p>
+
+</div>
+
+ChemRealm / 化境 is building toward a full, browser-based interactive chemistry
+platform: a place where virtual apparatus, experiments, scientific models,
+teaching workflows, and learner exploration share one verifiable reality layer.
+
+Its first focused product subsystem supports Chinese senior-high and Gaokao
+chemistry teaching and learning. Students and teachers should be able to
+explore, predict, manipulate, observe, explain, and verify — with the current
+M3 foundation growing toward that broader platform rather than stopping at a
+single exercise or simulation.
+
+ChemRealm is source-available and free for noncommercial educational, research,
+and personal use. It is local-first by design and built on defensible scientific
+models rather than exam-keyword scripts.
+
+This project intentionally does not describe itself as “Open Source”: the code
+license includes a noncommercial restriction. Commercial use requires a
+separate written license; see [Commercial Licensing](COMMERCIAL-LICENSING.md).
+
+> **Status: M3 — Solver Adapter Contract (S2 implementation candidate).** The
+> repository builds, its architectural rules are enforced, and the current
+> solver boundary is implemented pending owner S3 verification. See the
+> [M3 evidence packet](docs/evidence/M3.md), the
+> [SPEC-0001](docs/specs/SPEC-0001-world-foundation-acid-base-titration.md), and
+> the [milestone plan](docs/plans/PLAN-0001-world-foundation-acid-base-titration.md).
 
 ## Read these first
 
 | Document | What it governs |
 |---|---|
 | [`GOAL.md`](GOAL.md) | Project constitution. Where the project is allowed to go. |
-| [`CLAUDE.md`](CLAUDE.md) | Operating rules for coding agents, including the version-control workflow (§21). |
-| [`AGENTS.md`](AGENTS.md) | Cross-agent execution discipline; the S0–S4 stage gates. |
+| [`CLAUDE.md`](CLAUDE.md) | Operating rules for coding agents, including the direct integration workflow. |
+| [`AGENTS.md`](AGENTS.md) | Cross-agent execution discipline and the S0–S4 stage gates. |
 | [`docs/adr/`](docs/adr/) | Accepted architecture decisions. |
-| [`docs/specs/`](docs/specs/) | `SPEC-0001`, including the accepted revision 8–9 M1 amendments. |
-| [`docs/plans/`](docs/plans/) | `PLAN-0001`, approved to execute. |
+| [`docs/specs/`](docs/specs/) | `SPEC-0001`, including the accepted M1 amendments. |
+| [`docs/plans/`](docs/plans/) | `PLAN-0001`, approved milestone order and evidence. |
 | [`docs/science/quantity-ontology.md`](docs/science/quantity-ontology.md) | Authoritative definition of every scientific quantity. |
+
+## Product direction
+
+| Layer | Role |
+|---|---|
+| Interactive chemistry platform | Experiments, apparatus, observable phenomena, scientific exploration, and reusable learning spaces. |
+| High-school / Gaokao subsystem | Guided teaching and learning support for the Chinese senior-high chemistry curriculum and exam preparation. |
+| Scientific Reality Core | Units, models, solver adapters, validity domains, provenance, and reproducible reference evidence. |
+| World Runtime and learning systems | Persistent experiment state, replayable actions, teacher/learner workflows, and local-first evidence. |
+
+The first subsystem is deliberately focused; the platform foundation is not.
+
+## What ChemRealm protects
+
+- Scientific calculations stay in the Scientific Reality Core and carry units,
+  provenance, validity domains, and reproducible evidence.
+- World Runtime owns meaningful events, deterministic replay, snapshots, and
+  branches; it does not invent chemistry or pedagogy.
+- Rendering derives visuals from approved observable state instead of deciding
+  equilibrium or hiding solver failures.
+- Learning support is local-first and evidence-aware; it does not turn one
+  correct answer into a permanent learner label.
 
 ## Setup
 
 Two toolchains. Both are required for a full local verification.
 
-**Prerequisites:** Node ≥ 22, pnpm 11, [`uv`](https://docs.astral.sh/uv/).
+**Prerequisites:** Node ≥ 22, pnpm 11, and [`uv`](https://docs.astral.sh/uv/).
 
 ### TypeScript
 
@@ -49,8 +113,8 @@ Never use a global Python interpreter for this project. See `CLAUDE.md` §21.5.
 ## Verify
 
 These exact commands appear in `CLAUDE.md`, `PLAN-0001`, and CI. They are
-platform-neutral deliberately: the Windows-only `py` launcher does not exist on
-the GitHub Actions Ubuntu runner.
+platform-neutral deliberately: the Windows-only `py` launcher does not exist
+on the GitHub Actions Ubuntu runner.
 
 ```bash
 # TypeScript
@@ -70,26 +134,41 @@ uv run python tools/check_acceptance_coverage.py
 ```
 
 `pnpm guards` is worth knowing about: `depcruise` passing on a clean tree only
-shows nothing violates the rules *today*. The guard builds a violating tree in a
-scratch directory and asserts depcruise **fails** on it. A rule nobody has seen
-fire is not evidence that the rule works.
+shows nothing violates the rules *today*. The guard builds a violating tree in
+a scratch directory and asserts depcruise **fails** on it. A rule nobody has
+seen fire is not evidence that the rule works.
 
 ## Layout
 
 ```
 apps/web/            Composition root. The only place the four cores meet.
 packages/schema/     SINGLE SOURCE OF TRUTH for cross-boundary contracts.
+packages/sci/        Scientific Reality Core: units, adapters, and solver boundary.
 packages/world/      World Runtime: typed state, events, replay, snapshots, branches.
-tools/               Python: the acceptance-coverage checker, the node guards.
+tools/               Python: acceptance-coverage checker and node guards.
 tools/oracle/        Test-time scientific oracle (M4). Never deployed.
-docs/                ADRs, specs, plans, research, the visual standard.
+docs/                ADRs, specs, plans, research, and the visual standard.
 content/             Data-driven scenario definitions (M7).
 spikes/              Isolated experiments. Excluded from acceptance.
 ```
 
-`packages/sci`, `packages/world`, `packages/render`, and `packages/ace` arrive
-with the milestones that give them content — not before (`ADR-0001` rule 5).
-The import rules that govern them are already in `.dependency-cruiser.cjs`.
+`packages/render` and `packages/ace` arrive with the milestones that give them
+content — not before (`ADR-0001` rule 5). The import rules that govern the four
+cores are already in `.dependency-cruiser.cjs`.
+
+## Licensing
+
+| Scope | Terms |
+|---|---|
+| Source code | [PolyForm Noncommercial 1.0.0](LICENSE) |
+| Teaching content and original learning resources | [CC BY-NC-SA 4.0](CONTENT-LICENSE.md) |
+| Commercial use | [Separate written license required](COMMERCIAL-LICENSING.md) |
+| ChemRealm / 化境 name, logo, and visual identity | [Reserved](TRADEMARKS.md) |
+| Contributions | [CLA required](CLA.md) · [contribution guide](CONTRIBUTING.md) |
+| Third-party dependencies | [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) and each upstream license |
+
+The code and content grants are separate. A license for one scope does not
+grant rights to the other scopes, and neither grants trademark rights.
 
 ## Privacy
 

@@ -2,6 +2,7 @@
 name = "chemrealm-tools"
 version = "0.0.0"
 description = "ChemRealm's Python tooling: the acceptance-coverage checker, and (from M4) the PHREEQC validation oracle. Test-time only. Never deployed."
+license = { file = "LICENSE" }
 requires-python = ">=3.12"
 dependencies = []
 

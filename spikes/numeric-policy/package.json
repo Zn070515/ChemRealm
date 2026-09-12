@@ -1,6 +1,7 @@
 {
   "name": "chemrealm-spike-numeric-policy",
   "private": true,
+  "license": "PolyForm-Noncommercial-1.0.0",
   "type": "module",
   "description": "SPIKE - not a production path. Tests the branded-type guarantee (P1-4) and the deterministic-numeric policy (P1-2).",
   "devDependencies": {
