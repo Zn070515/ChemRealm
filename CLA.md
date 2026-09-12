@@ -14,22 +14,28 @@ submitted to the project.
 
 ## 2. Copyright license
 
-You grant the project owner and recipients of the project a perpetual,
-worldwide, non-exclusive, royalty-free, irrevocable copyright license to
-reproduce, prepare derivative works of, publicly display, publicly perform,
-distribute, sublicense, and otherwise use your contribution. This license
-includes the right to publish the contribution under the repository's current
+You grant the project owner a perpetual, worldwide, non-exclusive,
+royalty-free, irrevocable, sublicensable copyright license to reproduce,
+prepare derivative works of, publicly display, publicly perform, distribute,
+and otherwise use your contribution. This license includes the right for the
+project owner to publish the contribution under the repository's current
 licenses and to relicense it, in whole or in part, under different terms,
 including a commercial license or a future dual-license arrangement.
 
+Recipients receive only the rights that the project owner grants through the
+applicable public license or a separately executed license. This agreement
+does not give a recipient an independent right to sublicense or relicense the
+contribution.
+
 ## 3. Patent license
 
-You grant the project owner and recipients of the project a perpetual,
-worldwide, non-exclusive, royalty-free patent license for patent claims that
-you can license and that are necessarily infringed by your contribution alone
-or by the combination of your contribution with the project to which it was
-submitted. This patent license terminates for a recipient that brings a patent
-claim alleging that the contribution or the project infringes a patent.
+You grant the project owner a perpetual, worldwide, non-exclusive,
+royalty-free patent license for patent claims that you can license and that
+are necessarily infringed by your contribution alone or by the combination
+of your contribution with the project to which it was submitted. The project
+owner may extend patent rights to recipients only through the applicable
+public license or a separately executed license. This agreement does not give
+a recipient an independent patent or relicensing right.
 
 ## 4. Your assurances
 

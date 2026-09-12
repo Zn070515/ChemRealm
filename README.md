@@ -42,8 +42,9 @@ and personal use. It is local-first by design and built on defensible scientific
 models rather than exam-keyword scripts.
 
 This project intentionally does not describe itself as “Open Source”: the code
-license includes a noncommercial restriction. Commercial use requires a
-separate written license; see [Commercial Licensing](COMMERCIAL-LICENSING.md).
+license includes a noncommercial restriction. Commercial use not covered by the
+applicable public license requires a separate written license; see
+[Commercial Licensing](COMMERCIAL-LICENSING.md).
 
 > **Status: M3 — Solver Adapter Contract (S2 implementation candidate).** The
 > repository builds, its architectural rules are enforced, and the current
