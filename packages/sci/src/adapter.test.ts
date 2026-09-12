@@ -45,6 +45,12 @@ describe("SolverAdapter contract", () => {
     };
     const adapter = new StubSolverAdapter({ descriptor, outcome: expected });
 
+    expect(adapter.model).toBe(descriptor);
+    expect(adapter.solverConfig).toEqual({
+      id: descriptor.id,
+      version: descriptor.version,
+      parameters: {},
+    });
     const pending = adapter.solve(request);
     expect(pending).toBeInstanceOf(Promise);
     await expect(pending).resolves.toEqual(expected);

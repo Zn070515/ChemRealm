@@ -4,6 +4,7 @@ import type {
   ModelDescriptor,
   SolveRequest,
   SolveResult,
+  SolverConfig,
 } from "@chemrealm/schema";
 
 import type { SolverAdapter } from "./adapter.js";
@@ -15,6 +16,7 @@ export type StubOutcome =
 
 export interface StubSolverAdapterOptions {
   readonly descriptor: ModelDescriptor;
+  readonly parameters?: Readonly<Record<string, number>>;
   readonly outcome: StubOutcome;
 }
 
@@ -52,13 +54,19 @@ function domainReason(
 export class StubSolverAdapter implements SolverAdapter {
   readonly id: string;
   readonly version: string;
-  readonly models: readonly ModelDescriptor[];
+  readonly model: ModelDescriptor;
+  readonly solverConfig: SolverConfig;
   private readonly outcome: StubOutcome;
 
   constructor(options: StubSolverAdapterOptions) {
     this.id = options.descriptor.id;
     this.version = options.descriptor.version;
-    this.models = [options.descriptor];
+    this.model = options.descriptor;
+    this.solverConfig = {
+      id: this.id,
+      version: this.version,
+      parameters: { ...(options.parameters ?? {}) },
+    };
     this.outcome = options.outcome;
   }
 
@@ -68,9 +76,9 @@ export class StubSolverAdapter implements SolverAdapter {
       return { status: "INVALID_INPUT", violations };
     }
 
-    const reason = domainReason(request, this.models[0]!);
+    const reason = domainReason(request, this.model);
     if (reason !== undefined) {
-      return outOfDomain(this.models[0]!, reason);
+      return outOfDomain(this.model, reason);
     }
 
     return typeof this.outcome === "function"

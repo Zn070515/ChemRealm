@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { ionicStrengthMolal, kelvin, type ModelDescriptor } from "@chemrealm/schema";
+import {
+  ionicStrengthMolal,
+  kelvin,
+  type ModelDescriptor,
+} from "@chemrealm/schema";
 
+import type { SolverAdapter } from "./adapter.js";
 import { StubSolverAdapter } from "./stub.js";
 import { parseSolverRequirements } from "./request.js";
 import { SolverRegistry, SolverResolver } from "./registry.js";
@@ -40,6 +45,7 @@ describe("exact solver registry", () => {
   it("finds an adapter only at its exact id and version", () => {
     const adapter = new StubSolverAdapter({
       descriptor: makeDescriptor(),
+      parameters: { Kw: 1e-14 },
       outcome: { status: "NOT_CONVERGED", residual: 1, iterations: 1 },
     });
     const registry = new SolverRegistry();
@@ -73,6 +79,7 @@ describe("exact solver registry", () => {
   it("resolves a compatible adapter from machine-checkable requirements", () => {
     const adapter = new StubSolverAdapter({
       descriptor: makeDescriptor(),
+      parameters: { Kw: 1e-14 },
       outcome: { status: "NOT_CONVERGED", residual: 1, iterations: 1 },
     });
     const registry = new SolverRegistry([adapter]);
@@ -82,7 +89,29 @@ describe("exact solver registry", () => {
     expect(result.status).toBe("compatible");
     if (result.status !== "compatible") throw new Error("wrong result");
     expect(result.adapter).toBe(adapter);
-    expect(result.model).toBe(adapter.models[0]);
+    expect(result.model).toBe(adapter.model);
+    expect(result.solverConfig).toEqual({
+      id: "test-solver",
+      version: "1.0.0",
+      parameters: { Kw: 1e-14 },
+    });
+  });
+
+  it("rejects an adapter whose model or config identity is not exact", () => {
+    const descriptor = makeDescriptor();
+    const invalid = {
+      id: "test-solver",
+      version: "1.0.0",
+      model: { ...descriptor, version: "2.0.0" },
+      solverConfig: {
+        id: "test-solver",
+        version: "1.0.0",
+        parameters: {},
+      },
+      solve: async () => ({ status: "NOT_CONVERGED", residual: 1, iterations: 1 }),
+    } as unknown as SolverAdapter;
+
+    expect(() => new SolverRegistry([invalid])).toThrow(/identity/);
   });
 
   it("returns incompatible instead of falling back when requirements are unsatisfied", () => {

@@ -1,6 +1,10 @@
 /** Exact solver lookup and machine-checkable requirements resolution. */
 
-import type { ModelDescriptor } from "@chemrealm/schema";
+import {
+  SolverConfigSchema,
+  type ModelDescriptor,
+  type SolverConfig,
+} from "@chemrealm/schema";
 
 import type { SolverAdapter } from "./adapter.js";
 import type { SolverRequirements } from "./request.js";
@@ -19,6 +23,7 @@ export type SolverResolution =
       readonly status: "compatible";
       readonly adapter: SolverAdapter;
       readonly model: ModelDescriptor;
+      readonly solverConfig: SolverConfig;
     }
   | {
       readonly status: "incompatible";
@@ -88,8 +93,23 @@ export class SolverRegistry {
     if (adapter.id.trim().length === 0 || adapter.version.trim().length === 0) {
       throw new TypeError("solver adapter id and version must not be empty");
     }
-    if (adapter.models.length === 0) {
-      throw new TypeError("solver adapter must declare at least one model");
+    if (adapter.model === undefined || adapter.solverConfig === undefined) {
+      throw new TypeError(
+        "solver adapter must declare exactly one model and a solverConfig",
+      );
+    }
+    if (
+      adapter.id !== adapter.model.id ||
+      adapter.version !== adapter.model.version ||
+      adapter.id !== adapter.solverConfig.id ||
+      adapter.version !== adapter.solverConfig.version
+    ) {
+      throw new TypeError(
+        "solver adapter, model, and solverConfig identity must match exactly",
+      );
+    }
+    if (!SolverConfigSchema.safeParse(adapter.solverConfig).success) {
+      throw new TypeError("solverConfig does not satisfy its schema");
     }
 
     const key = keyOf(adapter.id, adapter.version);
@@ -133,15 +153,14 @@ export class SolverRegistry {
 
     const failures: string[] = [];
     for (const adapter of candidates) {
-      for (const model of adapter.models) {
-        const compatibility = checkModelCompatibility(requirements, model);
-        if (compatibility.compatible) {
-          return { status: "compatible", adapter, model };
-        }
-        failures.push(
-          `${adapter.id}@${adapter.version}: ${compatibility.reasons.join("; ")}`,
-        );
+      const model = adapter.model;
+      const compatibility = checkModelCompatibility(requirements, model);
+      if (compatibility.compatible) {
+        return { status: "compatible", adapter, model, solverConfig: adapter.solverConfig };
       }
+      failures.push(
+        `${adapter.id}@${adapter.version}: ${compatibility.reasons.join("; ")}`,
+      );
     }
 
     return {

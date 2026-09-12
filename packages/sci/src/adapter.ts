@@ -11,6 +11,7 @@ import type {
   ModelDescriptor,
   SolveRequest,
   SolveResult,
+  SolverConfig,
 } from "@chemrealm/schema";
 
 export type SolverId = string;
@@ -18,7 +19,9 @@ export type SolverId = string;
 export interface SolverAdapter {
   readonly id: SolverId;
   readonly version: string;
-  readonly models: readonly ModelDescriptor[];
+  /** v0 adapters expose exactly one model and its persisted solver identity. */
+  readonly model: ModelDescriptor;
+  readonly solverConfig: SolverConfig;
 
   solve(request: SolveRequest): Promise<SolveResult>;
 }
