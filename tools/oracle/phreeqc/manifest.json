@@ -1,0 +1,18 @@
+{
+  "tool": "PHREEQC",
+  "version": "3.8.6-17100",
+  "sourceUrl": "https://water.usgs.gov/water-resources/software/PHREEQC/phreeqc-3.8.6-17100.tar.gz",
+  "sourceSha256": "b5c4a6dfea1a6bb6a3436857a50346bb943904a49582714494b4f1b1e54e64e1",
+  "database": {
+    "name": "phreeqc.dat",
+    "archivePath": "phreeqc-3.8.6-17100/database/phreeqc.dat",
+    "sourceUrl": "https://water.usgs.gov/water-resources/software/PHREEQC/phreeqc-3.8.6-17100.tar.gz",
+    "sha256": "59373961d648dfbf68a40744060c1d64f57ecbec98f4f5fb89f3a1b4213ccd10",
+    "licenseSource": "PHREEQC distribution database; provenance and license are recorded with the CI toolchain.",
+    "selectionReason": "The v0 oracle uses the phreeqc.dat database shipped in the same pinned USGS release."
+  },
+  "executable": {
+    "linuxBuild": "Build the pinned source archive with the checked-in CI script.",
+    "windowsOverride": "PHREEQC_BIN may point to a locally installed executable for developer runs."
+  }
+}
