@@ -46,6 +46,7 @@ jobs:
       # what makes M0's stop condition machine-checked rather than a claim.
       - run: pnpm depcruise
       - run: pnpm guards
+      - run: pnpm verify:scientific-math
       - run: pnpm verify:world
 
       # Product properties asserted against the shipped artifact: no

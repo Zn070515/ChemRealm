@@ -180,13 +180,13 @@ Both functions reject non-finite or invalid arguments with a typed/routable rang
 **Implementation detail:**
 
 1. Port the accepted `log10` range reduction and atanh-series coefficients from the spike, preserving the exact operation ordering.
-2. Implement `exp10` with two-part Cody–Waite argument reduction: split the reduction constant into high/low parts, compute the reduced residual in a fixed order, evaluate the polynomial, and reconstruct the power using only allowed operations and integer exponent handling.
+2. Implement `exp10` with two-part Cody–Waite argument reduction: split the reduction constant into high/low parts, compute the reduced residual in a fixed order, evaluate the polynomial with fixed-order double-double arithmetic, and reconstruct the power using only allowed operations and integer exponent handling.
 3. Define the actual call domain from the solver's needs and the measured vector suite. Outside it, throw the deterministic-math domain error. Do not widen the domain to make a failing solver case pass.
 4. Add a static source check that rejects `Math.log10`, `Math.exp`, and `Math.pow` under `packages/sci/src` and `packages/world/src`. The guard must inspect tests/guarantee files as appropriate and must not whitelist a production call by filename.
 
 **Tests to add/run:**
 
-- arbitrary-precision reference vectors across the entire declared domain;
+- arbitrary-precision reference vectors across the entire declared domain (`detExp10` is currently validated only for the Davies band `[-0.135, 0]`; `detLog10` accepts normal positive doubles);
 - boundary, subnormal-adjacent, sign, zero, non-finite, and out-of-domain cases;
 - ulp measurement with the accepted `<= 1.5 ulp` in-domain bound and explicit refusal outside;
 - Cody–Waite reduction boundary cases around integer powers and the solver's minimum/maximum hydrogen values;

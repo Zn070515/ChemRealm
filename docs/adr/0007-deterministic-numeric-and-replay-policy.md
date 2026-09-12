@@ -41,9 +41,11 @@ cross-engine guarantee.
 
 **3. A deterministic implementation is feasible.** `detLog10` and `detExp10`
 built only from `+ - * /` and exactly-specified integer operations are
-bit-identical on every conforming engine by construction. Measured error:
-1.500 ulp for `detLog10`, and 1.500 ulp for `detExp10` **inside its domain** —
-but 32.5 ulp outside it, which is a real limitation, not a pass.
+bit-identical on every conforming engine by construction. The accepted
+reference suite measures no more than 1.5 ulp for `detLog10` over its normal
+positive-double domain and no more than 1.5 ulp for `detExp10` in the validated
+Davies band `[-0.135, 0]`. The wider exp10 sweep is deliberately outside the
+public domain and is refused.
 
 **4. Independent quantization of species breaks conservation.** 100-step serial
 transfer of 0.1 mol, 500 trials: quantizing the **transfer amount** once gives
@@ -72,7 +74,7 @@ mathematical operation that the physical model requires.
 |---|---|---|
 | `Math.sqrt` | **Permitted, used directly** | Correctly rounded per the July 2024 spec change; measured 0.000 ulp |
 | `Math.log10` | **Shipped as `detLog10`** | Spec-permitted engine variation; measured 1.5 ulp |
-| `Math.exp` / `Math.pow(10,x)` | **Shipped as `detExp10`** | Same; measured 1.5 ulp in domain |
+| `Math.exp` / `Math.pow(10,x)` | **Shipped as `detExp10`** | Same; measured 1.5 ulp in the validated Davies domain |
 
 The deterministic implementations live in `packages/sci/src/deterministic-math.ts`,
 are covered by tests against arbitrary-precision references, and are the only
@@ -85,12 +87,12 @@ loss to obtain engine-independence. That is the correct trade under the priority
 order — 1 ulp is nine orders of magnitude below the ±0.02 pH tolerance — but it
 is a real trade and is recorded as one.
 
-**Domain restriction is mandatory.** `detExp10` degrades to 32.5 ulp outside its
-validated domain because its single-constant argument reduction loses precision
-as `|x|` grows. It must refuse outside the domain, and the domain must be
-asserted at its call site. **M4 must replace the reduction with a two-part
-(Cody–Waite) constant** and re-measure; until then, restriction rather than
-silent degradation.
+**Domain restriction is mandatory.** `detExp10` is publicly validated only for
+the Davies activity-coefficient band `[-0.135, 0]`. Its two-part Cody–Waite
+reduction is implemented at M4, but the wider former spike sweep is not part of
+the accepted domain until it has its own reference measurement. Calls outside
+the domain must refuse rather than silently degrade, and activity-model call
+sites must assert the domain before invoking it.
 
 ### 3. Canonical state stores independent quantities, never derived ones
 
@@ -243,7 +245,8 @@ it, a hash mismatch cannot distinguish a real divergence from ulp noise.
 
 ### Negative
 - ~1 ulp of accuracy is traded for engine-independence in `log10`/`exp`.
-- `detExp10` is domain-restricted until its argument reduction is improved at M4.
+- `detExp10` remains domain-restricted to the measured Davies band; widening it
+  requires a new reference-vector and evidence review.
 - Replay-identity canonical state is quantized in its explicit identity
   projection; transfer deltas are quantized once and applied zero-sum. Missing
   either boundary is a silent defect, so each rule needs a test rather than
@@ -271,10 +274,6 @@ correctly rounded — which is not a property we can rely on from the spec.
    **Leaning: acceptable.** It is nine orders of magnitude below the pH tolerance,
    and the alternative is engine-dependent behaviour. Revisit only if a future
    model amplifies `log10` error.
-2. Should `detExp10`'s two-part reduction (Cody–Waite) be done at M4 or deferred?
-   **Leaning: at M4**, because a domain-restricted function that refuses outside
-   its range is a correctness feature, and shipping the restricted version is
-   acceptable only if the restriction is tested.
-3. Should `scienceHash` be recomputed on every replay in production, or only in
+2. Should `scienceHash` be recomputed on every replay in production, or only in
    tests? **Leaning: tests and on-demand diagnostics**, not on every load, since
    the canonical hash is what replay equality needs. Confirm at M8.
