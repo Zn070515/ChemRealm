@@ -188,9 +188,17 @@
 
   Run `git diff --check`, inspect staged diff/status, commit `Migrate persisted worlds to schema v3`, then push `main` directly without force-push or pull request.
 
-- [ ] **Step 4: Handoff.**
+- [x] **Step 4: Handoff.**
 
-  Record the pushed commit, hosted CI run, exact test commands, current gate, and remaining REF/PHREEQC work. Do not promote M4 to S3.
+  Implementation commit `04bf65e` and evidence pin `163b599` are pushed to
+  `main`; hosted CI runs `34705233550` and `34705369669` both completed
+  successfully. The current gate remains M4 S2: REF-1…REF-10, pinned PHREEQC
+  execution, cross-engine comparison, and the complete AC-S1…AC-S16 evidence
+  matrix remain outstanding. Do not promote M4 to S3.
+
+  Reproduce the local gate with the commands in Task 4 Step 1, then inspect
+  `docs/evidence/m4-persisted-schema-v3-migration.md` for the migration-specific
+  evidence and stop conditions.
 
 ## Acceptance Matrix
 
