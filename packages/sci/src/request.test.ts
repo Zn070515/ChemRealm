@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildIndicatorInputsFromSnapshot,
   parseSolverRequirements,
   validateSolveRequest,
 } from "./request.js";
@@ -57,5 +58,46 @@ describe("solver requirements DTO bridge", () => {
     expect(validateSolveRequest(request)).toEqual([
       expect.objectContaining({ field: "solutes[0].mode" }),
     ]);
+  });
+});
+
+describe("scenario-frozen scientific input bridge", () => {
+  const snapshot = {
+    scenarioRef: "frozen-indicator",
+    materials: [],
+    vessels: [],
+    apparatusDefaults: [],
+    indicators: [
+      {
+        indicatorId: "phenolphthalein",
+        kaIn: { value: 3.98e-10, unit: "1" },
+        provenance: {
+          source: "reference",
+          reference: "indicator transition table",
+          category: "evaluated",
+        },
+      },
+    ],
+    modelRequirements: {
+      temperature: { value: 298.15, unit: "K" },
+      solvent: "water",
+      phase: "aqueous",
+      activityCorrected: true,
+      species: ["H+"],
+    },
+  };
+
+  it("copies indicators from the validated snapshot, not a mutable catalog", () => {
+    const inputs = buildIndicatorInputsFromSnapshot(Object.freeze(snapshot));
+
+    expect(inputs[0]?.indicatorId).toBe("phenolphthalein");
+    expect(inputs[0]?.kaIn.value).toBe(3.98e-10);
+    expect(Object.isFrozen(inputs)).toBe(false);
+  });
+
+  it("rejects a snapshot indicator with a non-canonical unit", () => {
+    const invalid = structuredClone(snapshot);
+    invalid.indicators[0]!.kaIn = { value: 3.98e-10, unit: "mmol/L" };
+    expect(() => buildIndicatorInputsFromSnapshot(invalid)).toThrow();
   });
 });

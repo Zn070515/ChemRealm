@@ -8,20 +8,20 @@
 
 **Tech Stack:** TypeScript, Vitest, Zod contracts from `@chemrealm/schema`, Node 22, pnpm 11, Python 3.12, uv, pytest, PHREEQC CLI in test tooling only, and a committed PHREEQC/database manifest with checksums.
 
-**Spec:** `docs/superpowers/specs/2026-09-12-m4-acid-base-engine-design.md` (Design v2, approved); `docs/specs/SPEC-0001-world-foundation-acid-base-titration.md` revision 12; `docs/adr/0003-scientific-solver-adapter-boundary.md`; `docs/adr/0007-deterministic-numeric-and-replay-policy.md`.
+**Spec:** `docs/superpowers/specs/2026-09-12-m4-acid-base-engine-design.md` (Design v2, approved); `docs/specs/SPEC-0001-world-foundation-acid-base-titration.md` revision 13 candidate; `docs/adr/0003-scientific-solver-adapter-boundary.md`; `docs/adr/0007-deterministic-numeric-and-replay-policy.md`; `docs/adr/0011-scenario-scientific-input-freezing.md`.
 
 ## Global Constraints
 
 1. Read `GOAL.md`, `AGENTS.md`, the approved design, the current SPEC, ADR-0003, ADR-0007, `docs/science/quantity-ontology.md`, and `spikes/activity-equilibrium/README.md` before implementation. The spike is an origin record and an independent-derivation warning, not an accepted reference dataset.
 2. Work directly in the current shared working tree. Do not create a worktree or pull request. At the end of each completed round, verify, inspect the diff, commit, and push `main`.
 3. Use TDD for every production behavior: add a narrowly scoped failing test first, run it and record the intended failure, implement the smallest change, run the targeted test, then refactor without weakening the test.
-4. `packages/schema` remains the only owner of persisted/wire shapes. Do not add a schema version or silently widen a schema. If a required M4 output cannot be expressed by the current schema, stop and propose a separate schema ADR.
+4. `packages/schema` remains the only owner of persisted/wire shapes. Any required M4 contract change must be explicit, versioned, migrated, and emitted into the committed JSON Schema artifacts; never silently widen a persisted shape.
 5. The v0 production factory has no arbitrary constants override. It returns exactly one frozen identity: `acidbase-monoprotic-davies@1.0.0`.
 6. The exact v0 component catalog is model-owned:
    - `HCl` in `fully-dissociated` mode contributes strong-acid/chloride analytical totals;
    - `NaOH` in `fully-dissociated` mode contributes strong-base/sodium analytical totals;
    - `HOAc` in `monoprotic-equilibrium` mode contributes the acetate-family analytical total and must carry exactly the frozen model Ka;
-   - `NaOAc` in `fully-dissociated` mode contributes sodium and acetate analytical totals;
+   - `NaOAc` in `fully-dissociated` mode contributes sodium and the same acid-family analytical total as HOAc; origin does not create a separate permanent-acetate pool;
    - any other component ID, mode, or HOAc Ka is `MODEL_OUT_OF_DOMAIN` after request validation;
    - duplicate entries aggregate only when their mode and equilibrium constant agree exactly; conflicting duplicates refuse.
 7. The solver's native unknowns are dimensionless reduced molalities `m̂` and reduced ionic strength `Î`. Physical molality is produced once at the scientific-state boundary as `m = m̂ · m°`. `MolPerLitre` must not enter acid-base internals.
@@ -46,7 +46,7 @@ Before the first production edit, the implementer records these answers in the t
 | Owning cores | Scientific Reality Core; `ScientificProjection` is its named output boundary. PHREEQC runner is test infrastructure only. |
 | Existing contracts | M3 async `SolverAdapter`, frozen adapter/model/config identity, tagged request/result schema, discriminated solute modes, and the M2 synchronous World Runtime. |
 | Scientific assumptions | Monoprotic HOAc, strong HCl/NaOH/NaOAc catalog, aqueous 25 °C, Davies activity coefficients, reduced molality, unit water activity convention, and declared validity/accuracy limits. |
-| Persistence | No new event, world-state, or JSON Schema field. Existing `WorldCreated.solverConfig` is consumed as the frozen identity. |
+| Persistence | Schema version 2 adds resolved scenario indicator inputs to `ScenarioSnapshot`; the 1 → 2 migration supplies an explicit empty block for legacy records. Existing `WorldCreated.solverConfig` remains the frozen global solver identity. |
 | User-visible behavior | No UI change. Later callers receive tagged scientific results, explicit refusal statuses, and model-vs-taught hydrogen quantities through the approved boundary. |
 | Privacy/compliance | No network, account, identity, telemetry, learner state, or deployed PHREEQC behavior. Oracle inputs are checked-in fixtures. |
 | Required evidence | Independent reference vectors, residual/conservation/invariant reports, domain/refusal matrix, deterministic-math accuracy vectors, projection/type tests, PHREEQC sweep including equivalence, provenance review, and the final evidence packet. |
@@ -112,6 +112,7 @@ export interface AcidBaseConstants {
   readonly daviesB: number;
   readonly standardMolality: MolPerKilogram;
   readonly neutralAcidActivityCoefficient: ActivityCoefficient;
+  readonly waterActivity: Activity;
   readonly waterActivityConvention: "unit";
 }
 
@@ -119,7 +120,6 @@ export interface AcidBaseComponentTotals {
   readonly strongAcidChlorideMolality: ReducedMolality;
   readonly strongBaseSodiumMolality: ReducedMolality;
   readonly totalAcidFamilyMolality: ReducedMolality;
-  readonly totalAcetateMolality: ReducedMolality;
 }
 
 export const ACID_BASE_MODEL_ID = "acidbase-monoprotic-davies" as const;
@@ -137,7 +137,7 @@ export function buildAcidBaseSolverConfig(): SolverConfig;
 2. `aggregateComponents()` consumes only `amount` and the discriminated `mode`/`ka` already validated by the request boundary. Convert amount divided by `waterMass` to physical molality and immediately reduce it; all downstream catalog totals are reduced molalities.
 3. Enforce exact HOAc Ka equality with the fixed model constant. A request with `ka: 1.75e-5` is not accepted merely because it is close to the frozen value.
 4. Build a model descriptor whose species list and validity range are the catalog's explicit domain. Build the frozen numeric `SolverConfig` with the exact parameter keys approved by the evidence record. Do not expose an options object that lets callers mutate these values.
-5. Keep the nonnumeric water-activity convention and numeric algorithm identity immutable in the model implementation/version. If the persisted config must carry additional nonnumeric identity to satisfy the accepted contract, stop and open a schema/ADR change rather than encoding a misleading number.
+5. Include `waterActivity: 1` in the frozen numeric parameter bag and retain `waterActivityConvention: "unit"` in the model contract. The parameter is the explicit v0 approximation used by the `Kw` equation, not an undocumented magic number.
 
 **Tests to add/run:**
 
@@ -377,6 +377,60 @@ export function projectScientificState(
 **Expected evidence:** Scientific-state vs projection ownership matrix and reference output showing the two hydrogen quantities differ as required.
 
 **Stop/go:** Stop if the renderer-facing type needs chemistry inputs, if taught exponent is derived from molality without volume, or if projection mutates or recomputes the scientific equilibrium.
+
+## Task 5.5 — Freeze scenario-specific scientific inputs before adapter integration
+
+**Objective:** Make indicator constants replayable without making them part of
+the global solver identity.
+
+**Files:**
+
+- `packages/schema/src/content.ts`
+- `packages/schema/src/world.ts`
+- `packages/schema/src/migrate.ts`
+- `packages/world/src/state.ts`
+- `packages/sci/src/request.ts` and `packages/sci/src/request.test.ts`
+- `docs/adr/0011-scenario-scientific-input-freezing.md`
+- `docs/specs/SPEC-0001-world-foundation-acid-base-titration.md`
+- committed `packages/schema/json-schema/` artifacts and Python contract fixtures
+
+**Implementation detail:**
+
+1. Authoring scenarios declare indicator definitions with a dimension-checked
+   positive `kaIn`.
+2. Genesis snapshots carry canonical positive `kaIn` plus datum-level
+   `DataProvenance` for every indicator; `WorldCreated` content hashing covers
+   the block.
+3. Request builders copy indicator values from the frozen snapshot only. They
+   do not reload a mutable indicator catalog during replay.
+4. Bump the world/content schema to version 2 and add a tested forward `1 → 2`
+   migration that inserts only `indicators: []` when the legacy record has no
+   block. Regenerate and consume the committed JSON Schema artifacts.
+5. Add `waterActivity: 1` to the fixed numeric solver identity and use it in
+   `Kw = a_H · a_OH / a_w`.
+
+**Tests to add/run:**
+
+- missing provenance, non-canonical/non-positive indicator constants, and
+  unknown indicator keys refuse; runtime snapshot parsing rejects duplicate
+  indicator ids;
+- snapshot parse/serialize preserves the frozen indicator block and changing it
+  changes the genesis content hash;
+- v1 migration adds an explicit empty block without inventing a constant;
+- World Runtime migration rebuilds the derived genesis content checksum after
+  the snapshot bytes change;
+- the acid-base equation changes predictably when a test-only water activity is
+  varied, while the production config remains pinned at 1.
+
+**Expected evidence:** The genesis event is sufficient to rebuild the
+scenario-specific indicator input, while `SolverConfig` remains a reusable
+global model identity. The request bridge does not consult mutable content, and
+the migration/checksum rebuild plus committed artifact are reproducible from a
+clean checkout.
+
+**Stop/go:** Stop if an indicator request can still be populated from mutable
+content, if a resolved snapshot accepts a non-canonical or non-positive `kaIn`,
+or if the schema artifact and TypeScript contract disagree.
 
 ## Task 6 — Build the real adapter and map all result statuses
 

@@ -205,9 +205,13 @@ properly is what made engine-independence provable rather than hoped for.
 
 ### 8. Model parameters are part of replay identity
 
-`Kw`, `Ka`, the Davies `A` and `b`, `γ_neutral`, the activity model choice, and
-the quantization precision are recorded in the genesis event. A reference case
-that changes `Ka` is a different world.
+`Kw`, `Ka`, the Davies `A` and `b`, `γ_neutral`, the explicit `waterActivity`
+convention/value, the activity model choice, and the quantization precision are
+recorded in the genesis event's `solverConfig`. A reference case that changes a
+global model parameter is a different world. Scenario-specific indicator
+`Ka_in` is not a global solver parameter; it is recorded canonically with
+per-datum provenance in `ScenarioSnapshot.indicators`, which is included in the
+genesis content hash and therefore has the same replay identity protection.
 
 ## Alternatives considered
 

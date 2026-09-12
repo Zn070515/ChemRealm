@@ -3,7 +3,7 @@ import { scenarioSnapshotHash } from "../src/state.js";
 
 export const WORLD_CREATED: SerializedWorldCreated = {
   seq: 0,
-  schemaVersion: 1,
+  schemaVersion: 2,
   type: "WorldCreated",
   payload: {
     worldId: "w-1",
@@ -67,6 +67,17 @@ export const WORLD_CREATED: SerializedWorldCreated = {
         },
       ],
       apparatusDefaults: [],
+      indicators: [
+        {
+          indicatorId: "phenolphthalein",
+          kaIn: { value: 3.98e-10, unit: "1" },
+          provenance: {
+            source: "M4 provisional fixture",
+            reference: "indicator contract test vector",
+            category: "pedagogicalApproximation",
+          },
+        },
+      ],
       modelRequirements: {
         temperature: { value: 298.15, unit: "K" },
         species: ["H2O", "H+", "OH-", "Cl-", "Na+"],

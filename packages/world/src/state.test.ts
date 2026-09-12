@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   createInitialState,
+  migrateWorldCreated,
   parseWorldState,
   scenarioSnapshotHash,
   serializeWorldState,
@@ -11,7 +12,7 @@ import {
 
 const WORLD_CREATED: SerializedWorldCreated = {
   seq: 0,
-  schemaVersion: 1,
+  schemaVersion: 2,
   type: "WorldCreated",
   payload: {
     worldId: "w-1",
@@ -68,6 +69,17 @@ const WORLD_CREATED: SerializedWorldCreated = {
         },
       ],
       apparatusDefaults: [],
+      indicators: [
+        {
+          indicatorId: "phenolphthalein",
+          kaIn: { value: 3.98e-10, unit: "1" },
+          provenance: {
+            source: "M4 provisional fixture",
+            reference: "indicator contract test vector",
+            category: "pedagogicalApproximation",
+          },
+        },
+      ],
       modelRequirements: {
         temperature: { value: 298.15, unit: "K" },
         species: ["H2O", "H+", "OH-", "Cl-", "Na+"],
@@ -94,6 +106,10 @@ describe("WorldState domain boundary", () => {
 
     expect(state.worldId).toBe("w-1");
     expect(state.sequence).toBe(0);
+    expect(state.scenarioSnapshot.indicators[0]?.kaIn.value).toBe(3.98e-10);
+    expect(state.scenarioSnapshot.indicators[0]?.provenance.reference).toBe(
+      "indicator contract test vector",
+    );
     expect(state.canonical.byVessel.flask).toEqual({
       waterMass: 0,
       liquidVolume: 0,
@@ -146,12 +162,51 @@ describe("WorldState domain boundary", () => {
     );
   });
 
+  it("includes frozen indicator constants in the genesis content hash", () => {
+    const changed = {
+      ...WORLD_CREATED.payload.scenarioSnapshot,
+      indicators: [
+        {
+          ...WORLD_CREATED.payload.scenarioSnapshot.indicators[0]!,
+          kaIn: { value: 4.01e-10, unit: "1" as const },
+        },
+      ],
+    };
+
+    expect(scenarioSnapshotHash(changed)).not.toBe(
+      scenarioSnapshotHash(WORLD_CREATED.payload.scenarioSnapshot),
+    );
+  });
+
   it("rejects a genesis snapshot whose content checksum is stale", () => {
     const stale = {
       ...WORLD_CREATED,
       payload: { ...WORLD_CREATED.payload, contentHash: "sha256:stale" },
     };
     expect(() => createInitialState(stale)).toThrow(/CONTENT_HASH_MISMATCH/);
+  });
+
+  it("rebuilds the derived content checksum when migrating a v1 genesis", () => {
+    const legacySnapshot = { ...WORLD_CREATED.payload.scenarioSnapshot };
+    delete (legacySnapshot as Record<string, unknown>).indicators;
+    const legacy = {
+      ...WORLD_CREATED,
+      schemaVersion: 1 as const,
+      payload: {
+        ...WORLD_CREATED.payload,
+        scenarioSnapshot: legacySnapshot,
+        contentHash: scenarioSnapshotHash(legacySnapshot),
+      },
+    };
+
+    const migrated = migrateWorldCreated(legacy);
+
+    expect(migrated.schemaVersion).toBe(2);
+    expect(migrated.payload.scenarioSnapshot.indicators).toEqual([]);
+    expect(migrated.payload.contentHash).toBe(
+      scenarioSnapshotHash(migrated.payload.scenarioSnapshot),
+    );
+    expect(() => createInitialState(migrated)).not.toThrow();
   });
 
   it("deep-freezes the complete state graph", () => {
@@ -215,5 +270,23 @@ describe("WorldState domain boundary", () => {
       ...state,
       canonical: { byVessel: {} },
     })).toThrow(/STATE_SHAPE_MISMATCH/);
+  });
+
+  it("rejects duplicate indicator identities in a genesis snapshot", () => {
+    const duplicateSnapshot = {
+      ...WORLD_CREATED.payload.scenarioSnapshot,
+      indicators: [
+        ...WORLD_CREATED.payload.scenarioSnapshot.indicators,
+        WORLD_CREATED.payload.scenarioSnapshot.indicators[0]!,
+      ],
+    };
+    expect(() => createInitialState({
+      ...WORLD_CREATED,
+      payload: {
+        ...WORLD_CREATED.payload,
+        scenarioSnapshot: duplicateSnapshot,
+        contentHash: scenarioSnapshotHash(duplicateSnapshot),
+      },
+    })).toThrow(/DUPLICATE_ID: indicator/);
   });
 });

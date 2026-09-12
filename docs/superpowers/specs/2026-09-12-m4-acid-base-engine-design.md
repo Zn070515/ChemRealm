@@ -1,7 +1,8 @@
 # M4 Acid-Base Engine and Oracle Validation Design
 
 Status: Design v2 approved by the project owner on 2026-09-12 after
-self-review. Implementation has not started.
+self-review. Implementation is in progress; the M4 Chemical Identity Closure
+is recorded as the revision-13 candidate in `SPEC-0001` and `ADR-0011`.
 
 ## Context
 
@@ -38,8 +39,9 @@ M4 will deliver an acidbase-monoprotic-davies@1.0.0 adapter that:
 - Generic polyprotic, multi-equilibrium, precipitation, redox, or non-aqueous
   chemistry.
 - A Python or PHREEQC dependency in the browser or production runtime.
-- A change to the synchronous reducer, event log, replay, branch, or snapshot
-  model.
+- A change to the synchronous reducer, event log, or branch model. The required
+  scenario snapshot amendment is limited to freezing resolved indicator inputs
+  and is versioned/migrated under `ADR-0011`.
 - M5 observable-state projections, renderer colour mapping, ACE behaviour, or
   M6 apparatus assets.
 - Replacing the scientific model with Henderson–Hasselbalch or a lookup table.
@@ -116,10 +118,12 @@ uses reduced molalities:
 The activity equations are:
 
     log10(γ_i) = -A z_i² ( √Î/(1 + √Î) - bÎ )
-    Kw = a_H · a_OH
+    Kw = a_H · a_OH / a_w
     Ka = a_H · a_A / a_HA
 
-The neutral acid approximation is γ_HA = 1. Kw, Ka, A, and b are dimensionless
+The neutral acid approximation is γ_HA = 1. `a_w = 1` is an explicit v0 model
+convention, represented in the frozen solver parameter bag as `waterActivity`;
+the solver uses `Kw · a_w = a_H · a_OH`. Kw, Ka, A, and b are dimensionless
 model parameters. Physical molalities are created only at the ScientificState
 boundary by multiplying reduced molality by m°.
 
@@ -133,7 +137,7 @@ not as a display label. The v0 catalog is:
 | HCl | fully-dissociated | one strong-acid chloride equivalent, contributing Cl⁻ |
 | NaOH | fully-dissociated | one strong-base sodium equivalent, contributing Na⁺ |
 | HOAc | monoprotic-equilibrium | total HA/A⁻ family with the catalogued Ka |
-| NaOAc | fully-dissociated | Na⁺ and acetate A⁻ total |
+| NaOAc | fully-dissociated | Na⁺ and the same total acid family as HOAc |
 
 Free H⁺ and OH⁻ are produced by the water/equilibrium equations; they are not
 treated as authored solute labels. HCl, NaOH, HOAc, and NaOAc are the only
@@ -149,11 +153,13 @@ MODEL_OUT_OF_DOMAIN rather than an implicit precedence rule.
 The equilibrium solute ka remains present in SolveRequest because it is part of
 the M3 scientific request contract. For HOAc, the adapter requires it to equal
 the frozen catalog value in its SolverConfig exactly; a different finite value is
-an unsupported model request, not a silently substituted constant. World
-composition code obtains this value from the resolved adapter/configuration, and
-the exact value is persisted through WorldCreated.solverConfig. Thus changing
-acetic-acid Ka changes replay identity rather than changing only a transient
-request.
+an unsupported model request, not a silently substituted constant. Indicator
+`Ka_in` is different: it is scenario-specific scientific input. Content
+resolution canonicalizes it, attaches per-datum source provenance, and freezes
+it in `ScenarioSnapshot.indicators`, which is covered by the genesis content
+hash. A later SolveRequest is built only from that frozen snapshot block; it
+does not read a mutable indicator catalog. This keeps indicator choice out of
+global solver identity while keeping the scientific input replayable.
 
 ### Solve structure
 
@@ -217,12 +223,11 @@ figures than its source. A changed constant creates a different solver
 configuration and therefore a different replay identity.
 
 The fixed configuration includes the global model constants Kw, Ka_HOAc,
-Davies A and b, standard molality, neutral-acid activity coefficient, water
-activity convention, and the numeric-policy precision/version represented by
-the adapter's exact identity. Request-local indicator Ka values are scientific
-inputs to a solve, not silently promoted to global model constants; their
-catalog/source record must still be available to the request builder and
-reference evidence.
+Davies A and b, standard molality, neutral-acid activity coefficient, numeric
+`waterActivity`, and the numeric-policy precision/version represented by the
+adapter's exact identity. Scenario-specific indicator Ka values are not global
+model constants: they are resolved into the genesis snapshot with per-datum
+provenance and copied from there into each SolveRequest.
 
 M4 also reviews the density and molar-mass provenance already attached to
 MaterialSnapshot inputs because they determine the water-mass/molality boundary.
@@ -231,9 +236,10 @@ the genesis data-provenance contract.
 
 ## World/event design
 
-M4 introduces no new persisted event or world-state field. WorldCreated keeps
-the exact SolverConfig selected by M3; the acid-base adapter is resolved and
-invoked by composition code after a committed world state exists.
+M4 adds no new event type. WorldCreated keeps the exact SolverConfig selected by
+M3 and the resolved scenario-specific indicator block inside its self-contained
+ScenarioSnapshot; the acid-base adapter is resolved and invoked by composition
+code after a committed world state exists.
 
 The adapter is deterministic for the same request and frozen configuration.
 World replay does not invoke it implicitly, and solver completion order cannot
@@ -283,10 +289,13 @@ computational ionic-strength ceiling of 0.5 mol/kg, the closed supported
 species set, and activityCorrected: true. The persisted SolverConfig contains
 the exact numeric parameter bag required by the M3 identity contract.
 
-No JSON Schema version bump is expected. If implementation discovers that the
-existing ScientificState or result contract cannot express a required
-scientific output, implementation must stop and propose a separate schema ADR
-instead of widening the schema silently.
+The world/content schema is version 2 because replayable scenario-specific
+indicator inputs were not expressible in the v1 genesis snapshot. Migration
+`1 → 2` adds `indicators: []` only where no prior value exists; it never invents
+a missing constant. Scientific DTOs retain their independent scientific schema
+version. The resolved snapshot uses canonical, positive dimensionless `kaIn`
+with per-datum DataProvenance, while authored content uses a dimension-checked
+indicator definition that is resolved before genesis.
 
 The current runtime schema represents the proposed accuracy-envelope result as
 ValidityStatus.withinProposedAccuracyEnvelope, a boolean. SPEC-0001 revision 12
@@ -360,6 +369,8 @@ document:
 - v0 component ids and stoichiometric roles are now explicit and model-owned;
 - the public factory no longer permits an identity-breaking constant override;
 - HOAc Ka is tied to the frozen solver configuration and genesis identity;
+  scenario-specific indicator Ka is tied to the frozen genesis snapshot and
+  per-datum source provenance, rather than to global solver identity;
 - bracket, deterministic-math, and internal-invariant failures have distinct
   public result behavior; and
 - REF-5/REF-10 are explicitly assigned to ScientificProjection rather than
@@ -374,7 +385,9 @@ open questions are evidence-pinning tasks only.
 
 M4 is additive to the M3 adapter contract. The stub remains available for
 contract tests, while composition tests gain a real acid-base adapter fixture.
-No existing persisted world format changes, so no migration is required.
+The world/content schema changes from version 1 to version 2 solely to persist
+resolved scenario indicator inputs. The explicit `1 → 2` migration adds an
+empty list where no prior block exists and never fabricates a missing constant.
 
 The adapter is not registered as the default application solver until its
 reference and PHREEQC evidence pass. Before S3, any disagreement or missing

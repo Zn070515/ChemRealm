@@ -145,6 +145,26 @@ before a scientific solver is allowed to produce persisted or rendered state:
 This candidate does not change the synchronous World Runtime seam, solver
 selection policy, or the M4 chemistry scope.
 
+### M4 scenario-scientific-input closure (implementation candidate)
+
+The global `SolverConfig` contains constants that define the solver model,
+including `Kw`, `Ka_HOAc`, Davies parameters, the neutral-acid convention, the
+numeric `waterActivity` value, and the numeric-policy version. A scenario's
+indicator is not a different solver model, so its `Ka_in` does not belong in
+that global identity. It is nevertheless scientific input and must be
+replayable.
+
+Accordingly, the content-to-genesis resolver writes each resolved indicator to
+`ScenarioSnapshot.indicators` as `{ indicatorId, kaIn, provenance }`, with
+canonical positive dimensionless `kaIn` and datum-level `DataProvenance`. The
+snapshot is covered by `WorldCreated.payload.contentHash`; composition code
+copies the frozen snapshot value into `SolveRequest` and never consults mutable
+indicator content during replay. The world/content schema version is bumped
+from 1 to 2 with a forward migration that adds an explicit empty indicator list
+where no prior block exists. This does not recover an indicator that an older
+pre-v2 caller supplied only in an unpersisted request, so such a record must not
+be presented as having preserved that scientific input.
+
 **Correction (2026-09-11, owner-approved).** The OK branch was sketched above as
 `{ state, provenance }`, with provenance a SIBLING of state. The implementation
 puts it inside `ScientificState`, and that is now the decision:

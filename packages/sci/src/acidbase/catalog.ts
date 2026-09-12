@@ -18,7 +18,6 @@ export interface AcidBaseComponentCatalogEntry {
     | "strongAcidChloride"
     | "strongBaseSodium"
     | "acidFamily"
-    | "acetate"
   )[];
 }
 
@@ -45,7 +44,7 @@ const catalogEntries = new Map<
   ["HOAc", catalogEntry("HOAc", "monoprotic-equilibrium", ["acidFamily"])],
   [
     "NaOAc",
-    catalogEntry("NaOAc", "fully-dissociated", ["strongBaseSodium", "acetate"]),
+    catalogEntry("NaOAc", "fully-dissociated", ["strongBaseSodium", "acidFamily"]),
   ],
 ]);
 
@@ -90,7 +89,6 @@ export interface AcidBaseComponentTotals {
   readonly strongAcidChlorideMolality: ReducedMolality;
   readonly strongBaseSodiumMolality: ReducedMolality;
   readonly totalAcidFamilyMolality: ReducedMolality;
-  readonly totalAcetateMolality: ReducedMolality;
 }
 
 function isSupportedComponent(value: string): value is AcidBaseComponentId {
@@ -123,7 +121,6 @@ export function aggregateComponents(
   let strongAcidChlorideMolality = reducedMolality(0);
   let strongBaseSodiumMolality = reducedMolality(0);
   let totalAcidFamilyMolality = reducedMolality(0);
-  let totalAcetateMolality = reducedMolality(0);
   const seen = new Map<
     AcidBaseComponentId,
     { mode: SolveRequest["solutes"][number]["mode"]; ka?: number }
@@ -177,9 +174,6 @@ export function aggregateComponents(
             contribution,
           );
           break;
-        case "acetate":
-          totalAcetateMolality = add(totalAcetateMolality, contribution);
-          break;
       }
     }
   }
@@ -188,7 +182,6 @@ export function aggregateComponents(
     strongAcidChlorideMolality,
     strongBaseSodiumMolality,
     totalAcidFamilyMolality,
-    totalAcetateMolality,
   });
 }
 

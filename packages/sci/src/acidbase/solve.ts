@@ -2,7 +2,6 @@ import {
   reducedIonicStrength,
   reducedMolality,
   type ReducedIonicStrength,
-  type ReducedMolality,
 } from "@chemrealm/schema";
 import { daviesActivities, type DaviesActivities } from "./activity.js";
 import type { AcidBaseComponentTotals } from "./catalog.js";
@@ -80,20 +79,18 @@ function validateInput(input: ReducedSolveInput): void {
     input.totals.totalAcidFamilyMolality.value,
     "acid-family total",
   );
-  validateReducedValue(
-    input.totals.totalAcetateMolality.value,
-    "acetate total",
-  );
   if (!Number.isFinite(input.constants.Kw.value) || input.constants.Kw.value <= 0) {
     throw new RangeError("Kw must be finite and positive");
   }
   if (!Number.isFinite(input.constants.Ka_HOAc.value) || input.constants.Ka_HOAc.value <= 0) {
     throw new RangeError("HOAc Ka must be finite and positive");
   }
-}
-
-function addReduced(first: ReducedMolality, second: ReducedMolality): ReducedMolality {
-  return reducedMolality(first.value + second.value);
+  if (
+    !Number.isFinite(input.constants.waterActivity.value) ||
+    input.constants.waterActivity.value <= 0
+  ) {
+    throw new RangeError("water activity must be finite and positive");
+  }
 }
 
 /**
@@ -108,11 +105,10 @@ function idealHydrogenRoot(input: ReducedSolveInput): number {
   const kw = input.constants.Kw.value;
   const ka = input.constants.Ka_HOAc.value;
   const acidFamily = totals.totalAcidFamilyMolality.value;
-  const acetate = totals.totalAcetateMolality.value;
   const sodium = totals.strongBaseSodiumMolality.value;
   const chloride = totals.strongAcidChlorideMolality.value;
   const residual = (hydrogen: number): number =>
-    sodium + hydrogen - kw / hydrogen - acidFamily * ka / (ka + hydrogen) - acetate - chloride;
+    sodium + hydrogen - kw / hydrogen - acidFamily * ka / (ka + hydrogen) - chloride;
 
   let lower = HYDROGEN_LOWER;
   let upper = HYDROGEN_UPPER;
@@ -155,7 +151,8 @@ function speciesAt(
   const anionGamma = activities.monovalentAnion.value;
   const neutralGamma = activities.neutralAcid.value;
   const kwConditional =
-    input.constants.Kw.value / (hydrogenGamma * hydroxideGamma);
+    (input.constants.Kw.value * input.constants.waterActivity.value) /
+    (hydrogenGamma * hydroxideGamma);
   const kaConditional =
     input.constants.Ka_HOAc.value * neutralGamma / (hydrogenGamma * anionGamma);
   const hydroxide = reducedMolality(kwConditional / hydrogen);
@@ -164,10 +161,7 @@ function speciesAt(
     acidFamily.value * kaConditional / (kaConditional + hydrogen),
   );
   const neutralAcid = reducedMolality(acidFamily.value - dissociatedAcid.value);
-  const conjugateBase = addReduced(
-    dissociatedAcid,
-    input.totals.totalAcetateMolality,
-  );
+  const conjugateBase = dissociatedAcid;
 
   return {
     species: Object.freeze({

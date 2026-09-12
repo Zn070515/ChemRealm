@@ -54,6 +54,128 @@
                         },
                         "type": "array"
                       },
+                      "indicators": {
+                        "items": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "indicatorId": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "kaIn": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "unit": {
+                                  "const": "1",
+                                  "type": "string"
+                                },
+                                "value": {
+                                  "exclusiveMinimum": 0,
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "value",
+                                "unit"
+                              ],
+                              "type": "object"
+                            },
+                            "provenance": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "category": {
+                                  "enum": [
+                                    "measured",
+                                    "evaluated",
+                                    "calculated",
+                                    "empirical",
+                                    "pedagogicalApproximation"
+                                  ],
+                                  "type": "string"
+                                },
+                                "edition": {
+                                  "minLength": 1,
+                                  "type": "string"
+                                },
+                                "lastVerified": {
+                                  "minLength": 1,
+                                  "type": "string"
+                                },
+                                "pressure": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "unit": {
+                                      "enum": [
+                                        "kPa",
+                                        "Pa",
+                                        "atm"
+                                      ],
+                                      "type": "string"
+                                    },
+                                    "value": {
+                                      "type": "number"
+                                    }
+                                  },
+                                  "required": [
+                                    "value",
+                                    "unit"
+                                  ],
+                                  "type": "object"
+                                },
+                                "reference": {
+                                  "minLength": 1,
+                                  "type": "string"
+                                },
+                                "source": {
+                                  "minLength": 1,
+                                  "type": "string"
+                                },
+                                "temperature": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "unit": {
+                                      "enum": [
+                                        "K",
+                                        "degC"
+                                      ],
+                                      "type": "string"
+                                    },
+                                    "value": {
+                                      "type": "number"
+                                    }
+                                  },
+                                  "required": [
+                                    "value",
+                                    "unit"
+                                  ],
+                                  "type": "object"
+                                },
+                                "uncertainty": {
+                                  "minLength": 1,
+                                  "type": "string"
+                                },
+                                "version": {
+                                  "minLength": 1,
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "source",
+                                "reference",
+                                "category"
+                              ],
+                              "type": "object"
+                            }
+                          },
+                          "required": [
+                            "indicatorId",
+                            "kaIn",
+                            "provenance"
+                          ],
+                          "type": "object"
+                        },
+                        "type": "array"
+                      },
                       "materials": {
                         "items": {
                           "additionalProperties": false,
@@ -613,6 +735,7 @@
                       "materials",
                       "vessels",
                       "apparatusDefaults",
+                      "indicators",
                       "modelRequirements"
                     ],
                     "type": "object"
@@ -672,7 +795,7 @@
                 "type": "object"
               },
               "schemaVersion": {
-                "const": 1,
+                "const": 2,
                 "type": "number"
               },
               "seq": {
@@ -746,7 +869,7 @@
                 "type": "object"
               },
               "schemaVersion": {
-                "const": 1,
+                "const": 2,
                 "type": "number"
               },
               "seq": {
@@ -819,7 +942,7 @@
                 "type": "object"
               },
               "schemaVersion": {
-                "const": 1,
+                "const": 2,
                 "type": "number"
               },
               "seq": {
@@ -893,7 +1016,7 @@
                 "type": "object"
               },
               "schemaVersion": {
-                "const": 1,
+                "const": 2,
                 "type": "number"
               },
               "seq": {
@@ -976,7 +1099,7 @@
                 "type": "object"
               },
               "schemaVersion": {
-                "const": 1,
+                "const": 2,
                 "type": "number"
               },
               "seq": {
@@ -1039,7 +1162,7 @@
                 "type": "object"
               },
               "schemaVersion": {
-                "const": 1,
+                "const": 2,
                 "type": "number"
               },
               "seq": {
@@ -1140,7 +1263,7 @@
       "type": "array"
     },
     "schemaVersion": {
-      "const": 1,
+      "const": 2,
       "type": "number"
     }
   },

@@ -12,7 +12,7 @@ describe("World Runtime branches", () => {
     const genesis = createInitialState(WORLD_CREATED);
     const parentEvent = {
       seq: 1,
-      schemaVersion: 1 as const,
+      schemaVersion: 2 as const,
       type: "MaterialCharged" as const,
       payload: {
         vesselId: "flask",
@@ -44,7 +44,7 @@ describe("World Runtime branches", () => {
 
     const childEvent = {
       seq: 3,
-      schemaVersion: 1 as const,
+      schemaVersion: 2 as const,
       type: "MaterialCharged" as const,
       payload: {
         vesselId: "flask",

@@ -1,10 +1,11 @@
 /**
  * Forward-only schema migrations (`ADR-0005` §Schema versioning).
  *
- * There is no version 0 and therefore no migration to perform yet — but the
- * MECHANISM exists from the first release, with a registered no-op `1 -> 1`, so
- * the harness is tested before it is needed rather than written under pressure
- * against live user data.
+ * Version 2 adds resolved, scenario-specific indicator inputs to the genesis
+ * snapshot. The migration is deliberately structural: old records that had no
+ * persisted indicator definition receive an explicit empty list. No value is
+ * invented, and callers must decide how to handle worlds that used an
+ * unrecorded request-local indicator in a pre-v2 build.
  *
  * Rules, all of them learned from the failure modes in `ADR-0005`:
  *
@@ -25,17 +26,60 @@ export interface Migration {
 
 /**
  * The registry. Order matters only in that each `from` must be reachable.
- *
- * The `1 -> 1` entry is a no-op by design: it exercises the runner on every
- * test run, so a regression in the harness is caught immediately rather than
- * the first time a real migration exists.
  */
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function addIndicatorsToScenarioRecord(value: unknown): unknown {
+  if (!isRecord(value)) return value;
+  if ("indicators" in value) return value;
+  if (
+    "scenarioRef" in value &&
+    "materials" in value &&
+    "vessels" in value &&
+    "modelRequirements" in value &&
+    ("apparatusDefaults" in value || "apparatus" in value)
+  ) {
+    return { ...value, indicators: [] };
+  }
+  return value;
+}
+
+function addIndicatorsToSnapshot(value: unknown): unknown {
+  return addIndicatorsToScenarioRecord(value);
+}
+
+function migrateEvent(value: unknown): unknown {
+  if (!isRecord(value)) return value;
+  const migrated = migrateContainer(value);
+  return typeof migrated.schemaVersion === "number"
+    ? { ...migrated, schemaVersion: 2 }
+    : migrated;
+}
+
+function migrateContainer(record: Record<string, unknown>): Record<string, unknown> {
+  // Always clone before descending. A successful migration must not mutate
+  // the caller's in-memory record while it adds nested v2 fields.
+  const next = { ...(addIndicatorsToScenarioRecord(record) as Record<string, unknown>) };
+  if ("scenarioSnapshot" in next) {
+    next.scenarioSnapshot = addIndicatorsToSnapshot(next.scenarioSnapshot);
+  }
+  if (isRecord(next.payload)) {
+    next.payload = migrateContainer(next.payload);
+  }
+  if (Array.isArray(next.events)) {
+    next.events = next.events.map(migrateEvent);
+  }
+  return next;
+}
+
 export const MIGRATIONS: readonly Migration[] = [
   {
     from: 1,
-    to: 1,
-    describe: "no-op: exercises the runner before the first real migration exists",
-    migrate: (record) => record,
+    to: 2,
+    describe: "add the explicit scenario snapshot indicator block",
+    migrate: migrateContainer,
   },
 ];
 

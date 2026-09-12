@@ -1,11 +1,12 @@
 # SPEC-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** **Accepted** — S1 baseline, M1 S3, M3 S3, and M4
-  pre-implementation contract amendments accepted. Owner, 2026-09-12.
+- **Status:** **Accepted through revision 12** — revision 13 is an M4
+  implementation candidate pending owner review.
 - **Accepted baseline:** commit `8310c685`, `SPEC-0001` revision 6
-- **Current revision:** **12 Accepted** — M4 pre-implementation accuracy
-  contract wording was aligned with the existing runtime schema. Revisions 7–12
-  are accepted contract amendments.
+- **Current revision:** **13 Candidate** — M4 chemical identity closure adds
+  scenario-frozen indicator inputs, the explicit water-activity parameter, and
+  common acetate-family semantics. Revisions 7–12 are accepted amendments;
+  revision 13 remains pending owner review.
   See "Amendments since acceptance" below.
 - **Acceptance scope:** the specification and its acceptance criteria. Deferred
   items listed under Open questions remain open and must be resolved before the
@@ -30,6 +31,7 @@
 | 10 | 2026-09-12 | M3 Contract Closure: World Runtime reduction/replay stays synchronous; async solving is composition-level orchestration; v0 binds one adapter, one model, and one exact `SolverConfig`; solute modes are discriminated; `MODEL_OUT_OF_DOMAIN` requires `nearestSupported`; incompatible requirements reject genesis before `WorldCreated`. | Owner, 2026-09-12 |
 | 11 | 2026-09-12 | M3 Identity & Defensive Boundary Closure: decoded/cast request data always returns tagged `INVALID_INPUT`; adapter/model/config identity is defensively copied and deeply frozen across construction and registry boundaries; every `OK` result must carry provenance exactly matching the adapter model and solver configuration. | Owner, 2026-09-12 |
 | 12 | 2026-09-12 | M4 pre-implementation contract closure: the proposed accuracy-envelope qualification is represented by the existing `ValidityStatus.withinProposedAccuracyEnvelope` boolean; no parallel `accuracyStatus` field is introduced. | Owner, 2026-09-12 |
+| 13 | 2026-09-12 | M4 Chemical Identity Closure candidate: NaOAc contributes to the common HA/A⁻ analytical family rather than a permanent acetate pool; scenario-specific indicator `Ka_in` is resolved with per-datum provenance into `ScenarioSnapshot.indicators` and frozen by the genesis content hash; the explicit v0 `waterActivity` parameter participates in the `Kw` equation; world/content schema version 2 adds a forward migration from v1. | Pending owner review |
 
 A revision bump is recorded here rather than only in the body because the header
 is what a reader checks before deciding whether the file they are reading is the
@@ -671,10 +673,13 @@ In⁻ look like" is perception.* This is stated once as a general rule in
 | Methyl orange | red | yellow | 3.1 – 4.4 | ≈ 3.4 |
 
 **Provenance status: textbook/standard values, primary source to be pinned at M4.**
-`Ka_in` enters the **solver configuration** (scientific core) and therefore replay
-identity (`ADR-0007` §8); the colour endpoints enter the observable model's own
-version. They must be traced to citable sources before M4's gate closes. Marked
-here as provisional.
+`Ka_in` is a **scenario-specific scientific input**, not a global solver
+configuration parameter. Content resolution canonicalizes it and attaches
+datum-level `DataProvenance` in `ScenarioSnapshot.indicators`; that snapshot is
+covered by the genesis content hash and is the only source from which a later
+`SolveRequest` may obtain the indicator constant. The colour endpoints enter the
+observable model's own version. All values must be traced to citable sources
+before M4's gate closes. Marked here as provisional.
 
 **Labelled approximation.** Phenolphthalein is genuinely diprotic (`H₂In`,
 `HIn⁻`, `In²⁻`). v0 models it as monoprotic using the dominant transition. This
@@ -716,7 +721,7 @@ and are never stored as though they were thermodynamic.
 | Davies `b` | 0.3 | dimensionless, reduced-`I` convention | Empirical; primary source to be pinned at M4 |
 | Standard molality `m°` | 1 mol/kg | defines `Î = I_m/m°` | Convention; recorded in solver config |
 | `γ_HA` (neutral) | 1.0 | molality basis | **Approximation**, bounded at +0.02 `log10 γ` at I=0.1 (F6) |
-| `a_w` | 1.0 | convention | Valid over the supported domain only |
+| `a_w` | 1.0 | explicit `waterActivity` model parameter / unit-water-activity convention | Valid over the supported domain only |
 | Indicator `Ka_in` | see table | molality, dimensionless | **Provisional**, see above |
 
 **`A` changed from 0.5085 to 0.509** because the basis changed from molarity to
@@ -850,7 +855,7 @@ state it claimed to own.
 
 ```
 WorldState {
-  schemaVersion: 1
+  schemaVersion: 2
   worldId: WorldId
   lineage: { parentWorldId: WorldId | null, forkSequence: number, forkStateHash: Hash }
   sequence: number                      // present cursor; not hashed
@@ -966,6 +971,20 @@ Therefore:
     }
   }
   ```
+
+  The snapshot also carries the scenario's resolved indicator inputs:
+
+  ```
+  indicators: {
+    indicatorId,
+    kaIn: { value, unit: "1" },
+    provenance: DataProvenance
+  }[]
+  ```
+
+  These are scenario-specific scientific data, not global solver parameters.
+  They are canonicalized and frozen at genesis so a later `SolveRequest` is
+  built from the event log rather than from mutable indicator content.
 
   Each scientific input datum carries its own `DataProvenance` sibling: density
   has one, every composition entry has one, and every molar-mass entry has one.
@@ -1577,7 +1596,7 @@ zod; JSON Schema is emitted for the Python oracle (`ADR-0001` rule 1).
 
 | Contract | Kind | Versioned |
 |---|---|---|
-| `WorldState`, `Vessel`, `Apparatus`, `Attachment` | Persisted | yes, `schemaVersion: 1` |
+| `WorldState`, `Vessel`, `Apparatus`, `Attachment` | Persisted | yes, `schemaVersion: 2` |
 | The six v0 events | Persisted | yes |
 | `Command` union | Runtime | yes |
 | `SolveRequest`, `SolveResult`, `ScientificState`, `Provenance` | Runtime | yes |
@@ -1656,7 +1675,7 @@ Mapped one-to-one to acceptance criteria. Nothing below is "add tests later".
 | Integration | Command → validate → event → reduce → state, for each v0 command |
 | Replay | Full-log replay hash at every boundary; snapshot-deleted replay |
 | Branch | Parent-immutability hash; comparison alignment by cumulative volume |
-| Persistence | IndexedDB round-trip; export/import round-trip; migration harness (no-op v1→v1) |
+| Persistence | IndexedDB round-trip; export/import round-trip; explicit v1→v2 migration with derived genesis checksum rebuild |
 | Visual | Deterministic fixture world; screenshots at 4 named viewports; baseline diff |
 | Browser | Playwright core flow: deliver → observe → undo → fork → compare |
 | ACE | Evidence event emitted; ≥2 hypotheses retained; fading triggers; challenge mode has no intervention |
@@ -1707,7 +1726,7 @@ Binary and verifiable. Every criterion maps to an evidence method.
 | AC-R13 | `liquidVolume` is canonical world truth. It changes only through explicit volume-bearing world events (`MaterialCharged`, `TransferCommitted`), is never recomputed from chemistry or presentation state, and enters `replayHash` | hash-diff test over charge/transfer events |
 | AC-R14 | Transfer is **component**- and volume-conserving over 100 steps under the homogeneous-mixture assumption. **Element** totals (AC-S3) are conserved as a consequence, through the component→element composition declared by the model (`AC-R21`) | conservation test (spike §N promoted) |
 | AC-R15 | `WorldState` has exactly **one** location for vessel contents; `Vessel` carries no `contents` field | schema test + review |
-| AC-R16 | `scenarioSnapshot` carries model **requirements**, never a resolved `solverConfig`; exactly one resolved solver config exists per world | schema test: the snapshot type has no solver-config field |
+| AC-R16 | `scenarioSnapshot` carries model **requirements** and resolved scenario-specific indicator inputs, never a resolved `solverConfig`; exactly one resolved solver config exists per world | schema test: the snapshot type has no solver-config field and its indicator data is canonical/provenanced |
 | AC-R17 | **Branch export is self-contained.** Exporting a branch emits the **complete** event log from genesis (flattened), with lineage metadata — not just the branch's suffix. A bundle imported on a machine with no parent replays to the same `replayHash` | round-trip test that exports a child, discards the parent, and replays |
 | AC-R18 | Transfer deltas are computed from the pre-transfer snapshot: a test that interleaves read/write fails | unit test asserting the order-independence of the transfer update |
 | AC-R19 | **World identity is event-sourced.** `WorldCreated` carries `worldId`; `WorldBranched` carries `childWorldId`, `parentWorldId`, `forkSequence`, `forkStateHash`. Replaying a flattened genesis-to-tip log reconstructs the final `worldId` and full `lineage` from the log alone, with nothing regenerated | replay test: fold a flattened child log, compare reconstructed identity to the live world's |
@@ -1776,9 +1795,12 @@ Binary and verifiable. Every criterion maps to an evidence method.
 
 ## Rollout/migration
 
-- `schemaVersion` begins at `1`. There is no prior format, so there is no
-  migration to perform — but **the migration harness is built now** with a no-op
-  `1 → 1` migration, so the mechanism exists and is tested before it is needed.
+- World and content `schemaVersion` is currently `2`. Version 2 adds the
+  explicit resolved `ScenarioSnapshot.indicators` block; the tested forward
+  migration is `1 → 2` and inserts only an empty list when no indicator value
+  was previously persisted. A World Runtime migration boundary rebuilds the
+  derived genesis `contentHash` after that snapshot change. Scientific DTO
+  schema versions remain independent.
 - Export format `chemrealm.export` begins at `formatVersion: 1`.
 - **Forward migration must be explicit and tested.** No automatic best-effort
   migration.

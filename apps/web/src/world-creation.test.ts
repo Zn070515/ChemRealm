@@ -25,6 +25,7 @@ const snapshot = {
   materials: [],
   vessels: [],
   apparatusDefaults: [],
+  indicators: [],
   modelRequirements: {
     temperature: { value: 25, unit: "degC" },
     species: ["H+"],

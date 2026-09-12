@@ -110,7 +110,7 @@ SOLUTE = {
 }
 
 VALID_SCENARIO = {
-    "schemaVersion": 1,
+    "schemaVersion": 2,
     "contentVersion": 1,
     "scenarioRef": "hcl-naoh",
     "title": "HCl vs NaOH",
@@ -136,6 +136,7 @@ VALID_SCENARIO = {
         }
     ],
     "apparatus": [],
+    "indicators": [],
     "modelRequirements": {
         "temperature": {"value": 298.15, "unit": "K"},
         "solvent": "water",
@@ -200,6 +201,7 @@ SCENARIO_SNAPSHOT = {
         }
     ],
     "apparatusDefaults": [],
+    "indicators": [],
     "modelRequirements": {
         "temperature": {"value": 298.15, "unit": "K"},
         "species": ["H2O", "H+", "OH-", "Cl-", "Na+"],
@@ -211,7 +213,7 @@ SCENARIO_SNAPSHOT = {
 
 WORLD_CREATED_EVENT = {
     "seq": 0,
-    "schemaVersion": 1,
+    "schemaVersion": 2,
     "type": "WorldCreated",
     "payload": {
         "worldId": "w-1",
@@ -229,7 +231,7 @@ WORLD_CREATED_EVENT = {
 VALID_BUNDLE = {
     "format": "chemrealm.export",
     "formatVersion": 1,
-    "schemaVersion": 1,
+    "schemaVersion": 2,
     "lineage": [
         {
             "worldId": "w-1",

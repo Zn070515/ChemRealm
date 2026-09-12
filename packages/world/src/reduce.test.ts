@@ -10,7 +10,7 @@ describe("World Runtime reducer", () => {
     const state = createInitialState(WORLD_CREATED);
     const next = reduce(state, {
       seq: 1,
-      schemaVersion: 1,
+      schemaVersion: 2,
       type: "MaterialCharged",
       payload: {
         vesselId: "flask",
@@ -30,7 +30,7 @@ describe("World Runtime reducer", () => {
     const genesis = createInitialState(WORLD_CREATED);
     const flaskCharged = reduce(genesis, {
       seq: 1,
-      schemaVersion: 1,
+      schemaVersion: 2,
       type: "MaterialCharged",
       payload: {
         vesselId: "flask",
@@ -40,7 +40,7 @@ describe("World Runtime reducer", () => {
     });
     const bothCharged = reduce(flaskCharged, {
       seq: 2,
-      schemaVersion: 1,
+      schemaVersion: 2,
       type: "MaterialCharged",
       payload: {
         vesselId: "burette",
@@ -50,7 +50,7 @@ describe("World Runtime reducer", () => {
     });
     const transferred = reduce(bothCharged, {
       seq: 3,
-      schemaVersion: 1,
+      schemaVersion: 2,
       type: "TransferCommitted",
       payload: {
         fromVesselId: "flask",
@@ -76,7 +76,7 @@ describe("World Runtime reducer", () => {
     const genesis = createInitialState(WORLD_CREATED);
     const charged = reduce(genesis, {
       seq: 1,
-      schemaVersion: 1,
+      schemaVersion: 2,
       type: "MaterialCharged",
       payload: {
         vesselId: "flask",
@@ -86,7 +86,7 @@ describe("World Runtime reducer", () => {
     });
     const transferred = reduce(charged, {
       seq: 2,
-      schemaVersion: 1,
+      schemaVersion: 2,
       type: "TransferCommitted",
       payload: {
         fromVesselId: "flask",
@@ -120,7 +120,7 @@ describe("World Runtime reducer", () => {
     expect(() =>
       reduce(state, {
         seq: 2,
-        schemaVersion: 1,
+        schemaVersion: 2,
         type: "ApparatusPlaced",
         payload: {
           apparatusId: "stand",
@@ -136,7 +136,7 @@ describe("World Runtime reducer", () => {
     let solverInvoked = false;
     const charged = reduce(state, {
       seq: 1,
-      schemaVersion: 1,
+      schemaVersion: 2,
       type: "MaterialCharged",
       payload: {
         vesselId: "flask",
@@ -148,7 +148,7 @@ describe("World Runtime reducer", () => {
       charged,
       {
         seq: 2,
-        schemaVersion: 1,
+        schemaVersion: 2,
         type: "TransferCommitted",
         payload: {
           fromVesselId: "flask",

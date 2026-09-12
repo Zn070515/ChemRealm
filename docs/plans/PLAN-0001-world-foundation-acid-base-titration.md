@@ -1,7 +1,7 @@
 # PLAN-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** **M0–M3 S3 Verified / Accepted; M4 authorized** — the original plan was approved
-  on 2026-09-11 at `SPEC-0001` revision 6; the current contract is revision 12.
+- **Status:** **M0–M3 S3 Verified / Accepted; M4 S2 in progress** — the original plan was approved
+  on 2026-09-11 at `SPEC-0001` revision 6; the current contract is revision 13 candidate.
 - **Completed:** `M0 — Repository foundation` reached **S3 — Verified** on
   2026-09-11. Evidence: `docs/evidence/M0.md`, commits `1f3dfee`/`565a2e8`,
   CI run `34595967023` (13/13 gate steps on a clean `ubuntu-latest` checkout).
@@ -13,11 +13,12 @@
 - **Coverage check:** `uv run python tools/check_acceptance_coverage.py` — every `AC-*` in
   `SPEC-0001` is required to appear in at least one milestone here. Run it after
   editing either document.
-- **Date:** 2026-09-12 (revised for M3 acceptance and M4 authorization)
+- **Date:** 2026-09-12 (revised for M3 acceptance and M4 implementation)
 - **Implements:** `docs/specs/SPEC-0001-world-foundation-acid-base-titration.md`
 - **Related ADRs:** 0001–0009 were accepted at the baseline; ADR-0001 and
   ADR-0003 M1 Final Closure and M3 owner decisions, ADR-0001's M1 amendment,
-  and ADR-0010 are accepted. Load-bearing here: 0004 (revised), 0007 (revised),
+  and ADR-0010 are accepted. ADR-0011 is the proposed M4 scenario-input
+  amendment and remains pending owner review. Load-bearing here: 0004 (revised), 0007 (revised),
   0008, 0009, and ADR-0010's
   M2 basis-boundary gate.
 - **Audience:** an agent that did not participate in the design. Nothing below
@@ -33,7 +34,7 @@
 > **Final-closure note.** DTO→domain bridges canonicalize units before
 > construction; every resolved snapshot datum is canonical, carries its own
 > `DataProvenance`, and is required structurally; export contracts are aligned
-> with the v1 schema; and v0 rejects mixed composition bases until the Scientific
+> with the v1 export format and v2 world/content schema; and v0 rejects mixed composition bases until the Scientific
 > Reality Core owns the joint resolver. M1 and M2 are S3 verified; M3 is
 > authorized.
 
@@ -389,8 +390,8 @@ packages/world/src/branch.ts         fork, lineage, parent-immutability guards
 
 `reduce`, `validate`, `replay`, `stateHash`, `fork`, `snapshot` signatures
 finalized. `packages/world` still has **no** scientific dependency: the reducer
-takes a solver function by injection, so M2 can be tested with a stub solver and
-M4 can supply the real one without touching this package.
+and replay remain synchronous and solver-free. M4 supplies the real adapter only
+through composition code after a committed state exists.
 
 ### Implementation
 
@@ -440,8 +441,9 @@ M4 can supply the real one without touching this package.
    the parent object graph is unchanged after a child mutation — an end-of-test
    hash comparison can miss a transient mutation.
 7. Snapshot policy with the invariant that snapshots are a cache.
-8. `TransferCommitted` handling goes behind an **injected** solver interface, so
-   M2 is testable with a stub before M4 exists.
+8. `TransferCommitted` handling remains a synchronous world fact; chemistry is
+   recomputed by composition-level orchestration after the reducer boundary,
+   through the async M3 `SolverAdapter`.
 
 ### Tests and evidence
 
@@ -590,9 +592,9 @@ packages/sci/src/acidbase/solve.ts        bisection root-find (exactly-specified
 packages/sci/src/acidbase/activity.ts     Davies; sqrt permitted, log is NOT
 packages/sci/src/acidbase/species.ts      species inventory and mass balance
 packages/sci/src/acidbase/indicator.ts    ratio-based indicator model (empirical category)
-packages/sci/src/acidbase/index.ts        the adapter implementation
+packages/sci/src/acidbase/index.ts        the adapter implementation boundary
 packages/sci/test/reference/*.json        REF-1..REF-10 as data, not as literals in test code
-pyproject.toml                            add the PHREEQC dependency
+pyproject.toml                            Python oracle tooling only; no runtime PHREEQC dependency
 tools/oracle/phreeqc/run_batch.py         generate .pqi, run PHREEQC CLI, parse output
 tools/oracle/phreeqc/cases/*.pqi.in
 tools/oracle/tests/test_reference.py      oracle vs published standards
@@ -602,8 +604,11 @@ docs/research/constants-provenance.md     pin every constant to a citable source
 
 ### Contracts changed
 
-`acidbase-monoprotic-davies@1.0.0` registered. Constants table finalized — this enters replay
-identity.
+`acidbase-monoprotic-davies@1.0.0` registered. Global model constants, including
+the explicit `waterActivity: 1` convention, enter solver replay identity.
+Scenario-specific indicator constants are resolved with per-datum provenance into
+`ScenarioSnapshot.indicators` and enter genesis content identity under the
+revision-13 candidate and `ADR-0011`.
 
 ### Implementation
 

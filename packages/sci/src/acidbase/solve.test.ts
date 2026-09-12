@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { reducedMolality } from "@chemrealm/schema";
+import { activity, reducedMolality } from "@chemrealm/schema";
 import { daviesActivities } from "./activity.js";
 import { DEFAULT_ACID_BASE_CONSTANTS } from "./model.js";
 import { solveReduced, type ReducedSolveSuccess } from "./solve.js";
@@ -13,13 +13,11 @@ function totals(
   strongAcidChlorideMolality: number,
   strongBaseSodiumMolality: number,
   totalAcidFamilyMolality = 0,
-  totalAcetateMolality = 0,
 ): AcidBaseComponentTotals {
   return {
     strongAcidChlorideMolality: reducedMolality(strongAcidChlorideMolality),
     strongBaseSodiumMolality: reducedMolality(strongBaseSodiumMolality),
     totalAcidFamilyMolality: reducedMolality(totalAcidFamilyMolality),
-    totalAcetateMolality: reducedMolality(totalAcetateMolality),
   };
 }
 
@@ -59,18 +57,30 @@ describe("nested reduced acid-base solve", () => {
   });
 
   it("keeps weak-acid family mass balanced while adding fully dissociated acetate", () => {
-    const input = totals(0, 0.1, 0.1, 0.1);
+    const input = totals(0, 0.1, 0.2);
     const result = expectSuccess(
       solveReduced({ totals: input, constants: DEFAULT_ACID_BASE_CONSTANTS }),
     );
     const { species } = result;
 
     expect(species.neutralAcid.value + species.conjugateBase.value).toBeCloseTo(
-      input.totalAcidFamilyMolality.value + input.totalAcetateMolality.value,
+      input.totalAcidFamilyMolality.value,
       14,
     );
-    expect(species.conjugateBase.value).toBeGreaterThan(
-      input.totalAcetateMolality.value,
+    expect(species.conjugateBase.value).toBeGreaterThan(0.1);
+  });
+
+  it("allows acetate supplied as NaOAc to hydrolyze", () => {
+    const result = expectSuccess(
+      solveReduced({
+        totals: totals(0, 0.1, 0.1),
+        constants: DEFAULT_ACID_BASE_CONSTANTS,
+      }),
+    );
+
+    expect(result.species.neutralAcid.value).toBeGreaterThan(0);
+    expect(result.species.hydroxide.value).toBeGreaterThan(
+      result.species.hydrogen.value,
     );
   });
 
@@ -100,6 +110,25 @@ describe("nested reduced acid-base solve", () => {
 
     expect(waterProduct).toBeCloseTo(DEFAULT_ACID_BASE_CONSTANTS.Kw.value, 14);
     expect(acidQuotient).toBeCloseTo(DEFAULT_ACID_BASE_CONSTANTS.Ka_HOAc.value, 14);
+  });
+
+  it("uses the pinned water-activity convention in the water equilibrium", () => {
+    const constants = {
+      ...DEFAULT_ACID_BASE_CONSTANTS,
+      waterActivity: activity(0.9),
+    };
+    const result = expectSuccess(
+      solveReduced({ totals: totals(0, 0.1, 0.1), constants }),
+    );
+    const activities = daviesActivities(result.ionicStrength, constants);
+    const waterProduct =
+      activities.hydrogen.value * result.species.hydrogen.value *
+      activities.hydroxide.value * result.species.hydroxide.value;
+
+    expect(waterProduct).toBeCloseTo(
+      constants.Kw.value * constants.waterActivity.value,
+      14,
+    );
   });
 
   it("does not reduce activity to a post-hoc correction", () => {

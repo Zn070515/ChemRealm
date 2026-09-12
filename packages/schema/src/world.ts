@@ -104,6 +104,25 @@ export const MaterialSnapshotSchema = z.strictObject({
 export type MaterialSnapshot = z.infer<typeof MaterialSnapshotSchema>;
 
 /**
+ * A scenario-specific scientific input resolved at genesis.
+ *
+ * Indicator constants are not part of the global solver identity: the same
+ * solver can be used with different indicators. They are nevertheless part of
+ * the scenario's replayable truth, so the resolved canonical value and its
+ * source-data provenance travel with the snapshot rather than being looked up
+ * from mutable content when a request is built later.
+ */
+export const IndicatorSnapshotSchema = z.strictObject({
+  indicatorId: z.string().min(1),
+  kaIn: z.strictObject({
+    value: z.number().finite().positive(),
+    unit: z.literal("1"),
+  }),
+  provenance: DataProvenanceSchema,
+});
+export type IndicatorSnapshot = z.infer<typeof IndicatorSnapshotSchema>;
+
+/**
  * The genesis snapshot. Self-contained: replaying a world never reads
  * `content/` (`SPEC-0001` AC-R12).
  *
@@ -128,6 +147,8 @@ export const ScenarioSnapshotSchema = z.strictObject({
   apparatusDefaults: z.array(
     z.strictObject({ kind: z.string().min(1), state: z.record(z.string(), z.unknown()) }),
   ),
+  /** Resolved, canonical, per-datum scientific inputs frozen at genesis. */
+  indicators: z.array(IndicatorSnapshotSchema),
   /** A constraint on what may be used, not a record of what was used. */
   modelRequirements: z.strictObject({
     temperature: quantityOfDimension("temperature"),
@@ -226,7 +247,7 @@ export const LineageSchema = z.strictObject({
 });
 export type Lineage = z.infer<typeof LineageSchema>;
 
-export const CURRENT_SCHEMA_VERSION = 1;
+export const CURRENT_SCHEMA_VERSION = 2;
 
 /**
  * `sequence` is the present cursor and is NOT hashed. Wall-clock time appears

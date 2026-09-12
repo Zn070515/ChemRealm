@@ -75,6 +75,46 @@ describe("AC-R16 — requirements and the resolved solver are different things",
     const keys = Object.keys(WorldStateSchema.shape as Record<string, unknown>);
     expect(keys).toContain("solverConfig");
   });
+
+  it("freezes scenario indicator constants with per-datum provenance", () => {
+    const names = Object.keys(ScenarioSnapshotSchema.shape as Record<string, unknown>);
+    expect(names).toContain("indicators");
+
+    const snapshot = {
+      scenarioRef: "indicator-snapshot",
+      materials: [],
+      vessels: [],
+      apparatusDefaults: [],
+      modelRequirements: {
+        temperature: { value: 298.15, unit: "K" },
+        species: ["H+"],
+        solvent: "water",
+        phase: "aqueous",
+        activityCorrected: true,
+      },
+      indicators: [
+        {
+          indicatorId: "phenolphthalein",
+          kaIn: { value: 3.98e-10, unit: "1" },
+          provenance: {
+            source: "reference",
+            reference: "indicator transition table",
+            category: "evaluated",
+          },
+        },
+      ],
+    };
+    expect(ScenarioSnapshotSchema.safeParse(snapshot).success).toBe(true);
+    const withoutProvenance = structuredClone(snapshot);
+    delete (withoutProvenance.indicators[0] as Record<string, unknown>).provenance;
+    expect(ScenarioSnapshotSchema.safeParse(withoutProvenance).success).toBe(false);
+    const nonCanonical = structuredClone(snapshot);
+    nonCanonical.indicators[0]!.kaIn = { value: 0.000000398, unit: "mmol/L" };
+    expect(ScenarioSnapshotSchema.safeParse(nonCanonical).success).toBe(false);
+    const nonPositive = structuredClone(snapshot);
+    nonPositive.indicators[0]!.kaIn = { value: 0, unit: "1" };
+    expect(ScenarioSnapshotSchema.safeParse(nonPositive).success).toBe(false);
+  });
 });
 
 describe("AC-R19 — world identity is event-sourced", () => {
@@ -144,6 +184,7 @@ describe("AC-C1 — content declares a scenario and cannot express chemistry", (
       },
     ],
     apparatus: [],
+    indicators: [],
     modelRequirements: {
       temperature: { value: 298.15, unit: "K" },
       solvent: "water",
@@ -207,8 +248,8 @@ describe("AC-P4 — no tracking identifier in the export bundle, and lineage pre
 // mode `CLAUDE.md` §16 calls "tests passing only because assertions were
 // weakened", arriving through the label rather than the assertion.
 describe("the migration harness exists before it is needed", () => {
-  it("registers a no-op 1 -> 1 so the runner is exercised every run", () => {
-    expect(MIGRATIONS.some((m) => m.from === 1 && m.to === 1)).toBe(true);
+  it("registers the indicator snapshot migration before it is needed", () => {
+    expect(MIGRATIONS.some((m) => m.from === 1 && m.to === 2)).toBe(true);
   });
 
   it("passes a current record through untouched", () => {
@@ -227,6 +268,76 @@ describe("the migration harness exists before it is needed", () => {
   it("reports a broken chain instead of returning a half-migrated record", () => {
     const result = migrate({ schemaVersion: 0 }, CURRENT_SCHEMA_VERSION);
     expect(result.status).toBe("NO_PATH");
+  });
+
+  it("migrates a v1 genesis record with no indicator block into v2", () => {
+    const result = migrate(
+      {
+        schemaVersion: 1,
+        type: "WorldCreated",
+        payload: {
+          scenarioSnapshot: {
+            scenarioRef: "legacy",
+            materials: [],
+            vessels: [],
+            apparatusDefaults: [],
+            modelRequirements: {},
+          },
+        },
+      },
+      CURRENT_SCHEMA_VERSION,
+    );
+
+    expect(result.status).toBe("OK");
+    if (result.status === "OK") {
+      expect(result.record.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+      const payload = result.record.payload;
+      expect(payload).toBeTypeOf("object");
+      if (payload !== null && typeof payload === "object") {
+        const scenarioSnapshot = (payload as Record<string, unknown>).scenarioSnapshot;
+        expect(scenarioSnapshot).toMatchObject({ indicators: [] });
+      }
+    }
+  });
+
+  it("migrates a v1 authored scenario by making an empty indicator selection explicit", () => {
+    const result = migrate(
+      {
+        schemaVersion: 1,
+        scenarioRef: "legacy-content",
+        materials: [],
+        vessels: [],
+        apparatus: [],
+        modelRequirements: {},
+      },
+      CURRENT_SCHEMA_VERSION,
+    );
+
+    expect(result.status).toBe("OK");
+    if (result.status === "OK") {
+      expect(result.record).toMatchObject({ indicators: [] });
+    }
+  });
+
+  it("does not mutate the legacy record while migrating nested snapshots", () => {
+    const legacy = {
+      schemaVersion: 1,
+      type: "WorldCreated",
+      payload: {
+        scenarioSnapshot: {
+          scenarioRef: "legacy",
+          materials: [],
+          vessels: [],
+          apparatusDefaults: [],
+          modelRequirements: {},
+        },
+      },
+    };
+    const before = structuredClone(legacy);
+    const result = migrate(legacy, CURRENT_SCHEMA_VERSION);
+
+    expect(result.status).toBe("OK");
+    expect(legacy).toEqual(before);
   });
 });
 
@@ -323,6 +434,7 @@ describe("dimension coherence — the contract cannot express dimensional nonsen
       },
     ],
     apparatus: [],
+    indicators: [],
     modelRequirements: {
       temperature: { value: 298.15, unit: "K" },
       solvent: "water" as const,

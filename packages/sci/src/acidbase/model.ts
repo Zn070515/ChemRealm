@@ -1,10 +1,12 @@
 import {
+  activity,
   activityCoefficient,
   fromCelsius,
   ionicStrengthMolal,
   molPerKilogram,
   thermodynamicConstant,
   type ActivityCoefficient,
+  type Activity,
   type ModelDescriptor,
   type MolPerKilogram,
   type SolverConfig,
@@ -21,6 +23,8 @@ export interface AcidBaseConstants {
   readonly daviesB: number;
   readonly standardMolality: MolPerKilogram;
   readonly neutralAcidActivityCoefficient: ActivityCoefficient;
+  /** Explicit v0 unit-water-activity approximation used by Kw. */
+  readonly waterActivity: Activity;
   readonly waterActivityConvention: "unit";
 }
 
@@ -31,6 +35,7 @@ export const DEFAULT_ACID_BASE_CONSTANTS: AcidBaseConstants = Object.freeze({
   daviesB: 0.3,
   standardMolality: molPerKilogram(1),
   neutralAcidActivityCoefficient: activityCoefficient(1),
+  waterActivity: activity(1),
   waterActivityConvention: "unit",
 });
 
@@ -66,6 +71,7 @@ export function buildAcidBaseSolverConfig(): SolverConfig {
       standardMolality: DEFAULT_ACID_BASE_CONSTANTS.standardMolality,
       neutralAcidActivityCoefficient:
         DEFAULT_ACID_BASE_CONSTANTS.neutralAcidActivityCoefficient.value,
+      waterActivity: DEFAULT_ACID_BASE_CONSTANTS.waterActivity.value,
       numericPrecisionSignificantDigits: 12,
       numericPolicyVersion: 1,
     }),

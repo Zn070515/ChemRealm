@@ -34,6 +34,41 @@
     "description": {
       "type": "string"
     },
+    "indicators": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "indicatorId": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "kaIn": {
+            "additionalProperties": false,
+            "properties": {
+              "unit": {
+                "const": "1",
+                "type": "string"
+              },
+              "value": {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "value",
+              "unit"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "indicatorId",
+          "kaIn"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
     "learningGoals": {
       "items": {
         "type": "string"
@@ -304,7 +339,7 @@
       "type": "string"
     },
     "schemaVersion": {
-      "const": 1,
+      "const": 2,
       "type": "number"
     },
     "title": {
@@ -435,6 +470,7 @@
     "materials",
     "vessels",
     "apparatus",
+    "indicators",
     "modelRequirements"
   ],
   "type": "object"

@@ -134,6 +134,19 @@ export const ModelRequirementsSchema = z.strictObject({
 });
 export type ModelRequirements = z.infer<typeof ModelRequirementsSchema>;
 
+/**
+ * Authoring input for a scenario indicator. Genesis resolution canonicalizes
+ * `kaIn` and attaches its DataProvenance before creating ScenarioSnapshot.
+ */
+export const IndicatorDefinitionSchema = z.strictObject({
+  indicatorId: z.string().min(1),
+  kaIn: z.strictObject({
+    value: z.number().finite().positive(),
+    unit: z.literal("1"),
+  }),
+});
+export type IndicatorDefinition = z.infer<typeof IndicatorDefinitionSchema>;
+
 export const ScenarioSchema = z.strictObject({
   /**
    * The SHAPE's version, from the same scheme as the persisted world
@@ -165,6 +178,7 @@ export const ScenarioSchema = z.strictObject({
       state: z.record(z.string(), z.unknown()),
     }),
   ),
+  indicators: z.array(IndicatorDefinitionSchema),
   modelRequirements: ModelRequirementsSchema,
   representation: z
     .strictObject({

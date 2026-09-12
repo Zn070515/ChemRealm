@@ -68,7 +68,7 @@ Export produces a single self-describing, versioned bundle:
 {
   "format": "chemrealm.export",
   "formatVersion": 1,
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "lineage": [ {
     "worldId": "world-1",
     "lineage": {
@@ -134,7 +134,7 @@ recording the fork points. Internal storage may share the prefix; export is a
 {
   "format": "chemrealm.export",
   "formatVersion": 1,
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "lineage": [
     { "worldId": "root", "lineage": {
       "parentWorldId": null, "forkSequence": null, "forkStateHash": null
@@ -170,6 +170,12 @@ Not generated, not stored, not derivable from stored data:
 - Every persisted record carries `schemaVersion`.
 - Migrations are explicit, versioned, and tested forward. `SPEC-0001` requires a
   migration test for every version bump.
+- The current world/content migration `1 → 2` adds the explicit
+  `ScenarioSnapshot.indicators` block as an empty list when no prior value was
+  persisted. It never fabricates an indicator constant; an old request-local
+  value that was not in genesis cannot be recovered. Because the snapshot bytes
+  change, the World Runtime migration boundary rebuilds the derived genesis
+  `contentHash` before loading the migrated event.
 - **Migration failure must be loud.** A world that cannot be migrated is
   reported to the user and left untouched — never partially upgraded, never
   silently reset to a default. Silent reset destroys the user's work and is a

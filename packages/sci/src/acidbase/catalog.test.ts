@@ -12,6 +12,7 @@ import {
 } from "./model.js";
 import { kilogram, litre, mol, thermodynamicConstant } from "@chemrealm/schema";
 import type { SolveRequest } from "@chemrealm/schema";
+import { solveReduced, type ReducedSolveSuccess } from "./solve.js";
 
 const ka = DEFAULT_ACID_BASE_CONSTANTS.Ka_HOAc;
 
@@ -45,8 +46,7 @@ describe("v0 acid-base component catalog", () => {
 
     expect(totals.strongAcidChlorideMolality.value).toBe(0.1);
     expect(totals.strongBaseSodiumMolality.value).toBe(0.06);
-    expect(totals.totalAcidFamilyMolality.value).toBe(0.03);
-    expect(totals.totalAcetateMolality.value).toBe(0.04);
+    expect(totals.totalAcidFamilyMolality.value).toBe(0.07);
   });
 
   it("aggregates identical duplicate entries without changing their meaning", () => {
@@ -71,6 +71,41 @@ describe("v0 acid-base component catalog", () => {
 
     expect(totals.strongAcidChlorideMolality.value).toBe(0.05);
     expect(totals.totalAcidFamilyMolality.value).toBe(0.03);
+  });
+
+  it("makes equivalent acetate representations solve to the same state", () => {
+    const fromNeutralization = aggregateComponents(
+      request([
+        {
+          soluteId: "HOAc",
+          amount: mol(0.1),
+          mode: "monoprotic-equilibrium",
+          ka,
+        },
+        { soluteId: "NaOH", amount: mol(0.1), mode: "fully-dissociated" },
+      ]),
+    );
+    const fromSalt = aggregateComponents(
+      request([{ soluteId: "NaOAc", amount: mol(0.1), mode: "fully-dissociated" }]),
+    );
+
+    expect(fromNeutralization).toEqual(fromSalt);
+
+    const first = solveReduced({
+      totals: fromNeutralization,
+      constants: DEFAULT_ACID_BASE_CONSTANTS,
+    });
+    const second = solveReduced({
+      totals: fromSalt,
+      constants: DEFAULT_ACID_BASE_CONSTANTS,
+    });
+    if (!("species" in first) || !("species" in second)) {
+      throw new Error("equivalent acetate representations must solve");
+    }
+    const firstSuccess = first as ReducedSolveSuccess;
+    const secondSuccess = second as ReducedSolveSuccess;
+    expect(secondSuccess.species).toEqual(firstSuccess.species);
+    expect(secondSuccess.ionicStrength).toEqual(firstSuccess.ionicStrength);
   });
 
   it.each([
@@ -123,13 +158,14 @@ describe("fixed acid-base model identity", () => {
     expect(config).toEqual({
       id: ACID_BASE_MODEL_ID,
       version: ACID_BASE_MODEL_VERSION,
-      parameters: expect.objectContaining({
+        parameters: expect.objectContaining({
         Kw: DEFAULT_ACID_BASE_CONSTANTS.Kw.value,
         Ka_HOAc: DEFAULT_ACID_BASE_CONSTANTS.Ka_HOAc.value,
         Davies_A: 0.509,
         Davies_b: 0.3,
         standardMolality: 1,
         neutralAcidActivityCoefficient: 1,
+        waterActivity: 1,
         numericPrecisionSignificantDigits: 12,
         numericPolicyVersion: 1,
       }),

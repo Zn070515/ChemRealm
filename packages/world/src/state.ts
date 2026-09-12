@@ -10,10 +10,12 @@
 
 import {
   ApparatusSchema,
+  CURRENT_SCHEMA_VERSION,
   DomainEventSchema,
   ScenarioSnapshotSchema,
   WorldCreatedSchema,
   WorldStateSchema as SerializedWorldStateSchema,
+  migrate,
   kilogram,
   kilogramsPerLitre,
   kilogramsPerMol,
@@ -22,6 +24,7 @@ import {
   millimetre,
   mol,
   molPerLitre,
+  thermodynamicConstant,
   toCanonical,
   type Apparatus,
   type DataProvenanceDto,
@@ -94,6 +97,11 @@ export interface RuntimeScenarioSnapshot {
   readonly apparatusDefaults: readonly {
     readonly kind: string;
     readonly state: Record<string, unknown>;
+  }[];
+  readonly indicators: readonly {
+    readonly indicatorId: string;
+    readonly kaIn: ReturnType<typeof thermodynamicConstant>;
+    readonly provenance: RuntimeDataProvenance;
   }[];
   readonly modelRequirements: {
     readonly temperature: ReturnType<typeof kelvin>;
@@ -209,6 +217,7 @@ function parseScenarioSnapshot(dto: SerializedScenarioSnapshot): RuntimeScenario
   const parsed = ScenarioSnapshotSchema.parse(dto);
   assertUnique(parsed.materials.map((material) => material.materialId), "material");
   assertUnique(parsed.vessels.map((vessel) => vessel.vesselId), "vessel");
+  assertUnique(parsed.indicators.map((indicator) => indicator.indicatorId), "indicator");
   return {
     scenarioRef: parsed.scenarioRef,
     materials: parsed.materials.map(parseMaterialSnapshot),
@@ -226,6 +235,11 @@ function parseScenarioSnapshot(dto: SerializedScenarioSnapshot): RuntimeScenario
     apparatusDefaults: parsed.apparatusDefaults.map((entry) => ({
       kind: entry.kind,
       state: { ...entry.state },
+    })),
+    indicators: parsed.indicators.map((indicator) => ({
+      indicatorId: indicator.indicatorId,
+      kaIn: thermodynamicConstant(toCanonical(indicator.kaIn).value),
+      provenance: cloneDataProvenance(indicator.provenance),
     })),
     modelRequirements: {
       temperature: kelvin(toCanonical(parsed.modelRequirements.temperature).value),
@@ -353,6 +367,31 @@ export function createInitialState(input: unknown): WorldState {
   });
 }
 
+/**
+ * Migrate a persisted genesis event before the current event schema parses it.
+ * Structural schema migration can change the snapshot bytes; the content
+ * checksum is a derived field owned by World Runtime and must be rebuilt at
+ * this boundary rather than copied from the legacy record.
+ */
+export function migrateWorldCreated(input: unknown): SerializedWorldCreated {
+  if (input === null || typeof input !== "object" || Array.isArray(input)) {
+    throw new TypeError("WorldCreated migration requires an object record");
+  }
+  const result = migrate(input as Record<string, unknown>, CURRENT_SCHEMA_VERSION);
+  if (result.status !== "OK") {
+    throw new Error(`WorldCreated migration failed: ${result.status}`);
+  }
+  const event = WorldCreatedSchema.parse(result.record);
+  if (result.applied.length === 0) return event;
+  return WorldCreatedSchema.parse({
+    ...event,
+    payload: {
+      ...event.payload,
+      contentHash: scenarioSnapshotHash(event.payload.scenarioSnapshot),
+    },
+  });
+}
+
 function serializeDataProvenance(value: RuntimeDataProvenance): DataProvenanceDto {
   const result: Record<string, unknown> = {
     source: value.source,
@@ -411,6 +450,11 @@ function serializeScenarioSnapshot(snapshot: RuntimeScenarioSnapshot): Serialize
     apparatusDefaults: snapshot.apparatusDefaults.map((entry) => ({
       kind: entry.kind,
       state: { ...entry.state },
+    })),
+    indicators: snapshot.indicators.map((indicator) => ({
+      indicatorId: indicator.indicatorId,
+      kaIn: { value: indicator.kaIn.value, unit: "1" },
+      provenance: serializeDataProvenance(indicator.provenance),
     })),
     modelRequirements: {
       temperature: { value: snapshot.modelRequirements.temperature, unit: "K" },

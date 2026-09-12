@@ -3,7 +3,7 @@
 Status: **implementation evidence in progress; not an S3 acceptance record**.
 
 This file is the source record for the fixed `acidbase-monoprotic-davies@1.0.0`
-identity and for request-local indicator constants. A number in the TypeScript
+identity and for scenario-frozen indicator constants. A number in the TypeScript
 implementation is not accepted merely because it is familiar or appears in a
 textbook. The source, basis, temperature, precision, and approximation status
 must be recorded here first.
@@ -25,10 +25,14 @@ is stable. It must not be recomputed from a different rounded pKa at runtime.
 The implementation must still assert that a request's HOAc `ka` exactly equals
 this frozen value.
 
-## Request-local indicator inputs
+## Scenario-frozen indicator inputs
 
-Indicator constants are scientific request inputs, not silently promoted to the
-global solver configuration. The current v0 teaching contract names these
+Indicator constants are scenario-specific scientific inputs, not silently
+promoted to the global solver configuration. Content resolution must attach the
+canonical positive `kaIn` and a per-datum `DataProvenance` record to
+`ScenarioSnapshot.indicators`; the genesis content hash then freezes the value.
+SolveRequest builders copy indicators only from that snapshot and never read a
+mutable catalog at replay time. The current v0 teaching contract names these
 candidate values:
 
 | Indicator | Candidate `pKa_in` | Candidate `Ka_in` | Source/status |
@@ -39,7 +43,8 @@ candidate values:
 No indicator candidate is evidence-complete yet. M4 may use an explicitly
 recorded provisional fixture for continuity tests, but S3 must remain blocked
 until each value used in accepted evidence has a citable source and source
-precision.
+precision. An ad hoc request-local indicator that is absent from the frozen
+snapshot is not a replayable world input.
 
 ## Precision and model boundary rules
 

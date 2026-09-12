@@ -2,7 +2,9 @@
 
 import {
   ModelRequirementsSchema,
+  ScenarioSnapshotSchema,
   kelvin,
+  thermodynamicConstant,
   toCanonical,
   type InputViolation,
   type Kelvin,
@@ -37,6 +39,21 @@ export function parseSolverRequirements(input: unknown): SolverRequirements {
 
 /** Descriptive alias for call sites that use the schema's terminology. */
 export const parseModelRequirements = parseSolverRequirements;
+
+/**
+ * Copy scenario-specific indicator constants from resolved genesis truth into
+ * a solve request. This deliberately accepts the serialized snapshot rather
+ * than an indicator catalog: replay must not consult mutable authored content.
+ */
+export function buildIndicatorInputsFromSnapshot(
+  input: unknown,
+): SolveRequest["indicators"] {
+  const snapshot = ScenarioSnapshotSchema.parse(input);
+  return snapshot.indicators.map((indicator) => ({
+    indicatorId: indicator.indicatorId,
+    kaIn: thermodynamicConstant(toCanonical(indicator.kaIn).value),
+  }));
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
