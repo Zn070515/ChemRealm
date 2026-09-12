@@ -27,11 +27,7 @@ function compareIds(a: string, b: string): number {
   return a < b ? -1 : a > b ? 1 : 0;
 }
 
-export type SolverHook = (state: WorldState) => unknown;
-
 export interface ReduceOptions {
-  /** M2 injects this seam; M4 can supply the real scientific adapter. */
-  readonly solve?: SolverHook;
   /** Test-only equivalent grouping used to exercise the hash quantization boundary. */
   readonly arithmeticPath?: "standard" | "perturbed";
 }
@@ -301,8 +297,5 @@ export function reduce(
     }
   })();
 
-  if (event.type === "TransferCommitted" && options.solve !== undefined) {
-    options.solve(next);
-  }
   return next;
 }

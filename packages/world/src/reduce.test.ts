@@ -131,9 +131,9 @@ describe("World Runtime reducer", () => {
     ).toThrow(WorldRuntimeError);
   });
 
-  it("invokes an injected solver without allowing it to own world mutation", () => {
+  it("keeps scientific solving outside the synchronous world reducer", () => {
     const state = createInitialState(WORLD_CREATED);
-    const solvedStates: unknown[] = [];
+    let solverInvoked = false;
     const charged = reduce(state, {
       seq: 1,
       schemaVersion: 1,
@@ -157,10 +157,15 @@ describe("World Runtime reducer", () => {
           mechanism: "pipette",
         },
       },
-      { solve: (solved) => solvedStates.push(solved) },
+      {
+        solve: () => {
+          solverInvoked = true;
+        },
+      } as never,
     );
 
-    expect(solvedStates).toHaveLength(1);
+    expect(next).not.toBeInstanceOf(Promise);
+    expect(solverInvoked).toBe(false);
     expect(next.canonical.byVessel.flask.liquidVolume).toBeCloseTo(0.009, 14);
     expect(state.canonical.byVessel.flask.liquidVolume).toBe(0);
   });

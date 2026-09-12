@@ -12,6 +12,11 @@ import type { BranchLog } from "./branch.js";
 import { scienceHash } from "./hash.js";
 
 export interface ReplayOptions extends ReduceOptions {
+  /**
+   * Synchronous projection/hash callback only. It is not a SolverAdapter and
+   * is never awaited; async scientific orchestration belongs at the
+   * composition boundary after a deterministic world state is committed.
+   */
   readonly deriveScience?: (state: WorldState) => unknown;
   readonly snapshots?: readonly WorldSnapshot[];
 }
