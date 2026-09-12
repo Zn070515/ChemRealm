@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -43,6 +44,106 @@ def test_missing_required_toolchain_is_a_hard_failure(tmp_path, monkeypatch) -> 
 
     with pytest.raises(runner.PhreeqcToolchainError, match="executable"):
         runner.resolve_toolchain(REPO_ROOT)
+
+
+def test_local_executable_override_cannot_claim_pinned_oracle_identity(
+    tmp_path, monkeypatch
+) -> None:
+    runner = load_runner()
+    executable = tmp_path / "phreeqc"
+    database = tmp_path / "phreeqc.dat"
+    executable.write_text("developer executable", encoding="utf-8")
+    database.write_text("developer database", encoding="utf-8")
+    monkeypatch.setenv("PHREEQC_BIN", str(executable))
+    monkeypatch.setenv("PHREEQC_DATABASE", str(database))
+
+    with pytest.raises(runner.PhreeqcToolchainError, match="unverified"):
+        runner.resolve_toolchain(REPO_ROOT)
+
+
+def test_allowed_local_override_is_explicitly_unverified(
+    tmp_path, monkeypatch
+) -> None:
+    runner = load_runner()
+    executable = tmp_path / "phreeqc"
+    database = tmp_path / "phreeqc.dat"
+    executable.write_text("developer executable", encoding="utf-8")
+    database.write_text("developer database", encoding="utf-8")
+    monkeypatch.setenv("PHREEQC_BIN", str(executable))
+    monkeypatch.setenv("PHREEQC_DATABASE", str(database))
+    monkeypatch.setenv("CHEMREALM_ALLOW_UNVERIFIED_PHREEQC", "1")
+    monkeypatch.setattr(runner, "validate_database", lambda *_args: "database-sha")
+    monkeypatch.setattr(runner, "sha256_file", lambda _path: "executable-sha")
+
+    toolchain = runner.resolve_toolchain(REPO_ROOT)
+
+    assert toolchain.version == "unverified-override"
+    assert toolchain.identity_verified is False
+    assert toolchain.identity_source == "PHREEQC_BIN override"
+
+
+def test_required_pinned_oracle_rejects_local_override_even_when_allowed(
+    tmp_path, monkeypatch
+) -> None:
+    runner = load_runner()
+    executable = tmp_path / "phreeqc"
+    database = tmp_path / "phreeqc.dat"
+    executable.write_text("developer executable", encoding="utf-8")
+    database.write_text("developer database", encoding="utf-8")
+    monkeypatch.setenv("PHREEQC_BIN", str(executable))
+    monkeypatch.setenv("PHREEQC_DATABASE", str(database))
+    monkeypatch.setenv("CHEMREALM_ALLOW_UNVERIFIED_PHREEQC", "1")
+    monkeypatch.setenv("CHEMREALM_REQUIRE_PHREEQC", "1")
+
+    with pytest.raises(runner.PhreeqcToolchainError, match="pinned oracle"):
+        runner.resolve_toolchain(REPO_ROOT)
+
+
+def test_pinned_cache_requires_generated_toolchain_metadata(tmp_path, monkeypatch) -> None:
+    runner = load_runner()
+    executable_name = "phreeqc.exe" if os.name == "nt" else "phreeqc"
+    executable = tmp_path / "bin" / executable_name
+    executable.parent.mkdir()
+    executable.write_text("pinned-looking executable", encoding="utf-8")
+    monkeypatch.setattr(runner, "_default_cache", lambda *_args: tmp_path)
+    monkeypatch.setattr(runner, "validate_database", lambda *_args: "database-sha")
+    monkeypatch.setattr(runner, "sha256_file", lambda _path: "executable-sha")
+
+    with pytest.raises(runner.PhreeqcToolchainError, match="toolchain metadata"):
+        runner.resolve_toolchain(REPO_ROOT, environment={})
+
+
+def test_ci_toolchain_metadata_binds_the_actual_executable_checksum(tmp_path) -> None:
+    runner = load_runner()
+    executable = tmp_path / "phreeqc"
+    database = tmp_path / "phreeqc.dat"
+    executable.write_text("pinned executable", encoding="utf-8")
+    database.write_text("pinned database", encoding="utf-8")
+    manifest = {
+        "tool": "PHREEQC",
+        "version": "3.8.6-17100",
+        "sourceSha256": "source-sha",
+    }
+    metadata = {
+        "tool": "PHREEQC",
+        "version": "3.8.6-17100",
+        "sourceSha256": "source-sha",
+        "executable": str(executable),
+        "executableSha256": "wrong-sha",
+        "database": str(database),
+        "databaseSha256": "database-sha",
+    }
+
+    with pytest.raises(runner.PhreeqcToolchainError, match="executable checksum"):
+        runner.validate_ci_toolchain_metadata(
+            metadata,
+            metadata_path=tmp_path / "toolchain.json",
+            executable=executable,
+            database=database,
+            executable_sha256="actual-sha",
+            database_sha256="database-sha",
+            manifest=manifest,
+        )
 
 
 def test_database_checksum_is_checked_before_execution(tmp_path) -> None:

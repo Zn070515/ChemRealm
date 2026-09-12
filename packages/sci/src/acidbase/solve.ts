@@ -51,6 +51,20 @@ const OUTER_TOLERANCE = 1e-15;
 const INNER_ITERATION_LIMIT = 100;
 const OUTER_ITERATION_LIMIT = 200;
 const OUTER_BRACKET_SPANS = [3, 10, 100, 1000] as const;
+/**
+ * A tiny probe beyond the public I domain lets the solver classify the exact
+ * boundary correctly. The probe is never returned as a valid state: the final
+ * converged-I check still refuses every value above 0.5 mol/kg.
+ */
+const DOMAIN_BOUNDARY_PROBE = 1e-12;
+/**
+ * The outer bracket may need an exploratory lower endpoint whose ionic
+ * strength is materially above the accepted domain (notably for 0.5 mol/kg
+ * NaOH, where activity correction moves the hydrogen root away from the
+ * concentration-only seed). This is classification-only: no state is
+ * returned until the final converged value is checked against 0.5 mol/kg.
+ */
+const EXPLORATORY_IONIC_STRENGTH_UPPER = 1.25;
 
 function failOutOfDomain(reason: string): ReducedSolveFailure {
   return {
@@ -220,7 +234,7 @@ function solveInner(
   input: ReducedSolveInput,
 ): Candidate | ReducedSolveFailure {
   let lower = reducedIonicStrength(0);
-  let upper = reducedIonicStrength(IONIC_STRENGTH_UPPER);
+  let upper = reducedIonicStrength(EXPLORATORY_IONIC_STRENGTH_UPPER);
   let lowerResidual = ionicStrengthResidual(hydrogen, lower, input);
   let upperResidual = ionicStrengthResidual(hydrogen, upper, input);
 
@@ -300,7 +314,10 @@ export function solveReduced(
     let bracketFound = false;
 
     for (const span of OUTER_BRACKET_SPANS) {
-      const candidateLower = Math.max(HYDROGEN_LOWER, idealRoot / span);
+      const candidateLowerSeeds = [
+        Math.max(HYDROGEN_LOWER, idealRoot / span),
+        Math.max(HYDROGEN_LOWER, idealRoot * 0.5),
+      ];
       // A hydrogen trial above the declared ionic-strength domain can make
       // the inner solve refuse even when the actual outer root is valid. The
       // analytical total-solute gate bounds the supported hydrogen scale, so
@@ -308,23 +325,26 @@ export function solveReduced(
       // envelope instead of discarding the whole bracket span.
       const candidateUpper = Math.min(
         HYDROGEN_UPPER,
-        IONIC_STRENGTH_UPPER,
+        IONIC_STRENGTH_UPPER + DOMAIN_BOUNDARY_PROBE,
         idealRoot * span,
       );
-      const evaluatedLower = solveInner(candidateLower, input);
-      const evaluatedUpper = solveInner(candidateUpper, input);
-      if ("kind" in evaluatedLower || "kind" in evaluatedUpper) continue;
-      if (
-        evaluatedLower.reducedChargeResidual < 0 &&
-        evaluatedUpper.reducedChargeResidual > 0
-      ) {
-        lower = candidateLower;
-        upper = candidateUpper;
-        lowerCandidate = evaluatedLower;
-        upperCandidate = evaluatedUpper;
-        bracketFound = true;
-        break;
+      for (const candidateLower of candidateLowerSeeds) {
+        const evaluatedLower = solveInner(candidateLower, input);
+        const evaluatedUpper = solveInner(candidateUpper, input);
+        if ("kind" in evaluatedLower || "kind" in evaluatedUpper) continue;
+        if (
+          evaluatedLower.reducedChargeResidual < 0 &&
+          evaluatedUpper.reducedChargeResidual > 0
+        ) {
+          lower = candidateLower;
+          upper = candidateUpper;
+          lowerCandidate = evaluatedLower;
+          upperCandidate = evaluatedUpper;
+          bracketFound = true;
+          break;
+        }
       }
+      if (bracketFound) break;
     }
 
     if (!bracketFound || lowerCandidate === undefined || upperCandidate === undefined) {

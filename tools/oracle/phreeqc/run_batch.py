@@ -33,6 +33,8 @@ class PhreeqcToolchain:
     manifest: dict
     executable_sha256: str
     database_sha256: str
+    identity_verified: bool
+    identity_source: str
 
 
 @dataclass(frozen=True)
@@ -85,6 +87,85 @@ def validate_database(database: Path, manifest: dict) -> str:
     return actual
 
 
+def load_toolchain_metadata(path: Path) -> dict:
+    if not path.is_file():
+        raise PhreeqcToolchainError(
+            f"missing pinned PHREEQC toolchain metadata: {path}; "
+            "run install_ci.py before using the oracle"
+        )
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise PhreeqcToolchainError(
+            f"invalid pinned PHREEQC toolchain metadata: {path}: {error}"
+        ) from error
+    if not isinstance(value, dict):
+        raise PhreeqcToolchainError(
+            f"pinned PHREEQC toolchain metadata is not an object: {path}"
+        )
+    return value
+
+
+def validate_ci_toolchain_metadata(
+    metadata: Mapping[str, object],
+    *,
+    metadata_path: Path,
+    executable: Path,
+    database: Path,
+    executable_sha256: str,
+    database_sha256: str,
+    manifest: Mapping[str, object],
+) -> None:
+    def metadata_string(key: str) -> str:
+        value = metadata.get(key)
+        if not isinstance(value, str) or not value.strip():
+            raise PhreeqcToolchainError(
+                f"pinned PHREEQC toolchain metadata field {key!r} is missing or invalid: "
+                f"{metadata_path}"
+            )
+        return value
+
+    expected_tool = manifest.get("tool")
+    expected_version = manifest.get("version")
+    expected_source_sha256 = manifest.get("sourceSha256")
+    tool = metadata_string("tool")
+    version = metadata_string("version")
+    source_sha256 = metadata_string("sourceSha256")
+    executable_path = metadata_string("executable")
+    metadata_executable_sha256 = metadata_string("executableSha256")
+    database_path = metadata_string("database")
+    metadata_database_sha256 = metadata_string("databaseSha256")
+    if tool != expected_tool:
+        raise PhreeqcToolchainError(
+            f"pinned PHREEQC toolchain metadata has the wrong tool: {metadata_path}"
+        )
+    if version != expected_version:
+        raise PhreeqcToolchainError(
+            f"pinned PHREEQC toolchain version mismatch in {metadata_path}: "
+            f"expected {expected_version}, got {version}"
+        )
+    if source_sha256 != expected_source_sha256:
+        raise PhreeqcToolchainError(
+            f"pinned PHREEQC source checksum mismatch in {metadata_path}"
+        )
+    if Path(executable_path).resolve() != executable.resolve():
+        raise PhreeqcToolchainError(
+            f"pinned PHREEQC executable path mismatch in {metadata_path}"
+        )
+    if metadata_executable_sha256.lower() != executable_sha256.lower():
+        raise PhreeqcToolchainError(
+            f"pinned PHREEQC executable checksum mismatch in {metadata_path}"
+        )
+    if Path(database_path).resolve() != database.resolve():
+        raise PhreeqcToolchainError(
+            f"pinned PHREEQC database path mismatch in {metadata_path}"
+        )
+    if metadata_database_sha256.lower() != database_sha256.lower():
+        raise PhreeqcToolchainError(
+            f"pinned PHREEQC database checksum mismatch in {metadata_path}"
+        )
+
+
 def _default_cache(repo_root: Path, version: str) -> Path:
     configured = os.environ.get("CHEMREALM_PHREEQC_CACHE")
     return Path(configured) if configured else repo_root / "tools" / "oracle" / "phreeqc" / ".cache" / version
@@ -104,7 +185,8 @@ def resolve_toolchain(
     executable_name = manifest.get("executable", {}).get("binaryName", "phreeqc")
     if os.name == "nt" and executable_name == "phreeqc":
         executable_name = "phreeqc.exe"
-    executable = Path(env["PHREEQC_BIN"]) if env.get("PHREEQC_BIN") else cache / "bin" / executable_name
+    has_override = bool(env.get("PHREEQC_BIN"))
+    executable = Path(env["PHREEQC_BIN"]) if has_override else cache / "bin" / executable_name
     database = Path(env["PHREEQC_DATABASE"]) if env.get("PHREEQC_DATABASE") else cache / "database" / manifest["database"]["name"]
 
     if not executable.is_file():
@@ -112,14 +194,52 @@ def resolve_toolchain(
         suffix = " (CHEMREALM_REQUIRE_PHREEQC=1)" if required else ""
         raise PhreeqcToolchainError(f"PHREEQC executable is missing: {executable}{suffix}")
 
+    if has_override:
+        if env.get("CHEMREALM_ALLOW_UNVERIFIED_PHREEQC") != "1":
+            raise PhreeqcToolchainError(
+                "PHREEQC_BIN is an unverified developer override; set "
+                "CHEMREALM_ALLOW_UNVERIFIED_PHREEQC=1 for a local run, "
+                "but it cannot count as the pinned oracle"
+            )
+        if env.get("CHEMREALM_REQUIRE_PHREEQC") == "1":
+            raise PhreeqcToolchainError(
+                "a PHREEQC_BIN override cannot satisfy the pinned oracle "
+                "when CHEMREALM_REQUIRE_PHREEQC=1"
+            )
+        database_sha256 = validate_database(database, manifest)
+        return PhreeqcToolchain(
+            executable=executable,
+            database=database,
+            version="unverified-override",
+            manifest=manifest,
+            executable_sha256=sha256_file(executable),
+            database_sha256=database_sha256,
+            identity_verified=False,
+            identity_source="PHREEQC_BIN override",
+        )
+
     database_sha256 = validate_database(database, manifest)
+    executable_sha256 = sha256_file(executable)
+    metadata_path = cache / "toolchain.json"
+    metadata = load_toolchain_metadata(metadata_path)
+    validate_ci_toolchain_metadata(
+        metadata,
+        metadata_path=metadata_path,
+        executable=executable,
+        database=database,
+        executable_sha256=executable_sha256,
+        database_sha256=database_sha256,
+        manifest=manifest,
+    )
     return PhreeqcToolchain(
         executable=executable,
         database=database,
         version=version,
         manifest=manifest,
-        executable_sha256=sha256_file(executable),
+        executable_sha256=executable_sha256,
         database_sha256=database_sha256,
+        identity_verified=True,
+        identity_source="CI toolchain metadata",
     )
 
 
@@ -218,6 +338,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         "output": str(result.output_path),
         "executableSha256": result.toolchain.executable_sha256,
         "databaseSha256": result.toolchain.database_sha256,
+        "identityVerified": result.toolchain.identity_verified,
+        "identitySource": result.toolchain.identity_source,
     }, indent=2))
     return 0
 

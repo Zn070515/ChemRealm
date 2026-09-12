@@ -48,6 +48,23 @@ describe("production acid-base SolverAdapter", () => {
     },
   );
 
+  it.each(["HCl", "NaOH"] as const)(
+    "classifies the exact 0.5 mol/kg %s boundary by the converged domain",
+    async (soluteId) => {
+      const result = await createAcidBaseAdapter().solve(
+        request([{
+          soluteId,
+          amount: mol(0.5),
+          mode: "fully-dissociated",
+        }]),
+      );
+
+      expect(result.status).toBe("MODEL_OUT_OF_DOMAIN");
+      if (result.status !== "MODEL_OUT_OF_DOMAIN") throw new Error("wrong status");
+      expect(result.reason).toMatch(/ionic strength/i);
+    },
+  );
+
   it("solves a strong-acid request asynchronously with complete ScientificState", async () => {
     const adapter = createAcidBaseAdapter();
     const pending = adapter.solve(

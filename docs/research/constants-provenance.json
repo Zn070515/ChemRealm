@@ -22,8 +22,20 @@
       "canonicalSignificantDigits": 5,
       "sourceLiteral": "pKa=4.7560",
       "sourceSignificantDigits": 5,
+      "sourceDecimalPlaces": 4,
+      "sourceUncertainty": {
+        "absolute": 0.00005,
+        "unit": "pKa",
+        "basis": "half the last reported decimal place"
+      },
+      "transform": "Ka = 10^(-pKa)",
+      "propagatedPrecision": {
+        "relativeUncertaintyUpperBound": 0.000116,
+        "effectiveSignificantDigits": 3
+      },
+      "claimedSignificantDigits": 3,
       "kind": "derived",
-      "derivation": "10^(-pKa), frozen as the displayed canonical decimal and not recomputed at runtime.",
+      "derivation": "10^(-pKa), frozen as the displayed canonical decimal and not recomputed at runtime; source precision is propagated from the logarithmic pKa uncertainty.",
       "citation": "https://pubs.usgs.gov/of/1990/0408/report.pdf",
       "condition": "aqueous, 25 degC"
     },

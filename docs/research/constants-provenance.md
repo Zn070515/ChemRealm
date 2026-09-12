@@ -23,13 +23,23 @@ must be recorded here first.
 `Ka_HOAc` is stored as the derived decimal shown above so the replay identity
 is stable. It must not be recomputed from a different rounded pKa at runtime.
 The implementation must still assert that a request's HOAc `ka` exactly equals
-this frozen value.
+this frozen value. The five digits in the stored IEEE-754/JSON value describe
+the frozen representation, not five source-supported significant digits: the
+source reports `pKa = 4.7560`, so half of its last decimal place gives an
+absolute uncertainty of ±`0.00005 pKa`. Under `Ka = 10^(-pKa)`, that propagates
+to an approximately `1.16e-4` relative uncertainty bound, or three effective
+significant digits. This distinction is recorded in the machine-readable
+`sourceDecimalPlaces`, `sourceUncertainty`, `transform`, and
+`propagatedPrecision` fields.
 
 The machine-readable companion [`constants-provenance.json`](constants-provenance.json)
-records the source literal, source significant digits, canonical value, and
-canonical significant digits for every numeric solver-identity parameter. The
-trailing zeros sometimes used in explanatory prose are display formatting, not
-additional source precision; the JSON record is the precision authority.
+records the source literal, source precision, canonical value, and the
+precision semantics for every numeric solver-identity parameter. Directly
+sourced values use significant digits; logarithmic derivations record the
+source decimal places and propagated uncertainty instead of treating pKa
+digits as if they were Ka digits. The trailing zeros sometimes used in
+explanatory prose are display formatting, not additional source precision; the
+JSON record is the precision authority.
 
 ## Scenario-frozen indicator inputs
 

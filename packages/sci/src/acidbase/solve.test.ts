@@ -176,11 +176,9 @@ describe("nested reduced acid-base solve", () => {
       constants: DEFAULT_ACID_BASE_CONSTANTS,
     });
     expect(outside).toMatchObject({
-      kind: "NOT_CONVERGED",
-      code: "OUTER_BRACKET_NOT_FOUND",
-      reason: expect.stringContaining("outer charge-balance bracket"),
+      kind: "OUT_OF_DOMAIN",
+      reason: expect.stringContaining("converged ionic strength"),
     });
-    expect("residual" in outside).toBe(false);
     expect("species" in outside).toBe(false);
   });
 
@@ -190,7 +188,7 @@ describe("nested reduced acid-base solve", () => {
       constants: DEFAULT_ACID_BASE_CONSTANTS,
     });
 
-    expect(result).toMatchObject({ kind: "NOT_CONVERGED" });
+    expect(result).toMatchObject({ kind: "OUT_OF_DOMAIN" });
     expect("species" in result).toBe(false);
   });
 

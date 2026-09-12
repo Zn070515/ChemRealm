@@ -52,10 +52,16 @@ def test_every_solver_identity_numeric_has_machine_readable_provenance() -> None
         assert record["sourceSignificantDigits"] > 0
         assert isinstance(record["canonicalSignificantDigits"], int)
         assert record["canonicalSignificantDigits"] > 0
-        assert (
-            record["canonicalSignificantDigits"]
-            <= record["sourceSignificantDigits"]
-        )
+        if record["kind"] == "derived":
+            assert record["claimedSignificantDigits"] <= record["canonicalSignificantDigits"]
+            assert record["propagatedPrecision"]["effectiveSignificantDigits"] == record[
+                "claimedSignificantDigits"
+            ]
+        else:
+            assert (
+                record["canonicalSignificantDigits"]
+                <= record["sourceSignificantDigits"]
+            )
 
 
 def test_source_precision_is_explicit_for_the_pinned_water_constant() -> None:
@@ -66,3 +72,20 @@ def test_source_precision_is_explicit_for_the_pinned_water_constant() -> None:
     assert record["sourceSignificantDigits"] == 2
     assert record["canonicalValue"] == 1e-14
     assert record["canonicalSignificantDigits"] == 2
+
+
+def test_logarithmic_derivation_propagates_source_precision() -> None:
+    record = next(
+        item for item in load_provenance()["records"] if item["key"] == "Ka_HOAc"
+    )
+    assert record["sourceDecimalPlaces"] == 4
+    assert record["sourceUncertainty"] == {
+        "absolute": 0.00005,
+        "unit": "pKa",
+        "basis": "half the last reported decimal place",
+    }
+    assert record["transform"] == "Ka = 10^(-pKa)"
+    assert record["propagatedPrecision"]["effectiveSignificantDigits"] == 3
+    assert record["propagatedPrecision"]["relativeUncertaintyUpperBound"] == 0.000116
+    assert record["claimedSignificantDigits"] == 3
+    assert record["canonicalSignificantDigits"] == 5
