@@ -33,7 +33,7 @@ import {
   type WorldState as SchemaWorldState,
 } from "@chemrealm/schema";
 
-import { hashCanonical, quantizeTree } from "./hash.js";
+import { hashCanonical, quantize } from "./hash.js";
 
 function compareIds(a: string, b: string): number {
   return a < b ? -1 : a > b ? 1 : 0;
@@ -44,7 +44,7 @@ export type SerializedWorldState = SchemaWorldState;
 
 /** Content-address the self-contained genesis snapshot, including its units. */
 export function scenarioSnapshotHash(snapshot: SerializedScenarioSnapshot): string {
-  return `sha256:${hashCanonical(quantizeTree(snapshot))}`;
+  return `sha256:${hashCanonical(snapshot)}`;
 }
 
 export type RuntimeDataProvenance = DataProvenanceDto;
@@ -481,10 +481,47 @@ export function deepFreeze<T>(value: T): T {
   return value;
 }
 
-/** Hash only canonical state; the present cursor is a view and is excluded. */
+/**
+ * Project the state used for replay identity explicitly.
+ *
+ * Solver parameters, genesis inputs, provenance, and world structure are
+ * exact identity data. Only the independent conserved runtime quantities are
+ * quantized at their state boundary; derived science is not stored here.
+ */
+export type ReplayIdentityProjection = Omit<SerializedWorldState, "sequence">;
+
+export function replayIdentityProjection(state: WorldState): ReplayIdentityProjection {
+  const serialized = serializeWorldState(state);
+  return {
+    schemaVersion: serialized.schemaVersion,
+    worldId: serialized.worldId,
+    lineage: serialized.lineage,
+    solverConfig: serialized.solverConfig,
+    scenarioSnapshot: serialized.scenarioSnapshot,
+    vessels: serialized.vessels,
+    apparatus: serialized.apparatus,
+    attachments: serialized.attachments,
+    canonical: {
+      byVessel: Object.fromEntries(
+        Object.entries(serialized.canonical.byVessel).map(([vesselId, contents]) => [
+          vesselId,
+          {
+            waterMass: { value: quantize(contents.waterMass.value), unit: "kg" },
+            liquidVolume: { value: quantize(contents.liquidVolume.value), unit: "L" },
+            componentAmounts: contents.componentAmounts.map((entry) => ({
+              componentId: entry.componentId,
+              amount: { value: quantize(entry.amount.value), unit: "mol" },
+            })),
+          },
+        ]),
+      ),
+    },
+  };
+}
+
+/** Hash replay identity; the present sequence cursor is a view and excluded. */
 export function stateHash(state: WorldState): string {
-  const { sequence: _sequence, ...canonicalState } = serializeWorldState(state);
-  return hashCanonical(quantizeTree(canonicalState));
+  return hashCanonical(replayIdentityProjection(state));
 }
 
 /** Kept as a named alias because replay diagnostics call this a replay hash. */

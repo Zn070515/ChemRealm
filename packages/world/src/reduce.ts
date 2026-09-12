@@ -157,10 +157,11 @@ function transfer(
   // the invariant that prevents the target from receiving a second, already
   // decremented source value.
   const fraction = volume / source.liquidVolume;
-  const deltaWater =
+  const deltaWater = quantize(
     arithmeticPath === "perturbed"
       ? (source.waterMass / source.liquidVolume) * volume
-      : source.waterMass * fraction;
+      : source.waterMass * fraction,
+  );
   const sourceByComponent = new Map(
     source.componentAmounts.map((entry) => [entry.componentId, entry.amount] as const),
   );
@@ -173,10 +174,11 @@ function transfer(
   for (const componentId of componentIds) {
     const sourceAmount = sourceByComponent.get(componentId) ?? 0;
     const targetAmount = targetByComponent.get(componentId) ?? 0;
-    const delta =
+    const delta = quantize(
       arithmeticPath === "perturbed"
         ? (sourceAmount / source.liquidVolume) * volume
-        : sourceAmount * fraction;
+        : sourceAmount * fraction,
+    );
     sourceComponents.push({ componentId, amount: mol(sourceAmount - delta) });
     targetComponents.push({ componentId, amount: mol(targetAmount + delta) });
   }

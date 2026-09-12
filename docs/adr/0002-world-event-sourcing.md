@@ -163,7 +163,10 @@ and comparing the reconstructed identity and lineage against the live world's.
 - A snapshot is taken every `N` committed events (initial `N = 50`) and **always
   at a fork point**.
 - A snapshot stores: full serialized `WorldState`, its state hash, the sequence
-  number, schema version, and solver configuration.
+  number, schema version, solver configuration, the snapshot `worldId`, the
+  genesis `contentHash`, and an exact hash of the event-log prefix through the
+  snapshot sequence. Replay accepts a snapshot only when all of those bindings
+  match the current log; a snapshot from another world is ignored.
 - Snapshots are a **cache, not truth**. Deleting every snapshot must not change
   any computed result; it only makes replay slower. This is a testable invariant
   and is in `SPEC-0001`'s acceptance criteria.
@@ -254,8 +257,6 @@ is at least mechanically possible.
 
 1. Snapshot interval `N = 50` is a guess. It should be tuned against a measured
    replay-time budget at M8, and the number recorded here updated then.
-2. Should the fork's shared prefix be structural sharing (persistent data
-   structures) or copy-on-fork of the prefix? Copy-on-fork is simpler and
-   obviously correct; structural sharing is faster but needs an immutability
-   library. **Leaning: copy-on-fork at v0**, since a world state is small (a few
-   vessels, tens of species) and correctness beats cleverness here.
+2. Nested branch persistence and compaction are deferred to M8. M2 resolves
+   the v0 representation as an immutable shared prefix plus an owned suffix;
+   only the portability/export boundary materializes a flattened log.

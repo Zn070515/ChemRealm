@@ -108,9 +108,12 @@ Three distinct levels, never conflated:
 never quantized independently.** Quantizing them separately is what accumulates
 drift, because each rounding is an independent error that no constraint corrects.
 
-A transfer is quantized **once**, in the event payload, and applied as an exact
-zero-sum update: `n_from -= d; n_to += d`. Measured drift 1.39e-15 over 100
-transfers, indistinguishable from the unquantized float baseline of 1.25e-15.
+A transfer's volume is canonicalized at the event boundary. For each conserved
+independent quantity, the reducer then computes its pre-transfer delta and
+quantizes that delta **once**, applying the same value as an exact zero-sum
+update: `d = quantize(n_source * fraction); n_source -= d; n_target += d`.
+Water mass uses the same rule. Measured drift is 1.39e-15 over 100 transfers,
+indistinguishable from the unquantized float baseline of 1.25e-15.
 
 Quantization remains `Number(v.toPrecision(12))`. `toPrecision` is
 algorithmically specified for exact decimal conversion and is deterministic.
@@ -150,13 +153,16 @@ are never quantized — so they cannot disagree.
 Two hashes, with different jobs:
 
 ```
-replayHash  = SHA-256( canonicalJson( quantized( canonicalState ) ) )
+replayHash  = SHA-256( canonicalJson( ReplayIdentityProjection ) )
 scienceHash = SHA-256( canonicalJson( quantized( derivedScience ) ) )
 ```
 
-- **`replayHash`** covers the independent state and defines replay equality and
-  persistence identity. A mismatch means the *inputs* diverged — the strongest
-  possible signal, and it is what the event log is folded against.
+- **`replayHash`** covers an explicit replay-identity projection. Solver
+  configuration, genesis snapshot, provenance, structure, lineage, and IDs are
+  exact; only canonical independent runtime quantities are quantized. It
+  defines replay equality and persistence identity. A mismatch means the
+  *inputs* diverged — the strongest possible signal, and it is what the event
+  log is folded against.
 - **`scienceHash`** covers derived observables and is a **verification artifact**.
   It is what detects a solver regression, since derived values are recomputed
   rather than replayed (`ADR-0002`). It is not persisted as truth.

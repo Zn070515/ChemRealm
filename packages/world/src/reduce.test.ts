@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { WORLD_CREATED } from "../test/fixtures.js";
+import { quantize } from "./hash.js";
 import { createInitialState } from "./state.js";
 import { reduce, WorldRuntimeError } from "./reduce.js";
 
@@ -69,6 +70,49 @@ describe("World Runtime reducer", () => {
     expect(transferred.canonical.byVessel.burette.componentAmounts).toEqual([
       { componentId: "HCl", amount: expect.closeTo(0.0045, 14) },
     ]);
+  });
+
+  it("quantizes each conserved transfer delta once before the zero-sum update", () => {
+    const genesis = createInitialState(WORLD_CREATED);
+    const charged = reduce(genesis, {
+      seq: 1,
+      schemaVersion: 1,
+      type: "MaterialCharged",
+      payload: {
+        vesselId: "flask",
+        materialId: "hcl-0.1",
+        volume: { value: 117, unit: "mL" },
+      },
+    });
+    const transferred = reduce(charged, {
+      seq: 2,
+      schemaVersion: 1,
+      type: "TransferCommitted",
+      payload: {
+        fromVesselId: "flask",
+        toVesselId: "burette",
+        volume: { value: 13, unit: "mL" },
+        mechanism: "pipette",
+      },
+    });
+
+    const source = charged.canonical.byVessel.flask;
+    const fraction = 0.013 / source.liquidVolume;
+    const expectedWaterDelta = quantize(source.waterMass * fraction);
+    const sourceComponentAmount = source.componentAmounts[0]?.amount ?? 0;
+    const expectedComponentDelta = quantize(sourceComponentAmount * fraction);
+    const target = transferred.canonical.byVessel.burette;
+
+    expect(target.waterMass).toBe(expectedWaterDelta);
+    expect(target.componentAmounts).toEqual([
+      { componentId: "HCl", amount: expectedComponentDelta },
+    ]);
+    expect(transferred.canonical.byVessel.flask.waterMass).toBe(
+      source.waterMass - expectedWaterDelta,
+    );
+    expect(transferred.canonical.byVessel.flask.componentAmounts[0]?.amount).toBe(
+      sourceComponentAmount - expectedComponentDelta,
+    );
   });
 
   it("rejects an event that is not the next sequence boundary", () => {

@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { WORLD_CREATED } from "../test/fixtures.js";
-import { createInitialState } from "./state.js";
+import { createLog } from "./log.js";
+import { createInitialState, scenarioSnapshotHash } from "./state.js";
 import { createSnapshot, shouldSnapshot, validateSnapshot } from "./snapshot.js";
 
 describe("World Runtime snapshots", () => {
@@ -14,21 +15,45 @@ describe("World Runtime snapshots", () => {
 
   it("stores a validated full state cache and its hash", () => {
     const state = createInitialState(WORLD_CREATED);
-    const snapshot = createSnapshot(state, "interval");
+    const snapshot = createSnapshot(state, "interval", createLog(WORLD_CREATED));
 
     expect(snapshot.sequence).toBe(0);
     expect(snapshot.stateHash).toHaveLength(64);
+    expect(snapshot.worldId).toBe("w-1");
+    expect(snapshot.genesisContentHash).toBe(WORLD_CREATED.payload.contentHash);
+    expect(snapshot.prefixHash).toMatch(/^sha256:[0-9a-f]{64}$/);
     expect(validateSnapshot(snapshot)).toEqual(snapshot);
     expect(Object.isFrozen(snapshot)).toBe(true);
   });
 
   it("rejects a cache with a changed state or unknown reason", () => {
-    const snapshot = createSnapshot(createInitialState(WORLD_CREATED), "interval");
+    const snapshot = createSnapshot(createInitialState(WORLD_CREATED), "interval", createLog(WORLD_CREATED));
     expect(() => validateSnapshot({ ...snapshot, stateHash: "sha256:wrong" })).toThrow();
     expect(() => validateSnapshot({ ...snapshot, reason: "manual" })).toThrow();
     expect(() => validateSnapshot({
       ...snapshot,
       solverConfig: { ...snapshot.solverConfig, parameters: { Kw: 1e-13 } },
     })).toThrow();
+  });
+
+  it("accepts a snapshot when genesis used an equivalent authoring unit", () => {
+    const authoredGenesis = {
+      ...WORLD_CREATED,
+      payload: {
+        ...WORLD_CREATED.payload,
+        scenarioSnapshot: {
+          ...WORLD_CREATED.payload.scenarioSnapshot,
+          modelRequirements: {
+            ...WORLD_CREATED.payload.scenarioSnapshot.modelRequirements,
+            temperature: { value: 25, unit: "degC" as const },
+          },
+        },
+      },
+    };
+    authoredGenesis.payload.contentHash = scenarioSnapshotHash(authoredGenesis.payload.scenarioSnapshot);
+    const log = createLog(authoredGenesis);
+    const snapshot = createSnapshot(createInitialState(authoredGenesis), "interval", log);
+
+    expect(validateSnapshot(snapshot)).toEqual(snapshot);
   });
 });

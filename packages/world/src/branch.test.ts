@@ -3,12 +3,12 @@ import { describe, expect, it } from "vitest";
 import { WORLD_CREATED } from "../test/fixtures.js";
 import { appendEvent, createLog } from "./log.js";
 import { reduce } from "./reduce.js";
-import { replay } from "./replay.js";
+import { replayBranch } from "./replay.js";
 import { createInitialState, stateHash } from "./state.js";
-import { forkWorld } from "./branch.js";
+import { appendBranchEvent, forkWorld } from "./branch.js";
 
 describe("World Runtime branches", () => {
-  it("records a flattened child lineage and keeps the parent immutable", () => {
+  it("stores a shared immutable prefix and child suffix without flattening", () => {
     const genesis = createInitialState(WORLD_CREATED);
     const parentEvent = {
       seq: 1,
@@ -31,7 +31,9 @@ describe("World Runtime branches", () => {
       forkSequence: 1,
       forkStateHash: parentHash,
     });
-    expect(branch.log).toHaveLength(3);
+    expect(branch.log.prefix).toBe(parentLog);
+    expect(branch.log.suffix).toHaveLength(1);
+    expect(branch.log.suffix[0]).toEqual(branch.event);
     expect(branch.state.worldId).toBe("w-child");
     expect(branch.state.lineage.parentWorldId).toBe("w-1");
     expect(stateHash(parentState)).toBe(parentHash);
@@ -50,10 +52,14 @@ describe("World Runtime branches", () => {
         volume: { value: 5, unit: "mL" as const },
       },
     };
-    const childLog = appendEvent(branch.log, childEvent);
-    const childReplay = replay(childLog);
+    const childLog = appendBranchEvent(branch.log, childEvent);
+    const childReplay = replayBranch(childLog);
+    const childReplayFromForkSnapshot = replayBranch(childLog, {
+      snapshots: [branch.forkSnapshot],
+    });
     expect(childReplay.state.worldId).toBe("w-child");
     expect(childReplay.state.canonical.byVessel.flask?.liquidVolume).toBeCloseTo(0.015, 14);
+    expect(childReplayFromForkSnapshot.state).toEqual(childReplay.state);
     expect(stateHash(parentState)).toBe(parentHash);
   });
 

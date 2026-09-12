@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { WORLD_CREATED } from "../test/fixtures.js";
 import { emitCommand } from "./command.js";
+import { quantize } from "./hash.js";
 import { appendEvent, createLog } from "./log.js";
 import { reduce } from "./reduce.js";
 import { replay } from "./replay.js";
@@ -77,7 +78,7 @@ describe("World Runtime replay", () => {
 
   it("gets the same final state when every snapshot is deleted", () => {
     const { log, state } = eventLog(60);
-    const snapshot = createSnapshot(state, "interval");
+    const snapshot = createSnapshot(state, "interval", log);
     const withSnapshot = replay(log, { snapshots: [snapshot] });
     const withoutSnapshots = replay(log, { snapshots: [] });
 
@@ -87,9 +88,25 @@ describe("World Runtime replay", () => {
 
   it("ignores a corrupt snapshot cache and replays from the log", () => {
     const { log, state } = eventLog(60);
-    const snapshot = createSnapshot(state, "interval");
+    const snapshot = createSnapshot(state, "interval", log);
     const corrupt = { ...snapshot, stateHash: "sha256:corrupt" };
     expect(replay(log, { snapshots: [corrupt] }).replayHash).toBe(replay(log).replayHash);
+  });
+
+  it("ignores a self-consistent snapshot from a different event-log prefix", () => {
+    const { log } = eventLog(3);
+    const foreignGenesis = {
+      ...WORLD_CREATED,
+      payload: { ...WORLD_CREATED.payload, worldId: "w-foreign" },
+    };
+    const foreignLog = createLog(foreignGenesis);
+    const foreignSnapshot = createSnapshot(
+      createInitialState(foreignGenesis),
+      "interval",
+      foreignLog,
+    );
+
+    expect(replay(log, { snapshots: [foreignSnapshot] }).state).toEqual(replay(log).state);
   });
 
   it("rejects a serialized log that does not start at genesis", () => {
@@ -123,8 +140,37 @@ describe("World Runtime replay", () => {
     };
     const initial = totals(before);
     const final = totals(after);
-    expect(Math.abs(final.waterMass - initial.waterMass)).toBeLessThanOrEqual(1e-13);
-    expect(Math.abs(final.liquidVolume - initial.liquidVolume)).toBeLessThanOrEqual(1e-13);
-    expect(Math.abs((final.components.get("HCl") ?? 0) - (initial.components.get("HCl") ?? 0))).toBeLessThanOrEqual(1e-13);
+    const relativeError = (actual: number, expected: number) =>
+      Math.abs(actual - expected) / Math.max(Math.abs(expected), Number.EPSILON);
+    expect(relativeError(final.waterMass, initial.waterMass)).toBeLessThanOrEqual(1e-13);
+    expect(relativeError(final.liquidVolume, initial.liquidVolume)).toBeLessThanOrEqual(1e-13);
+    expect(relativeError(final.components.get("HCl") ?? 0, initial.components.get("HCl") ?? 0)).toBeLessThanOrEqual(1e-13);
+  });
+
+  it("fails the independently-quantized vessel strategy used as the AC-R9 design guard", () => {
+    const N_A = 0.1;
+    const steps = 100;
+    let worstCorrect = 0;
+    let worstWrong = 0;
+    for (let trial = 0; trial < 500; trial += 1) {
+      const fraction = 1 / 200 + trial * 1e-9;
+      let correctFrom = N_A;
+      let correctTo = 0;
+      let wrongFrom = quantize(N_A);
+      let wrongTo = quantize(0);
+      for (let step = 0; step < steps; step += 1) {
+        const correctDelta = Number((correctFrom * fraction).toPrecision(12));
+        correctFrom -= correctDelta;
+        correctTo += correctDelta;
+        const wrongDelta = wrongFrom * fraction;
+        wrongFrom = Number((wrongFrom - wrongDelta).toPrecision(12));
+        wrongTo = Number((wrongTo + wrongDelta).toPrecision(12));
+      }
+      worstCorrect = Math.max(worstCorrect, Math.abs(correctFrom + correctTo - N_A) / N_A);
+      worstWrong = Math.max(worstWrong, Math.abs(wrongFrom + wrongTo - N_A) / N_A);
+    }
+
+    expect(worstCorrect).toBeLessThanOrEqual(1.4e-14);
+    expect(worstWrong).toBeGreaterThan(1e-13);
   });
 });

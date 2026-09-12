@@ -119,6 +119,33 @@ describe("WorldState domain boundary", () => {
     );
   });
 
+  it("keeps solver parameters exact in replay identity", () => {
+    const serialized = serializeWorldState(createInitialState(WORLD_CREATED));
+    const changed = {
+      ...serialized,
+      solverConfig: {
+        ...serialized.solverConfig,
+        parameters: { Kw: 1e-14 + 1e-28 },
+      },
+    };
+
+    expect(stateHash(parseWorldState(changed))).not.toBe(stateHash(parseWorldState(serialized)));
+  });
+
+  it("keeps genesis snapshot checksums exact instead of quantizing all numbers", () => {
+    const changed = {
+      ...WORLD_CREATED.payload.scenarioSnapshot,
+      modelRequirements: {
+        ...WORLD_CREATED.payload.scenarioSnapshot.modelRequirements,
+        temperature: { value: 298.15 + 1e-10, unit: "K" as const },
+      },
+    };
+
+    expect(scenarioSnapshotHash(changed)).not.toBe(
+      scenarioSnapshotHash(WORLD_CREATED.payload.scenarioSnapshot),
+    );
+  });
+
   it("rejects a genesis snapshot whose content checksum is stale", () => {
     const stale = {
       ...WORLD_CREATED,

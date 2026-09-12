@@ -1121,15 +1121,19 @@ This is the fix for owner finding P1-2 and it is load-bearing (`ADR-0007` §3):
 | **Derived science** | molalities, activities, `γ`, `I_m`, model pH, species | no | no | recomputed on demand |
 
 Species, activities, and ionic strength are **derived and never quantized
-independently**. The measured consequence (`spikes/numeric-policy`): quantizing
-independent per-vessel quantities drifts `4.0e-12` over 100 transfers, while
-quantizing the transfer amount once drifts `1.4e-15` — a ~3000× difference, and
-the wrong choice is invisible in any single step.
+independently**. A transfer computes each conserved independent delta from the
+pre-transfer state, quantizes that delta once, and applies the same delta to
+source and target. The measured consequence (`spikes/numeric-policy`):
+quantizing independent per-vessel quantities drifts `4.0e-12` over 100
+transfers, while quantizing the transfer delta once drifts `1.4e-15` — a ~3000×
+difference, and the wrong choice is invisible in any single step.
 
 Two hashes follow from the split:
 
-- **`replayHash`** over the canonical state — defines replay equality and
-  persistence identity.
+- **`replayHash`** over an explicit replay-identity projection — solver
+  configuration, genesis snapshot, provenance, lineage, IDs, and structure are
+  exact, while only canonical independent runtime quantities are quantized;
+  this defines replay equality and persistence identity.
 - **`scienceHash`** over the derived science — a verification artifact that
   detects a solver regression, since derived values are recomputed rather than
   replayed.
@@ -1266,7 +1270,10 @@ external dependency.
   different number of steps, and the pedagogically meaningful comparison is at
   equal volume.
 - **Snapshots:** every 50 events and always at fork points. A cache, not truth —
-  deleting all snapshots must not change any result (AC-R5).
+  deleting all snapshots must not change any result (AC-R5). Each cache binds
+  its world identity, genesis content hash, solver configuration, and exact
+  event-log prefix hash through its sequence; a foreign or stale-prefix cache
+  is ignored.
 
 ### Persistence and export
 
@@ -1673,7 +1680,7 @@ Binary and verifiable. Every criterion maps to an evidence method.
 | AC-R7 | 500-event replay completes in < 2 s | benchmark |
 | AC-R8 | World export → import round-trips to an identical state hash | persistence test |
 | AC-R9 | **Design guard.** Conservation after canonicalization ≤ 1e-13 relative over 100 transfers, **and** the "quantize each vessel independently" strategy demonstrably fails this threshold (measured 4.0e-12 vs 1.4e-15) | regression test derived from `spikes/numeric-policy` |
-| AC-R10 | The reducer quantizes **only** canonical independent state; no derived quantity is ever quantized independently | static check + review of the single quantization call site |
+| AC-R10 | The reducer quantizes **only** canonical independent state; no derived quantity is ever quantized independently, and each conserved transfer delta is quantized once | static check + review of the explicit reducer delta boundaries |
 | AC-R11 | `canonicalJson` normalizes `-0` to `0` and rejects `NaN`/`±Infinity` | unit test with the adversarial values |
 | AC-R12 | **Replay completeness.** Delete or corrupt every file under `content/`, then replay a serialized world: `replayHash` is unchanged. The log is self-contained | test that moves `content/` aside and replays |
 | AC-R13 | `liquidVolume` is updated only by transfer and enters `replayHash`; a change in it changes the hash | hash-diff test over a transfer |

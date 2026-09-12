@@ -37,9 +37,15 @@ for (const file of files) {
 const sourceByName = Object.fromEntries(
   files.map((file) => [file.slice(SOURCE.length + 1).replaceAll("\\", "/"), readFileSync(file, "utf8")]),
 );
-const reducerQuantizers = sourceByName["reduce.ts"]?.match(/\bquantize\s*\(/g) ?? [];
-if (reducerQuantizers.length !== 1 || !sourceByName["reduce.ts"]?.includes("function canonicalVolume")) {
-  fail("reduce.ts: exactly one quantization boundary must canonicalize event volume");
+const reducerSource = sourceByName["reduce.ts"] ?? "";
+const reducerQuantizers = reducerSource.match(/\bquantize\s*\(/g) ?? [];
+if (
+  reducerQuantizers.length !== 3 ||
+  !reducerSource.includes("function canonicalVolume") ||
+  !reducerSource.includes("const deltaWater = quantize(") ||
+  !reducerSource.includes("const delta = quantize(")
+) {
+  fail("reduce.ts: canonical volume and each conserved transfer delta must be quantized once");
 }
 const commandQuantizers = sourceByName["command.ts"]?.match(/\bquantize\s*\(/g) ?? [];
 if (commandQuantizers.length !== 1 || !sourceByName["command.ts"]?.includes("function canonicalVolume")) {
@@ -47,6 +53,16 @@ if (commandQuantizers.length !== 1 || !sourceByName["command.ts"]?.includes("fun
 }
 if (sourceByName["reduce.ts"]?.includes("scienceHash") || sourceByName["reduce.ts"]?.includes("deriveScience")) {
   fail("reduce.ts: derived science must remain outside the world reducer");
+}
+const stateSource = sourceByName["state.ts"] ?? "";
+if (
+  !stateSource.includes("function replayIdentityProjection") ||
+  !stateSource.includes("quantize(contents.waterMass.value)") ||
+  !stateSource.includes("quantize(contents.liquidVolume.value)") ||
+  !stateSource.includes("quantize(entry.amount.value)") ||
+  stateSource.includes("quantizeTree(canonicalState)")
+) {
+  fail("state.ts: replay identity must explicitly quantize only canonical independent contents");
 }
 
 if (failures.length > 0) {
@@ -56,6 +72,6 @@ if (failures.length > 0) {
 }
 
 console.log(`ok    World Runtime static contract (${files.length} production modules)`);
-console.log("ok    quantization is limited to command/reducer event boundaries and hash policy");
+console.log("ok    quantization is limited to command/reducer boundaries and explicit hash projections");
 console.log("ok    no Node-only, clock, or unseeded randomness dependency");
 console.log("\nRESULT: PASS");

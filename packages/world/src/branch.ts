@@ -5,19 +5,25 @@ import { CURRENT_SCHEMA_VERSION, type DomainEvent } from "@chemrealm/schema";
 import { appendEvent, type EventLog } from "./log.js";
 import { reduce } from "./reduce.js";
 import { createSnapshot, type WorldSnapshot } from "./snapshot.js";
-import { stateHash, type WorldState } from "./state.js";
+import { deepFreeze, stateHash, type WorldState } from "./state.js";
+
+/** Internal branch storage: an immutable shared prefix plus an own suffix. */
+export interface BranchLog {
+  readonly prefix: EventLog;
+  readonly suffix: EventLog;
+  readonly forkSequence: number;
+}
 
 export interface ForkResult {
   readonly event: Extract<DomainEvent, { type: "WorldBranched" }>;
-  readonly log: EventLog;
+  readonly log: BranchLog;
   readonly state: WorldState;
   readonly forkSnapshot: WorldSnapshot;
 }
 
 /**
  * Fork at the supplied present state. The parent log is never mutated; the
- * child log is a flattened prefix plus its branch marker, which is portable
- * without access to the parent (`ADR-0005`).
+ * child stores the parent log by reference and owns only its suffix.
  */
 export function forkWorld(
   parentState: WorldState,
@@ -44,14 +50,28 @@ export function forkWorld(
       forkStateHash: stateHash(parentState),
     },
   };
-  const log = appendEvent(parentLog, event);
+  const log = deepFreeze({
+    prefix: parentLog,
+    suffix: deepFreeze([event]),
+    forkSequence: parentState.sequence,
+  });
   const state = reduce(parentState, event);
   return {
     event,
     log,
     state,
-    forkSnapshot: createSnapshot(parentState, "fork"),
+    forkSnapshot: createSnapshot(parentState, "fork", parentLog),
   };
+}
+
+/** Append an event to a branch-owned suffix without copying the shared prefix. */
+export function appendBranchEvent(branch: BranchLog, input: unknown): BranchLog {
+  const suffix = appendEvent(branch.suffix, input);
+  return deepFreeze({
+    prefix: branch.prefix,
+    suffix,
+    forkSequence: branch.forkSequence,
+  });
 }
 
 function reduceLogTip(log: EventLog): WorldState {

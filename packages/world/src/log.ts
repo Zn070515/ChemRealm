@@ -7,10 +7,16 @@ import {
 } from "@chemrealm/schema";
 
 import { canonicalizeDomainEvent } from "./command.js";
+import { hashCanonical } from "./hash.js";
 import { createInitialState, deepFreeze } from "./state.js";
 import { WorldRuntimeError } from "./reduce.js";
 
 export type EventLog = readonly DomainEvent[];
+
+/** Hash the exact event identity in a prefix; human-only metadata is ignored. */
+export function eventPrefixHash(log: EventLog): string {
+  return `sha256:${hashCanonical(log.map(({ meta: _meta, ...identity }) => identity))}`;
+}
 
 function fail(code: string, detail: string): never {
   throw new WorldRuntimeError(code, detail);

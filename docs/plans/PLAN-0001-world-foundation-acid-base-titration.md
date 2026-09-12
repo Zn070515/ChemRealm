@@ -421,8 +421,12 @@ M4 can supply the real one without touching this package.
    size of the next transfer**, so it is state, not a display value (AC-R13).
    Species, activities, and ionic strength are **derived** and never quantized
    independently (`ADR-0007` §3).
-2. `quantize(v) = Number(v.toPrecision(12))`, **one** call site, applied to
-   canonical independent state and to the transfer amount in the event payload.
+2. `quantize(v) = Number(v.toPrecision(12))`. Event volumes are canonicalized
+   at the command/log boundary; each conserved transfer delta (water mass and
+   every component amount) is quantized once and the same delta is applied to
+   source and target. Replay identity uses an explicit projection: metadata,
+   solver inputs, provenance, and structure remain exact, while only canonical
+   independent runtime quantities are quantized.
 3. `canonicalJson`: sorted keys, specified shortest round-trip formatting,
    **normalize `-0` to `0`**, **reject `NaN`/`±Infinity`**.
 4. Reducer enforces `event.seq === state.sequence + 1`; strict sequential replay.
@@ -441,7 +445,7 @@ M4 can supply the real one without touching this package.
 |---|---|
 | Replay of a 500-event log: hash identical at every boundary, run twice | AC-R1, AC-R2 |
 | Same log replayed through a **perturbed arithmetic path** (an extra `+0.0`, a different but equivalent grouping) yields the same quantized hash | AC-R3 — the cross-engine proxy |
-| **Conservation after canonicalization ≤ 1e-13 over 100 transfers** | AC-R9 |
+| **Relative conservation after canonicalization ≤ 1e-13 over 100 transfers** | AC-R9 |
 | **The "quantize each vessel independently" strategy FAILS the above** (measured 4.0e-12 vs 1.4e-15) | AC-R9 design guard — the wrong design must be caught here, not in production |
 | Static check: no derived quantity passes through the quantization call site | AC-R10 |
 | `canonicalJson` normalizes `-0`, rejects `NaN`/`Infinity` | AC-R11 |
