@@ -393,6 +393,31 @@ describe("scientific contract carries the model's identity and validity", () => 
       status: "MODEL_OUT_OF_DOMAIN",
       reason: "temperature outside the model's range",
     });
+    expect(refused.success).toBe(false);
+  });
+
+  it("requires an actionable nearest-supported descriptor for refusal", () => {
+    const refused = SolveResultSchema.safeParse({
+      schemaVersion: 1,
+      status: "MODEL_OUT_OF_DOMAIN",
+      reason: "temperature outside the model's range",
+      nearestSupported: {
+        id: "test-solver",
+        version: "1.0.0",
+        description: "contract test",
+        validity: {
+          temperature: {
+            min: { value: 273.15, unit: "K" },
+            max: { value: 373.15, unit: "K" },
+          },
+          ionicStrengthMolalMax: { value: 0.5, unit: "mol/kg" },
+          species: ["H+"],
+          solvent: "water",
+          phase: "aqueous",
+          activityCorrected: true,
+        },
+      },
+    });
     expect(refused.success).toBe(true);
   });
 
@@ -787,7 +812,7 @@ describe("DTOs parse into domain quantities, not bare numbers", () => {
       {
         soluteId: "HCl",
         amount: { value: 0.005, unit: "mol" },
-        fullyDissociated: true,
+        mode: "fully-dissociated",
       },
     ],
     temperature: { value: 298.15, unit: "K" },
@@ -811,9 +836,43 @@ describe("DTOs parse into domain quantities, not bare numbers", () => {
     expect(req.waterMass).toBeCloseTo(0.998, 15);
     expect(req.liquidVolume).toBeCloseTo(0.05, 15);
     expect(req.solutes[0]!.amount).toBeCloseTo(0.005, 15);
-    // Absent `Ka` means the model treats it as fully dissociated; it must not
-    // become a zero that a later reader mistakes for a real constant.
-    expect(req.solutes[0]!.ka).toBeUndefined();
+    expect(req.solutes[0]!.mode).toBe("fully-dissociated");
+  });
+
+  it("requires Ka only for the monoprotic-equilibrium solute mode", () => {
+    const weak = structuredClone(requestDto);
+    weak.solutes[0] = {
+      soluteId: "HA",
+      amount: { value: 0.005, unit: "mol" },
+      mode: "monoprotic-equilibrium",
+      ka: { value: 1.8e-5, unit: "1" },
+    };
+    const parsed = SolveRequestSchema.parse(weak);
+    const req = parseSolveRequest(parsed);
+    expect(req.solutes[0]!.mode).toBe("monoprotic-equilibrium");
+    if (req.solutes[0]!.mode !== "monoprotic-equilibrium") {
+      throw new Error("expected equilibrium solute");
+    }
+    expect(req.solutes[0]!.ka.value).toBeCloseTo(1.8e-5, 20);
+  });
+
+  it("rejects contradictory or incomplete solute mode data", () => {
+    const withKaOnStrong = structuredClone(requestDto);
+    withKaOnStrong.solutes[0] = {
+      soluteId: "HCl",
+      amount: { value: 0.005, unit: "mol" },
+      mode: "fully-dissociated",
+      ka: { value: 1.8e-5, unit: "1" },
+    };
+    const withoutKaOnEquilibrium = structuredClone(requestDto);
+    withoutKaOnEquilibrium.solutes[0] = {
+      soluteId: "HA",
+      amount: { value: 0.005, unit: "mol" },
+      mode: "monoprotic-equilibrium",
+    };
+
+    expect(SolveRequestSchema.safeParse(withKaOnStrong).success).toBe(false);
+    expect(SolveRequestSchema.safeParse(withoutKaOnEquilibrium).success).toBe(false);
   });
 
   it("canonicalizes non-canonical wire units before constructing the domain", () => {

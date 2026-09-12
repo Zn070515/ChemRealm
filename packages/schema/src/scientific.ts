@@ -377,6 +377,35 @@ export function parseScientificState(dto: ScientificStateDto): ScientificState {
  * before the core sees them. That keeps the core testable with no world, no
  * storage, and no browser.
  */
+export const SolveRequestSoluteSchema = z.discriminatedUnion("mode", [
+  z.strictObject({
+    soluteId: z.string().min(1),
+    amount: quantityOfDimension("amount"),
+    mode: z.literal("fully-dissociated"),
+  }),
+  z.strictObject({
+    soluteId: z.string().min(1),
+    amount: quantityOfDimension("amount"),
+    mode: z.literal("monoprotic-equilibrium"),
+    /** Monoprotic acid dissociation constant, dimensionless and molality-based. */
+    ka: quantityOfDimension("dimensionless"),
+  }),
+]);
+export type SolveRequestSoluteDto = z.infer<typeof SolveRequestSoluteSchema>;
+
+export type SolveRequestSolute =
+  | {
+      soluteId: string;
+      amount: Mol;
+      mode: "fully-dissociated";
+    }
+  | {
+      soluteId: string;
+      amount: Mol;
+      mode: "monoprotic-equilibrium";
+      ka: ThermodynamicConstant;
+    };
+
 export const SolveRequestSchema = z.strictObject({
   schemaVersion: z.literal(SCIENTIFIC_SCHEMA_VERSION),
   /** Conserved solvent. */
@@ -384,20 +413,11 @@ export const SolveRequestSchema = z.strictObject({
   /** Operational: sets nothing thermodynamically, but a molarity needs it. */
   liquidVolume: quantityOfDimension("volume"),
   /**
-   * The inventory the equilibrium is solved over. `Ka` is absent for a strong
-   * acid: the model treats it as fully dissociated, which is a model choice
-   * recorded in the solver config rather than a constant.
+   * The inventory the equilibrium is solved over. The mode is explicit so a
+   * caller cannot supply contradictory instructions such as a finite `Ka` for a
+   * fully dissociated solute or omit the constant for an equilibrium solute.
    */
-  solutes: z.array(
-    z.strictObject({
-      soluteId: z.string().min(1),
-      amount: quantityOfDimension("amount"),
-      /** Monoprotic acid dissociation constant, dimensionless and molality-based. */
-      ka: quantityOfDimension("dimensionless").optional(),
-      /** Fully dissociated: no equilibrium for this solute. */
-      fullyDissociated: z.boolean(),
-    }),
-  ),
+  solutes: z.array(SolveRequestSoluteSchema),
   temperature: quantityOfDimension("temperature"),
   /**
    * Indicator constants. Part of the SCIENTIFIC input because computing the
@@ -416,13 +436,7 @@ export type SolveRequestDto = z.infer<typeof SolveRequestSchema>;
 export interface SolveRequest {
   waterMass: Kilogram;
   liquidVolume: Litre;
-  solutes: readonly {
-    soluteId: string;
-    amount: Mol;
-    /** Absent for a strong acid, which the model treats as fully dissociated. */
-    ka: ThermodynamicConstant | undefined;
-    fullyDissociated: boolean;
-  }[];
+  solutes: readonly SolveRequestSolute[];
   temperature: Kelvin;
   indicators: readonly { indicatorId: string; kaIn: ThermodynamicConstant }[];
 }
@@ -431,15 +445,18 @@ export function parseSolveRequest(dto: SolveRequestDto): SolveRequest {
   return {
     waterMass: kilogram(toCanonical(dto.waterMass).value),
     liquidVolume: litre(toCanonical(dto.liquidVolume).value),
-    solutes: dto.solutes.map((s) => ({
-      soluteId: s.soluteId,
-      amount: mol(toCanonical(s.amount).value),
-      ka:
-        s.ka === undefined
-          ? undefined
-          : thermodynamicConstant(toCanonical(s.ka).value),
-      fullyDissociated: s.fullyDissociated,
-    })),
+    solutes: dto.solutes.map((s) => {
+      const amount = mol(toCanonical(s.amount).value);
+      if (s.mode === "fully-dissociated") {
+        return { soluteId: s.soluteId, amount, mode: s.mode };
+      }
+      return {
+        soluteId: s.soluteId,
+        amount,
+        mode: s.mode,
+        ka: thermodynamicConstant(toCanonical(s.ka).value),
+      };
+    }),
     temperature: kelvin(toCanonical(dto.temperature).value),
     indicators: dto.indicators.map((i) => ({
       indicatorId: i.indicatorId,
@@ -484,7 +501,7 @@ export const SolveResultSchema = z.discriminatedUnion("status", [
      * What WOULD have been supported. `ADR-0003` requires this so a refusal
      * tells the caller something actionable; a bare reason does not.
      */
-    nearestSupported: ModelDescriptorSchema.optional(),
+    nearestSupported: ModelDescriptorSchema,
   }),
   z.strictObject({
     schemaVersion: z.literal(SCIENTIFIC_SCHEMA_VERSION),
@@ -507,7 +524,7 @@ export type SolveResult =
   | {
       status: "MODEL_OUT_OF_DOMAIN";
       reason: string;
-      nearestSupported: ModelDescriptor | undefined;
+      nearestSupported: ModelDescriptor;
     }
   | { status: "NOT_CONVERGED"; residual: number; iterations: number }
   | { status: "INVALID_INPUT"; violations: readonly InputViolation[] };
@@ -520,9 +537,7 @@ export function parseSolveResult(dto: SolveResultDto): SolveResult {
       return {
         status: "MODEL_OUT_OF_DOMAIN",
         reason: dto.reason,
-        nearestSupported: dto.nearestSupported
-          ? parseModelDescriptor(dto.nearestSupported)
-          : undefined,
+        nearestSupported: parseModelDescriptor(dto.nearestSupported),
       };
     case "NOT_CONVERGED":
       return {

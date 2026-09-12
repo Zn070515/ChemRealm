@@ -81,13 +81,24 @@ export function validateSolveRequest(
         message: "solute amount must be finite and non-negative",
       });
     }
-    if (
-      solute.ka !== undefined &&
-      (!Number.isFinite(solute.ka.value) || solute.ka.value <= 0)
-    ) {
+    if (solute.mode === "fully-dissociated") {
+      if ("ka" in solute) {
+        violations.push({
+          field: `solutes[${index}].mode`,
+          message: "fully dissociated solutes cannot carry an equilibrium constant",
+        });
+      }
+    } else if (solute.mode === "monoprotic-equilibrium") {
+      if (!Number.isFinite(solute.ka.value) || solute.ka.value <= 0) {
+        violations.push({
+          field: `solutes[${index}].ka`,
+          message: "thermodynamic constant must be finite and positive",
+        });
+      }
+    } else {
       violations.push({
-        field: `solutes[${index}].ka`,
-        message: "thermodynamic constant must be finite and positive",
+        field: `solutes[${index}].mode`,
+        message: "solute mode is not supported",
       });
     }
   }
