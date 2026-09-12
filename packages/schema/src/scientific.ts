@@ -184,19 +184,19 @@ export type ModelDescriptorDto = z.infer<typeof ModelDescriptorSchema>;
 
 /** The declared validity envelope, as values the solver can compare against. */
 export interface ModelValidity {
-  temperature: { min: Kelvin; max: Kelvin };
-  ionicStrengthMolalMax: IonicStrengthMolal;
-  species: readonly string[];
-  solvent: string;
-  phase: string;
+  readonly temperature: { readonly min: Kelvin; readonly max: Kelvin };
+  readonly ionicStrengthMolalMax: IonicStrengthMolal;
+  readonly species: readonly string[];
+  readonly solvent: string;
+  readonly phase: string;
   readonly activityCorrected: boolean;
 }
 
 export interface ModelDescriptor {
-  id: string;
-  version: string;
-  description: string;
-  validity: ModelValidity;
+  readonly id: string;
+  readonly version: string;
+  readonly description: string;
+  readonly validity: ModelValidity;
 }
 
 /** DTO → domain. Canonicalizes all quantity fields before branded construction. */
@@ -571,4 +571,8 @@ export const SolverConfigSchema = z.strictObject({
   parameters: z.record(z.string(), z.number()),
 });
 export type SolverConfigDto = z.infer<typeof SolverConfigSchema>;
-export type SolverConfig = SolverConfigDto;
+export interface SolverConfig {
+  readonly id: string;
+  readonly version: string;
+  readonly parameters: Readonly<Record<string, number>>;
+}

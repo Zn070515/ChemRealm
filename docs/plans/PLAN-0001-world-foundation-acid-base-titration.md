@@ -477,8 +477,8 @@ the scientific engine is built means rebuilding both.
 ## M3 — Solver adapter contract
 
 **Status:** **S2 — Implemented Candidate / Owner Verification Pending** · evidence
-`docs/evidence/M3.md` · implementation baseline `1807979` plus preceding M3
-closure commits · CI pending for the final evidence baseline
+`docs/evidence/M3.md` · implementation baseline `1807979` plus M3 identity and
+defensive-boundary closure · CI pending for the final evidence baseline
 **Authorization:** Owner-authorized 2026-09-12 after M2 S3 acceptance at
 baseline `778fadbd` (CI `34677042056`)
 **Target stage:** S3
@@ -495,6 +495,7 @@ provenance and validity as first-class return values.
 packages/schema/src/scientific.ts   DTO/domain bridges, solute and result unions
 packages/sci/src/adapter.ts         one-model SolverAdapter + exact SolverConfig
 packages/sci/src/request.ts         canonical requirements and request validation
+packages/sci/src/identity.ts        frozen identity snapshots and result assertion
 packages/sci/src/stub.ts            deliberately-trivial async contract adapter
 packages/sci/src/registry.ts        exact identity registration and resolution
 packages/world/src/reduce.ts        synchronous world reducer with no solver hook
@@ -505,8 +506,9 @@ apps/web/src/world-creation.ts      composition-level requirements/genesis build
 ### Contracts changed
 
 `SolverAdapter`, exact `SolverConfig` binding, `SolveRequestSolute`,
-`SolveResult`, `Provenance`, `ModelDescriptor`, `ReduceOptions`, and the
-composition-level `createWorld` result union.
+`SolveResult`, `Provenance`, `ModelDescriptor`, deep-readonly identity
+snapshots, `ReduceOptions`, and the composition-level `createWorld` result
+union.
 
 ### Implementation
 
@@ -533,6 +535,14 @@ composition-level `createWorld` result union.
    Genesis `MaterialSnapshot` attaches `DataProvenance` to density and every
    composition and molar-mass datum. Persistence availability tiers, re-solve,
    and archive behavior remain M8 scope under ADR-0008.
+7. Defensive validation treats request data as untrusted at runtime: missing or
+   malformed constants, non-finite quantities, impossible temperatures, and
+   malformed arrays return `INVALID_INPUT` instead of throwing.
+8. Model/config identity is copied and deeply frozen at adapter construction
+   and registry boundaries. Registered adapters are exposed through a frozen
+   wrapper, and a shared result assertion rejects an `OK` state whose
+   provenance model id, version, or exact parameter set differs from the
+   adapter identity.
 
 ### Tests and evidence
 
@@ -544,6 +554,9 @@ composition-level `createWorld` result union.
 | Schema/runtime tests reject contradictory solute modes and incomplete `ka` data | Scientific request semantics cannot be ambiguous |
 | Type test: `SolveResult` has no `ph: number` field | The convenience shortcut cannot be added quietly |
 | `Provenance.category` is required, not optional | `GOAL.md` §12 is enforceable |
+| Adapter tests feed missing/malformed constants, `NaN`/`Infinity`, negative temperature, and malformed arrays through a cast boundary | Defensive invalid input is always tagged and never leaks a runtime exception |
+| Registry tests mutate caller-owned descriptor/config objects after registration and inspect nested freeze state | Exact solver identity cannot drift after registration |
+| Adapter and registry-wrapper tests return `OK` with mismatched provenance model id, version, or parameters | Scientific output cannot claim a different producer than the adapter/config that returned it |
 | Reducer regression proves a solver callback is not invoked and return remains synchronous | Async orchestration is outside World Runtime |
 | `apps/web/src/world-creation.test.ts` proves incompatible requirements return no event and compatible requirements persist the complete config | AC-R20 — requirements reject genesis rather than being overridden |
 

@@ -122,6 +122,29 @@ owner's M3 S3 review.
    `WorldCreated`; incompatible or unavailable resolution returns a reason and
    no event. The builder does not invoke the async solver.
 
+### M3 Identity & Defensive Boundary Closure candidate (owner review pending)
+
+The M3 closure implementation adds three runtime protections that are required
+before a scientific solver is allowed to produce persisted or rendered state:
+
+1. **Malformed cross-boundary input is a tagged result.** Defensive request
+   validation treats decoded or cast values as `unknown` at runtime. Missing,
+   malformed, non-finite, or physically impossible fields produce
+   `INVALID_INPUT`; they do not escape as a JavaScript property-access error.
+2. **Solver identity is a frozen snapshot.** Domain model/config contracts use
+   deep-readonly semantics. Adapter construction and registry registration copy
+   and freeze nested identity values, and the registry exposes a frozen contract
+   wrapper so later mutation of a caller-owned object cannot change the exact
+   `(id, version, parameters)` used for lookup or genesis.
+3. **Successful results prove their producer.** An `OK` result crosses the
+   adapter boundary only after a shared assertion verifies that
+   `state.provenance.modelId`, `modelVersion`, and exact `parameters` equal the
+   adapter's model and `SolverConfig`. A mismatch is an adapter contract error,
+   not a scientific result to propagate.
+
+This candidate does not change the synchronous World Runtime seam, solver
+selection policy, or the M4 chemistry scope.
+
 **Correction (2026-09-11, owner-approved).** The OK branch was sketched above as
 `{ state, provenance }`, with provenance a SIBLING of state. The implementation
 puts it inside `ScientificState`, and that is now the decision:

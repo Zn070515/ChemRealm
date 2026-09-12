@@ -7,6 +7,7 @@ import {
 } from "@chemrealm/schema";
 
 import type { SolverAdapter } from "./adapter.js";
+import { freezeSolverAdapter } from "./identity.js";
 import type { SolverRequirements } from "./request.js";
 
 export type ExactSolverLookup =
@@ -118,7 +119,7 @@ export class SolverRegistry {
         `solver adapter ${adapter.id}@${adapter.version} is already registered`,
       );
     }
-    this.adapters.set(key, adapter);
+    this.adapters.set(key, freezeSolverAdapter(adapter));
   }
 
   lookup(id: string, version: string): ExactSolverLookup {

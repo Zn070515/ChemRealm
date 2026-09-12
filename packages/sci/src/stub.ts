@@ -8,6 +8,11 @@ import type {
 } from "@chemrealm/schema";
 
 import type { SolverAdapter } from "./adapter.js";
+import {
+  assertSolveResultIdentity,
+  cloneAndFreezeModelDescriptor,
+  cloneAndFreezeSolverConfig,
+} from "./identity.js";
 import { validateSolveRequest } from "./request.js";
 
 export type StubOutcome =
@@ -61,13 +66,14 @@ export class StubSolverAdapter implements SolverAdapter {
   constructor(options: StubSolverAdapterOptions) {
     this.id = options.descriptor.id;
     this.version = options.descriptor.version;
-    this.model = options.descriptor;
-    this.solverConfig = {
+    this.model = cloneAndFreezeModelDescriptor(options.descriptor);
+    this.solverConfig = cloneAndFreezeSolverConfig({
       id: this.id,
       version: this.version,
       parameters: { ...(options.parameters ?? {}) },
-    };
+    });
     this.outcome = options.outcome;
+    Object.freeze(this);
   }
 
   async solve(request: SolveRequest): Promise<SolveResult> {
@@ -81,8 +87,9 @@ export class StubSolverAdapter implements SolverAdapter {
       return outOfDomain(this.model, reason);
     }
 
-    return typeof this.outcome === "function"
+    const result = typeof this.outcome === "function"
       ? await this.outcome(request)
       : this.outcome;
+    return assertSolveResultIdentity(result, this.model, this.solverConfig);
   }
 }

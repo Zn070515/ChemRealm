@@ -38,6 +38,22 @@ export function parseSolverRequirements(input: unknown): SolverRequirements {
 /** Descriptive alias for call sites that use the schema's terminology. */
 export const parseModelRequirements = parseSolverRequirements;
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+function isPositiveThermodynamicConstant(value: unknown): boolean {
+  return (
+    isRecord(value) &&
+    isFiniteNumber(value.value) &&
+    value.value > 0
+  );
+}
+
 /**
  * Validate the semantic preconditions that a typed request still needs before
  * a model can inspect its domain. Constructors reject negative quantities, but
@@ -49,72 +65,125 @@ export function validateSolveRequest(
 ): readonly InputViolation[] {
   const violations: InputViolation[] = [];
 
-  if (!Number.isFinite(request.waterMass) || request.waterMass <= 0) {
+  const candidate: unknown = request;
+  if (!isRecord(candidate)) {
+    return [
+      {
+        field: "request",
+        message: "solve request must be an object",
+      },
+    ];
+  }
+
+  if (!isFiniteNumber(candidate.waterMass) || candidate.waterMass <= 0) {
     violations.push({
       field: "waterMass",
       message: "water mass must be finite and greater than zero",
     });
   }
-  if (!Number.isFinite(request.liquidVolume) || request.liquidVolume <= 0) {
+  if (
+    !isFiniteNumber(candidate.liquidVolume) ||
+    candidate.liquidVolume <= 0
+  ) {
     violations.push({
       field: "liquidVolume",
       message: "liquid volume must be finite and greater than zero",
     });
   }
-  if (!Number.isFinite(request.temperature)) {
+  if (!isFiniteNumber(candidate.temperature) || candidate.temperature < 0) {
     violations.push({
       field: "temperature",
-      message: "temperature must be finite",
+      message: "temperature must be finite and non-negative",
     });
   }
 
-  for (const [index, solute] of request.solutes.entries()) {
-    if (solute.soluteId.trim().length === 0) {
-      violations.push({
-        field: `solutes[${index}].soluteId`,
-        message: "solute id must not be empty",
-      });
-    }
-    if (!Number.isFinite(solute.amount) || solute.amount < 0) {
-      violations.push({
-        field: `solutes[${index}].amount`,
-        message: "solute amount must be finite and non-negative",
-      });
-    }
-    if (solute.mode === "fully-dissociated") {
-      if ("ka" in solute) {
+  if (!Array.isArray(candidate.solutes)) {
+    violations.push({
+      field: "solutes",
+      message: "solutes must be an array",
+    });
+  } else {
+    for (const [index, rawSolute] of candidate.solutes.entries()) {
+      if (!isRecord(rawSolute)) {
+        violations.push({
+          field: `solutes[${index}]`,
+          message: "solute must be an object",
+        });
+        continue;
+      }
+
+      const soluteId = rawSolute.soluteId;
+      if (typeof soluteId !== "string" || soluteId.trim().length === 0) {
+        violations.push({
+          field: `solutes[${index}].soluteId`,
+          message: "solute id must be a non-empty string",
+        });
+      }
+      if (
+        !isFiniteNumber(rawSolute.amount) ||
+        rawSolute.amount < 0
+      ) {
+        violations.push({
+          field: `solutes[${index}].amount`,
+          message: "solute amount must be finite and non-negative",
+        });
+      }
+
+      const mode = rawSolute.mode;
+      if (mode === "fully-dissociated") {
+        if ("ka" in rawSolute) {
+          violations.push({
+            field: `solutes[${index}].mode`,
+            message: "fully dissociated solutes cannot carry an equilibrium constant",
+          });
+        }
+      } else if (mode === "monoprotic-equilibrium") {
+        if (!isPositiveThermodynamicConstant(rawSolute.ka)) {
+          violations.push({
+            field: `solutes[${index}].ka`,
+            message: "thermodynamic constant must be finite and positive",
+          });
+        }
+      } else {
         violations.push({
           field: `solutes[${index}].mode`,
-          message: "fully dissociated solutes cannot carry an equilibrium constant",
+          message: "solute mode is not supported",
         });
       }
-    } else if (solute.mode === "monoprotic-equilibrium") {
-      if (!Number.isFinite(solute.ka.value) || solute.ka.value <= 0) {
-        violations.push({
-          field: `solutes[${index}].ka`,
-          message: "thermodynamic constant must be finite and positive",
-        });
-      }
-    } else {
-      violations.push({
-        field: `solutes[${index}].mode`,
-        message: "solute mode is not supported",
-      });
     }
   }
 
-  for (const [index, indicator] of request.indicators.entries()) {
-    if (indicator.indicatorId.trim().length === 0) {
-      violations.push({
-        field: `indicators[${index}].indicatorId`,
-        message: "indicator id must not be empty",
-      });
-    }
-    if (!Number.isFinite(indicator.kaIn.value) || indicator.kaIn.value <= 0) {
-      violations.push({
-        field: `indicators[${index}].kaIn`,
-        message: "thermodynamic constant must be finite and positive",
-      });
+  if (!Array.isArray(candidate.indicators)) {
+    violations.push({
+      field: "indicators",
+      message: "indicators must be an array",
+    });
+  } else {
+    for (const [index, rawIndicator] of candidate.indicators.entries()) {
+      if (!isRecord(rawIndicator)) {
+        violations.push({
+          field: `indicators[${index}]`,
+          message: "indicator must be an object",
+        });
+        continue;
+      }
+
+      const indicatorId = rawIndicator.indicatorId;
+      if (
+        typeof indicatorId !== "string" ||
+        indicatorId.trim().length === 0
+      ) {
+        violations.push({
+          field: `indicators[${index}].indicatorId`,
+          message: "indicator id must be a non-empty string",
+        });
+      }
+      if (!isPositiveThermodynamicConstant(rawIndicator.kaIn)) {
+        violations.push({
+          field: `indicators[${index}].kaIn`,
+          message: "thermodynamic constant must be finite and positive",
+        });
+      }
     }
   }
 
