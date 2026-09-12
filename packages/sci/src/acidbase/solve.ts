@@ -4,9 +4,16 @@ import {
   type ReducedIonicStrength,
   type SolveFailureCode,
 } from "@chemrealm/schema";
-import { daviesActivities, type DaviesActivities } from "./activity.js";
+import {
+  daviesActivities,
+  DaviesDomainError,
+  type DaviesActivities,
+} from "./activity.js";
 import type { AcidBaseComponentTotals } from "./catalog.js";
-import type { AcidBaseConstants } from "./model.js";
+import {
+  ACID_BASE_MAX_IONIC_STRENGTH,
+  type AcidBaseConstants,
+} from "./model.js";
 import {
   chargeResidualFromSpecies,
   ionicStrengthFromSpecies,
@@ -43,28 +50,19 @@ type Candidate = {
   readonly innerIterations: number;
 };
 
+type DomainEdge = {
+  readonly hydrogen: number;
+  readonly candidate: Candidate;
+};
+
 const HYDROGEN_LOWER = 1e-16;
 const HYDROGEN_UPPER = 1;
-const IONIC_STRENGTH_UPPER = 0.5;
+const IONIC_STRENGTH_UPPER = ACID_BASE_MAX_IONIC_STRENGTH;
 const INNER_TOLERANCE = 1e-15;
 const OUTER_TOLERANCE = 1e-15;
 const INNER_ITERATION_LIMIT = 100;
 const OUTER_ITERATION_LIMIT = 200;
 const OUTER_BRACKET_SPANS = [3, 10, 100, 1000] as const;
-/**
- * A tiny probe beyond the public I domain lets the solver classify the exact
- * boundary correctly. The probe is never returned as a valid state: the final
- * converged-I check still refuses every value above 0.5 mol/kg.
- */
-const DOMAIN_BOUNDARY_PROBE = 1e-12;
-/**
- * The outer bracket may need an exploratory lower endpoint whose ionic
- * strength is materially above the accepted domain (notably for 0.5 mol/kg
- * NaOH, where activity correction moves the hydrogen root away from the
- * concentration-only seed). This is classification-only: no state is
- * returned until the final converged value is checked against 0.5 mol/kg.
- */
-const EXPLORATORY_IONIC_STRENGTH_UPPER = 1.25;
 
 function failOutOfDomain(reason: string): ReducedSolveFailure {
   return {
@@ -234,16 +232,21 @@ function solveInner(
   input: ReducedSolveInput,
 ): Candidate | ReducedSolveFailure {
   let lower = reducedIonicStrength(0);
-  let upper = reducedIonicStrength(EXPLORATORY_IONIC_STRENGTH_UPPER);
+  let upper = reducedIonicStrength(IONIC_STRENGTH_UPPER);
   let lowerResidual = ionicStrengthResidual(hydrogen, lower, input);
   let upperResidual = ionicStrengthResidual(hydrogen, upper, input);
 
-  if (lowerResidual < 0 || upperResidual > 0) {
+  if (lowerResidual < 0) {
     return failNotConverged(
       "INNER_BRACKET_NOT_FOUND",
       "inner ionic-strength fixed-point bracket could not be established",
       0,
       upperResidual,
+    );
+  }
+  if (upperResidual > INNER_TOLERANCE) {
+    return failOutOfDomain(
+      `ionic-strength fixed point exceeds the v0 limit of ${IONIC_STRENGTH_UPPER} mol/kg`,
     );
   }
   if (Math.abs(lowerResidual) <= INNER_TOLERANCE) {
@@ -293,6 +296,59 @@ function solveInner(
   );
 }
 
+/**
+ * Find the last valid inner solution before an out-of-domain endpoint. The
+ * search itself only calls solveInner(), whose entire fixed-point bracket is
+ * inside the Davies domain. The returned candidate is therefore valid for the
+ * outer solve; the endpoint is used only to establish which side of the
+ * charge-balance root the domain boundary occupies.
+ */
+function locateValidDomainEdge(
+  outsideHydrogen: number,
+  insideHydrogen: number,
+  insideCandidate: Candidate,
+  input: ReducedSolveInput,
+): DomainEdge | ReducedSolveFailure {
+  let outside = outsideHydrogen;
+  let inside = insideHydrogen;
+  let candidate = insideCandidate;
+  for (let iteration = 0; iteration < OUTER_ITERATION_LIMIT; iteration += 1) {
+    const midpoint = outside + 0.5 * (inside - outside);
+    if (midpoint === outside || midpoint === inside) {
+      return { hydrogen: inside, candidate };
+    }
+    const evaluated = solveInner(midpoint, input);
+    if ("kind" in evaluated) {
+      if (evaluated.kind === "OUT_OF_DOMAIN") {
+        outside = midpoint;
+        continue;
+      }
+      return evaluated;
+    }
+    inside = midpoint;
+    candidate = evaluated;
+  }
+  return { hydrogen: inside, candidate };
+}
+
+function boundaryCandidate(
+  hydrogen: number,
+  input: ReducedSolveInput,
+): Candidate {
+  return candidateAt(
+    hydrogen,
+    reducedIonicStrength(IONIC_STRENGTH_UPPER),
+    input,
+    0,
+  );
+}
+
+function domainBoundaryRefusal(): ReducedSolveFailure {
+  return failOutOfDomain(
+    `converged ionic strength is outside the v0 limit of ${IONIC_STRENGTH_UPPER} mol/kg`,
+  );
+}
+
 /** Solve the v0 system entirely in reduced molality and reduced ionic strength. */
 export function solveReduced(
   input: ReducedSolveInput,
@@ -318,20 +374,84 @@ export function solveReduced(
         Math.max(HYDROGEN_LOWER, idealRoot / span),
         Math.max(HYDROGEN_LOWER, idealRoot * 0.5),
       ];
-      // A hydrogen trial above the declared ionic-strength domain can make
-      // the inner solve refuse even when the actual outer root is valid. The
-      // analytical total-solute gate bounds the supported hydrogen scale, so
-      // keep the exploratory upper endpoint inside the same half-molal
-      // envelope instead of discarding the whole bracket span.
+      // Keep every fixed-point evaluation inside the Davies validity domain.
+      // When an endpoint crosses that domain, the boundary residual below is
+      // used only to classify whether the charge root is reachable inside it.
       const candidateUpper = Math.min(
         HYDROGEN_UPPER,
-        IONIC_STRENGTH_UPPER + DOMAIN_BOUNDARY_PROBE,
+        IONIC_STRENGTH_UPPER,
         idealRoot * span,
       );
       for (const candidateLower of candidateLowerSeeds) {
         const evaluatedLower = solveInner(candidateLower, input);
         const evaluatedUpper = solveInner(candidateUpper, input);
-        if ("kind" in evaluatedLower || "kind" in evaluatedUpper) continue;
+
+        if (
+          "kind" in evaluatedLower &&
+          evaluatedLower.kind === "OUT_OF_DOMAIN" &&
+          "kind" in evaluatedUpper &&
+          evaluatedUpper.kind === "OUT_OF_DOMAIN"
+        ) {
+          // Both ends of the concentration-only search interval already
+          // require an ionic-strength fixed point outside the Davies domain.
+          // Do not widen the interval to prove this with extrapolated
+          // activities; the explicit analytical/domain gate owns this refusal.
+          return domainBoundaryRefusal();
+        }
+
+        if ("kind" in evaluatedLower) {
+          if (evaluatedLower.kind !== "OUT_OF_DOMAIN") continue;
+          const boundary = boundaryCandidate(candidateLower, input);
+          if (boundary.reducedChargeResidual >= -OUTER_TOLERANCE) {
+            return domainBoundaryRefusal();
+          }
+          if (
+            ! ("kind" in evaluatedUpper) &&
+            evaluatedUpper.reducedChargeResidual > OUTER_TOLERANCE
+          ) {
+            const edge = locateValidDomainEdge(
+              candidateLower,
+              candidateUpper,
+              evaluatedUpper,
+              input,
+            );
+            if (!("kind" in edge) && edge.candidate.reducedChargeResidual < 0) {
+              lower = edge.hydrogen;
+              upper = candidateUpper;
+              lowerCandidate = edge.candidate;
+              upperCandidate = evaluatedUpper;
+              bracketFound = true;
+              break;
+            }
+            if (!("kind" in edge)) return domainBoundaryRefusal();
+          }
+          continue;
+        }
+
+        if ("kind" in evaluatedUpper) {
+          if (evaluatedUpper.kind !== "OUT_OF_DOMAIN") continue;
+          const boundary = boundaryCandidate(candidateUpper, input);
+          if (boundary.reducedChargeResidual <= OUTER_TOLERANCE) {
+            return domainBoundaryRefusal();
+          }
+          const edge = locateValidDomainEdge(
+            candidateUpper,
+            candidateLower,
+            evaluatedLower,
+            input,
+          );
+          if (!("kind" in edge) && edge.candidate.reducedChargeResidual > 0) {
+            lower = candidateLower;
+            upper = edge.hydrogen;
+            lowerCandidate = evaluatedLower;
+            upperCandidate = edge.candidate;
+            bracketFound = true;
+            break;
+          }
+          if (!("kind" in edge)) return domainBoundaryRefusal();
+          continue;
+        }
+
         if (
           evaluatedLower.reducedChargeResidual < 0 &&
           evaluatedUpper.reducedChargeResidual > 0
@@ -414,6 +534,9 @@ export function solveReduced(
       }),
     });
   } catch (error) {
+    if (error instanceof DaviesDomainError) {
+      return failOutOfDomain(error.message);
+    }
     if (error instanceof RangeError) {
       return failNotConverged(
         "INVALID_NUMERIC_ARGUMENT",

@@ -19,6 +19,7 @@ export const ACID_BASE_MODEL_VERSION = "1.0.0" as const;
 /** Analytical component-total molality bounds for the v0 model. */
 export const ACID_BASE_MIN_TOTAL_SOLUTE_MOLALITY = 1e-9;
 export const ACID_BASE_MAX_TOTAL_SOLUTE_MOLALITY = 0.5;
+export const ACID_BASE_MAX_IONIC_STRENGTH = 0.5;
 
 export interface AcidBaseConstants {
   readonly Kw: ThermodynamicConstant;
@@ -91,7 +92,7 @@ export function buildAcidBaseModelDescriptor(): ModelDescriptor {
         min: fromCelsius(25),
         max: fromCelsius(25),
       }),
-      ionicStrengthMolalMax: ionicStrengthMolal(0.5),
+      ionicStrengthMolalMax: ionicStrengthMolal(ACID_BASE_MAX_IONIC_STRENGTH),
       species: Object.freeze(["H2O", "H+", "OH-", "HOAc", "OAc-", "Na+", "Cl-"]),
       components: Object.freeze(["HCl", "NaOH", "HOAc", "NaOAc"]),
       solvent: "water",

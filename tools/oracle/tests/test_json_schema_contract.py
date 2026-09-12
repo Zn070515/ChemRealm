@@ -106,11 +106,10 @@ SOLUTE = {
     "basis": "molarity",
     "amountConcentration": {"value": 0.1, "unit": "mol/L"},
     "molarMass": {"value": 36.4609, "unit": "g/mol"},
-    "fullyDissociated": True,
 }
 
 VALID_SCENARIO = {
-    "schemaVersion": 2,
+    "schemaVersion": 3,
     "contentVersion": 1,
     "scenarioRef": "hcl-naoh",
     "title": "HCl vs NaOH",
@@ -385,7 +384,6 @@ class TestScenario:
             "soluteId": "HCl",
             "concentration": {"value": 0.1, "unit": "mol/L"},
             "molarMass": {"value": 36.4609, "unit": "g/mol"},
-            "fullyDissociated": True,
         }
         assert not is_valid("scenario", broken)
 
@@ -396,9 +394,14 @@ class TestScenario:
             "basis": "molality",
             "molality": {"value": 0.1, "unit": "mol/kg"},
             "molarMass": {"value": 36.4609, "unit": "g/mol"},
-            "fullyDissociated": True,
         }
         assert is_valid("scenario", variant)
+
+    def test_REJECTS_an_authored_dissociation_flag(self):
+        """Dissociation mode belongs to the scientific component catalog."""
+        broken = copy.deepcopy(VALID_SCENARIO)
+        broken["materials"][0]["solutes"][0]["fullyDissociated"] = True
+        assert not is_valid("scenario", broken)
 
     def test_accepts_multiple_molarity_basis_solutes(self):
         variant = copy.deepcopy(VALID_SCENARIO)
@@ -408,7 +411,6 @@ class TestScenario:
                 "basis": "molarity",
                 "amountConcentration": {"value": 0.1, "unit": "mol/L"},
                 "molarMass": {"value": 58.44, "unit": "g/mol"},
-                "fullyDissociated": True,
             }
         )
         assert is_valid("scenario", variant)
@@ -421,14 +423,12 @@ class TestScenario:
                 "basis": "molality",
                 "molality": {"value": 0.1, "unit": "mol/kg"},
                 "molarMass": {"value": 36.4609, "unit": "g/mol"},
-                "fullyDissociated": True,
             },
             {
                 "soluteId": "NaCl",
                 "basis": "molality",
                 "molality": {"value": 0.1, "unit": "mol/kg"},
                 "molarMass": {"value": 58.44, "unit": "g/mol"},
-                "fullyDissociated": True,
             },
         ]
         assert not is_valid("scenario", variant)
@@ -441,7 +441,6 @@ class TestScenario:
                 "basis": "molality",
                 "molality": {"value": 0.1, "unit": "mol/kg"},
                 "molarMass": {"value": 58.44, "unit": "g/mol"},
-                "fullyDissociated": True,
             }
         )
         assert not is_valid("scenario", variant)

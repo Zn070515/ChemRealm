@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { MaterialDefinitionSchema, ScenarioSchema, SoluteDefinitionSchema } from "./content.js";
+import {
+  MaterialDefinitionSchema,
+  SCENARIO_SCHEMA_VERSION,
+  ScenarioSchema,
+  SoluteDefinitionSchema,
+} from "./content.js";
 import { FORBIDDEN_BUNDLE_FIELDS, ExportBundleSchema } from "./export.js";
 import { DomainEventSchema, WorldBranchedSchema, WorldCreatedSchema } from "./events.js";
 import { MIGRATIONS, migrate } from "./migrate.js";
@@ -153,7 +158,7 @@ describe("AC-R19 — world identity is event-sourced", () => {
 
 describe("AC-C1 — content declares a scenario and cannot express chemistry", () => {
   const minimalScenario = {
-    schemaVersion: CURRENT_SCHEMA_VERSION,
+    schemaVersion: SCENARIO_SCHEMA_VERSION,
     contentVersion: 1,
     scenarioRef: "hcl-naoh",
     title: "HCl vs NaOH",
@@ -184,7 +189,6 @@ describe("AC-C1 — content declares a scenario and cannot express chemistry", (
                 category: "evaluated",
               },
             },
-            fullyDissociated: true,
           },
         ],
         density: {
@@ -427,7 +431,7 @@ describe("dimension coherence — the contract cannot express dimensional nonsen
   // have accepted them too. Being explicit about units does not prevent
   // dimension confusion; only checking the dimension does (ADR-0004).
   const valid = {
-    schemaVersion: CURRENT_SCHEMA_VERSION,
+    schemaVersion: SCENARIO_SCHEMA_VERSION,
     contentVersion: 1,
     scenarioRef: "x",
     title: "x",
@@ -450,7 +454,6 @@ describe("dimension coherence — the contract cannot express dimensional nonsen
               unit: "g/mol",
               provenance: { source: "fixture", reference: "molar mass", category: "evaluated" },
             },
-            fullyDissociated: true,
           },
         ],
         density: {
@@ -1165,7 +1168,6 @@ describe("a solute declares its composition scale by name", () => {
   const base = {
     soluteId: "HCl",
     molarMass: { value: 36.4609, unit: "g/mol", provenance },
-    fullyDissociated: true,
   };
 
   it("accepts a molarity-basis solute", () => {
@@ -1176,6 +1178,17 @@ describe("a solute declares its composition scale by name", () => {
         amountConcentration: { value: 0.1, unit: "mol/L", provenance },
       }).success,
     ).toBe(true);
+  });
+
+  it("rejects an authored dissociation flag because chemistry mode is catalog-owned", () => {
+    expect(
+      SoluteDefinitionSchema.safeParse({
+        ...base,
+        basis: "molarity",
+        amountConcentration: { value: 0.1, unit: "mol/L", provenance },
+        fullyDissociated: true,
+      }).success,
+    ).toBe(false);
   });
 
   it("accepts a molality-basis solute", () => {
@@ -1223,7 +1236,6 @@ describe("a solute declares its composition scale by name", () => {
       basis: "molality" as const,
       molality: { value: 0.1, unit: "mol/kg" as const, provenance },
       molarMass: { value: 58.44, unit: "g/mol" as const, provenance },
-      fullyDissociated: true,
     };
     expect(
       MaterialDefinitionSchema.safeParse({
@@ -1242,7 +1254,6 @@ describe("a solute declares its composition scale by name", () => {
       basis: "molality" as const,
       molality: { value: 0.1, unit: "mol/kg" as const, provenance },
       molarMass: { value: 58.44, unit: "g/mol" as const, provenance },
-      fullyDissociated: true,
     };
     expect(
       MaterialDefinitionSchema.safeParse({

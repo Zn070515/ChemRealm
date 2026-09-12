@@ -36,7 +36,7 @@ describe("World Runtime snapshots", () => {
     })).toThrow();
   });
 
-  it("accepts a snapshot when genesis used an equivalent authoring unit", () => {
+  it("rejects a persisted snapshot that retains a non-canonical authoring unit", () => {
     const authoredGenesis = {
       ...WORLD_CREATED,
       payload: {
@@ -51,9 +51,6 @@ describe("World Runtime snapshots", () => {
       },
     };
     authoredGenesis.payload.contentHash = scenarioSnapshotHash(authoredGenesis.payload.scenarioSnapshot);
-    const log = createLog(authoredGenesis);
-    const snapshot = createSnapshot(createInitialState(authoredGenesis), "interval", log);
-
-    expect(validateSnapshot(snapshot)).toEqual(snapshot);
+    expect(() => createInitialState(authoredGenesis)).toThrow(/Invalid input|unit|K/i);
   });
 });

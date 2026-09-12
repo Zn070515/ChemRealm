@@ -399,9 +399,6 @@
                       "const": "molarity",
                       "type": "string"
                     },
-                    "fullyDissociated": {
-                      "type": "boolean"
-                    },
                     "molarMass": {
                       "additionalProperties": false,
                       "properties": {
@@ -517,8 +514,7 @@
                     "soluteId",
                     "basis",
                     "amountConcentration",
-                    "molarMass",
-                    "fullyDissociated"
+                    "molarMass"
                   ],
                   "type": "object"
                 },
@@ -531,9 +527,6 @@
                     "basis": {
                       "const": "molality",
                       "type": "string"
-                    },
-                    "fullyDissociated": {
-                      "type": "boolean"
                     },
                     "molality": {
                       "additionalProperties": false,
@@ -755,8 +748,7 @@
                     "soluteId",
                     "basis",
                     "molality",
-                    "molarMass",
-                    "fullyDissociated"
+                    "molarMass"
                   ],
                   "type": "object"
                 },
@@ -855,7 +847,7 @@
       "type": "string"
     },
     "schemaVersion": {
-      "const": 2,
+      "const": 3,
       "type": "number"
     },
     "title": {

@@ -1,14 +1,16 @@
 # SPEC-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** **Accepted through revision 12** — revisions 13–15 are M4
+- **Status:** **Accepted through revision 12** — revisions 13–16 are M4
   implementation candidates pending owner review.
 - **Accepted baseline:** commit `8310c685`, `SPEC-0001` revision 6
-- **Current revision:** **15 Candidate** — M4 chemical identity closure adds
+- **Current revision:** **16 Candidate** — M4 chemical identity closure adds
   scenario-frozen indicator inputs, the explicit water-activity parameter, and
   common acetate-family semantics; revision 14 adds the total-solute domain and
   equilibrium-constant failure semantics; revision 15 makes numerical failure
-  diagnostics explicit. Revisions 7–12 are accepted amendments; revisions
-  13–15 remain pending owner review.
+  diagnostics explicit; revision 16 closes the cross-system component,
+  authoring-schema, temperature-normalization, and Davies-domain boundaries.
+  Revisions 7–12 are accepted amendments; revisions 13–16 remain pending owner
+  review.
   See "Amendments since acceptance" below.
 - **Acceptance scope:** the specification and its acceptance criteria. Deferred
   items listed under Open questions remain open and must be resolved before the
@@ -33,10 +35,11 @@
 | 10 | 2026-09-12 | M3 Contract Closure: World Runtime reduction/replay stays synchronous; async solving is composition-level orchestration; v0 binds one adapter, one model, and one exact `SolverConfig`; solute modes are discriminated; `MODEL_OUT_OF_DOMAIN` requires `nearestSupported`; incompatible requirements reject genesis before `WorldCreated`. | Owner, 2026-09-12 |
 | 11 | 2026-09-12 | M3 Identity & Defensive Boundary Closure: decoded/cast request data always returns tagged `INVALID_INPUT`; adapter/model/config identity is defensively copied and deeply frozen across construction and registry boundaries; every `OK` result must carry provenance exactly matching the adapter model and solver configuration. | Owner, 2026-09-12 |
 | 12 | 2026-09-12 | M4 pre-implementation contract closure: the proposed accuracy-envelope qualification is represented by the existing `ValidityStatus.withinProposedAccuracyEnvelope` boolean; no parallel `accuracyStatus` field is introduced. | Owner, 2026-09-12 |
-| 13 | 2026-09-12 | M4 Chemical Identity Closure candidate: NaOAc contributes to the common HA/A⁻ analytical family rather than a permanent acetate pool; scenario-specific indicator `Ka_in` is resolved with per-datum provenance into `ScenarioSnapshot.indicators` and frozen by the genesis content hash; the explicit v0 `waterActivity` parameter is recorded in solver identity; world/content schema version 2 adds a forward migration from v1. | Pending owner review |
+| 13 | 2026-09-12 | M4 Chemical Identity Closure candidate: NaOAc contributes to the common HA/A⁻ analytical family rather than a permanent acetate pool; scenario-specific indicator `Ka_in` is resolved with per-datum provenance into `ScenarioSnapshot.indicators` and frozen by the genesis content hash; the explicit v0 `waterActivity` parameter is recorded in solver identity; persisted world/event schema version 2 adds a forward migration from v1. | Pending owner review |
 | 14 | 2026-09-12 | M4 Scientific Domain & Constant Semantics Closure candidate: total analytical solute molality is gated at `1e-9..0.5 mol/kg` before solving; the pinned `Kw` means `a_H · a_OH` while `waterActivity: 1` records a unit convention without multiplying the equation; failed numerical brackets/iterations return `NOT_CONVERGED` rather than `MODEL_OUT_OF_DOMAIN`. | Pending owner review |
 
 | 15 | 2026-09-12 | M4 numerical diagnostic closure candidate: scientific wire schema version 2 requires NOT_CONVERGED.code and non-empty reason; residual is optional and appears only when a finite meaningful residual was computed. AC-S4 assigns solvent/phase/required-species compatibility to requirements resolution before genesis and keeps solve-stage checks in the adapter. | Pending owner review |
+| 16 | 2026-09-12 | M4 cross-system compatibility closure candidate: genesis derives actual scenario input components from the resolved snapshot before solver resolution; authoring scenarios use shape version 3 and no longer carry an ignored dissociation flag; resolved requirement temperatures are canonical Kelvin; Davies activity evaluation never leaves its declared `I_m ≤ 0.5 mol/kg` domain, including boundary classification. | Pending owner review |
 
 A revision bump is recorded here rather than only in the body because the header
 is what a reader checks before deciding whether the file they are reading is the
@@ -563,6 +566,12 @@ The UI displays it with that qualification rather than suppressing it or
 presenting it as equally trustworthy. `GOAL.md` §5.2 — an explicitly labelled
 approximation, never a silent one.
 
+The domain boundary is also a computation boundary: the solver may evaluate
+the Davies expression at the exact legal edge `I_m = 0.5 mol/kg` to classify a
+root, but it never evaluates activity coefficients at `I_m > 0.5` as an
+exploratory or classification-only chemistry path. If the legal envelope cannot
+establish the root, the result is `NOT_CONVERGED`, not an invented extrapolation.
+
 ### Refusal conditions
 
 | Constraint | Supported | On violation |
@@ -747,6 +756,20 @@ The model descriptor has two distinct sets: `validity.components` names the
 authored input components accepted by the adapter (`HCl`, `NaOH`, `HOAc`, and
 `NaOAc`), while `validity.species` names the equilibrium species it can
 represent. A component is not itself an equilibrium species.
+
+Actual component compatibility is checked at genesis without adding a second
+authoring field to `modelRequirements`. The composition boundary derives the
+unique `soluteId` values from the resolved `ScenarioSnapshot.materials` and
+passes them as ephemeral resolution context. Every derived component must be
+included in the selected model's `validity.components`; otherwise world
+creation is rejected before `WorldCreated` exists. The model requirements remain
+the author's constraint, while the derived component set is the resolved fact
+about the scenario's actual inputs.
+
+The authoring `Scenario` shape has no dissociation-mode field. Component
+identity and its dissociation/equilibrium semantics belong to the Scientific
+Reality Core's model-owned catalog. The persisted world event schema remains
+separate from this authoring shape version.
 
 ### Expected precision and tolerance
 
@@ -1107,7 +1130,8 @@ REJECT    SolverConfig  →  frozen into genesis
 
 If the resolved solver does **not** satisfy the snapshot's requirements — wrong
 temperature, an unsupported species set, an activity model outside its stated
-domain — then **world creation fails**. It does not quietly proceed with a
+domain, or an actual scenario component outside `validity.components` — then
+**world creation fails**. It does not quietly proceed with a
 solver the scenario did not ask for.
 
 The two are not competing sources of truth; they answer different questions:
@@ -1716,7 +1740,7 @@ Binary and verifiable. Every criterion maps to an evidence method.
 | AC-S1 | REF-1..REF-10 pass within stated tolerances, on the **self-consistent molality-basis** formulation | `vitest packages/sci`, `pytest tools/oracle` |
 | AC-S2 | Charge balance residual < 1e-14 mol/kg on the **unquantized solver state** across the reference sweep | invariant test output |
 | AC-S3 | Na, Cl, and acid-group totals conserved across a 100-transfer sequence. The conserved world state is a **component** inventory (`AC-R21`); these totals are read through the component→element composition the model declares | conservation test + state dump |
-| AC-S4 | Requirements resolution refuses unsupported solvent, phase, and required species before genesis; the adapter refuses unsupported temperature, component/analytical totals, and converged `I_m` without producing a number | resolver + adapter domain test matrix |
+| AC-S4 | Requirements resolution refuses unsupported solvent, phase, required species, and actual scenario components before genesis; the adapter refuses unsupported temperature, component/analytical totals, and converged `I_m` without producing a number | resolver + genesis component test + adapter domain test matrix |
 | AC-S5 | The 1e-6 mol/kg acetic acid case matches the exact solve, and the HH divergence (0.65 pH) is reproduced | adversarial test |
 | AC-S6 | The PHREEQC oracle agrees within ±0.02 pH over the swept curve, **including the equivalence region**, with constants **and the molality basis** aligned | oracle comparison report; see the caveat above |
 | AC-S7 | **Every scientific input** is traced to a citable source in `docs/research/constants-provenance.md`: `Ka`, `Kw`, Davies `A` and `b`, `γ_HA`, `a_w`, the indicator `Ka_in`, the solution **densities**, and the **molar masses** (`ρ` and `M` jointly set `waterMass → molality → activity → model pH`; both are scientific inputs, not implementation details) | provenance review; **currently open — see Open questions** |
@@ -1752,7 +1776,7 @@ Binary and verifiable. Every criterion maps to an evidence method.
 | AC-R17 | **Branch export is self-contained.** Exporting a branch emits the **complete** event log from genesis (flattened), with lineage metadata — not just the branch's suffix. A bundle imported on a machine with no parent replays to the same `replayHash` | round-trip test that exports a child, discards the parent, and replays |
 | AC-R18 | Transfer deltas are computed from the pre-transfer snapshot: a test that interleaves read/write fails | unit test asserting the order-independence of the transfer update |
 | AC-R19 | **World identity is event-sourced.** `WorldCreated` carries `worldId`; `WorldBranched` carries `childWorldId`, `parentWorldId`, `forkSequence`, `forkStateHash`. Replaying a flattened genesis-to-tip log reconstructs the final `worldId` and full `lineage` from the log alone, with nothing regenerated | replay test: fold a flattened child log, compare reconstructed identity to the live world's |
-| AC-R20 | **Requirements constrain, they do not lose.** A scenario whose `modelRequirements` cannot be satisfied by any available solver **rejects world creation** with a stated reason. It never resolves to a solver the scenario did not ask for | negative test: a scenario requiring a temperature outside every shipped solver's domain fails to create, with the reason recorded |
+| AC-R20 | **Requirements constrain, they do not lose.** A scenario whose `modelRequirements` or actual resolved input components cannot be satisfied by any available solver **rejects world creation** with a stated reason. It never resolves to a solver the scenario did not ask for | negative tests: unsupported temperature and an HNO3 scenario against an HCl-only model fail to create, with the reason recorded |
 | AC-R21 | **The conserved quantity is a chemical component, not a material.** `CanonicalContents` holds `componentAmounts: { componentId, amount }[]`, and **no material identifier appears anywhere in conserved world state** — material identity stops at genesis. Two materials supplying the same component are indistinguishable after mixing, and a material holding two components has no `n(material)`. The **component→element** composition that `AC-S3` checks is declared by the layer that owns the chemical model, not inferred from a `componentId`; for v0 the genesis resolver maps a material's solutes to components one-for-one, so no mapping is needed yet, and this criterion fixes the *shape* rather than that mapping's home | schema test: `CanonicalContents` has `componentAmounts` and no material identifier, on both sides of the language boundary |
 
 ### Representation

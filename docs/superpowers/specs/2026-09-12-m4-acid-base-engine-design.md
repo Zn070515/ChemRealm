@@ -6,7 +6,11 @@ is recorded as the revision-13 candidate in `SPEC-0001` and `ADR-0011`. The
 M4 Scientific Domain & Constant Semantics Closure is recorded as the
 revision-14 candidate and `ADR-0012`; both remain pending owner review.
 The scientific wire result diagnostics are revision-15 candidate material:
-schema version 2 requires an explicit numerical failure code and reason.
+schema version 2 requires an explicit numerical failure code and reason. The
+cross-system compatibility closure is revision-16 candidate material: actual
+scenario components participate in genesis resolution, authoring scenarios are
+shape version 3, resolved requirement temperatures are canonical Kelvin, and
+the Davies solver never evaluates activity outside its declared domain.
 
 ## Context
 
@@ -155,6 +159,11 @@ this catalog returns MODEL_OUT_OF_DOMAIN with a reason. The mapping is a
 model-owned stoichiometric catalog, so a material name cannot silently select a
 chemical behavior.
 
+The `fully-dissociated` and `monoprotic-equilibrium` labels in this table are
+catalog modes owned by the Scientific Reality Core, not authoring fields. The
+Scenario content contract carries component identity and quantities only; it
+has no `fullyDissociated` boolean for the resolver to ignore or override.
+
 Repeated entries for the same component id are aggregated only when their mode
 and, for HOAc, their Ka agree exactly. Conflicting duplicate entries are
 MODEL_OUT_OF_DOMAIN rather than an implicit precedence rule.
@@ -184,6 +193,13 @@ The solver finds (m̂_H, Î) by nested bracketed bisection:
    bisect until the configured residual and interval tolerances are met.
 5. Recompute the converged ionic strength and domain status from the final
    unquantized state before emitting any number.
+
+Every activity evaluation, including an outer trial and an exact-boundary
+classification, is made at `0 <= Î <= 0.5`. If a legal boundary evaluation
+establishes that the root lies beyond the Davies domain, the solver returns an
+explicit domain refusal. It never evaluates Davies coefficients at an
+exploratory `Î > 0.5` value merely to classify that refusal; an inability to
+establish a bracket inside the legal envelope remains `NOT_CONVERGED`.
 
 The supported v0 species are the named strong-acid/strong-base ions and one
 monoprotic acid family represented by the existing SolveRequest solute union.
@@ -299,13 +315,15 @@ computational ionic-strength ceiling of 0.5 mol/kg, the closed supported
 species set, and activityCorrected: true. The persisted SolverConfig contains
 the exact numeric parameter bag required by the M3 identity contract.
 
-The world/content schema is version 2 because replayable scenario-specific
-indicator inputs were not expressible in the v1 genesis snapshot. Migration
-`1 → 2` adds `indicators: []` only where no prior value exists; it never invents
-a missing constant. Scientific DTOs retain their independent scientific schema
-version. The resolved snapshot uses canonical, positive dimensionless `kaIn`
-with per-datum DataProvenance, while authored content uses a dimension-checked
-indicator definition that is resolved before genesis.
+The persisted world/event schema is version 2 because replayable
+scenario-specific indicator inputs were not expressible in the v1 genesis
+snapshot. Migration `1 → 2` adds `indicators: []` only where no prior value
+exists; it never invents a missing constant. The authored `Scenario` shape is a
+separate versioned contract and is currently version 3. Its resolved snapshot
+freezes canonical Kelvin requirements, canonical positive dimensionless `kaIn`,
+per-datum `DataProvenance`, and actual component identities before genesis;
+authoring units are never retained as alternate snapshot representations.
+Scientific DTOs retain their independent scientific schema version.
 
 The current runtime schema represents the proposed accuracy-envelope result as
 ValidityStatus.withinProposedAccuracyEnvelope, a boolean. SPEC-0001 revision 12
@@ -317,7 +335,7 @@ bump is introduced.
 | Failure | Required behavior |
 |---|---|
 | Missing, malformed, non-finite, or physically impossible request field | INVALID_INPUT with violations; no solver callback and no exception escape |
-| Incompatible solvent, phase, or required species in `SolverRequirements` | Resolver rejects before `WorldCreated`, with an actionable reason |
+| Incompatible solvent, phase, required species, or derived scenario component in `SolverRequirements`/resolution context | Resolver rejects before `WorldCreated`, with an actionable reason |
 | Unsupported component or temperature in `SolveRequest` | MODEL_OUT_OF_DOMAIN with reason and nearest supported descriptor |
 | Total analytical solute molality below 1e-9 or above 0.5 mol/kg | MODEL_OUT_OF_DOMAIN before aggregation/solve |
 | Final converged ionic strength exceeds 0.5 mol/kg | MODEL_OUT_OF_DOMAIN; do not emit ScientificState |
@@ -389,17 +407,20 @@ document:
 - REF-5/REF-10 are explicitly assigned to ScientificProjection rather than
   being smuggled into ScientificState.
 
-The owner accepted the recommended resolution: the existing boolean field is
-the sole accuracy-envelope representation, and SPEC-0001 revision 12 records
-that decision. The design is ready for an implementation plan; the remaining
-open questions are evidence-pinning tasks only.
+The owner accepted the recommended resolution: the existing
+`withinProposedAccuracyEnvelope` boolean is the sole accuracy-envelope
+representation, and SPEC-0001 revision 12 records that decision. The design is
+ready for an implementation plan; the remaining open questions are
+evidence-pinning tasks only.
 
 ## Rollout/migration
 
 M4 is additive to the M3 adapter contract. The stub remains available for
 contract tests, while composition tests gain a real acid-base adapter fixture.
-The world/content schema changes from version 1 to version 2 solely to persist
-resolved scenario indicator inputs. The explicit `1 → 2` migration adds an
+The persisted world/event schema changes from version 1 to version 2 solely to
+persist resolved scenario indicator inputs. The authored Scenario shape is a
+separate versioned contract and is currently version 3 after removal of the
+ignored dissociation field. The explicit persisted `1 → 2` migration adds an
 empty list where no prior block exists and never fabricates a missing constant.
 
 The adapter is not registered as the default application solver until its

@@ -17,6 +17,7 @@ import {
   kilogram,
   kilogramsPerLitre,
   kilogramsPerMol,
+  kelvin,
   litre,
   mol,
   toCanonical,
@@ -98,6 +99,16 @@ function requiredProvenance(input: unknown, label: string) {
     );
   }
   return parsed.data;
+}
+
+function requiredScenarioComponents(
+  snapshot: ScenarioSnapshot,
+): readonly string[] {
+  return [...new Set(
+    snapshot.materials.flatMap((material) =>
+      material.composition.map((entry) => entry.soluteId),
+    ),
+  )].sort();
 }
 
 function resolveMaterial(material: Scenario["materials"][number]): ScenarioSnapshot["materials"][number] {
@@ -269,7 +280,15 @@ export function resolveScenario(input: unknown): ScenarioSnapshot {
       ),
     })),
     modelRequirements: {
-      temperature: scenario.modelRequirements.temperature,
+      temperature: {
+        value: kelvin(
+          canonicalNumber(
+            toCanonical(scenario.modelRequirements.temperature).value,
+            "scenario model requirement temperature",
+          ),
+        ),
+        unit: "K" as const,
+      },
       species: [...scenario.modelRequirements.species],
       solvent: scenario.modelRequirements.solvent,
       phase: scenario.modelRequirements.phase,
@@ -294,7 +313,9 @@ export function createWorld(
     };
   }
   const requirements = parseSolverRequirements(snapshot.modelRequirements);
-  const resolution = registry.resolve(requirements);
+  const resolution = registry.resolve(requirements, {
+    requiredComponents: requiredScenarioComponents(snapshot),
+  });
   if (resolution.status !== "compatible") return rejected(resolution);
 
   const event: WorldCreated = WorldCreatedSchema.parse({

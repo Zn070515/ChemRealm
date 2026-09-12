@@ -50,6 +50,18 @@ The public `MODEL_OUT_OF_DOMAIN` result continues to include the required
 `OUT_OF_DOMAIN` failure tag only for an explicit model-domain condition that
 the adapter can map to that public result.
 
+4. Genesis derives the actual input component IDs from the resolved scenario
+   snapshot and supplies them as resolution context. The resolver requires
+   every derived component to be present in the selected model's
+   `validity.components`. `modelRequirements` does not gain a duplicate
+   `components` field, and a solver is never selected for a scenario whose
+   actual material components it cannot accept.
+
+5. Every call to the Davies activity model, including root-bracketing and
+   boundary classification, uses only `0 <= I_m/m° <= 0.5`. The exact upper
+   boundary may be evaluated as a legal model point to classify a root, but no
+   exploratory activity coefficient is calculated above the declared domain.
+
 Scientific wire schema version 2 makes numerical diagnostics explicit:
 `NOT_CONVERGED` carries a failure `code` and non-empty `reason`, while
 `residual` is optional and is emitted only when a finite residual was actually

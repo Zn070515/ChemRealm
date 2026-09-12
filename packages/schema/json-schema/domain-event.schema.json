@@ -626,10 +626,7 @@
                       "additionalProperties": false,
                       "properties": {
                         "unit": {
-                          "enum": [
-                            "K",
-                            "degC"
-                          ],
+                          "const": "K",
                           "type": "string"
                         },
                         "value": {

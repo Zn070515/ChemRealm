@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript, Vitest, Zod contracts from `@chemrealm/schema`, Node 22, pnpm 11, Python 3.12, uv, pytest, PHREEQC CLI in test tooling only, and a committed PHREEQC/database manifest with checksums.
 
-**Spec:** `docs/superpowers/specs/2026-09-12-m4-acid-base-engine-design.md` (Design v2, approved); `docs/specs/SPEC-0001-world-foundation-acid-base-titration.md` revisions 13–15 candidates; `docs/adr/0003-scientific-solver-adapter-boundary.md`; `docs/adr/0007-deterministic-numeric-and-replay-policy.md`; `docs/adr/0011-scenario-scientific-input-freezing.md`; `docs/adr/0012-m4-domain-and-constant-semantics.md`.
+**Spec:** `docs/superpowers/specs/2026-09-12-m4-acid-base-engine-design.md` (Design v2, approved); `docs/specs/SPEC-0001-world-foundation-acid-base-titration.md` revisions 13–16 candidates; `docs/adr/0003-scientific-solver-adapter-boundary.md`; `docs/adr/0007-deterministic-numeric-and-replay-policy.md`; `docs/adr/0011-scenario-scientific-input-freezing.md`; `docs/adr/0012-m4-domain-and-constant-semantics.md`.
 
 ## Global Constraints
 
@@ -46,7 +46,7 @@ Before the first production edit, the implementer records these answers in the t
 | Owning cores | Scientific Reality Core; `ScientificProjection` is its named output boundary. PHREEQC runner is test infrastructure only. |
 | Existing contracts | M3 async `SolverAdapter`, frozen adapter/model/config identity, tagged request/result schema, discriminated solute modes, and the M2 synchronous World Runtime. |
 | Scientific assumptions | Monoprotic HOAc, strong HCl/NaOH/NaOAc catalog, aqueous 25 °C, Davies activity coefficients, reduced molality, unit water activity convention, and declared validity/accuracy limits. |
-| Persistence | Schema version 2 adds resolved scenario indicator inputs to `ScenarioSnapshot`; the 1 → 2 migration supplies an explicit empty block for legacy records. Existing `WorldCreated.solverConfig` remains the frozen global solver identity. |
+| Persistence | Persisted world/event schema version 2 adds resolved scenario indicator inputs to `ScenarioSnapshot`; the 1 → 2 migration supplies an explicit empty block for legacy records. The authored Scenario shape is independently version 3 after removing the ignored dissociation field. Existing `WorldCreated.solverConfig` remains the frozen global solver identity. |
 | User-visible behavior | No UI change. Later callers receive tagged scientific results, explicit refusal statuses, and model-vs-taught hydrogen quantities through the approved boundary. |
 | Privacy/compliance | No network, account, identity, telemetry, learner state, or deployed PHREEQC behavior. Oracle inputs are checked-in fixtures. |
 | Required evidence | Independent reference vectors, residual/conservation/invariant reports, domain/refusal matrix, deterministic-math accuracy vectors, projection/type tests, PHREEQC sweep including equivalence, provenance review, and the final evidence packet. |
@@ -409,9 +409,11 @@ the global solver identity.
    the block.
 3. Request builders copy indicator values from the frozen snapshot only. They
    do not reload a mutable indicator catalog during replay.
-4. Bump the world/content schema to version 2 and add a tested forward `1 → 2`
-   migration that inserts only `indicators: []` when the legacy record has no
-   block. Regenerate and consume the committed JSON Schema artifacts.
+4. Keep the persisted world/event schema at version 2 and add the tested forward
+   `1 → 2` migration that inserts only `indicators: []` when the legacy record
+   has no block. The authored Scenario shape is independently version 3 after
+   removing the ignored dissociation field. Regenerate and consume the
+   committed JSON Schema artifacts.
 5. Add `waterActivity: 1` to the fixed numeric solver identity. The v0
    equation remains `Kw = a_H · a_OH`; a positive non-unit test value is
    outside the v0 unit-water-activity convention.

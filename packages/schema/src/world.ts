@@ -151,7 +151,8 @@ export const ScenarioSnapshotSchema = z.strictObject({
   indicators: z.array(IndicatorSnapshotSchema),
   /** A constraint on what may be used, not a record of what was used. */
   modelRequirements: z.strictObject({
-    temperature: quantityOfDimension("temperature"),
+    /** Resolved snapshots freeze the requirement in canonical Kelvin. */
+    temperature: canonicalQuantityOfDimension("temperature"),
     species: z.array(z.string().min(1)).min(1),
     solvent: z.literal("water"),
     phase: z.literal("aqueous"),

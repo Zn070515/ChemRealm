@@ -170,12 +170,14 @@ Not generated, not stored, not derivable from stored data:
 - Every persisted record carries `schemaVersion`.
 - Migrations are explicit, versioned, and tested forward. `SPEC-0001` requires a
   migration test for every version bump.
-- The current world/content migration `1 → 2` adds the explicit
+- The current persisted world/event migration `1 → 2` adds the explicit
   `ScenarioSnapshot.indicators` block as an empty list when no prior value was
   persisted. It never fabricates an indicator constant; an old request-local
   value that was not in genesis cannot be recovered. Because the snapshot bytes
   change, the World Runtime migration boundary rebuilds the derived genesis
   `contentHash` before loading the migrated event.
+- The authored `Scenario` shape is a separate contract and is currently version
+  3; authoring-only changes do not alter the persisted world migration path.
 - **Migration failure must be loud.** A world that cannot be migrated is
   reported to the user and left untouched — never partially upgraded, never
   silently reset to a default. Silent reset destroys the user's work and is a

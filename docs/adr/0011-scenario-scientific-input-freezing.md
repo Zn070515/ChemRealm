@@ -46,11 +46,14 @@ content during replay. `SolverConfig` continues to contain global model
 parameters, including the explicit v0 `waterActivity: 1` convention, but not
 scenario indicator constants.
 
-The world/content schema is version 2. Migration `1 → 2` adds
+The persisted world/event schema is version 2. Migration `1 → 2` adds
 `indicators: []` to legacy records that have no block. It does not invent a
 missing indicator constant. A pre-v2 world whose indicator existed only in an
 unpersisted request cannot be represented as having preserved that input and
-must not receive a false replay guarantee.
+must not receive a false replay guarantee. The authored `Scenario` shape is a
+separate contract and is currently version 3; removing the ignored
+`fullyDissociated` field changes authoring validation, not the persisted-world
+migration.
 
 Because adding the explicit block changes the snapshot bytes, the World Runtime
 migration boundary rebuilds the derived `WorldCreated.payload.contentHash`

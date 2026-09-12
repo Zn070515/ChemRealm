@@ -4,7 +4,20 @@ import {
   type ReducedIonicStrength,
 } from "@chemrealm/schema";
 import { detExp10 } from "../deterministic-math.js";
-import type { AcidBaseConstants } from "./model.js";
+import {
+  ACID_BASE_MAX_IONIC_STRENGTH,
+  type AcidBaseConstants,
+} from "./model.js";
+
+export class DaviesDomainError extends RangeError {
+  constructor(value: number) {
+    super(
+      `Davies reduced ionic strength ${value} is outside the v0 domain ` +
+      `[0, ${ACID_BASE_MAX_IONIC_STRENGTH}]`,
+    );
+    this.name = "DaviesDomainError";
+  }
+}
 
 export interface DaviesActivities {
   readonly hydrogen: ActivityCoefficient;
@@ -25,6 +38,9 @@ export function daviesActivities(
   constants: AcidBaseConstants,
 ): DaviesActivities {
   requireFiniteNonNegative(ionicStrength.value, "reduced ionic strength");
+  if (ionicStrength.value > ACID_BASE_MAX_IONIC_STRENGTH) {
+    throw new DaviesDomainError(ionicStrength.value);
+  }
   requireFiniteNonNegative(constants.daviesA, "Davies A");
   requireFiniteNonNegative(constants.daviesB, "Davies b");
   if (!(constants.standardMolality > 0) || !Number.isFinite(constants.standardMolality)) {

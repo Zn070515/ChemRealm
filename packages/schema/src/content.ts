@@ -16,7 +16,9 @@ import { z } from "zod";
 
 import { quantityOfDimension } from "./quantity.js";
 import { DataProvenanceSchema } from "./scientific.js";
-import { CURRENT_SCHEMA_VERSION } from "./world.js";
+
+/** Authoring shape version; independent from the persisted world event version. */
+export const SCENARIO_SCHEMA_VERSION = 3;
 
 /**
  * A solute, on ONE named composition scale.
@@ -40,8 +42,6 @@ const MolaritySoluteDefinitionSchema = z.strictObject({
   molarMass: quantityOfDimension("molarMass").extend({
     provenance: DataProvenanceSchema.optional(),
   }),
-  /** Whether the solute is fully dissociated at these concentrations. */
-  fullyDissociated: z.boolean(),
 });
 
 const MolalitySoluteDefinitionSchema = z.strictObject({
@@ -54,7 +54,6 @@ const MolalitySoluteDefinitionSchema = z.strictObject({
   molarMass: quantityOfDimension("molarMass").extend({
     provenance: DataProvenanceSchema.optional(),
   }),
-  fullyDissociated: z.boolean(),
 });
 
 export const SoluteDefinitionSchema = z.discriminatedUnion("basis", [
@@ -162,13 +161,12 @@ export type IndicatorDefinition = z.infer<typeof IndicatorDefinitionSchema>;
 
 export const ScenarioSchema = z.strictObject({
   /**
-   * The SHAPE's version, from the same scheme as the persisted world
-   * (`world.ts`). Distinct from `contentVersion` below, which versions THIS
+   * The authoring SHAPE's version is distinct from the persisted world event
+   * version and from `contentVersion`, which versions THIS
    * content: a content file can be revised without the format changing, and the
-   * format can change without any lesson changing. An earlier version carried
-   * only `contentVersion`, which cannot express the second case.
+   * content. This shape version changes when the authoring contract changes.
    */
-  schemaVersion: z.literal(CURRENT_SCHEMA_VERSION),
+  schemaVersion: z.literal(SCENARIO_SCHEMA_VERSION),
   /** Bumped whenever the content changes; part of the content hash. */
   contentVersion: z.number().int().positive(),
   scenarioRef: z.string().min(1),

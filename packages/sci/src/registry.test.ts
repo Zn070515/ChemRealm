@@ -260,6 +260,21 @@ describe("exact solver registry", () => {
     });
   });
 
+  it("rejects required input components absent from the model", () => {
+    const adapter = new StubSolverAdapter({
+      descriptor: makeDescriptor(),
+      parameters: { Kw: 1e-14 },
+      outcome: notConverged(),
+    });
+    const result = new SolverRegistry([adapter]).resolve(requirements(), {
+      requiredComponents: ["HNO3"],
+    });
+
+    expect(result).toMatchObject({ status: "incompatible" });
+    if (result.status !== "incompatible") throw new Error("expected incompatible result");
+    expect(result.reason).toContain("HNO3");
+  });
+
   it("rejects an adapter whose model or config identity is not exact", () => {
     const descriptor = makeDescriptor();
     const invalid = {

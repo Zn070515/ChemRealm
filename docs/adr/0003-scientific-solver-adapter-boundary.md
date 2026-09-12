@@ -172,7 +172,7 @@ Accordingly, the content-to-genesis resolver writes each resolved indicator to
 canonical positive dimensionless `kaIn` and datum-level `DataProvenance`. The
 snapshot is covered by `WorldCreated.payload.contentHash`; composition code
 copies the frozen snapshot value into `SolveRequest` and never consults mutable
-indicator content during replay. The world/content schema version is bumped
+indicator content during replay. The persisted world/event schema version is bumped
 from 1 to 2 with a forward migration that adds an explicit empty indicator list
 where no prior block exists. This does not recover an indicator that an older
 pre-v2 caller supplied only in an unpersisted request, so such a record must not

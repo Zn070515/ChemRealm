@@ -54,4 +54,13 @@ describe("Davies activity coefficients", () => {
       ),
     ).toThrow(RangeError);
   });
+
+  it("rejects ionic strength outside the declared Davies domain", () => {
+    expect(() =>
+      daviesActivities(
+        reducedIonicStrength(0.500001),
+        DEFAULT_ACID_BASE_CONSTANTS,
+      ),
+    ).toThrow(/outside.*domain/i);
+  });
 });

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { ionicStrengthMolal, kelvin, type ModelDescriptor } from "@chemrealm/schema";
+import { ionicStrengthMolal, kelvin, SCENARIO_SCHEMA_VERSION, type ModelDescriptor } from "@chemrealm/schema";
 import { SolverRegistry, StubSolverAdapter } from "@chemrealm/sci";
-import { createInitialState, createLog } from "@chemrealm/world";
+import { createInitialState, createLog, scenarioSnapshotHash } from "@chemrealm/world";
 
 import { createWorld, createWorldFromScenario, resolveScenario } from "./world-creation.js";
 
@@ -28,7 +28,7 @@ const provenance = {
 };
 
 const authoringScenario = {
-  schemaVersion: 2,
+  schemaVersion: SCENARIO_SCHEMA_VERSION,
   contentVersion: 1,
   scenarioRef: "hcl-authoring",
   title: "HCl authoring resolver",
@@ -43,7 +43,6 @@ const authoringScenario = {
           basis: "molarity" as const,
           amountConcentration: { value: 100, unit: "mmol/L" as const, provenance },
           molarMass: { value: 36.4609, unit: "g/mol" as const, provenance },
-          fullyDissociated: true,
         },
       ],
       density: { value: 1.002, unit: "kg/L" as const, provenance },
@@ -124,6 +123,28 @@ describe("composition-level world creation", () => {
     expect(result.reason).toContain("temperature");
   });
 
+  it("rejects a scenario component the resolved model cannot accept", () => {
+    const result = createWorld(registry(), {
+      worldId: "world-unsupported-component",
+      scenario: {
+        ...authoringScenario,
+        materials: [{
+          ...authoringScenario.materials[0]!,
+          solutes: [{
+            ...authoringScenario.materials[0]!.solutes[0]!,
+            soluteId: "HNO3",
+          }],
+        }],
+      },
+      seed: null,
+    });
+
+    expect(result).toMatchObject({ accepted: false, status: "incompatible" });
+    expect("event" in result).toBe(false);
+    if (result.accepted) throw new Error("expected unsupported component rejection");
+    expect(result.reason).toContain("HNO3");
+  });
+
   it("resolves authored scenario quantities into a self-contained genesis snapshot", () => {
     const result = createWorld(registry(), {
       worldId: "world-authored",
@@ -181,9 +202,16 @@ describe("composition-level world creation", () => {
           initialContents: [{ materialId: "hcl-0.1", volume: { value: 0.025, unit: "L" as const } }],
         },
       ],
+      modelRequirements: {
+        ...authoringScenario.modelRequirements,
+        temperature: { value: 298.15, unit: "K" as const },
+      },
     };
 
     expect(resolveScenario(authoringScenario)).toEqual(resolveScenario(canonicalAuthoring));
+    expect(scenarioSnapshotHash(resolveScenario(authoringScenario))).toBe(
+      scenarioSnapshotHash(resolveScenario(canonicalAuthoring)),
+    );
   });
 
   it("resolves the supported molality authoring basis into per-litre inventory", () => {
@@ -198,7 +226,6 @@ describe("composition-level world creation", () => {
               basis: "molality" as const,
               molality: { value: 0.1, unit: "mol/kg" as const, provenance },
               molarMass: { value: 0.0364609, unit: "kg/mol" as const, provenance },
-              fullyDissociated: true,
             },
           ],
         },

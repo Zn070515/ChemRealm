@@ -42,12 +42,19 @@ export interface CompatibilityResult {
   readonly reasons: readonly string[];
 }
 
+/** Runtime-only facts derived by a composition boundary for one resolution. */
+export interface SolverResolutionContext {
+  /** Actual input components present in the resolved scenario. */
+  readonly requiredComponents?: readonly string[];
+}
+
 const keyOf = (id: string, version: string): string => `${id}\u0000${version}`;
 
 /** Explain every failed machine-checkable requirement for one model. */
 export function checkModelCompatibility(
   requirements: SolverRequirements,
   model: ModelDescriptor,
+  context: SolverResolutionContext = {},
 ): CompatibilityResult {
   const reasons: string[] = [];
   const { temperature } = requirements;
@@ -67,6 +74,12 @@ export function checkModelCompatibility(
   );
   if (missingSpecies.length > 0) {
     reasons.push(`species not supported: ${missingSpecies.join(", ")}`);
+  }
+  const missingComponents = (context.requiredComponents ?? []).filter(
+    (component) => !validity.components.includes(component),
+  );
+  if (missingComponents.length > 0) {
+    reasons.push(`input components not supported: ${missingComponents.join(", ")}`);
   }
   if (requirements.solvent !== validity.solvent) {
     reasons.push(
@@ -142,7 +155,10 @@ export class SolverRegistry {
     return [...this.adapters.values()];
   }
 
-  resolve(requirements: SolverRequirements): SolverResolution {
+  resolve(
+    requirements: SolverRequirements,
+    context: SolverResolutionContext = {},
+  ): SolverResolution {
     const candidates = [...this.adapters.values()];
     if (candidates.length === 0) {
       return {
@@ -155,7 +171,7 @@ export class SolverRegistry {
     const failures: string[] = [];
     for (const adapter of candidates) {
       const model = adapter.model;
-      const compatibility = checkModelCompatibility(requirements, model);
+      const compatibility = checkModelCompatibility(requirements, model, context);
       if (compatibility.compatible) {
         return { status: "compatible", adapter, model, solverConfig: adapter.solverConfig };
       }
@@ -176,14 +192,18 @@ export class SolverRegistry {
 export class SolverResolver {
   constructor(private readonly registry: SolverRegistry) {}
 
-  resolve(requirements: SolverRequirements): SolverResolution {
-    return this.registry.resolve(requirements);
+  resolve(
+    requirements: SolverRequirements,
+    context: SolverResolutionContext = {},
+  ): SolverResolution {
+    return this.registry.resolve(requirements, context);
   }
 }
 
 export function resolveSolver(
   registry: SolverRegistry,
   requirements: SolverRequirements,
+  context: SolverResolutionContext = {},
 ): SolverResolution {
-  return new SolverResolver(registry).resolve(requirements);
+  return new SolverResolver(registry).resolve(requirements, context);
 }
