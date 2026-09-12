@@ -15,7 +15,7 @@ import {
   ScenarioSnapshotSchema,
   WorldCreatedSchema,
   WorldStateSchema as SerializedWorldStateSchema,
-  migrate,
+  migrateWorld,
   kilogram,
   kilogramsPerLitre,
   kilogramsPerMol,
@@ -454,7 +454,7 @@ export function migrateWorldCreated(input: unknown): SerializedWorldCreated {
   if (input === null || typeof input !== "object" || Array.isArray(input)) {
     throw new TypeError("WorldCreated migration requires an object record");
   }
-  const result = migrate(input as Record<string, unknown>, CURRENT_SCHEMA_VERSION);
+  const result = migrateWorld(input as Record<string, unknown>, CURRENT_SCHEMA_VERSION);
   if (result.status !== "OK") {
     throw new Error(`WorldCreated migration failed: ${result.status}`);
   }

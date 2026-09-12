@@ -3,7 +3,7 @@ import { scenarioSnapshotHash } from "../src/state.js";
 
 export const WORLD_CREATED: SerializedWorldCreated = {
   seq: 0,
-  schemaVersion: 2,
+  schemaVersion: 3,
   type: "WorldCreated",
   payload: {
     worldId: "w-1",

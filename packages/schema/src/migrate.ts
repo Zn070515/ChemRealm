@@ -1,132 +1,108 @@
-/**
- * Forward-only schema migrations (`ADR-0005` §Schema versioning).
- *
- * Version 2 adds resolved, scenario-specific indicator inputs to the genesis
- * snapshot. The migration is deliberately structural: old records that had no
- * persisted indicator definition receive an explicit empty list. No value is
- * invented, and callers must decide how to handle worlds that used an
- * unrecorded request-local indicator in a pre-v2 build.
- *
- * Rules, all of them learned from the failure modes in `ADR-0005`:
- *
- *   - Forward only. A newer `schemaVersion` is REFUSED, not attempted.
- *   - Failure is LOUD and NON-DESTRUCTIVE. An unmigratable record is reported
- *     and left untouched. A silent reset destroys the user's work and is a
- *     P0-class defect.
- *   - Every migration is independently testable, so a chain can be verified
- *     step by step rather than only end to end.
- */
+/** Forward-only persisted World/Event migrations (`ADR-0005` §Schema versioning). */
 
-export interface Migration {
-  readonly from: number;
-  readonly to: number;
-  readonly describe: string;
-  migrate(record: Record<string, unknown>): Record<string, unknown>;
-}
+import { toCanonical } from "./quantity.js";
+import { runMigrations, type Migration, type MigrationResult } from "./migration-core.js";
 
-/**
- * The registry. Order matters only in that each `from` must be reachable.
- */
+export type { Migration, MigrationResult } from "./migration-core.js";
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
-function addIndicatorsToScenarioRecord(value: unknown): unknown {
-  if (!isRecord(value)) return value;
-  if ("indicators" in value) return value;
+function addIndicatorsToSnapshot(value: unknown): unknown {
+  if (!isRecord(value) || "indicators" in value) return value;
   if (
     "scenarioRef" in value &&
     "materials" in value &&
     "vessels" in value &&
     "modelRequirements" in value &&
-    ("apparatusDefaults" in value || "apparatus" in value)
+    "apparatusDefaults" in value
   ) {
     return { ...value, indicators: [] };
   }
   return value;
 }
 
-function addIndicatorsToSnapshot(value: unknown): unknown {
-  return addIndicatorsToScenarioRecord(value);
-}
-
-function migrateEvent(value: unknown): unknown {
+function canonicalTemperature(value: unknown): unknown {
   if (!isRecord(value)) return value;
-  const migrated = migrateContainer(value);
-  return typeof migrated.schemaVersion === "number"
-    ? { ...migrated, schemaVersion: 2 }
-    : migrated;
+  const requirements = value["modelRequirements"];
+  if (!isRecord(requirements)) return value;
+  const temperature = requirements["temperature"];
+  if (
+    !isRecord(temperature) ||
+    typeof temperature.value !== "number" ||
+    (temperature.unit !== "K" && temperature.unit !== "degC")
+  ) {
+    return value;
+  }
+  const canonical = toCanonical(temperature as Parameters<typeof toCanonical>[0]);
+  return {
+    ...value,
+    modelRequirements: {
+      ...requirements,
+      temperature: {
+        value: Number(canonical.value.toPrecision(15)),
+        unit: "K",
+      },
+    },
+  };
 }
 
-function migrateContainer(record: Record<string, unknown>): Record<string, unknown> {
-  // Always clone before descending. A successful migration must not mutate
-  // the caller's in-memory record while it adds nested v2 fields.
-  const next = { ...(addIndicatorsToScenarioRecord(record) as Record<string, unknown>) };
+function migratePersistedContainer(
+  record: Record<string, unknown>,
+  destinationVersion: number,
+): Record<string, unknown> {
+  const next = { ...record };
   if ("scenarioSnapshot" in next) {
-    next.scenarioSnapshot = addIndicatorsToSnapshot(next.scenarioSnapshot);
+    next.scenarioSnapshot = destinationVersion === 2
+      ? addIndicatorsToSnapshot(next.scenarioSnapshot)
+      : canonicalTemperature(next.scenarioSnapshot);
   }
   if (isRecord(next.payload)) {
-    next.payload = migrateContainer(next.payload);
+    next.payload = migratePersistedContainer(next.payload, destinationVersion);
   }
   if (Array.isArray(next.events)) {
-    next.events = next.events.map(migrateEvent);
+    next.events = next.events.map((event) => {
+      if (!isRecord(event)) return event;
+      return {
+        ...migratePersistedContainer(event, destinationVersion),
+        schemaVersion: destinationVersion,
+      };
+    });
   }
   return next;
 }
 
-export const MIGRATIONS: readonly Migration[] = [
+export const WORLD_MIGRATIONS: readonly Migration[] = [
   {
     from: 1,
     to: 2,
     describe: "add the explicit scenario snapshot indicator block",
-    migrate: migrateContainer,
+    migrate: (record) => migratePersistedContainer(record, 2),
+  },
+  {
+    from: 2,
+    to: 3,
+    describe: "canonicalize persisted scenario requirement temperature to Kelvin",
+    migrate: (record) => migratePersistedContainer(record, 3),
   },
 ];
 
-export type MigrationResult =
-  | { status: "OK"; record: Record<string, unknown>; applied: number[] }
-  | { status: "REFUSED_FROM_FUTURE"; foundVersion: number; supportedVersion: number }
-  | { status: "NO_PATH"; foundVersion: number; supportedVersion: number };
-
-/**
- * Migrate a record to `targetVersion`, or refuse it.
- *
- * A refusal returns the ORIGINAL record untouched inside the result — the
- * caller must not have to reach for it separately, because a caller that has to
- * remember to preserve it is a caller that will forget.
- */
-export function migrate(
+/** Migrate a persisted World/Event record in its own version namespace. */
+export function migrateWorld(
   record: Record<string, unknown>,
   targetVersion: number,
 ): MigrationResult {
-  const found = record["schemaVersion"];
-  if (typeof found !== "number" || !Number.isInteger(found)) {
-    return { status: "NO_PATH", foundVersion: Number.NaN, supportedVersion: targetVersion };
+  // A top-level scenarioRef/materials pair is an authored Scenario, not a
+  // persisted world/event container. Refuse it here instead of allowing a
+  // coincidentally compatible version number to cross namespaces.
+  if ("scenarioRef" in record && "materials" in record) {
+    const found = record["schemaVersion"];
+    return {
+      status: "NO_PATH",
+      foundVersion: typeof found === "number" ? found : Number.NaN,
+      supportedVersion: targetVersion,
+    };
   }
-
-  if (found > targetVersion) {
-    // Older app, newer data. Never partially migrate; never guess.
-    return { status: "REFUSED_FROM_FUTURE", foundVersion: found, supportedVersion: targetVersion };
-  }
-  if (found === targetVersion) {
-    return { status: "OK", record, applied: [] };
-  }
-
-  let current = record;
-  let version = found;
-  const applied: number[] = [];
-
-  while (version < targetVersion) {
-    const step = MIGRATIONS.find((m) => m.from === version);
-    if (step === undefined) {
-      // The chain is broken. Return what we have, plus the failure, rather than
-      // a half-migrated record that looks migrated.
-      return { status: "NO_PATH", foundVersion: version, supportedVersion: targetVersion };
-    }
-    current = { ...step.migrate(current), schemaVersion: step.to };
-    version = step.to;
-    applied.push(step.to);
-  }
-
-  return { status: "OK", record: current, applied };
+  return runMigrations(record, targetVersion, WORLD_MIGRATIONS);
 }

@@ -8,7 +8,9 @@ import {
 } from "./content.js";
 import { FORBIDDEN_BUNDLE_FIELDS, ExportBundleSchema } from "./export.js";
 import { DomainEventSchema, WorldBranchedSchema, WorldCreatedSchema } from "./events.js";
-import { MIGRATIONS, migrate } from "./migrate.js";
+import { migrateScenario } from "./scenario-migrate.js";
+import { SCENARIO_MIGRATIONS } from "./scenario-migrate.js";
+import { migrateWorld, WORLD_MIGRATIONS } from "./migrate.js";
 import { QuantitySchema } from "./quantity.js";
 import {
   ScientificStateSchema,
@@ -277,17 +279,20 @@ describe("AC-P4 — no tracking identifier in the export bundle, and lineage pre
 // mode `CLAUDE.md` §16 calls "tests passing only because assertions were
 // weakened", arriving through the label rather than the assertion.
 describe("the migration harness exists before it is needed", () => {
-  it("registers the indicator snapshot migration before it is needed", () => {
-    expect(MIGRATIONS.some((m) => m.from === 1 && m.to === 2)).toBe(true);
+  it("registers the persisted world migration chain", () => {
+    expect(WORLD_MIGRATIONS).toEqual([
+      expect.objectContaining({ from: 1, to: 2 }),
+      expect.objectContaining({ from: 2, to: 3 }),
+    ]);
   });
 
   it("passes a current record through untouched", () => {
-    const result = migrate({ schemaVersion: CURRENT_SCHEMA_VERSION }, CURRENT_SCHEMA_VERSION);
+    const result = migrateWorld({ schemaVersion: CURRENT_SCHEMA_VERSION }, CURRENT_SCHEMA_VERSION);
     expect(result.status).toBe("OK");
   });
 
   it("REFUSES a record from the future rather than attempting it", () => {
-    const result = migrate({ schemaVersion: 999 }, CURRENT_SCHEMA_VERSION);
+    const result = migrateWorld({ schemaVersion: 999 }, CURRENT_SCHEMA_VERSION);
     expect(result.status).toBe("REFUSED_FROM_FUTURE");
     if (result.status === "REFUSED_FROM_FUTURE") {
       expect(result.foundVersion).toBe(999);
@@ -295,12 +300,12 @@ describe("the migration harness exists before it is needed", () => {
   });
 
   it("reports a broken chain instead of returning a half-migrated record", () => {
-    const result = migrate({ schemaVersion: 0 }, CURRENT_SCHEMA_VERSION);
+    const result = migrateWorld({ schemaVersion: 0 }, CURRENT_SCHEMA_VERSION);
     expect(result.status).toBe("NO_PATH");
   });
 
-  it("migrates a v1 genesis record with no indicator block into v2", () => {
-    const result = migrate(
+  it("migrates a v1 genesis record through v2 into canonical-temperature v3", () => {
+    const result = migrateWorld(
       {
         schemaVersion: 1,
         type: "WorldCreated",
@@ -310,7 +315,7 @@ describe("the migration harness exists before it is needed", () => {
             materials: [],
             vessels: [],
             apparatusDefaults: [],
-            modelRequirements: {},
+            modelRequirements: { temperature: { value: 25, unit: "degC" } },
           },
         },
       },
@@ -320,32 +325,97 @@ describe("the migration harness exists before it is needed", () => {
     expect(result.status).toBe("OK");
     if (result.status === "OK") {
       expect(result.record.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+      expect(result.applied).toEqual([2, 3]);
       const payload = result.record.payload;
       expect(payload).toBeTypeOf("object");
       if (payload !== null && typeof payload === "object") {
         const scenarioSnapshot = (payload as Record<string, unknown>).scenarioSnapshot;
-        expect(scenarioSnapshot).toMatchObject({ indicators: [] });
+        expect(scenarioSnapshot).toMatchObject({
+          indicators: [],
+          modelRequirements: { temperature: { value: 298.15, unit: "K" } },
+        });
       }
     }
   });
 
-  it("migrates a v1 authored scenario by making an empty indicator selection explicit", () => {
-    const result = migrate(
-      {
-        schemaVersion: 1,
-        scenarioRef: "legacy-content",
-        materials: [],
-        vessels: [],
-        apparatus: [],
-        modelRequirements: {},
+  it("migrates a persisted v2 genesis temperature without mutating the legacy record", () => {
+    const legacy = {
+      schemaVersion: 2,
+      type: "WorldCreated",
+      payload: {
+        scenarioSnapshot: {
+          scenarioRef: "legacy-v2",
+          materials: [],
+          vessels: [],
+          apparatusDefaults: [],
+          indicators: [],
+          modelRequirements: { temperature: { value: 25, unit: "degC" } },
+        },
       },
-      CURRENT_SCHEMA_VERSION,
-    );
+    };
+    const before = structuredClone(legacy);
+    const result = migrateWorld(legacy, CURRENT_SCHEMA_VERSION);
 
     expect(result.status).toBe("OK");
     if (result.status === "OK") {
-      expect(result.record).toMatchObject({ indicators: [] });
+      expect(result.applied).toEqual([3]);
+      expect(result.record.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+      expect(result.record.payload).toMatchObject({
+        scenarioSnapshot: {
+          modelRequirements: { temperature: { value: 298.15, unit: "K" } },
+        },
+      });
     }
+    expect(legacy).toEqual(before);
+  });
+
+  it("updates nested event envelopes when migrating a persisted event log", () => {
+    const result = migrateWorld({
+      schemaVersion: 2,
+      events: [{
+        schemaVersion: 2,
+        type: "WorldCreated",
+        payload: {
+          scenarioSnapshot: {
+            scenarioRef: "legacy-log",
+            materials: [],
+            vessels: [],
+            apparatusDefaults: [],
+            indicators: [],
+            modelRequirements: { temperature: { value: 25, unit: "degC" } },
+          },
+        },
+      }],
+    }, CURRENT_SCHEMA_VERSION);
+
+    expect(result.status).toBe("OK");
+    if (result.status === "OK") {
+      expect(result.record.events).toMatchObject([{
+        schemaVersion: 3,
+        payload: {
+          scenarioSnapshot: {
+            modelRequirements: { temperature: { value: 298.15, unit: "K" } },
+          },
+        },
+      }]);
+    }
+  });
+
+  it("does not use the persisted migration namespace for authored scenarios", () => {
+    const legacy = {
+      schemaVersion: 2,
+      scenarioRef: "legacy-content",
+      materials: [],
+      vessels: [],
+      apparatus: [],
+      modelRequirements: {},
+      fullyDissociated: true,
+    };
+    expect(migrateWorld(legacy, CURRENT_SCHEMA_VERSION).status).toBe("NO_PATH");
+    expect(migrateScenario(legacy, SCENARIO_SCHEMA_VERSION)).toMatchObject({
+      status: "NO_PATH",
+    });
+    expect(SCENARIO_MIGRATIONS).toEqual([]);
   });
 
   it("does not mutate the legacy record while migrating nested snapshots", () => {
@@ -363,7 +433,7 @@ describe("the migration harness exists before it is needed", () => {
       },
     };
     const before = structuredClone(legacy);
-    const result = migrate(legacy, CURRENT_SCHEMA_VERSION);
+    const result = migrateWorld(legacy, CURRENT_SCHEMA_VERSION);
 
     expect(result.status).toBe("OK");
     expect(legacy).toEqual(before);

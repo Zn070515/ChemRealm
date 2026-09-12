@@ -62,11 +62,12 @@ the adapter can map to that public result.
    boundary may be evaluated as a legal model point to classify a root, but no
    exploratory activity coefficient is calculated above the declared domain.
 
-Scientific wire schema version 2 makes numerical diagnostics explicit:
+Scientific wire schema v2 introduced explicit numerical diagnostics:
 `NOT_CONVERGED` carries a failure `code` and non-empty `reason`, while
 `residual` is optional and is emitted only when a finite residual was actually
-computed. A missing bracket or a numeric argument error is never reported with
-a fabricated zero residual.
+computed. The current scientific wire schema is v3; it additionally separates
+accepted input components from equilibrium species. A missing bracket or a
+numeric argument error is never reported with a fabricated zero residual.
 
 ## Alternatives considered
 

@@ -1,7 +1,7 @@
 # PLAN-0001 — World Foundation & Acid-Base Titration
 
 - **Status:** **M0–M3 S3 Verified / Accepted; M4 S2 in progress** — the original plan was approved
-  on 2026-09-11 at `SPEC-0001` revision 6; the current contract is revisions 13–16 candidates.
+  on 2026-09-11 at `SPEC-0001` revision 6; the current contract is revisions 13–17 candidates.
 - **Completed:** `M0 — Repository foundation` reached **S3 — Verified** on
   2026-09-11. Evidence: `docs/evidence/M0.md`, commits `1f3dfee`/`565a2e8`,
   CI run `34595967023` (13/13 gate steps on a clean `ubuntu-latest` checkout).
@@ -34,7 +34,7 @@
 > **Final-closure note.** DTO→domain bridges canonicalize units before
 > construction; every resolved snapshot datum is canonical, carries its own
 > `DataProvenance`, and is required structurally; export contracts are aligned
-> with the v1 export format, v2 persisted world schema, and v3 authored Scenario shape; and v0 rejects mixed composition bases until the Scientific
+> with the v1 export format, v3 persisted world schema, and v3 authored Scenario shape; persisted v2→v3 temperature migration is explicit; and v0 rejects mixed composition bases until the Scientific
 > Reality Core owns the joint resolver. M1 and M2 are S3 verified; M3 is
 > authorized.
 
@@ -335,7 +335,7 @@ this milestone defines their representation.
 | Export-schema test: the bundle carries no tracking identifier, and does carry `lineage` and an explicit `includesLearnerEvidence` | AC-P4 |
 | Golden JSON Schema snapshot | Contract drift is visible in review |
 | **Python test loads the committed artifact and validates a fixture against it; a second fixture that violates the contract is REJECTED** | M1 stop condition — `ADR-0001` rule 1's "one source of truth" is demonstrated, not asserted |
-| Migration registry runs `1 → 1` on a fixture world | The migration harness exists before it is needed (`SPEC-0001` §Rollout/migration). **Not `AC-R8`** — that criterion is the export→import round-trip to an identical state hash, evidenced at M2/M8 |
+| Migration harness passes a current persisted record through and exercises the explicit chain | The migration harness exists before it is needed (`SPEC-0001` §Rollout/migration). **Not `AC-R8`** — that criterion is the export→import round-trip to an identical state hash, evidenced at M2/M8 |
 
 ### Note on what this milestone does **not** claim
 
@@ -573,7 +573,8 @@ requirements are unsatisfiable. M3 evidence is owner-verified at baseline
 
 ## M4 — Acid-base reference engine and oracle validation
 
-**Status:** **S2 — Implementation in progress**; cross-system compatibility
+**Status:** **S2 — Implementation in progress**; persisted schema v3 migration and
+cross-system compatibility
 remediation is locally complete, but REF-1…REF-10 and PHREEQC evidence remain
 pending.
 **Target stage:** S3
@@ -613,8 +614,9 @@ Scenario-specific indicator constants are resolved with per-datum provenance int
 `ScenarioSnapshot.indicators` and enter genesis content identity under the
 revision-13 candidate and `ADR-0011`. The revision-14 candidate and `ADR-0012`
 add the analytical total-solute gate, the pinned `Kw = a_H · a_OH`
-interpretation, and distinct numerical-failure tagging. Revision 15 adds the
-version-2 `NOT_CONVERGED` diagnostic code/reason contract and assigns solvent,
+interpretation, and distinct numerical-failure tagging. Revision 15 records that
+scientific wire schema v2 introduced the `NOT_CONVERGED` diagnostic code/reason
+contract and assigns solvent,
 phase, and required-species compatibility to requirements resolution before
 genesis rather than duplicating those fields in `SolveRequest`.
 Revision 16 adds the cross-system closure: actual component IDs are derived
@@ -623,6 +625,10 @@ Scenario shape version 3 has no ignored dissociation field; resolved
 requirement temperatures are canonical Kelvin; and the Davies activity path
 never evaluates outside its declared `Î ≤ 0.5` domain, including boundary
 classification.
+Revision 17 adds the persisted migration closure: World/Event schema version 3
+preserves the historical v2 shape, canonicalizes legacy persisted temperature
+in an explicit `2 → 3` step, rebuilds migrated genesis checksums, and keeps
+authoring Scenario migration in its own namespace.
 
 ### Implementation
 

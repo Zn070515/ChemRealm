@@ -212,7 +212,7 @@ SCENARIO_SNAPSHOT = {
 
 WORLD_CREATED_EVENT = {
     "seq": 0,
-    "schemaVersion": 2,
+    "schemaVersion": 3,
     "type": "WorldCreated",
     "payload": {
         "worldId": "w-1",
@@ -230,7 +230,7 @@ WORLD_CREATED_EVENT = {
 VALID_BUNDLE = {
     "format": "chemrealm.export",
     "formatVersion": 1,
-    "schemaVersion": 2,
+    "schemaVersion": 3,
     "lineage": [
         {
             "worldId": "w-1",

@@ -6,11 +6,15 @@ is recorded as the revision-13 candidate in `SPEC-0001` and `ADR-0011`. The
 M4 Scientific Domain & Constant Semantics Closure is recorded as the
 revision-14 candidate and `ADR-0012`; both remain pending owner review.
 The scientific wire result diagnostics are revision-15 candidate material:
-schema version 2 requires an explicit numerical failure code and reason. The
-cross-system compatibility closure is revision-16 candidate material: actual
-scenario components participate in genesis resolution, authoring scenarios are
-shape version 3, resolved requirement temperatures are canonical Kelvin, and
-the Davies solver never evaluates activity outside its declared domain.
+scientific schema v2 introduced an explicit numerical failure code and reason.
+The current scientific wire schema is v3; v3 additionally separates accepted
+input components from equilibrium species. The cross-system compatibility
+closure is revision-16 candidate material: actual scenario components
+participate in genesis resolution, authoring scenarios are shape version 3,
+resolved requirement temperatures are canonical Kelvin, and the Davies solver
+never evaluates activity outside its declared domain. Persisted world/event
+schema v3 is revision-17 candidate material: v2 temperature snapshots migrate
+to canonical Kelvin rather than being reinterpreted in place.
 
 ## Context
 
@@ -315,12 +319,13 @@ computational ionic-strength ceiling of 0.5 mol/kg, the closed supported
 species set, and activityCorrected: true. The persisted SolverConfig contains
 the exact numeric parameter bag required by the M3 identity contract.
 
-The persisted world/event schema is version 2 because replayable
-scenario-specific indicator inputs were not expressible in the v1 genesis
-snapshot. Migration `1 → 2` adds `indicators: []` only where no prior value
-exists; it never invents a missing constant. The authored `Scenario` shape is a
-separate versioned contract and is currently version 3. Its resolved snapshot
-freezes canonical Kelvin requirements, canonical positive dimensionless `kaIn`,
+The persisted world/event schema is version 3 because v2 could persist a
+non-canonical temperature spelling. Migration `1 → 2` adds `indicators: []`
+only where no prior value exists; migration `2 → 3` canonicalizes a persisted
+requirement temperature to Kelvin. Neither step invents a missing constant.
+The authored `Scenario` shape is a separate versioned contract and is currently
+version 3 with its own migration namespace. Its resolved snapshot freezes
+canonical Kelvin requirements, canonical positive dimensionless `kaIn`,
 per-datum `DataProvenance`, and actual component identities before genesis;
 authoring units are never retained as alternate snapshot representations.
 Scientific DTOs retain their independent scientific schema version.
@@ -417,11 +422,13 @@ evidence-pinning tasks only.
 
 M4 is additive to the M3 adapter contract. The stub remains available for
 contract tests, while composition tests gain a real acid-base adapter fixture.
-The persisted world/event schema changes from version 1 to version 2 solely to
-persist resolved scenario indicator inputs. The authored Scenario shape is a
-separate versioned contract and is currently version 3 after removal of the
-ignored dissociation field. The explicit persisted `1 → 2` migration adds an
-empty list where no prior block exists and never fabricates a missing constant.
+The persisted world/event schema is version 3. Its explicit migration chain is
+`1 → 2 → 3`: the first step adds an empty indicator list where no prior block
+exists, and the second canonicalizes legacy persisted requirement temperature
+to Kelvin. Both steps preserve the original record and the World Runtime
+rebuilds the derived genesis checksum after the snapshot changes. The authored
+Scenario shape is a separate version 3 contract with an independent migration
+namespace; removal of the ignored dissociation field has no automatic rewrite.
 
 The adapter is not registered as the default application solver until its
 reference and PHREEQC evidence pass. Before S3, any disagreement or missing

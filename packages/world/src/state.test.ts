@@ -9,10 +9,12 @@ import {
   stateHash,
   type SerializedWorldCreated,
 } from "./state.js";
+import { createLog } from "./log.js";
+import { replay } from "./replay.js";
 
 const WORLD_CREATED: SerializedWorldCreated = {
   seq: 0,
-  schemaVersion: 2,
+  schemaVersion: 3,
   type: "WorldCreated",
   payload: {
     worldId: "w-1",
@@ -201,12 +203,44 @@ describe("WorldState domain boundary", () => {
 
     const migrated = migrateWorldCreated(legacy);
 
-    expect(migrated.schemaVersion).toBe(2);
+    expect(migrated.schemaVersion).toBe(3);
     expect(migrated.payload.scenarioSnapshot.indicators).toEqual([]);
     expect(migrated.payload.contentHash).toBe(
       scenarioSnapshotHash(migrated.payload.scenarioSnapshot),
     );
     expect(() => createInitialState(migrated)).not.toThrow();
+  });
+
+  it("migrates a legacy v2 Celsius genesis to v3 and preserves replay identity", () => {
+    const legacySnapshot = structuredClone(WORLD_CREATED.payload.scenarioSnapshot) as unknown as Record<string, unknown>;
+    legacySnapshot.modelRequirements = {
+      ...(legacySnapshot.modelRequirements as Record<string, unknown>),
+      temperature: { value: 25, unit: "degC" },
+    };
+    const legacy = {
+      ...WORLD_CREATED,
+      schemaVersion: 2,
+      payload: {
+        ...WORLD_CREATED.payload,
+        scenarioSnapshot: legacySnapshot,
+        contentHash: scenarioSnapshotHash(
+          legacySnapshot as Parameters<typeof scenarioSnapshotHash>[0],
+        ),
+      },
+    };
+
+    expect(() => createInitialState(legacy)).toThrow(/expected 3/);
+    const migrated = migrateWorldCreated(legacy);
+
+    expect(migrated.schemaVersion).toBe(3);
+    expect(migrated.payload.scenarioSnapshot.modelRequirements.temperature).toEqual({
+      value: 298.15,
+      unit: "K",
+    });
+    expect(migrated.payload.contentHash).toBe(WORLD_CREATED.payload.contentHash);
+    expect(replay(createLog(migrated)).replayHash).toBe(
+      replay(createLog(WORLD_CREATED)).replayHash,
+    );
   });
 
   it("deep-freezes the complete state graph", () => {

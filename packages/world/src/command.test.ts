@@ -33,7 +33,7 @@ describe("World Runtime command boundary", () => {
     const genesis = createInitialState(WORLD_CREATED);
     const state = reduce(genesis, {
       seq: 1,
-      schemaVersion: 2,
+      schemaVersion: 3,
       type: "MaterialCharged",
       payload: {
         vesselId: "burette",

@@ -248,7 +248,8 @@ export const LineageSchema = z.strictObject({
 });
 export type Lineage = z.infer<typeof LineageSchema>;
 
-export const CURRENT_SCHEMA_VERSION = 2;
+/** Current persisted World/Event/State schema version. */
+export const CURRENT_SCHEMA_VERSION = 3;
 
 /**
  * `sequence` is the present cursor and is NOT hashed. Wall-clock time appears

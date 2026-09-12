@@ -68,7 +68,7 @@ Export produces a single self-describing, versioned bundle:
 {
   "format": "chemrealm.export",
   "formatVersion": 1,
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "lineage": [ {
     "worldId": "world-1",
     "lineage": {
@@ -134,7 +134,7 @@ recording the fork points. Internal storage may share the prefix; export is a
 {
   "format": "chemrealm.export",
   "formatVersion": 1,
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "lineage": [
     { "worldId": "root", "lineage": {
       "parentWorldId": null, "forkSequence": null, "forkStateHash": null
@@ -170,12 +170,17 @@ Not generated, not stored, not derivable from stored data:
 - Every persisted record carries `schemaVersion`.
 - Migrations are explicit, versioned, and tested forward. `SPEC-0001` requires a
   migration test for every version bump.
-- The current persisted world/event migration `1 → 2` adds the explicit
-  `ScenarioSnapshot.indicators` block as an empty list when no prior value was
-  persisted. It never fabricates an indicator constant; an old request-local
-  value that was not in genesis cannot be recovered. Because the snapshot bytes
-  change, the World Runtime migration boundary rebuilds the derived genesis
-  `contentHash` before loading the migrated event.
+- The current persisted world/event schema is version 3. Migration `1 → 2`
+  adds the explicit `ScenarioSnapshot.indicators` block as an empty list when
+  no prior value was persisted; migration `2 → 3` canonicalizes the persisted
+  snapshot requirement temperature to Kelvin. Neither step fabricates a
+  scientific input. Because both migrations can change snapshot bytes, the
+  World Runtime migration boundary rebuilds the derived genesis `contentHash`
+  before loading the migrated event.
+- Persisted World/Event and authored Scenario records use separate migration
+  namespaces. The current authored Scenario shape is version 3; no automatic
+  migration is promised for the removed `fullyDissociated` field, because
+  silently deleting an authored scientific assertion would be unsafe.
 - The authored `Scenario` shape is a separate contract and is currently version
   3; authoring-only changes do not alter the persisted world migration path.
 - **Migration failure must be loud.** A world that cannot be migrated is

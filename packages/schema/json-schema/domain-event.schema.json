@@ -789,7 +789,7 @@
           "type": "object"
         },
         "schemaVersion": {
-          "const": 2,
+          "const": 3,
           "type": "number"
         },
         "seq": {
@@ -863,7 +863,7 @@
           "type": "object"
         },
         "schemaVersion": {
-          "const": 2,
+          "const": 3,
           "type": "number"
         },
         "seq": {
@@ -936,7 +936,7 @@
           "type": "object"
         },
         "schemaVersion": {
-          "const": 2,
+          "const": 3,
           "type": "number"
         },
         "seq": {
@@ -1010,7 +1010,7 @@
           "type": "object"
         },
         "schemaVersion": {
-          "const": 2,
+          "const": 3,
           "type": "number"
         },
         "seq": {
@@ -1093,7 +1093,7 @@
           "type": "object"
         },
         "schemaVersion": {
-          "const": 2,
+          "const": 3,
           "type": "number"
         },
         "seq": {
@@ -1156,7 +1156,7 @@
           "type": "object"
         },
         "schemaVersion": {
-          "const": 2,
+          "const": 3,
           "type": "number"
         },
         "seq": {

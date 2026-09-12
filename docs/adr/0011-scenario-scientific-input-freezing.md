@@ -46,19 +46,24 @@ content during replay. `SolverConfig` continues to contain global model
 parameters, including the explicit v0 `waterActivity: 1` convention, but not
 scenario indicator constants.
 
-The persisted world/event schema is version 2. Migration `1 → 2` adds
-`indicators: []` to legacy records that have no block. It does not invent a
-missing indicator constant. A pre-v2 world whose indicator existed only in an
-unpersisted request cannot be represented as having preserved that input and
-must not receive a false replay guarantee. The authored `Scenario` shape is a
-separate contract and is currently version 3; removing the ignored
-`fullyDissociated` field changes authoring validation, not the persisted-world
-migration.
+The persisted world/event schema is version 3. Migration `1 → 2` adds
+`indicators: []` to legacy records that have no block; migration `2 → 3`
+canonicalizes the persisted requirement temperature to Kelvin. Neither step
+invents a missing indicator constant. A pre-v2 world whose indicator existed
+only in an unpersisted request cannot be represented as having preserved that
+input and must not receive a false replay guarantee. The authored `Scenario`
+shape is a separate version 3 contract and has its own migration namespace;
+removing the ignored `fullyDissociated` field changes authoring validation and
+has no automatic v2→v3 rewrite.
 
 Because adding the explicit block changes the snapshot bytes, the World Runtime
 migration boundary rebuilds the derived `WorldCreated.payload.contentHash`
 before the migrated event is parsed or replayed. The legacy checksum is never
 copied over the changed snapshot.
+
+The same checksum rule applies to the persisted v2→v3 temperature
+canonicalization: a legacy `{ value: 25, unit: "degC" }` snapshot is migrated
+to `{ value: 298.15, unit: "K" }`, then receives a newly computed content hash.
 
 ## Alternatives considered
 

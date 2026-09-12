@@ -1,16 +1,17 @@
 # SPEC-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** **Accepted through revision 12** — revisions 13–16 are M4
+- **Status:** **Accepted through revision 12** — revisions 13–17 are M4
   implementation candidates pending owner review.
 - **Accepted baseline:** commit `8310c685`, `SPEC-0001` revision 6
-- **Current revision:** **16 Candidate** — M4 chemical identity closure adds
+- **Current revision:** **17 Candidate** — M4 chemical identity closure adds
   scenario-frozen indicator inputs, the explicit water-activity parameter, and
   common acetate-family semantics; revision 14 adds the total-solute domain and
   equilibrium-constant failure semantics; revision 15 makes numerical failure
   diagnostics explicit; revision 16 closes the cross-system component,
-  authoring-schema, temperature-normalization, and Davies-domain boundaries.
-  Revisions 7–12 are accepted amendments; revisions 13–16 remain pending owner
-  review.
+  authoring-schema, temperature-normalization, and Davies-domain boundaries;
+  revision 17 separates persisted v2→v3 migration from the authored Scenario
+  namespace and canonicalizes legacy persisted temperatures. Revisions 7–12 are
+  accepted amendments; revisions 13–17 remain pending owner review.
   See "Amendments since acceptance" below.
 - **Acceptance scope:** the specification and its acceptance criteria. Deferred
   items listed under Open questions remain open and must be resolved before the
@@ -38,8 +39,9 @@
 | 13 | 2026-09-12 | M4 Chemical Identity Closure candidate: NaOAc contributes to the common HA/A⁻ analytical family rather than a permanent acetate pool; scenario-specific indicator `Ka_in` is resolved with per-datum provenance into `ScenarioSnapshot.indicators` and frozen by the genesis content hash; the explicit v0 `waterActivity` parameter is recorded in solver identity; persisted world/event schema version 2 adds a forward migration from v1. | Pending owner review |
 | 14 | 2026-09-12 | M4 Scientific Domain & Constant Semantics Closure candidate: total analytical solute molality is gated at `1e-9..0.5 mol/kg` before solving; the pinned `Kw` means `a_H · a_OH` while `waterActivity: 1` records a unit convention without multiplying the equation; failed numerical brackets/iterations return `NOT_CONVERGED` rather than `MODEL_OUT_OF_DOMAIN`. | Pending owner review |
 
-| 15 | 2026-09-12 | M4 numerical diagnostic closure candidate: scientific wire schema version 2 requires NOT_CONVERGED.code and non-empty reason; residual is optional and appears only when a finite meaningful residual was computed. AC-S4 assigns solvent/phase/required-species compatibility to requirements resolution before genesis and keeps solve-stage checks in the adapter. | Pending owner review |
+| 15 | 2026-09-12 | M4 numerical diagnostic closure candidate: scientific wire schema v2 introduced `NOT_CONVERGED.code` and non-empty `reason`; residual is optional and appears only when a finite meaningful residual was computed. AC-S4 assigns solvent/phase/required-species compatibility to requirements resolution before genesis and keeps solve-stage checks in the adapter. | Pending owner review |
 | 16 | 2026-09-12 | M4 cross-system compatibility closure candidate: genesis derives actual scenario input components from the resolved snapshot before solver resolution; authoring scenarios use shape version 3 and no longer carry an ignored dissociation flag; resolved requirement temperatures are canonical Kelvin; Davies activity evaluation never leaves its declared `I_m ≤ 0.5 mol/kg` domain, including boundary classification. | Pending owner review |
+| 17 | 2026-09-13 | Persisted schema migration closure candidate: persisted World/Event schema advances from v2 to v3; v2 requirement temperatures are explicitly canonicalized to Kelvin with a rebuilt genesis `contentHash`; persisted and authored Scenario migration namespaces are separate, and no automatic rewrite deletes the removed `fullyDissociated` authoring field. | Pending owner review |
 
 A revision bump is recorded here rather than only in the body because the header
 is what a reader checks before deciding whether the file they are reading is the
@@ -893,7 +895,7 @@ state it claimed to own.
 
 ```
 WorldState {
-  schemaVersion: 2
+  schemaVersion: 3
   worldId: WorldId
   lineage: { parentWorldId: WorldId | null, forkSequence: number, forkStateHash: Hash }
   sequence: number                      // present cursor; not hashed
@@ -1642,7 +1644,7 @@ zod; JSON Schema is emitted for the Python oracle (`ADR-0001` rule 1).
 
 | Contract | Kind | Versioned |
 |---|---|---|
-| `WorldState`, `Vessel`, `Apparatus`, `Attachment` | Persisted | yes, `schemaVersion: 2` |
+| `WorldState`, `Vessel`, `Apparatus`, `Attachment` | Persisted | yes, `schemaVersion: 3` |
 | The six v0 events | Persisted | yes |
 | `Command` union | Runtime | yes |
 | `SolveRequest`, `SolveResult`, `ScientificState`, `Provenance` | Runtime | yes |
@@ -1721,7 +1723,7 @@ Mapped one-to-one to acceptance criteria. Nothing below is "add tests later".
 | Integration | Command → validate → event → reduce → state, for each v0 command |
 | Replay | Full-log replay hash at every boundary; snapshot-deleted replay |
 | Branch | Parent-immutability hash; comparison alignment by cumulative volume |
-| Persistence | IndexedDB round-trip; export/import round-trip; explicit v1→v2 migration with derived genesis checksum rebuild |
+| Persistence | IndexedDB round-trip; export/import round-trip; explicit v1→v2→v3 migration with canonical-temperature normalization and derived genesis checksum rebuild |
 | Visual | Deterministic fixture world; screenshots at 4 named viewports; baseline diff |
 | Browser | Playwright core flow: deliver → observe → undo → fork → compare |
 | ACE | Evidence event emitted; ≥2 hypotheses retained; fading triggers; challenge mode has no intervention |
@@ -1841,12 +1843,15 @@ Binary and verifiable. Every criterion maps to an evidence method.
 
 ## Rollout/migration
 
-- World and content `schemaVersion` is currently `2`. Version 2 adds the
-  explicit resolved `ScenarioSnapshot.indicators` block; the tested forward
-  migration is `1 → 2` and inserts only an empty list when no indicator value
-  was previously persisted. A World Runtime migration boundary rebuilds the
-  derived genesis `contentHash` after that snapshot change. Scientific DTO
-  schema versions remain independent.
+- Persisted World/Event `schemaVersion` is currently `3`. Version 2 added the
+  explicit resolved `ScenarioSnapshot.indicators` block; version 3 requires the
+  persisted snapshot requirement temperature to be canonical Kelvin. The tested
+  forward migration is `1 → 2 → 3`: it inserts only an empty indicator list
+  where no value was previously persisted, then canonicalizes legacy temperature
+  units. A World Runtime migration boundary rebuilds the derived genesis
+  `contentHash` after either snapshot change. Authored Scenario shape version 3
+  has its own migration namespace; no automatic migration deletes the removed
+  `fullyDissociated` field. Scientific DTO schema versions remain independent.
 - Export format `chemrealm.export` begins at `formatVersion: 1`.
 - **Forward migration must be explicit and tested.** No automatic best-effort
   migration.
