@@ -1,6 +1,7 @@
 # M4 Acid-Base Engine and Oracle Validation Design
 
-Status: Design approved by the project owner on 2026-09-12. Implementation has
+Status: Design v1 approved by the project owner on 2026-09-12. Self-review
+revision is pending one owner-level accuracy-field decision. Implementation has
 not started.
 
 ## Context
@@ -87,6 +88,9 @@ The implementation is split by responsibility:
   residual diagnostics.
 - packages/sci/src/acidbase/species.ts owns mass balance, charge balance,
   ionic-strength calculation, species inventory, and state construction inputs.
+- packages/sci/src/acidbase/catalog.ts owns the exact v0 component identities,
+  stoichiometric roles, and the fixed acid constant used by this model. It
+  never infers chemistry from a material label.
 - packages/sci/src/acidbase/indicator.ts owns indicator equilibrium ratios; it
   does not map ratios to colours.
 - packages/sci/src/acidbase/index.ts owns adapter orchestration, domain
@@ -119,6 +123,38 @@ The activity equations are:
 The neutral acid approximation is γ_HA = 1. Kw, Ka, A, and b are dimensionless
 model parameters. Physical molalities are created only at the ScientificState
 boundary by multiplying reduced molality by m°.
+
+### Input interpretation and fixed v0 component catalog
+
+The model interprets SolveRequest.soluteId as an exact model component identity,
+not as a display label. The v0 catalog is:
+
+| Component id | Required mode | Scientific contribution |
+|---|---|---|
+| HCl | fully-dissociated | one strong-acid chloride equivalent, contributing Cl⁻ |
+| NaOH | fully-dissociated | one strong-base sodium equivalent, contributing Na⁺ |
+| HOAc | monoprotic-equilibrium | total HA/A⁻ family with the catalogued Ka |
+| NaOAc | fully-dissociated | Na⁺ and acetate A⁻ total |
+
+Free H⁺ and OH⁻ are produced by the water/equilibrium equations; they are not
+treated as authored solute labels. HCl, NaOH, HOAc, and NaOAc are the only
+component ids the v0 adapter may accept. Any other id or a mode that contradicts
+this catalog returns MODEL_OUT_OF_DOMAIN with a reason. The mapping is a
+model-owned stoichiometric catalog, so a material name cannot silently select a
+chemical behavior.
+
+Repeated entries for the same component id are aggregated only when their mode
+and, for HOAc, their Ka agree exactly. Conflicting duplicate entries are
+MODEL_OUT_OF_DOMAIN rather than an implicit precedence rule.
+
+The equilibrium solute ka remains present in SolveRequest because it is part of
+the M3 scientific request contract. For HOAc, the adapter requires it to equal
+the frozen catalog value in its SolverConfig exactly; a different finite value is
+an unsupported model request, not a silently substituted constant. World
+composition code obtains this value from the resolved adapter/configuration, and
+the exact value is persisted through WorldCreated.solverConfig. Thus changing
+acetic-acid Ka changes replay identity rather than changing only a transient
+request.
 
 ### Solve structure
 
@@ -181,6 +217,19 @@ docs/research/constants-provenance.md. No value may carry more significant
 figures than its source. A changed constant creates a different solver
 configuration and therefore a different replay identity.
 
+The fixed configuration includes the global model constants Kw, Ka_HOAc,
+Davies A and b, standard molality, neutral-acid activity coefficient, water
+activity convention, and the numeric-policy precision/version represented by
+the adapter's exact identity. Request-local indicator Ka values are scientific
+inputs to a solve, not silently promoted to global model constants; their
+catalog/source record must still be available to the request builder and
+reference evidence.
+
+M4 also reviews the density and molar-mass provenance already attached to
+MaterialSnapshot inputs because they determine the water-mass/molality boundary.
+It does not duplicate those data in SolverConfig or move their ownership out of
+the genesis data-provenance contract.
+
 ## World/event design
 
 M4 introduces no new persisted event or world-state field. WorldCreated keeps
@@ -215,11 +264,15 @@ introduced.
 
 The existing public adapter shape remains stable:
 
-    export function createAcidBaseAdapter(options?: {
-      readonly constants?: AcidBaseConstants;
-    }): SolverAdapter;
+    export function createAcidBaseAdapter(): SolverAdapter;
 
     solve(request: SolveRequest): Promise<SolveResult>;
+
+There is no public arbitrary-constant override on the production factory. A
+constant override would let two adapters claim the same fixed id/version while
+solving different models. Test vectors vary inputs; they do not mutate the
+accepted production identity. Any future configurable model requires a new
+explicit identity/configuration contract.
 
 The adapter's frozen identity is:
 
@@ -236,6 +289,15 @@ existing ScientificState or result contract cannot express a required
 scientific output, implementation must stop and propose a separate schema ADR
 instead of widening the schema silently.
 
+The current runtime schema represents the proposed accuracy-envelope result as
+ValidityStatus.withinProposedAccuracyEnvelope, a boolean. The accepted SPEC
+currently also contains the older prose form
+accuracyStatus: "outside-validated-envelope". M4 must not implement both or
+silently choose between them: before production code is planned, the owner
+must accept a wording amendment that makes the SPEC use the existing boolean
+field, unless a separate schema decision intentionally introduces a new tagged
+field.
+
 ## Failure modes
 
 | Failure | Required behavior |
@@ -243,9 +305,10 @@ instead of widening the schema silently.
 | Missing, malformed, non-finite, or physically impossible request field | INVALID_INPUT with violations; no solver callback and no exception escape |
 | Unsupported species, solvent, phase, or temperature | MODEL_OUT_OF_DOMAIN with reason and nearest supported descriptor |
 | Final converged ionic strength exceeds 0.5 mol/kg | MODEL_OUT_OF_DOMAIN; do not emit ScientificState |
-| Root bracket cannot be established | NOT_CONVERGED with residual/iterations, or an explicit model refusal if the input is outside the declared domain |
+| Root bracket cannot be established for an otherwise in-domain request | NOT_CONVERGED with residual and iterations; domain failures are rejected before this path |
 | Inner or outer solve reaches iteration limit | NOT_CONVERGED; no stale or partial state |
-| Deterministic math argument outside validated band | typed refusal; never silently call a native substitute |
+| Deterministic math argument outside the model's declared validated band | MODEL_OUT_OF_DOMAIN; never silently call a native substitute |
+| Internal solver invariant produces an invalid math argument | NOT_CONVERGED with a diagnostic; the invariant is a test failure and no partial state is emitted |
 | TypeScript/PHREEQC disagreement beyond tolerance | recorded investigation failure; never averaged or hidden |
 | Missing constant citation or invented precision | M4 S3 blocked; no accepted evidence claim |
 
@@ -261,7 +324,9 @@ intended reason. The test layers are:
 3. solver tests for strong acid/base excess, weak-acid buffer, dilute weak acid,
    equivalence region, low-water/high-ionic-strength boundaries, and refusal;
 4. adapter contract tests for all four result statuses and exact provenance;
-5. hand-authored REF-1 through REF-10 fixtures loaded from JSON;
+5. hand-authored REF-1 through REF-10 fixtures loaded from JSON. REF-5 and
+   REF-10 exercise ScientificProjection for molarity-dependent quantities; they
+   do not add those quantities to ScientificState;
 6. Python PHREEQC batch tests using aligned molality inputs and a locally pinned
    database; and
 7. a swept cross-engine comparison that includes pre-equivalence, equivalence,
@@ -287,10 +352,31 @@ internals.
 | AC-S10 | Deterministic log/exp functions meet the stated ulp bound in-domain and refuse outside | numeric vectors |
 | AC-S11 | Outer residual is strictly increasing over the expanded sweep and domain boundary | monotonicity test |
 | AC-S12 | No UI or documentation calls model pH “true” or “thermodynamic” pH | copy review and existing inspection contract |
-| AC-S13 | Results outside the proposed accuracy envelope carry the required qualification | validity-domain test |
+| AC-S13 | Results outside the proposed accuracy envelope carry withinProposedAccuracyEnvelope: false after the SPEC/schema wording is reconciled | validity-domain test |
 | AC-S14 | The v0 scenario maximum ionic strength is checked against the proposed envelope | boundary evidence |
 | AC-S15 | Missing scenario density is rejected rather than defaulted | schema/content negative test |
 | AC-S16 | Constant precision never exceeds the cited source precision | provenance review |
+
+## Self-review findings and closure status
+
+The first self-review found and resolved the following design ambiguities in this
+document:
+
+- v0 component ids and stoichiometric roles are now explicit and model-owned;
+- the public factory no longer permits an identity-breaking constant override;
+- HOAc Ka is tied to the frozen solver configuration and genesis identity;
+- bracket, deterministic-math, and internal-invariant failures have distinct
+  public result behavior; and
+- REF-5/REF-10 are explicitly assigned to ScientificProjection rather than
+  being smuggled into ScientificState.
+
+One owner-level contract decision remains before an implementation plan can be
+written:
+
+- reconcile the accepted SPEC's accuracyStatus wording with the existing
+  ValidityStatus.withinProposedAccuracyEnvelope schema field. The recommended
+  resolution is to amend the SPEC wording and keep the existing schema, with no
+  schema version bump.
 
 ## Rollout/migration
 
@@ -305,8 +391,8 @@ relabelled as a successful validation.
 
 ## Open questions
 
-The algorithm and ownership decisions are closed. Two external evidence details
-must be pinned during implementation before M4 S3:
+The algorithm and ownership decisions are otherwise closed. Two external
+evidence details must be pinned during implementation before M4 S3:
 
 1. the exact citable source and precision for the acetic-acid Ka, densities,
    molar masses, Kw, Davies constants, neutral-acid approximation, and
