@@ -444,7 +444,8 @@
       "required": [
         "schemaVersion",
         "status",
-        "reason"
+        "reason",
+        "nearestSupported"
       ],
       "type": "object"
     },
