@@ -1,3 +1,7 @@
+import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
 import { describe, expect, it } from "vitest";
 
 import { WORLD_CREATED } from "../test/fixtures.js";
@@ -107,6 +111,33 @@ describe("World Runtime replay", () => {
     );
 
     expect(replay(log, { snapshots: [foreignSnapshot] }).state).toEqual(replay(log).state);
+  });
+
+  it("replays the serialized world unchanged after its content source is corrupted and deleted", async () => {
+    const { log } = eventLog(3);
+    const serializedLog = JSON.parse(JSON.stringify(log)) as unknown;
+    const sandbox = await mkdtemp(join(tmpdir(), "chemrealm-r12-"));
+    const contentDir = join(sandbox, "content");
+    const previousWorkingDirectory = process.cwd();
+    await mkdir(contentDir);
+    await writeFile(
+      join(contentDir, "hcl-naoh.json"),
+      JSON.stringify({ scenarioRef: "hcl-naoh", materials: [{ density: 999999 }] }),
+      "utf8",
+    );
+
+    try {
+      process.chdir(sandbox);
+      const withCorruptContent = replay(serializedLog);
+      await rm(contentDir, { recursive: true, force: true });
+      const withoutContent = replay(serializedLog);
+
+      expect(withoutContent.replayHash).toBe(withCorruptContent.replayHash);
+      expect(withoutContent.state).toEqual(withCorruptContent.state);
+    } finally {
+      process.chdir(previousWorkingDirectory);
+      await rm(sandbox, { recursive: true, force: true });
+    }
   });
 
   it("rejects a serialized log that does not start at genesis", () => {

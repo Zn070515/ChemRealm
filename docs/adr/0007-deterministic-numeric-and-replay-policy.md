@@ -244,8 +244,9 @@ it, a hash mismatch cannot distinguish a real divergence from ulp noise.
 ### Negative
 - ~1 ulp of accuracy is traded for engine-independence in `log10`/`exp`.
 - `detExp10` is domain-restricted until its argument reduction is improved at M4.
-- Every value crossing into canonical state must pass through the quantization
-  boundary; missing one is a silent defect, so it needs a test rather than
+- Replay-identity canonical state is quantized in its explicit identity
+  projection; transfer deltas are quantized once and applied zero-sum. Missing
+  either boundary is a silent defect, so each rule needs a test rather than
   vigilance.
 - `detLog10`/`detExp10` are code we own, test, and must maintain. The alternative
   was depending on unspecified engine behaviour.

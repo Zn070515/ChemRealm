@@ -455,7 +455,7 @@ M4 can supply the real one without touching this package.
 | Reducer rejects out-of-sequence events | Sequence enforcement |
 | `canonicalJson` order-independence | Hash is structural, not incidental |
 | **Replay completeness: move `content/` aside entirely, replay a serialized world, `replayHash` unchanged** | AC-R12 — the log is self-contained |
-| `liquidVolume` is updated only by transfer; changing it changes `replayHash` | AC-R13 |
+| `liquidVolume` changes only through explicit volume-bearing events (`MaterialCharged`, `TransferCommitted`); changing it changes `replayHash` | AC-R13 |
 | Volume, water mass and component amounts conserved over 100 transfers | AC-R14 |
 | Transfer deltas computed from the **pre-transfer** snapshot; an implementation that interleaves read/write produces a different result and fails | AC-R18 |
 | `WorldCreated` carries `worldId`; `WorldBranched` carries `childWorldId`, `parentWorldId`, `forkSequence`, `forkStateHash`; replay reconstructs the final `worldId` and lineage from the log alone | AC-R19 |

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { WORLD_CREATED } from "../test/fixtures.js";
 import { appendEvent, createLog } from "./log.js";
 import { reduce } from "./reduce.js";
-import { replayBranch } from "./replay.js";
+import { replay, replayBranch } from "./replay.js";
 import { createInitialState, stateHash } from "./state.js";
 import { appendBranchEvent, forkWorld } from "./branch.js";
 
@@ -57,9 +57,13 @@ describe("World Runtime branches", () => {
     const childReplayFromForkSnapshot = replayBranch(childLog, {
       snapshots: [branch.forkSnapshot],
     });
+    const flattenedReplay = replay([...childLog.prefix, ...childLog.suffix]);
     expect(childReplay.state.worldId).toBe("w-child");
     expect(childReplay.state.canonical.byVessel.flask?.liquidVolume).toBeCloseTo(0.015, 14);
     expect(childReplayFromForkSnapshot.state).toEqual(childReplay.state);
+    expect(flattenedReplay.state.worldId).toBe(childReplay.state.worldId);
+    expect(flattenedReplay.state.lineage).toEqual(childReplay.state.lineage);
+    expect(flattenedReplay.replayHash).toBe(stateHash(childReplay.state));
     expect(stateHash(parentState)).toBe(parentHash);
   });
 

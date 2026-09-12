@@ -1683,7 +1683,7 @@ Binary and verifiable. Every criterion maps to an evidence method.
 | AC-R10 | The reducer quantizes **only** canonical independent state; no derived quantity is ever quantized independently, and each conserved transfer delta is quantized once | static check + review of the explicit reducer delta boundaries |
 | AC-R11 | `canonicalJson` normalizes `-0` to `0` and rejects `NaN`/`±Infinity` | unit test with the adversarial values |
 | AC-R12 | **Replay completeness.** Delete or corrupt every file under `content/`, then replay a serialized world: `replayHash` is unchanged. The log is self-contained | test that moves `content/` aside and replays |
-| AC-R13 | `liquidVolume` is updated only by transfer and enters `replayHash`; a change in it changes the hash | hash-diff test over a transfer |
+| AC-R13 | `liquidVolume` is canonical world truth. It changes only through explicit volume-bearing world events (`MaterialCharged`, `TransferCommitted`), is never recomputed from chemistry or presentation state, and enters `replayHash` | hash-diff test over charge/transfer events |
 | AC-R14 | Transfer is **component**- and volume-conserving over 100 steps under the homogeneous-mixture assumption. **Element** totals (AC-S3) are conserved as a consequence, through the component→element composition declared by the model (`AC-R21`) | conservation test (spike §N promoted) |
 | AC-R15 | `WorldState` has exactly **one** location for vessel contents; `Vessel` carries no `contents` field | schema test + review |
 | AC-R16 | `scenarioSnapshot` carries model **requirements**, never a resolved `solverConfig`; exactly one resolved solver config exists per world | schema test: the snapshot type has no solver-config field |
