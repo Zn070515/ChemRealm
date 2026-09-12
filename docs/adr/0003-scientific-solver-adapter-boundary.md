@@ -1,10 +1,10 @@
 # ADR-0003: Scientific solver adapter boundary
 
 - **Status:** **Accepted** — M1 Final Closure source-data provenance amendment
-  accepted. Owner, 2026-09-11.
-- **Deferred decisions:** see the ADR's own `## Open questions` / `## Open
-  decisions`; acceptance covers the decision, not deferred sub-questions.
-- **Date:** 2026-09-11
+  and M3 owner decisions accepted. Owner, 2026-09-12.
+- **Deferred decisions:** ADR-0008's availability tiers and product workflow
+  remain deferred to M8; the M3 registry/resolver primitive is decided below.
+- **Date:** 2026-09-12
 - **Deciders:** Project owner
 - **Related:** `GOAL.md` §5.1, §5.2, §6.1, §14; `CLAUDE.md` §4.5, §8; `AGENTS.md` §2, §9
 - **Blocks:** `PLAN-0001` M3, M4
@@ -60,7 +60,7 @@ interface SolverAdapter {
   readonly version: string;         // semver, participates in replay identity
   readonly models: readonly ModelDescriptor[];
 
-  solve(request: SolveRequest): SolveResult;
+  solve(request: SolveRequest): Promise<SolveResult>;
 }
 
 type SolveResult =
@@ -69,6 +69,26 @@ type SolveResult =
   | { status: "NOT_CONVERGED";  residual: number; iterations: number }
   | { status: "INVALID_INPUT";  violations: readonly InputViolation[] };
 ```
+
+### M3 owner decisions (accepted 2026-09-12)
+
+1. **Solver disagreement has no unconditional authority.** The solver selected
+   in a world's genesis record is authoritative for that world's replay
+   identity, but not a universal scientific authority. If an independent
+   solver or oracle disagrees beyond the accepted tolerance, the result is a
+   finding to investigate. Implementations must never average the results or
+   silently choose the more convenient one; M4 validation fails until the
+   disagreement is explained.
+2. **The adapter is async from the start.** The public contract is
+   `solve(request): Promise<SolveResult>`, including for a local pure
+   TypeScript implementation. This keeps worker, WASM, and out-of-process
+   adapters from requiring a later breaking change.
+3. **M3 implements only exact availability primitives.** Registry lookup is an
+   exact `(id, version)` match: a newer or older version is not a fallback.
+   Resolver requirements are constraints, not preferences, and resolution
+   returns an explicit unavailable/incompatible reason when no adapter
+   satisfies them. ADR-0008's Tier A/B/C replay, re-solve, and archive product
+   workflows remain M8 scope.
 
 **Correction (2026-09-11, owner-approved).** The OK branch was sketched above as
 `{ state, provenance }`, with provenance a SIBLING of state. The implementation
@@ -251,9 +271,9 @@ that read is visible in review.
 ### Negative
 - More ceremony at every call site than `const ph = solvePh(...)`.
 - The result envelope is a schema, so changing it is a versioned change.
-- Two solver implementations will eventually disagree on some input. The
-  interface makes that *visible* (different `SolverId`), but the project still
-  needs a policy for which one is authoritative. Recorded as an open question.
+- Two solver implementations may disagree on some input. The disagreement is
+  deliberately visible and follows the investigation policy above; it is not
+  averaged or silently resolved by the adapter boundary.
 
 ### Neutral
 - The adapter boundary is invisible to users. Its cost is entirely in developer
@@ -269,14 +289,13 @@ intentional — it is `GOAL.md` §5.3.
 
 ## Open questions
 
-1. When `acidbase-monoprotic-davies` and `phreeqc-adapter` disagree, which is authoritative?
-   **Proposed: neither, unconditionally — a disagreement above tolerance is a
-   finding to investigate, and the world records which solver produced its
-   numbers.** Owner confirmation wanted before M3.
-2. Should the adapter be synchronous or async in its interface? A future
-   PHREEQC-over-HTTP adapter is async; a pure local solve is sync. Deciding
-   async now costs a little ergonomics and avoids a breaking change later.
-   **Leaning: async from the start.** Confirm at M3.
+1. ~~When `acidbase-monoprotic-davies` and `phreeqc-adapter` disagree, which is
+   authoritative?~~ **RESOLVED by owner, 2026-09-12.** Neither is
+   unconditionally authoritative; disagreement above tolerance is a finding,
+   never an input to averaging or silent selection.
+2. ~~Should the adapter be synchronous or async in its interface?~~
+   **RESOLVED by owner, 2026-09-12.** `SolverAdapter.solve` is async from the
+   start and returns `Promise<SolveResult>`.
 3. ~~Activity model for v0~~ — **RESOLVED 2026-09-11.** Davies on the
    **molality** basis, participating **inside** the equilibrium constraints, with
    the two ionic-strength bases kept as distinct types. Demonstrated to
@@ -285,8 +304,8 @@ intentional — it is `GOAL.md` §5.3.
    rule is 2 decimal places, derived from it. SIT or Pitzer would be more
    accurate at higher ionic strength and remain out of scope. See
    `docs/science/quantity-ontology.md`.
-4. **What happens to a persisted world whose solver version no longer ships?**
-   Not answerable within this ADR — it is `ADR-0008`, which defines three
-   availability tiers (exact replay / re-solve / archive). The adapter registry
-   must be able to report *which* tiers are available for a given world, which
-   is a small addition to the interface above. Confirm at M3.
+4. ~~What happens to a persisted world whose solver version no longer ships?~~
+   **M3 boundary resolved by owner, 2026-09-12.** The registry provides exact
+   `(id, version)` lookup and requirements compatibility/unavailability
+   reasons. The three availability tiers (exact replay / re-solve / archive)
+   and their product workflow remain `ADR-0008` / M8 scope.

@@ -231,7 +231,7 @@ ACE reads WorldState + its own evidence store. It writes only to its own store.
 
 ### Interface summary (exact contracts in §API/schema)
 
-- `SolverAdapter.solve(request) → SolveResult` — a result envelope, never a bare number (`ADR-0003`).
+- `SolverAdapter.solve(request) → Promise<SolveResult>` — an async result envelope, never a bare number (`ADR-0003`).
 - `reduce(state, event) → state` — pure, deterministic, no clock, no RNG (`ADR-0002`).
 - `toObservable(scientificState) → ObservableModel` — pure, no DOM (`ADR-0006`).
 - `toRenderState(observableModel) → RenderState` — pure, no PixiJS.

@@ -17,10 +17,10 @@ scientifically consequential, format-defining, or dependency-defining
 **All nine baseline ADRs were accepted by the owner on 2026-09-11**, at baseline
 commit `8310c685`, together with `SPEC-0001` revision 6. The M1 Final Closure
 amendments to ADR-0001 and ADR-0003, and new ADR-0010, were accepted by the owner
-with M1 S3 at implementation commit `295908ec` (CI run `34611467104`). Acceptance
-covers each ADR's *decision*; every ADR that carries an `## Open questions` or
-`## Open decisions` section keeps those explicitly open, and they must be
-resolved before the milestone each one names.
+with M1 S3 at implementation commit `295908ec` (CI run `34611467104`). ADR-0003's
+M3 owner decisions were accepted with M2 S3 at baseline `778fadbd` (CI run
+`34677042056`). Acceptance covers each ADR's *decision*; any remaining open
+question must be resolved before the milestone that names it.
 
 If an accepted decision is later found to be wrong, the ADR is **superseded by a
 new ADR**, not quietly edited.
@@ -31,7 +31,7 @@ new ADR**, not quietly edited.
 |---|---|---|---|
 | [0001](0001-repository-and-workspace-strategy.md) | Repository and workspace strategy | **Accepted** (M1 amendment) | M0 |
 | [0002](0002-world-event-sourcing.md) | World event sourcing and branch model | **Accepted** | M1, M2, M8 |
-| [0003](0003-scientific-solver-adapter-boundary.md) | Scientific solver adapter boundary | **Accepted** (M1 amendment) | M3, M4 |
+| [0003](0003-scientific-solver-adapter-boundary.md) | Scientific solver adapter boundary | **Accepted** (M1/M3 amendments) | M3, M4 |
 | [0004](0004-units-and-quantity-representation.md) | Units and quantity representation | **Accepted** (revised) | M1, M3, M5 |
 | [0005](0005-local-first-persistence.md) | Local-first persistence and export | **Accepted** | M8 |
 | [0006](0006-renderer-and-observable-architecture.md) | Renderer and observable architecture | **Accepted** | M5, M6, M7 |

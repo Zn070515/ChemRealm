@@ -1,21 +1,23 @@
 # PLAN-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** **M1 S3 Verified / Accepted; M2 S2 implementation candidate** — the original plan
-  was approved on 2026-09-11 at `SPEC-0001` revision 6; the current contract
-  is revision 9.
+- **Status:** **M0–M2 S3 Verified / Accepted** — the original plan was approved
+  on 2026-09-11 at `SPEC-0001` revision 6; the current contract is revision 9.
 - **Completed:** `M0 — Repository foundation` reached **S3 — Verified** on
   2026-09-11. Evidence: `docs/evidence/M0.md`, commits `1f3dfee`/`565a2e8`,
   CI run `34595967023` (13/13 gate steps on a clean `ubuntu-latest` checkout).
-- **Authorized next:** `M2 — Event runtime and replay`. `M1 — Schema and units`
-  is **S3 — Verified / Accepted** with evidence in `docs/evidence/M1.md`.
+- **Authorized next:** `M3 — Solver adapter contract`. `M1 — Schema and units`
+  is **S3 — Verified / Accepted** with evidence in `docs/evidence/M1.md`; `M2 —
+  Event runtime and replay` is **S3 — Verified / Accepted** at baseline
+  `778fadbd` with CI `34677042056` and evidence in `docs/evidence/M2.md`.
 - **Coverage check:** `uv run python tools/check_acceptance_coverage.py` — every `AC-*` in
   `SPEC-0001` is required to appear in at least one milestone here. Run it after
   editing either document.
-- **Date:** 2026-09-12 (revised for M2 implementation)
+- **Date:** 2026-09-12 (revised for M2 acceptance and M3 authorization)
 - **Implements:** `docs/specs/SPEC-0001-world-foundation-acid-base-titration.md`
 - **Related ADRs:** 0001–0009 were accepted at the baseline; ADR-0001 and
-  ADR-0003 M1 Final Closure amendments and ADR-0010 are accepted with M1 S3.
-  Load-bearing here: 0004 (revised), 0007 (revised), 0008, 0009, and ADR-0010's
+  ADR-0003 M1 Final Closure and M3 owner decisions, ADR-0001's M1 amendment,
+  and ADR-0010 are accepted. Load-bearing here: 0004 (revised), 0007 (revised),
+  0008, 0009, and ADR-0010's
   M2 basis-boundary gate.
 - **Audience:** an agent that did not participate in the design. Nothing below
   assumes prior context beyond the repository documents.
@@ -31,7 +33,8 @@
 > construction; every resolved snapshot datum is canonical, carries its own
 > `DataProvenance`, and is required structurally; export contracts are aligned
 > with the v1 schema; and v0 rejects mixed composition bases until the Scientific
-> Reality Core owns the joint resolver. M1 is S3 verified and M2 is authorized.
+> Reality Core owns the joint resolver. M1 and M2 are S3 verified; M3 is
+> authorized.
 
 ## How to read this plan
 
@@ -352,8 +355,8 @@ truth" claim rather than asserting it.
 
 ## M2 — Event runtime and replay
 
-**Status:** **S2 — Implemented Candidate / Owner Verification Pending** · evidence
-`docs/evidence/M2.md`
+**Status:** **S3 — Verified / Accepted**, baseline `778fadbd`, CI
+`34677042056` · evidence `docs/evidence/M2.md`
 **Target stage:** S3
 **Addresses:** ADR-0002, ADR-0007; `SPEC-0001` AC-R1..AC-R5, AC-R7, AC-R9..AC-R16, AC-R18..AC-R19
 
@@ -472,6 +475,8 @@ the scientific engine is built means rebuilding both.
 
 ## M3 — Solver adapter contract
 
+**Authorization:** Owner-authorized 2026-09-12 after M2 S3 acceptance at
+baseline `778fadbd` (CI `34677042056`)
 **Target stage:** S3
 **Addresses:** ADR-0003; `SPEC-0001` AC-R20, AC-S4
 
@@ -498,7 +503,7 @@ packages/sci/src/registry.ts         adapter registry, id+version lookup
 
 1. The result union from ADR-0003, with **no** convenience scalar accessor. If a
    call site wants a number, it reads it from the returned state, visibly.
-2. Async from the start, per ADR-0003 open question 2: a future PHREEQC adapter
+2. Async from the start, per the accepted ADR-0003 M3 owner decision: a future PHREEQC adapter
    may be out-of-process, and retrofitting async later is a breaking change
    across every call site.
 3. Solver `Provenance` carries `{ modelId, modelVersion, activityModel, parameters,
