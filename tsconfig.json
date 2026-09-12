@@ -3,6 +3,7 @@
   "files": [],
   "references": [
     { "path": "packages/schema" },
+    { "path": "packages/sci" },
     { "path": "packages/world" },
     { "path": "apps/web" },
     { "path": "tsconfig.node.json" }

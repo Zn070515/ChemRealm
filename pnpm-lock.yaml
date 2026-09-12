@@ -61,6 +61,12 @@ importers:
         specifier: ^4.1.12
         version: 4.6.1
 
+  packages/sci:
+    dependencies:
+      '@chemrealm/schema':
+        specifier: workspace:*
+        version: link:../schema
+
   packages/world:
     dependencies:
       '@chemrealm/schema':

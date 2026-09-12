@@ -176,6 +176,8 @@ export const ModelDescriptorSchema = z.strictObject({
     species: z.array(z.string()),
     solvent: z.string(),
     phase: z.string(),
+    /** Whether the model accounts for activity coefficients. */
+    activityCorrected: z.boolean(),
   }),
 });
 export type ModelDescriptorDto = z.infer<typeof ModelDescriptorSchema>;
@@ -187,6 +189,7 @@ export interface ModelValidity {
   species: readonly string[];
   solvent: string;
   phase: string;
+  readonly activityCorrected: boolean;
 }
 
 export interface ModelDescriptor {
@@ -213,6 +216,7 @@ export function parseModelDescriptor(dto: ModelDescriptorDto): ModelDescriptor {
       species: dto.validity.species,
       solvent: dto.validity.solvent,
       phase: dto.validity.phase,
+      activityCorrected: dto.validity.activityCorrected,
     },
   };
 }

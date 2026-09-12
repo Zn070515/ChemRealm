@@ -7,6 +7,7 @@ import { MIGRATIONS, migrate } from "./migrate.js";
 import { QuantitySchema } from "./quantity.js";
 import {
   ScientificStateSchema,
+  ModelDescriptorSchema,
   SolveRequestSchema,
   SolveResultSchema,
   SolverConfigSchema,
@@ -749,6 +750,34 @@ describe("the export bundle cannot carry learner identity", () => {
   });
 });
 
+describe("model descriptors declare machine-checkable capabilities", () => {
+  const base = {
+    id: "test-solver",
+    version: "1.0.0",
+    description: "contract test",
+    validity: {
+      temperature: {
+        min: { value: 0, unit: "K" },
+        max: { value: 400, unit: "K" },
+      },
+      ionicStrengthMolalMax: { value: 0.5, unit: "mol/kg" },
+      species: ["H+"],
+      solvent: "water",
+      phase: "aqueous",
+    },
+  };
+
+  it("requires an explicit activity-correction capability", () => {
+    expect(
+      ModelDescriptorSchema.safeParse({
+        ...base,
+        validity: { ...base.validity, activityCorrected: true },
+      }).success,
+    ).toBe(true);
+    expect(ModelDescriptorSchema.safeParse(base).success).toBe(false);
+  });
+});
+
 describe("DTOs parse into domain quantities, not bare numbers", () => {
   const requestDto = {
     schemaVersion: 1,
@@ -849,6 +878,7 @@ describe("DTOs parse into domain quantities, not bare numbers", () => {
             species: ["H+"],
             solvent: "water",
             phase: "aqueous",
+            activityCorrected: true,
           },
         },
       }),

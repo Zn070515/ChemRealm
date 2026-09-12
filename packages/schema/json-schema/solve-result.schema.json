@@ -320,6 +320,9 @@
             "validity": {
               "additionalProperties": false,
               "properties": {
+                "activityCorrected": {
+                  "type": "boolean"
+                },
                 "ionicStrengthMolalMax": {
                   "additionalProperties": false,
                   "properties": {
@@ -407,7 +410,8 @@
                 "ionicStrengthMolalMax",
                 "species",
                 "solvent",
-                "phase"
+                "phase",
+                "activityCorrected"
               ],
               "type": "object"
             },

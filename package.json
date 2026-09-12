@@ -17,7 +17,7 @@
     "artifacts": "node tools/check_build_artifacts.mjs",
     "lint": "eslint .",
     "test:browser": "playwright test",
-    "verify:guarantees": "tsc -p packages/schema/tsconfig.guarantees.json",
+    "verify:guarantees": "tsc -p packages/schema/tsconfig.guarantees.json && tsc -p packages/sci/tsconfig.guarantees.json",
     "verify:schema-artifacts": "node packages/schema/scripts/emit-json-schema.mjs --check",
     "emit:schema": "node packages/schema/scripts/emit-json-schema.mjs"
   },

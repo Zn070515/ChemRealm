@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "noUnusedLocals": false
+  },
+  "include": ["src/**/*.guarantees.ts", "src/**/*.ts"],
+  "exclude": ["src/**/*.test.ts"]
+}
