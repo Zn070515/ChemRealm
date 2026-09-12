@@ -184,3 +184,15 @@ def test_selected_output_parser_rejects_missing_marker() -> None:
     runner = load_runner()
     with pytest.raises(runner.PhreeqcOutputError, match="marker"):
         runner.parse_selected_output("PHREEQC completed without selected output")
+
+
+def test_selected_output_parser_accepts_phreeqc_header_marker() -> None:
+    runner = load_runner()
+    selected_output = (
+        "                  pH\tCHEMREALM_SELECTED_OUTPUT\t\n"
+        "  7.000000000000e+00\t  1.000000000000e+00\t\n"
+    )
+
+    assert runner.parse_selected_output(selected_output) == [
+        {"pH": "7.000000000000e+00", "CHEMREALM_SELECTED_OUTPUT": "1.000000000000e+00"}
+    ]

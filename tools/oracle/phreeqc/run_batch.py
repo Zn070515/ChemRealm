@@ -41,6 +41,7 @@ class PhreeqcToolchain:
 class PhreeqcBatchResult:
     command: tuple[str, ...]
     output_path: Path
+    selected_output_path: Path
     stdout: str
     stderr: str
     toolchain: PhreeqcToolchain
@@ -258,6 +259,7 @@ def run_batch(
     *,
     repo_root: Path,
     output_path: Path | None = None,
+    selected_output_path: Path | None = None,
     timeout_seconds: float = 120.0,
 ) -> PhreeqcBatchResult:
     toolchain = resolve_toolchain(repo_root)
@@ -277,6 +279,8 @@ def run_batch(
             cwd=input_path.parent,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             check=False,
             timeout=timeout_seconds,
         )
@@ -293,9 +297,15 @@ def run_batch(
         raise PhreeqcOutputError(
             f"PHREEQC produced no output: {' '.join(command)}; stderr:\n{completed.stderr}"
         )
+    selected = (selected_output_path or input_path.parent / "selected_output_1.sel").resolve()
+    if not selected.is_file() or not selected.read_text(encoding="utf-8", errors="replace").strip():
+        raise PhreeqcOutputError(
+            f"PHREEQC produced no selected output: {selected}; command: {' '.join(command)}"
+        )
     return PhreeqcBatchResult(
         command=tuple(command),
         output_path=output,
+        selected_output_path=selected,
         stdout=completed.stdout,
         stderr=completed.stderr,
         toolchain=toolchain,
@@ -304,21 +314,41 @@ def run_batch(
 
 def parse_selected_output(text: str, marker: str = "CHEMREALM_SELECTED_OUTPUT") -> list[dict[str, str]]:
     lines = text.splitlines()
-    try:
-        marker_index = next(index for index, line in enumerate(lines) if line.strip() == marker)
-    except StopIteration as error:
-        raise PhreeqcOutputError(f"selected-output marker {marker!r} is missing") from error
+    marker_index: int | None = None
+    marker_is_header = False
+    for index, line in enumerate(lines):
+        if line.strip() == marker:
+            marker_index = index
+            break
+        delimiter = "\t" if "\t" in line else ","
+        fields = [field.strip() for field in next(csv.reader([line], delimiter=delimiter), [])]
+        if marker in fields:
+            marker_index = index
+            marker_is_header = True
+            break
+    if marker_index is None:
+        raise PhreeqcOutputError(f"selected-output marker {marker!r} is missing")
 
     rows = [line for line in lines[marker_index + 1 :] if line.strip()]
+    if marker_is_header:
+        header_line = lines[marker_index]
+        rows.insert(0, header_line)
     if len(rows) < 2:
         raise PhreeqcOutputError("selected-output marker has no header and data rows")
     delimiter = "\t" if "\t" in rows[0] else ","
     parsed = list(csv.reader(rows, delimiter=delimiter))
-    headers = [header.strip() for header in parsed[0]]
+
+    def trim_trailing_empty_fields(row: list[str]) -> list[str]:
+        while row and not row[-1].strip():
+            row.pop()
+        return row
+
+    headers = [header.strip() for header in trim_trailing_empty_fields(parsed[0])]
     if not headers or any(not header for header in headers):
         raise PhreeqcOutputError("selected-output header contains an empty field")
     records: list[dict[str, str]] = []
     for row in parsed[1:]:
+        row = trim_trailing_empty_fields(row)
         if len(row) != len(headers):
             raise PhreeqcOutputError("selected-output row width does not match its header")
         records.append({header: value.strip() for header, value in zip(headers, row)})

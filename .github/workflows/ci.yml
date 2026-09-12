@@ -75,6 +75,14 @@ jobs:
       - run: uv sync
       - run: uv run pytest
 
+      # M4's scientific oracle is a hard gate: the pinned PHREEQC source is
+      # built from the checked-in manifest before the cross-engine sweep.
+      - run: bash tools/oracle/phreeqc/install_ci.sh
+      - name: Run M4 reference and PHREEQC cross-engine validation
+        env:
+          CHEMREALM_REQUIRE_PHREEQC: "1"
+        run: uv run python tools/oracle/reference/run_m4_validation.py
+
       # Acceptance-criterion coverage: every AC defined in SPEC-0001 must be
       # claimed by a PLAN-0001 milestone AND carry evidence there.
       - run: uv run python tools/check_acceptance_coverage.py

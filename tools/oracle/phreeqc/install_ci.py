@@ -49,6 +49,31 @@ def run(command: list[str], *, cwd: Path | None = None) -> None:
     subprocess.run(command, cwd=cwd, check=True)
 
 
+def configure_command(source_root: Path, build: Path) -> list[str]:
+    """Choose a generator that builds the CLI without the optional .NET UI."""
+    command = [
+        "cmake",
+        "-S",
+        str(source_root),
+        "-B",
+        str(build),
+        "-DCMAKE_BUILD_TYPE=Release",
+    ]
+    # The upstream Windows project exposes extra CLR configurations which can
+    # make a Visual Studio configure require the .NET Framework developer pack,
+    # even though the test oracle needs only the native CLI. Prefer the native
+    # Ninja/MinGW path when it is available. Linux CI retains its normal CMake
+    # path (and can also use Ninja when the runner provides it).
+    if os.name == "nt" and all(shutil.which(tool) for tool in ("ninja", "gcc", "g++")):
+        command[1:1] = ["-G", "Ninja"]
+        command.extend([
+            "-DCMAKE_C_COMPILER=gcc",
+            "-DCMAKE_CXX_COMPILER=g++",
+            "-DPHRQC_USE_GMP=OFF",
+        ])
+    return command
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", type=Path, default=Path(__file__).resolve().parents[3])
@@ -74,8 +99,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     if not source_root.is_dir():
         raise RuntimeError(f"extracted PHREEQC source directory is missing: {source_root}")
 
-    build = cache / "build"
-    run(["cmake", "-S", str(source_root), "-B", str(build), "-DCMAKE_BUILD_TYPE=Release"])
+    build = cache / ("build-ninja" if os.name == "nt" and all(
+        shutil.which(tool) for tool in ("ninja", "gcc", "g++")
+    ) else "build")
+    run(configure_command(source_root, build))
     run(["cmake", "--build", str(build), "--config", "Release", "--parallel"])
 
     binary_name = manifest.get("executable", {}).get("binaryName", "phreeqc")

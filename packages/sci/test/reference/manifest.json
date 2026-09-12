@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "model": {
+    "id": "acidbase-monoprotic-davies",
+    "version": "1.0.0"
+  },
+  "derivation": {
+    "method": "independent Decimal arithmetic implementation",
+    "script": "tools/oracle/reference/derive_acid_base.py",
+    "notGeneratedBy": "packages/sci",
+    "constants": "docs/research/constants-provenance.json",
+    "basis": "molality",
+    "waterActivityConvention": "unit"
+  },
+  "fixtures": [
+    "REF-1",
+    "REF-2",
+    "REF-3",
+    "REF-4",
+    "REF-5",
+    "REF-6",
+    "REF-7",
+    "REF-8",
+    "REF-9",
+    "REF-10"
+  ]
+}

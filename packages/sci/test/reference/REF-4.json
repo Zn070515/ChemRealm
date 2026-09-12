@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "REF-4",
+  "description": "0.1 mol/kg sodium acetate",
+  "derivation": "Independent high-precision Decimal solve of the accepted Davies equations; no TypeScript output was used.",
+  "request": {
+    "waterMassKg": 1,
+    "liquidVolumeL": 1,
+    "temperatureK": 298.15,
+    "solutes": [{ "soluteId": "NaOAc", "amountMol": 0.1, "mode": "fully-dissociated" }],
+    "indicators": []
+  },
+  "expected": {
+    "modelPh": 8.77102471682797,
+    "ionicStrengthMolal": 0.10000000216767464,
+    "speciesMolality": {
+      "H+": 2.167674647149939e-9,
+      "OH-": 7.551679187068085e-6,
+      "HOAc": 7.549511512420935e-6,
+      "OAc-": 0.09999245048848758,
+      "Na+": 0.1,
+      "Cl-": 0
+    },
+    "projection": {
+      "hydrogenIonMolarity": 2.167674647149939e-9,
+      "taughtHydrogenIonExponent": 8.664005901815807
+    },
+    "indicatorRatios": {}
+  },
+  "tolerance": { "absolute": 1e-10, "chargeResidual": 1e-14 }
+}

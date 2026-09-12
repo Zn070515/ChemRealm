@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "REF-2",
+  "description": "0.1 mol/kg strong base",
+  "derivation": "Independent high-precision Decimal solve of the accepted Davies equations; no TypeScript output was used.",
+  "request": {
+    "waterMassKg": 1,
+    "liquidVolumeL": 1,
+    "temperatureK": 298.15,
+    "solutes": [{ "soluteId": "NaOH", "amountMol": 0.1, "mode": "fully-dissociated" }],
+    "indicators": []
+  },
+  "expected": {
+    "modelPh": 12.892981185664471,
+    "ionicStrengthMolal": 0.1000000000001637,
+    "speciesMolality": {
+      "H+": 1.6369583466236321e-13,
+      "OH-": 0.1000000000001637,
+      "HOAc": 0,
+      "OAc-": 0,
+      "Na+": 0.1,
+      "Cl-": 0
+    },
+    "projection": {
+      "hydrogenIonMolarity": 1.6369583466236321e-13,
+      "taughtHydrogenIonExponent": 12.78596237132823
+    },
+    "indicatorRatios": {}
+  },
+  "tolerance": { "absolute": 1e-10, "chargeResidual": 1e-14 }
+}

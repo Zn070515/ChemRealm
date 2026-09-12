@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "REF-5",
+  "description": "1e-6 mol/kg dilute weak acid; water autoionization matters",
+  "derivation": "Independent high-precision Decimal solve of the accepted Davies equations; no TypeScript output was used.",
+  "request": {
+    "waterMassKg": 1,
+    "liquidVolumeL": 1,
+    "temperatureK": 298.15,
+    "solutes": [{ "soluteId": "HOAc", "amountMol": 1e-6, "mode": "monoprotic-equilibrium", "ka": 1.7539e-5 }],
+    "indicators": []
+  },
+  "expected": {
+    "modelPh": 6.01879830964058,
+    "ionicStrengthMolal": 9.587369032619542e-7,
+    "speciesMolality": {
+      "H+": 9.587369032619542e-7,
+      "OH-": 1.0454326600511347e-8,
+      "HOAc": 5.1717423338557115e-8,
+      "OAc-": 9.482825766614429e-7,
+      "Na+": 0,
+      "Cl-": 0
+    },
+    "projection": {
+      "hydrogenIonMolarity": 9.587369032619542e-7,
+      "taughtHydrogenIonExponent": 6.018300555642611
+    },
+    "indicatorRatios": {}
+  },
+  "comparison": {
+    "hendersonHasselbalchApproximationPh": 5.377997585954273,
+    "pHDivergence": 0.6408007236863069,
+    "divergenceClaim": "approximately 0.65 pH"
+  },
+  "tolerance": { "absolute": 1e-10, "chargeResidual": 1e-14 }
+}
