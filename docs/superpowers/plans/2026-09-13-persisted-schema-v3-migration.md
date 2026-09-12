@@ -184,7 +184,7 @@
   current Scenario v3 and persisted World/Event v3 use separate constants/registries
   ```
 
-- [ ] **Step 3: Review, commit, and push.**
+- [x] **Step 3: Review, commit, and push.**
 
   Run `git diff --check`, inspect staged diff/status, commit `Migrate persisted worlds to schema v3`, then push `main` directly without force-push or pull request.
 

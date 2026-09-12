@@ -6,9 +6,9 @@
 and PHREEQC execution. This packet does not claim independent scientific
 validation.
 
-**Implementation baseline:** `fce95dad513e40ee07fc748dc608281a7a338337` —
-Close M4 cross-system compatibility gaps before references. Hosted CI run
-`34703646857` completed successfully on this baseline.
+**Implementation baseline:** `04bf65ed1c4f48e6da281704eb800fb925605cc7` —
+Migrate persisted worlds to schema v3. Hosted CI run `34705233550` completed
+successfully on this baseline.
 
 **Plan:** [`2026-09-12-m4-cross-system-compatibility-closure.md`](../superpowers/plans/2026-09-12-m4-cross-system-compatibility-closure.md)
 

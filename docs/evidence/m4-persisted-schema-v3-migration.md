@@ -7,8 +7,10 @@ introducing v3 canonical snapshot temperature, and keep authored Scenario
 migration in a separate namespace. This packet does not claim REF-1…REF-10 or
 PHREEQC validation.
 
-**Implementation baseline:** to be pinned after the remediation commit; hosted
-CI is not claimed until that commit's workflow completes.
+**Implementation baseline:** `04bf65ed1c4f48e6da281704eb800fb925605cc7` —
+Migrate persisted worlds to schema v3. Hosted CI run `34705233550` completed
+successfully on this baseline. The later evidence-pin commit only updates this
+bookkeeping and does not change the implementation baseline.
 
 **Plan:** [`2026-09-13-persisted-schema-v3-migration.md`](../superpowers/plans/2026-09-13-persisted-schema-v3-migration.md)
 
