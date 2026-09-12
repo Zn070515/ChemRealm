@@ -72,8 +72,10 @@ matrix is exercised.
 ## Verification and handoff
 
 Run the existing full TypeScript/Python gates plus the PHREEQC-required command
-on a committed baseline. The local run recorded 10/10 compared points, a
-maximum absolute pH difference of `0.0193938057606573`, and verified the pinned
-PHREEQC source/executable/database identity. The complete handoff is in
-`docs/evidence/M4.md` and `docs/evidence/M4-reference-report.json`. M5 remains
-unauthorized until the owner accepts the completed M4 matrix.
+on a committed baseline. Commit `249c0cdd8357c9fdc90e7d5f83317711f5b5a914`
+recorded 10/10 compared points, a maximum absolute pH difference of
+`0.0193938057606573`, and verified the pinned PHREEQC source/executable/database
+identity; hosted CI run `34709078924` repeated the hard gate successfully. The
+complete handoff is in `docs/evidence/M4.md` and
+`docs/evidence/M4-reference-report.json`. M5 remains unauthorized until the
+owner accepts the completed M4 matrix.

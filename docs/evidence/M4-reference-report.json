@@ -138,5 +138,11 @@
     "REF-10"
   ],
   "schemaVersion": 1,
-  "tolerancePh": 0.02
+  "tolerancePh": 0.02,
+  "validation": {
+    "sourceCommit": "249c0cdd8357c9fdc90e7d5f83317711f5b5a914",
+    "ciRun": "34709078924",
+    "ciHardGate": true,
+    "executionEnvironment": "local Windows run; CI independently repeats the pinned install and sweep"
+  }
 }
