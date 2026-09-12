@@ -41,8 +41,11 @@ uv run python tools/check_acceptance_coverage.py
 - Persisted World/Event records migrate through `1 → 2 → 3`.
 - v1→v2 adds only the explicit empty indicator block when absent.
 - v2→v3 converts valid legacy temperature units to canonical Kelvin.
-- Any migrated snapshot change causes the World Runtime to rebuild
-  `WorldCreated.payload.contentHash`.
+- Any migrated genesis loaded through the World Runtime migration boundary
+  causes it to rebuild `WorldCreated.payload.contentHash` after the snapshot
+  changes. Schema-level migration of a generic event-log/export container does
+  not rewrite derived hashes; complete log/export import migration is an M8
+  responsibility and must use a Runtime-owned boundary before replay.
 - Authored Scenario shape v3 is independent. The removed `fullyDissociated`
   field is not silently deleted or reinterpreted.
 

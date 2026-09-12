@@ -46,7 +46,7 @@ Before the first production edit, the implementer records these answers in the t
 | Owning cores | Scientific Reality Core; `ScientificProjection` is its named output boundary. PHREEQC runner is test infrastructure only. |
 | Existing contracts | M3 async `SolverAdapter`, frozen adapter/model/config identity, tagged request/result schema, discriminated solute modes, and the M2 synchronous World Runtime. |
 | Scientific assumptions | Monoprotic HOAc, strong HCl/NaOH/NaOAc catalog, aqueous 25 °C, Davies activity coefficients, reduced molality, unit water activity convention, and declared validity/accuracy limits. |
-| Persistence | Persisted world/event schema version 2 adds resolved scenario indicator inputs to `ScenarioSnapshot`; the 1 → 2 migration supplies an explicit empty block for legacy records. The authored Scenario shape is independently version 3 after removing the ignored dissociation field. Existing `WorldCreated.solverConfig` remains the frozen global solver identity. |
+| Persistence | Persisted world/event schema version 3 includes resolved scenario indicator inputs and canonical snapshot temperature; the explicit migration chain is `1 → 2 → 3`. The authored Scenario shape is independently version 3 after removing the ignored dissociation field. Existing `WorldCreated.solverConfig` remains the frozen global solver identity. |
 | User-visible behavior | No UI change. Later callers receive tagged scientific results, explicit refusal statuses, and model-vs-taught hydrogen quantities through the approved boundary. |
 | Privacy/compliance | No network, account, identity, telemetry, learner state, or deployed PHREEQC behavior. Oracle inputs are checked-in fixtures. |
 | Required evidence | Independent reference vectors, residual/conservation/invariant reports, domain/refusal matrix, deterministic-math accuracy vectors, projection/type tests, PHREEQC sweep including equivalence, provenance review, and the final evidence packet. |
@@ -409,11 +409,12 @@ the global solver identity.
    the block.
 3. Request builders copy indicator values from the frozen snapshot only. They
    do not reload a mutable indicator catalog during replay.
-4. Keep the persisted world/event schema at version 2 and add the tested forward
-   `1 → 2` migration that inserts only `indicators: []` when the legacy record
-   has no block. The authored Scenario shape is independently version 3 after
-   removing the ignored dissociation field. Regenerate and consume the
-   committed JSON Schema artifacts.
+4. Keep the persisted world/event schema at version 3 and retain the tested
+   forward `1 → 2 → 3` migration chain: `1 → 2` inserts only `indicators: []`
+   when the legacy record has no block, and `2 → 3` canonicalizes the persisted
+   requirement temperature to Kelvin. The authored Scenario shape is
+   independently version 3 after removing the ignored dissociation field.
+   Regenerate and consume the committed JSON Schema artifacts.
 5. Add `waterActivity: 1` to the fixed numeric solver identity. The v0
    equation remains `Kw = a_H · a_OH`; a positive non-unit test value is
    outside the v0 unit-water-activity convention.

@@ -183,6 +183,11 @@ Not generated, not stored, not derivable from stored data:
   silently deleting an authored scientific assertion would be unsafe.
 - The authored `Scenario` shape is a separate contract and is currently version
   3; authoring-only changes do not alter the persisted world migration path.
+- A schema-level migration of a generic event-log/export container does not
+  repair derived genesis hashes. The M8 import/load boundary must identify each
+  migrated `WorldCreated`, rebuild its `contentHash` in World Runtime, validate
+  the complete log, and only then replay it; schema migration alone is not an
+  import guarantee.
 - **Migration failure must be loud.** A world that cannot be migrated is
   reported to the user and left untouched — never partially upgraded, never
   silently reset to a default. Silent reset destroys the user's work and is a
