@@ -28,14 +28,18 @@ export interface AcidBaseConstants {
   readonly waterActivityConvention: "unit";
 }
 
+function freezeQuantity<T>(value: T): T {
+  return Object.freeze(value) as T;
+}
+
 export const DEFAULT_ACID_BASE_CONSTANTS: AcidBaseConstants = Object.freeze({
-  Kw: thermodynamicConstant(1e-14),
-  Ka_HOAc: thermodynamicConstant(1.7539e-5),
+  Kw: freezeQuantity(thermodynamicConstant(1e-14)),
+  Ka_HOAc: freezeQuantity(thermodynamicConstant(1.7539e-5)),
   daviesA: 0.509,
   daviesB: 0.3,
-  standardMolality: molPerKilogram(1),
-  neutralAcidActivityCoefficient: activityCoefficient(1),
-  waterActivity: activity(1),
+  standardMolality: freezeQuantity(molPerKilogram(1)),
+  neutralAcidActivityCoefficient: freezeQuantity(activityCoefficient(1)),
+  waterActivity: freezeQuantity(activity(1)),
   waterActivityConvention: "unit",
 });
 
