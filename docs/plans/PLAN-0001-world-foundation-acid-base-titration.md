@@ -1,11 +1,12 @@
 # PLAN-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** **M0–M2 S3 Verified / Accepted** — the original plan was approved
+- **Status:** **M0–M2 S3 Verified / Accepted; M3 S2 implementation candidate** — the original plan was approved
   on 2026-09-11 at `SPEC-0001` revision 6; the current contract is revision 9.
 - **Completed:** `M0 — Repository foundation` reached **S3 — Verified** on
   2026-09-11. Evidence: `docs/evidence/M0.md`, commits `1f3dfee`/`565a2e8`,
   CI run `34595967023` (13/13 gate steps on a clean `ubuntu-latest` checkout).
-- **Authorized next:** `M3 — Solver adapter contract`. `M1 — Schema and units`
+- **Authorized:** `M3 — Solver adapter contract` is in progress as an S2
+  candidate. `M1 — Schema and units`
   is **S3 — Verified / Accepted** with evidence in `docs/evidence/M1.md`; `M2 —
   Event runtime and replay` is **S3 — Verified / Accepted** at baseline
   `778fadbd` with CI `34677042056` and evidence in `docs/evidence/M2.md`.
@@ -475,6 +476,8 @@ the scientific engine is built means rebuilding both.
 
 ## M3 — Solver adapter contract
 
+**Status:** **S2 — Implemented Candidate / Owner Verification Pending** · evidence
+`docs/evidence/M3.md` · implementation `66c5971` · CI pending
 **Authorization:** Owner-authorized 2026-09-12 after M2 S3 acceptance at
 baseline `778fadbd` (CI `34677042056`)
 **Target stage:** S3
