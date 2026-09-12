@@ -149,8 +149,8 @@ Files:
 - [x] Step 1: Run pnpm install --frozen-lockfile, pnpm typecheck, pnpm typecheck:tests, pnpm build, pnpm test, pnpm verify:guarantees, pnpm verify:schema-artifacts, pnpm depcruise, pnpm guards, pnpm verify:scientific-math, pnpm verify:m4-contracts, pnpm verify:world, pnpm artifacts, pnpm lint, pnpm test:browser, uv sync, uv run pytest, and uv run python tools/check_acceptance_coverage.py. Every command exited zero; REF and PHREEQC remain explicitly unexecuted.
 - [x] Step 2: Re-run the original audit reproductions: production adapter plus world requirements is compatible; malformed result is rejected; forged snapshot is rejected; nested flattened branch replay reconstructs identity.
 - [x] Step 3: Run git diff --check, inspect git status --short, git diff --stat, and the contract/evidence diff. Confirm no REF or PHREEQC result is claimed.
-- [ ] Step 4: Commit with message Close cross-system contract gaps before M4 references and push with git push. Do not force-push or create a PR.
-- [ ] Step 5: Handoff the stage gate, verified commands/counts, pushed commit, remaining REF/oracle work, and any unresolved owner decision.
+- [x] Step 4: Commit with message Close cross-system contract gaps before M4 references and push with git push. Do not force-push or create a PR. Implementation commit `91620c9` and evidence pin `a804745` were pushed to `main`.
+- [x] Step 5: Handoff the stage gate, verified commands/counts, pushed commit, remaining REF/oracle work, and any unresolved owner decision. M4 remains S2; REF/PHREEQC work is the next gate.
 
 ## Self-review checklist
 
