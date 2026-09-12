@@ -105,6 +105,24 @@ describe("production acid-base SolverAdapter", () => {
       "ionic strength outside Davies domain",
       request([{ soluteId: "HCl", amount: mol(0.6), mode: "fully-dissociated" }]),
     ],
+    [
+      "total solute above model domain",
+      request([{
+        soluteId: "HOAc",
+        amount: mol(0.6),
+        mode: "monoprotic-equilibrium",
+        ka: DEFAULT_ACID_BASE_CONSTANTS.Ka_HOAc,
+      }]),
+    ],
+    [
+      "total solute below model domain",
+      request([{
+        soluteId: "HOAc",
+        amount: mol(1e-12),
+        mode: "monoprotic-equilibrium",
+        ka: DEFAULT_ACID_BASE_CONSTANTS.Ka_HOAc,
+      }]),
+    ],
   ] as const)("returns MODEL_OUT_OF_DOMAIN for %s", async (_name, input) => {
     const result = await createAcidBaseAdapter().solve(input);
 
@@ -113,6 +131,33 @@ describe("production acid-base SolverAdapter", () => {
     expect(result.nearestSupported.id).toBe(ACID_BASE_MODEL_ID);
     expect(result.nearestSupported.version).toBe(ACID_BASE_MODEL_VERSION);
     expect(result.reason.length).toBeGreaterThan(0);
+  });
+
+  it.each([
+    [
+      "0.6 mol/kg weak acid",
+      request([{
+        soluteId: "HOAc",
+        amount: mol(0.6),
+        mode: "monoprotic-equilibrium",
+        ka: DEFAULT_ACID_BASE_CONSTANTS.Ka_HOAc,
+      }]),
+    ],
+    [
+      "1e-12 mol/kg weak acid",
+      request([{
+        soluteId: "HOAc",
+        amount: mol(1e-12),
+        mode: "monoprotic-equilibrium",
+        ka: DEFAULT_ACID_BASE_CONSTANTS.Ka_HOAc,
+      }]),
+    ],
+  ] as const)("reports the total-solute domain reason for %s", async (_name, input) => {
+    const result = await createAcidBaseAdapter().solve(input);
+
+    expect(result.status).toBe("MODEL_OUT_OF_DOMAIN");
+    if (result.status !== "MODEL_OUT_OF_DOMAIN") throw new Error("wrong status");
+    expect(result.reason).toMatch(/total analytical solute/i);
   });
 
   it("returns INVALID_INPUT for malformed decoded data without throwing", async () => {

@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript, Vitest, Zod contracts from `@chemrealm/schema`, Node 22, pnpm 11, Python 3.12, uv, pytest, PHREEQC CLI in test tooling only, and a committed PHREEQC/database manifest with checksums.
 
-**Spec:** `docs/superpowers/specs/2026-09-12-m4-acid-base-engine-design.md` (Design v2, approved); `docs/specs/SPEC-0001-world-foundation-acid-base-titration.md` revision 13 candidate; `docs/adr/0003-scientific-solver-adapter-boundary.md`; `docs/adr/0007-deterministic-numeric-and-replay-policy.md`; `docs/adr/0011-scenario-scientific-input-freezing.md`.
+**Spec:** `docs/superpowers/specs/2026-09-12-m4-acid-base-engine-design.md` (Design v2, approved); `docs/specs/SPEC-0001-world-foundation-acid-base-titration.md` revisions 13–14 candidates; `docs/adr/0003-scientific-solver-adapter-boundary.md`; `docs/adr/0007-deterministic-numeric-and-replay-policy.md`; `docs/adr/0011-scenario-scientific-input-freezing.md`; `docs/adr/0012-m4-domain-and-constant-semantics.md`.
 
 ## Global Constraints
 
@@ -26,7 +26,7 @@
    - duplicate entries aggregate only when their mode and equilibrium constant agree exactly; conflicting duplicates refuse.
 7. The solver's native unknowns are dimensionless reduced molalities `m̂` and reduced ionic strength `Î`. Physical molality is produced once at the scientific-state boundary as `m = m̂ · m°`. `MolPerLitre` must not enter acid-base internals.
 8. The accepted scientific model is self-consistent: activity coefficients participate inside the equilibrium equations and ionic strength is solved with a bracketed inner solve. No post-hoc activity correction, Henderson–Hasselbalch replacement, concentration-only branch, or pre-authored pH curve is acceptable.
-9. The model validity domain is aqueous liquid phase, 25 °C (`298.15 K`), supported v0 species only, and converged `I_m <= 0.5 mol/kg`. The proposed accuracy envelope is separate from the model domain and is represented only by `withinProposedAccuracyEnvelope`.
+9. The model validity domain is aqueous liquid phase, 25 °C (`298.15 K`), supported v0 species only, total analytical solute molality in `[1e-9, 0.5] mol/kg`, and converged `I_m <= 0.5 mol/kg`. The pinned `waterActivity: 1` is a unit-water-activity convention and is not multiplied into `Kw = a_H · a_OH`. The proposed accuracy envelope is separate from the model domain and is represented only by `withinProposedAccuracyEnvelope`.
 10. `detLog10` and `detExp10` are the only logarithm/exponential path in `packages/sci` and `packages/world`. Native `Math.log10`, `Math.exp`, and `Math.pow` are forbidden there. `Math.sqrt` is permitted. Outside the measured deterministic-function domain, refuse; do not silently fall back to native math.
 11. Transfer conservation, World Runtime replay, branch storage, and event schemas are M2 contracts. M4 must consume committed state/request data at the composition boundary and must not modify the reducer or make replay await a solver.
 12. `ScientificState` contains molal species, activity coefficients, activities, ionic strength, activity-based model pH, indicator protonation ratios, validity, and solver provenance. It does not contain molarity or taught `−lg c(H⁺)`.
@@ -137,7 +137,7 @@ export function buildAcidBaseSolverConfig(): SolverConfig;
 2. `aggregateComponents()` consumes only `amount` and the discriminated `mode`/`ka` already validated by the request boundary. Convert amount divided by `waterMass` to physical molality and immediately reduce it; all downstream catalog totals are reduced molalities.
 3. Enforce exact HOAc Ka equality with the fixed model constant. A request with `ka: 1.75e-5` is not accepted merely because it is close to the frozen value.
 4. Build a model descriptor whose species list and validity range are the catalog's explicit domain. Build the frozen numeric `SolverConfig` with the exact parameter keys approved by the evidence record. Do not expose an options object that lets callers mutate these values.
-5. Include `waterActivity: 1` in the frozen numeric parameter bag and retain `waterActivityConvention: "unit"` in the model contract. The parameter is the explicit v0 approximation used by the `Kw` equation, not an undocumented magic number.
+5. Include `waterActivity: 1` in the frozen numeric parameter bag and retain `waterActivityConvention: "unit"` in the model contract. The parameter records the explicit v0 convention and replay identity; it is not multiplied into the v0 `Kw = a_H · a_OH` equation. A positive non-unit value is outside v0.
 
 **Tests to add/run:**
 
@@ -288,7 +288,7 @@ export interface ReducedSolveSuccess {
 }
 
 export type ReducedSolveFailure =
-  | { readonly kind: "BRACKET_NOT_FOUND"; readonly residual: number }
+  | { readonly kind: "OUT_OF_DOMAIN"; readonly reason: string }
   | { readonly kind: "NOT_CONVERGED"; readonly residual: number; readonly iterations: number };
 
 export function solveReduced(
@@ -303,7 +303,7 @@ export function solveReduced(
 3. For a candidate `(m̂_H, Î)`, use thermodynamic `Kw` and frozen HOAc `Ka` in activity form. Strong acid/base totals and acetate/acid-family totals come from Task 1. The HA/A− distribution is a mass-balanced equilibrium calculation, not Henderson–Hasselbalch.
 4. Use a bracketed outer charge-balance root over the declared hydrogen domain. Establish and verify the sign change before iterating. The final converged ionic strength is checked again against the model domain.
 5. Keep tolerances explicit and separate: root residual tolerance, physical charge residual `< 1e-14 mol/kg` for the reference sweep, iteration caps, and model domain/accuracy envelope. No rounding/quantization is applied to hide a residual.
-6. Return an internal failure classification that the adapter maps to `MODEL_OUT_OF_DOMAIN` for a declared domain refusal, or `NOT_CONVERGED` with diagnostic data for a numerical failure. Never emit a partial `ScientificState`.
+6. Return `OUT_OF_DOMAIN` only for an explicit model-domain condition (such as a converged ionic-strength overflow or the unit-water-activity convention). Failed inner/outer brackets, iteration limits, and invalid numerical arguments return `NOT_CONVERGED` with diagnostic data. Never emit a partial `ScientificState`.
 
 **Tests to add/run:**
 
@@ -406,8 +406,9 @@ the global solver identity.
 4. Bump the world/content schema to version 2 and add a tested forward `1 → 2`
    migration that inserts only `indicators: []` when the legacy record has no
    block. Regenerate and consume the committed JSON Schema artifacts.
-5. Add `waterActivity: 1` to the fixed numeric solver identity and use it in
-   `Kw = a_H · a_OH / a_w`.
+5. Add `waterActivity: 1` to the fixed numeric solver identity. The v0
+   equation remains `Kw = a_H · a_OH`; a positive non-unit test value is
+   outside the v0 unit-water-activity convention.
 
 **Tests to add/run:**
 
@@ -419,8 +420,9 @@ the global solver identity.
 - v1 migration adds an explicit empty block without inventing a constant;
 - World Runtime migration rebuilds the derived genesis content checksum after
   the snapshot bytes change;
-- the acid-base equation changes predictably when a test-only water activity is
-  varied, while the production config remains pinned at 1.
+- the default acid-base equation satisfies `a_H · a_OH = Kw`, while a test-only
+  non-unit water activity is refused and the production config remains pinned
+  at 1.
 
 **Expected evidence:** The genesis event is sufficient to rebuild the
 scenario-specific indicator input, while `SolverConfig` remains a reusable

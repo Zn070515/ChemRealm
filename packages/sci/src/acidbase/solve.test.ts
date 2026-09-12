@@ -112,23 +112,15 @@ describe("nested reduced acid-base solve", () => {
     expect(acidQuotient).toBeCloseTo(DEFAULT_ACID_BASE_CONSTANTS.Ka_HOAc.value, 14);
   });
 
-  it("uses the pinned water-activity convention in the water equilibrium", () => {
+  it("rejects a non-unit water activity under the v0 convention", () => {
     const constants = {
       ...DEFAULT_ACID_BASE_CONSTANTS,
       waterActivity: activity(0.9),
     };
-    const result = expectSuccess(
-      solveReduced({ totals: totals(0, 0.1, 0.1), constants }),
-    );
-    const activities = daviesActivities(result.ionicStrength, constants);
-    const waterProduct =
-      activities.hydrogen.value * result.species.hydrogen.value *
-      activities.hydroxide.value * result.species.hydroxide.value;
+    const result = solveReduced({ totals: totals(0, 0.1, 0.1), constants });
 
-    expect(waterProduct).toBeCloseTo(
-      constants.Kw.value * constants.waterActivity.value,
-      14,
-    );
+    expect(result).toMatchObject({ kind: "OUT_OF_DOMAIN" });
+    expect("species" in result).toBe(false);
   });
 
   it("does not reduce activity to a post-hoc correction", () => {
@@ -168,7 +160,7 @@ describe("nested reduced acid-base solve", () => {
       totals: totals(0.5, 0.5),
       constants: DEFAULT_ACID_BASE_CONSTANTS,
     });
-    expect(outside).toMatchObject({ kind: "BRACKET_NOT_FOUND" });
+    expect(outside).toMatchObject({ kind: "NOT_CONVERGED" });
     expect("species" in outside).toBe(false);
   });
 
@@ -178,7 +170,7 @@ describe("nested reduced acid-base solve", () => {
       constants: DEFAULT_ACID_BASE_CONSTANTS,
     });
 
-    expect(result).toMatchObject({ kind: "BRACKET_NOT_FOUND" });
+    expect(result).toMatchObject({ kind: "NOT_CONVERGED" });
     expect("species" in result).toBe(false);
   });
 
@@ -199,6 +191,6 @@ describe("nested reduced acid-base solve", () => {
         totals: totals(0.1, 0),
         constants: invalidConstants,
       }),
-    ).toMatchObject({ kind: "BRACKET_NOT_FOUND" });
+    ).toMatchObject({ kind: "NOT_CONVERGED" });
   });
 });

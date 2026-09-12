@@ -189,5 +189,7 @@ export { buildAcidBaseModelDescriptor, buildAcidBaseSolverConfig } from "./model
 export {
   ACID_BASE_MODEL_ID,
   ACID_BASE_MODEL_VERSION,
+  ACID_BASE_MAX_TOTAL_SOLUTE_MOLALITY,
+  ACID_BASE_MIN_TOTAL_SOLUTE_MOLALITY,
   DEFAULT_ACID_BASE_CONSTANTS,
 } from "./model.js";

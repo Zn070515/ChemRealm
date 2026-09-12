@@ -1,12 +1,13 @@
 # SPEC-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** **Accepted through revision 12** — revision 13 is an M4
-  implementation candidate pending owner review.
+- **Status:** **Accepted through revision 12** — revisions 13–14 are M4
+  implementation candidates pending owner review.
 - **Accepted baseline:** commit `8310c685`, `SPEC-0001` revision 6
-- **Current revision:** **13 Candidate** — M4 chemical identity closure adds
+- **Current revision:** **14 Candidate** — M4 chemical identity closure adds
   scenario-frozen indicator inputs, the explicit water-activity parameter, and
-  common acetate-family semantics. Revisions 7–12 are accepted amendments;
-  revision 13 remains pending owner review.
+  common acetate-family semantics; revision 14 adds the total-solute domain and
+  equilibrium-constant failure semantics. Revisions 7–12 are accepted
+  amendments; revisions 13–14 remain pending owner review.
   See "Amendments since acceptance" below.
 - **Acceptance scope:** the specification and its acceptance criteria. Deferred
   items listed under Open questions remain open and must be resolved before the
@@ -31,7 +32,8 @@
 | 10 | 2026-09-12 | M3 Contract Closure: World Runtime reduction/replay stays synchronous; async solving is composition-level orchestration; v0 binds one adapter, one model, and one exact `SolverConfig`; solute modes are discriminated; `MODEL_OUT_OF_DOMAIN` requires `nearestSupported`; incompatible requirements reject genesis before `WorldCreated`. | Owner, 2026-09-12 |
 | 11 | 2026-09-12 | M3 Identity & Defensive Boundary Closure: decoded/cast request data always returns tagged `INVALID_INPUT`; adapter/model/config identity is defensively copied and deeply frozen across construction and registry boundaries; every `OK` result must carry provenance exactly matching the adapter model and solver configuration. | Owner, 2026-09-12 |
 | 12 | 2026-09-12 | M4 pre-implementation contract closure: the proposed accuracy-envelope qualification is represented by the existing `ValidityStatus.withinProposedAccuracyEnvelope` boolean; no parallel `accuracyStatus` field is introduced. | Owner, 2026-09-12 |
-| 13 | 2026-09-12 | M4 Chemical Identity Closure candidate: NaOAc contributes to the common HA/A⁻ analytical family rather than a permanent acetate pool; scenario-specific indicator `Ka_in` is resolved with per-datum provenance into `ScenarioSnapshot.indicators` and frozen by the genesis content hash; the explicit v0 `waterActivity` parameter participates in the `Kw` equation; world/content schema version 2 adds a forward migration from v1. | Pending owner review |
+| 13 | 2026-09-12 | M4 Chemical Identity Closure candidate: NaOAc contributes to the common HA/A⁻ analytical family rather than a permanent acetate pool; scenario-specific indicator `Ka_in` is resolved with per-datum provenance into `ScenarioSnapshot.indicators` and frozen by the genesis content hash; the explicit v0 `waterActivity` parameter is recorded in solver identity; world/content schema version 2 adds a forward migration from v1. | Pending owner review |
+| 14 | 2026-09-12 | M4 Scientific Domain & Constant Semantics Closure candidate: total analytical solute molality is gated at `1e-9..0.5 mol/kg` before solving; the pinned `Kw` means `a_H · a_OH` while `waterActivity: 1` records a unit convention without multiplying the equation; failed numerical brackets/iterations return `NOT_CONVERGED` rather than `MODEL_OUT_OF_DOMAIN`. | Pending owner review |
 
 A revision bump is recorded here rather than only in the body because the header
 is what a reader checks before deciding whether the file they are reading is the
@@ -721,7 +723,7 @@ and are never stored as though they were thermodynamic.
 | Davies `b` | 0.3 | dimensionless, reduced-`I` convention | Empirical; primary source to be pinned at M4 |
 | Standard molality `m°` | 1 mol/kg | defines `Î = I_m/m°` | Convention; recorded in solver config |
 | `γ_HA` (neutral) | 1.0 | molality basis | **Approximation**, bounded at +0.02 `log10 γ` at I=0.1 (F6) |
-| `a_w` | 1.0 | explicit `waterActivity` model parameter / unit-water-activity convention | Valid over the supported domain only |
+| `a_w` | 1.0 | explicit `waterActivity` model parameter / unit-water-activity convention; not multiplied into the v0 `Kw = a_H · a_OH` equation | Valid over the supported domain only |
 | Indicator `Ka_in` | see table | molality, dimensionless | **Provisional**, see above |
 
 **`A` changed from 0.5085 to 0.509** because the basis changed from molarity to

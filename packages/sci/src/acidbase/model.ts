@@ -16,6 +16,10 @@ import {
 export const ACID_BASE_MODEL_ID = "acidbase-monoprotic-davies" as const;
 export const ACID_BASE_MODEL_VERSION = "1.0.0" as const;
 
+/** Analytical component-total molality bounds for the v0 model. */
+export const ACID_BASE_MIN_TOTAL_SOLUTE_MOLALITY = 1e-9;
+export const ACID_BASE_MAX_TOTAL_SOLUTE_MOLALITY = 0.5;
+
 export interface AcidBaseConstants {
   readonly Kw: ThermodynamicConstant;
   readonly Ka_HOAc: ThermodynamicConstant;
@@ -23,7 +27,7 @@ export interface AcidBaseConstants {
   readonly daviesB: number;
   readonly standardMolality: MolPerKilogram;
   readonly neutralAcidActivityCoefficient: ActivityCoefficient;
-  /** Explicit v0 unit-water-activity approximation used by Kw. */
+  /** Explicit v0 unit-water-activity convention carried in model identity. */
   readonly waterActivity: Activity;
   readonly waterActivityConvention: "unit";
 }

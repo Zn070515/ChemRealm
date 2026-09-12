@@ -26,6 +26,8 @@ import { aggregateComponents, type AcidBaseComponentTotals } from "./catalog.js"
 import {
   ACID_BASE_MODEL_ID,
   ACID_BASE_MODEL_VERSION,
+  ACID_BASE_MAX_TOTAL_SOLUTE_MOLALITY,
+  ACID_BASE_MIN_TOTAL_SOLUTE_MOLALITY,
   DEFAULT_ACID_BASE_CONSTANTS,
   buildAcidBaseModelDescriptor,
   buildAcidBaseSolverConfig,
@@ -66,6 +68,22 @@ function domainReason(
   }
   if (request.temperature > descriptor.validity.temperature.max) {
     return "temperature is above the acid-base model's 25 °C domain";
+  }
+
+  const totalSoluteMolality =
+    request.solutes.reduce((total, solute) => total + solute.amount, 0) /
+    request.waterMass;
+  if (
+    !Number.isFinite(totalSoluteMolality) ||
+    totalSoluteMolality < ACID_BASE_MIN_TOTAL_SOLUTE_MOLALITY ||
+    totalSoluteMolality > ACID_BASE_MAX_TOTAL_SOLUTE_MOLALITY
+  ) {
+    return (
+      `total analytical solute molality ${totalSoluteMolality} mol/kg is ` +
+      `outside the v0 domain [` +
+      `${ACID_BASE_MIN_TOTAL_SOLUTE_MOLALITY}, ` +
+      `${ACID_BASE_MAX_TOTAL_SOLUTE_MOLALITY}] mol/kg`
+    );
   }
 
   const unsupported = request.solutes.find(
@@ -204,6 +222,9 @@ function solveRequest(
     constants: DEFAULT_ACID_BASE_CONSTANTS,
   });
   if ("kind" in reducedResult) {
+    if (reducedResult.kind === "OUT_OF_DOMAIN") {
+      return outOfDomain(model, reducedResult.reason);
+    }
     if (reducedResult.kind === "NOT_CONVERGED") {
       return {
         status: "NOT_CONVERGED",
@@ -211,10 +232,6 @@ function solveRequest(
         iterations: reducedResult.iterations,
       };
     }
-    return outOfDomain(
-      model,
-      "the converged ionic strength or deterministic math path is outside the v0 model domain",
-    );
   }
 
   const state = buildScientificState(request, reducedResult, model, solverConfig);

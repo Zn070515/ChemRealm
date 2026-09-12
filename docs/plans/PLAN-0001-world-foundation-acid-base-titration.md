@@ -1,7 +1,7 @@
 # PLAN-0001 — World Foundation & Acid-Base Titration
 
 - **Status:** **M0–M3 S3 Verified / Accepted; M4 S2 in progress** — the original plan was approved
-  on 2026-09-11 at `SPEC-0001` revision 6; the current contract is revision 13 candidate.
+  on 2026-09-11 at `SPEC-0001` revision 6; the current contract is revisions 13–14 candidates.
 - **Completed:** `M0 — Repository foundation` reached **S3 — Verified** on
   2026-09-11. Evidence: `docs/evidence/M0.md`, commits `1f3dfee`/`565a2e8`,
   CI run `34595967023` (13/13 gate steps on a clean `ubuntu-latest` checkout).
@@ -17,8 +17,8 @@
 - **Implements:** `docs/specs/SPEC-0001-world-foundation-acid-base-titration.md`
 - **Related ADRs:** 0001–0009 were accepted at the baseline; ADR-0001 and
   ADR-0003 M1 Final Closure and M3 owner decisions, ADR-0001's M1 amendment,
-  and ADR-0010 are accepted. ADR-0011 is the proposed M4 scenario-input
-  amendment and remains pending owner review. Load-bearing here: 0004 (revised), 0007 (revised),
+  and ADR-0010 are accepted. ADR-0011 and ADR-0012 are proposed M4
+  amendments and remain pending owner review. Load-bearing here: 0004 (revised), 0007 (revised),
   0008, 0009, and ADR-0010's
   M2 basis-boundary gate.
 - **Audience:** an agent that did not participate in the design. Nothing below
@@ -608,7 +608,9 @@ docs/research/constants-provenance.md     pin every constant to a citable source
 the explicit `waterActivity: 1` convention, enter solver replay identity.
 Scenario-specific indicator constants are resolved with per-datum provenance into
 `ScenarioSnapshot.indicators` and enter genesis content identity under the
-revision-13 candidate and `ADR-0011`.
+revision-13 candidate and `ADR-0011`. The revision-14 candidate and `ADR-0012`
+add the analytical total-solute gate, the pinned `Kw = a_H · a_OH`
+interpretation, and distinct numerical-failure tagging.
 
 ### Implementation
 

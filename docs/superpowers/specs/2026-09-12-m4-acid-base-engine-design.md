@@ -2,14 +2,17 @@
 
 Status: Design v2 approved by the project owner on 2026-09-12 after
 self-review. Implementation is in progress; the M4 Chemical Identity Closure
-is recorded as the revision-13 candidate in `SPEC-0001` and `ADR-0011`.
+is recorded as the revision-13 candidate in `SPEC-0001` and `ADR-0011`. The
+M4 Scientific Domain & Constant Semantics Closure is recorded as the
+revision-14 candidate and `ADR-0012`; both remain pending owner review.
 
 ## Context
 
 M0–M3 establish the Scientific Reality Core boundary, typed quantities,
 defensive DTO parsing, exact solver identity, and the synchronous World Runtime
-boundary. The repository currently has a contract-only asynchronous stub
-adapter; it does not yet compute acid-base equilibrium.
+boundary. The repository now has a deterministic production adapter for the
+v0 slice; independent reference fixtures and PHREEQC oracle validation remain
+pending.
 
 The first scientific slice is aqueous monoprotic acid/strong-base chemistry at
 25 °C with Davies activity correction. The activity-equilibrium spike proves
@@ -118,14 +121,16 @@ uses reduced molalities:
 The activity equations are:
 
     log10(γ_i) = -A z_i² ( √Î/(1 + √Î) - bÎ )
-    Kw = a_H · a_OH / a_w
+    Kw = a_H · a_OH
     Ka = a_H · a_A / a_HA
 
 The neutral acid approximation is γ_HA = 1. `a_w = 1` is an explicit v0 model
-convention, represented in the frozen solver parameter bag as `waterActivity`;
-the solver uses `Kw · a_w = a_H · a_OH`. Kw, Ka, A, and b are dimensionless
-model parameters. Physical molalities are created only at the ScientificState
-boundary by multiplying reduced molality by m°.
+convention, represented in the frozen solver parameter bag as `waterActivity`.
+It records the unit-water-activity assumption but is not multiplied into the
+v0 `Kw` equation. A positive non-unit value is outside this v0 model and is
+refused. Kw, Ka, A, and b are dimensionless model parameters. Physical
+molalities are created only at the ScientificState boundary by multiplying
+reduced molality by m°.
 
 ### Input interpretation and fixed v0 component catalog
 
@@ -225,7 +230,8 @@ configuration and therefore a different replay identity.
 The fixed configuration includes the global model constants Kw, Ka_HOAc,
 Davies A and b, standard molality, neutral-acid activity coefficient, numeric
 `waterActivity`, and the numeric-policy precision/version represented by the
-adapter's exact identity. Scenario-specific indicator Ka values are not global
+adapter's exact identity. `waterActivity: 1` is an identity/model convention,
+not a multiplier in the v0 `Kw = a_H · a_OH` equation. Scenario-specific indicator Ka values are not global
 model constants: they are resolved into the genesis snapshot with per-datum
 provenance and copied from there into each SolveRequest.
 
@@ -308,7 +314,9 @@ bump is introduced.
 |---|---|
 | Missing, malformed, non-finite, or physically impossible request field | INVALID_INPUT with violations; no solver callback and no exception escape |
 | Unsupported species, solvent, phase, or temperature | MODEL_OUT_OF_DOMAIN with reason and nearest supported descriptor |
+| Total analytical solute molality below 1e-9 or above 0.5 mol/kg | MODEL_OUT_OF_DOMAIN before aggregation/solve |
 | Final converged ionic strength exceeds 0.5 mol/kg | MODEL_OUT_OF_DOMAIN; do not emit ScientificState |
+| Positive non-unit water activity | MODEL_OUT_OF_DOMAIN; v0 uses the unit-water-activity convention only |
 | Root bracket cannot be established for an otherwise in-domain request | NOT_CONVERGED with residual and iterations; domain failures are rejected before this path |
 | Inner or outer solve reaches iteration limit | NOT_CONVERGED; no stale or partial state |
 | Deterministic math argument outside the model's declared validated band | MODEL_OUT_OF_DOMAIN; never silently call a native substitute |

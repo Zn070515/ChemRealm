@@ -18,7 +18,7 @@ must be recorded here first.
 | `Davies b` | `0.3` | original Davies empirical extension coefficient | water, 25 °C | Davies, C. W. (1962), *Ion Association*, Butterworths; fixed by `SPEC-0001` and `ADR-0003` | model policy, source record retained |
 | `standardMolality` | `1.0000 mol/kg` | standard molality / standard-state scale used to make reduced molality dimensionless | molality basis | `docs/science/quantity-ontology.md` and `ADR-0004`; a convention, not an empirical fit | pinned convention |
 | `neutralAcidActivityCoefficient` | `1.0000` | bounded v0 approximation for neutral HA | dilute aqueous domain | `SPEC-0001` §Scientific design; explicitly labelled approximation, not measured data | pinned approximation |
-| `waterActivity` | `1.0000` | unit-water-activity v0 convention | dilute aqueous domain | `SPEC-0001` and `ADR-0003`; explicitly labelled model convention | pinned approximation |
+| `waterActivity` | `1.0000` | unit-water-activity v0 convention; not a multiplier in `Kw = a_H · a_OH` | dilute aqueous domain | `SPEC-0001`, `ADR-0003`, and `ADR-0012`; explicitly labelled model convention | pinned approximation |
 
 `Ka_HOAc` is stored as the derived decimal shown above so the replay identity
 is stable. It must not be recomputed from a different rounded pKa at runtime.
@@ -54,6 +54,11 @@ snapshot is not a replayable world input.
   molarity-basis coefficient or by PHREEQC's unrelated activity convention.
 - `γ_HA = 1` and `a_w = 1` are model approximations. They are not presented as
   measured universal constants.
+- The v0 water equation uses the pinned autoprotolysis definition
+  `Kw = a_H · a_OH`. `waterActivity = 1` is retained in solver identity as an
+  explicit convention, but is not multiplied into `Kw`; a future non-unit
+  water-activity model requires a new convention, source, version, and oracle
+  validation.
 - A changed fixed value means a changed solver configuration and therefore a
   changed replay identity. It requires a new evidence baseline and owner review.
 

@@ -26,7 +26,7 @@ export interface ReducedSolveSuccess {
 }
 
 export type ReducedSolveFailure =
-  | { readonly kind: "BRACKET_NOT_FOUND"; readonly residual: number }
+  | { readonly kind: "OUT_OF_DOMAIN"; readonly reason: string }
   | { readonly kind: "NOT_CONVERGED"; readonly residual: number; readonly iterations: number };
 
 type Candidate = {
@@ -45,10 +45,10 @@ const INNER_ITERATION_LIMIT = 100;
 const OUTER_ITERATION_LIMIT = 200;
 const OUTER_BRACKET_SPANS = [3, 10, 100, 1000] as const;
 
-function failBracket(residual: number): ReducedSolveFailure {
+function failOutOfDomain(reason: string): ReducedSolveFailure {
   return {
-    kind: "BRACKET_NOT_FOUND",
-    residual: Number.isFinite(residual) ? residual : 0,
+    kind: "OUT_OF_DOMAIN",
+    reason,
   };
 }
 
@@ -151,8 +151,7 @@ function speciesAt(
   const anionGamma = activities.monovalentAnion.value;
   const neutralGamma = activities.neutralAcid.value;
   const kwConditional =
-    (input.constants.Kw.value * input.constants.waterActivity.value) /
-    (hydrogenGamma * hydroxideGamma);
+    input.constants.Kw.value / (hydrogenGamma * hydroxideGamma);
   const kaConditional =
     input.constants.Ka_HOAc.value * neutralGamma / (hydrogenGamma * anionGamma);
   const hydroxide = reducedMolality(kwConditional / hydrogen);
@@ -210,7 +209,7 @@ function solveInner(
   let upperResidual = ionicStrengthResidual(hydrogen, upper, input);
 
   if (lowerResidual < 0 || upperResidual > 0) {
-    return failBracket(upperResidual);
+    return failNotConverged(upperResidual, 0);
   }
   if (Math.abs(lowerResidual) <= INNER_TOLERANCE) {
     return candidateAt(hydrogen, lower, input, 0);
@@ -259,6 +258,12 @@ export function solveReduced(
   try {
     validateInput(input);
 
+    if (!Object.is(input.constants.waterActivity.value, 1)) {
+      return failOutOfDomain(
+        "v0 acid-base model requires the unit water-activity convention",
+      );
+    }
+
     const idealRoot = idealHydrogenRoot(input);
     let lower = HYDROGEN_LOWER;
     let upper = HYDROGEN_UPPER;
@@ -286,7 +291,7 @@ export function solveReduced(
     }
 
     if (!bracketFound || lowerCandidate === undefined || upperCandidate === undefined) {
-      return failBracket(0);
+      return failNotConverged(0, OUTER_BRACKET_SPANS.length);
     }
 
     let finalCandidate: Candidate | undefined;
@@ -315,7 +320,10 @@ export function solveReduced(
 
     const recomputedIonicStrength = ionicStrengthFromSpecies(finalCandidate.species);
     if (recomputedIonicStrength.value > IONIC_STRENGTH_UPPER + INNER_TOLERANCE) {
-      return failBracket(recomputedIonicStrength.value - IONIC_STRENGTH_UPPER);
+      return failOutOfDomain(
+        `converged ionic strength ${recomputedIonicStrength.value} mol/kg ` +
+        `exceeds the v0 limit of ${IONIC_STRENGTH_UPPER} mol/kg`,
+      );
     }
 
     return Object.freeze({
@@ -329,7 +337,7 @@ export function solveReduced(
       }),
     });
   } catch (error) {
-    if (error instanceof RangeError) return failBracket(0);
+    if (error instanceof RangeError) return failNotConverged(0, 0);
     throw error;
   }
 }
