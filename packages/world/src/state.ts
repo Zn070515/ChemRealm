@@ -106,8 +106,8 @@ export interface RuntimeScenarioSnapshot {
   readonly modelRequirements: {
     readonly temperature: ReturnType<typeof kelvin>;
     readonly species: readonly string[];
-    readonly solvent: string;
-    readonly phase: string;
+    readonly solvent: "water";
+    readonly phase: "aqueous";
     readonly activityCorrected: boolean;
   };
 }
@@ -184,9 +184,84 @@ function assertUnique(values: readonly string[], label: string): void {
   }
 }
 
+const MATERIAL_BALANCE_RELATIVE_TOLERANCE = 1e-12;
+
+function validateMaterialSnapshotSemantics(
+  material: RuntimeMaterialSnapshot,
+): void {
+  const compositionIds = material.composition.map((entry) => entry.soluteId);
+  const molarMassIds = material.molarMasses.map((entry) => entry.soluteId);
+  const amountIds = material.resolvedInventoryPerLitre.soluteAmounts.map(
+    (entry) => entry.soluteId,
+  );
+  assertUnique(compositionIds, `material ${material.materialId} composition`);
+  assertUnique(molarMassIds, `material ${material.materialId} molar mass`);
+  assertUnique(amountIds, `material ${material.materialId} inventory`);
+
+  const sorted = (values: readonly string[]) => [...values].sort(compareIds);
+  if (
+    JSON.stringify(sorted(compositionIds)) !== JSON.stringify(sorted(molarMassIds)) ||
+    JSON.stringify(sorted(compositionIds)) !== JSON.stringify(sorted(amountIds))
+  ) {
+    throw new Error(
+      `MATERIAL_INVENTORY_MISMATCH: material ${material.materialId} must carry the same solute identities in composition, molar masses, and resolved inventory`,
+    );
+  }
+
+  if (!(material.density.value > 0) || !Number.isFinite(material.density.value)) {
+    throw new Error(`MATERIAL_INVENTORY_MISMATCH: material ${material.materialId} density must be finite and positive`);
+  }
+  if (
+    !(material.resolvedInventoryPerLitre.waterMass > 0) ||
+    !Number.isFinite(material.resolvedInventoryPerLitre.waterMass)
+  ) {
+    throw new Error(`MATERIAL_INVENTORY_MISMATCH: material ${material.materialId} water mass must be finite and positive`);
+  }
+
+  const molarMassById = new Map(
+    material.molarMasses.map((entry) => [entry.soluteId, entry.molarMass]),
+  );
+  const concentrationById = new Map(
+    material.composition.map((entry) => [entry.soluteId, entry.amountConcentration]),
+  );
+  let soluteMass = 0;
+  for (const inventory of material.resolvedInventoryPerLitre.soluteAmounts) {
+    if (!(inventory.amount > 0) || !Number.isFinite(inventory.amount)) {
+      throw new Error(
+        `MATERIAL_INVENTORY_MISMATCH: material ${material.materialId} solute ${inventory.soluteId} amount must be finite and positive`,
+      );
+    }
+    const molarMass = molarMassById.get(inventory.soluteId);
+    const concentration = concentrationById.get(inventory.soluteId);
+    if (
+      molarMass === undefined ||
+      concentration === undefined ||
+      !(molarMass > 0) ||
+      !Number.isFinite(molarMass) ||
+      !(concentration > 0) ||
+      !Number.isFinite(concentration) ||
+      Math.abs(inventory.amount - concentration) >
+        MATERIAL_BALANCE_RELATIVE_TOLERANCE * Math.max(Math.abs(concentration), Number.EPSILON)
+    ) {
+      throw new Error(
+        `MATERIAL_INVENTORY_MISMATCH: material ${material.materialId} resolved amount for ${inventory.soluteId} does not match its concentration`,
+      );
+    }
+    soluteMass += inventory.amount * molarMass;
+  }
+
+  const expectedDensity = material.resolvedInventoryPerLitre.waterMass + soluteMass;
+  const scale = Math.max(Math.abs(material.density.value), Math.abs(expectedDensity), Number.EPSILON);
+  if (Math.abs(expectedDensity - material.density.value) > MATERIAL_BALANCE_RELATIVE_TOLERANCE * scale) {
+    throw new Error(
+      `MATERIAL_INVENTORY_MISMATCH: material ${material.materialId} density does not equal water mass plus resolved solute mass`,
+    );
+  }
+}
+
 function parseMaterialSnapshot(dto: SerializedMaterialSnapshot): RuntimeMaterialSnapshot {
   const density = toCanonical(dto.density);
-  return {
+  const material = {
     materialId: dto.materialId,
     sourceDefinition: dto.sourceDefinition,
     density: {
@@ -211,6 +286,8 @@ function parseMaterialSnapshot(dto: SerializedMaterialSnapshot): RuntimeMaterial
       })),
     },
   };
+  validateMaterialSnapshotSemantics(material);
+  return material;
 }
 
 function parseScenarioSnapshot(dto: SerializedScenarioSnapshot): RuntimeScenarioSnapshot {

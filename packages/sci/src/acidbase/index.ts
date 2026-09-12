@@ -28,7 +28,8 @@ import {
   ACID_BASE_MODEL_VERSION,
   ACID_BASE_MAX_TOTAL_SOLUTE_MOLALITY,
   ACID_BASE_MIN_TOTAL_SOLUTE_MOLALITY,
-  DEFAULT_ACID_BASE_CONSTANTS,
+  acidBaseConstantsFromSolverConfig,
+  type AcidBaseConstants,
   buildAcidBaseModelDescriptor,
   buildAcidBaseSolverConfig,
 } from "./model.js";
@@ -87,7 +88,7 @@ function domainReason(
   }
 
   const unsupported = request.solutes.find(
-    (solute) => !descriptor.validity.species.includes(solute.soluteId),
+    (solute) => !descriptor.validity.components.includes(solute.soluteId),
   );
   if (unsupported !== undefined) {
     return `solute ${unsupported.soluteId} is outside the v0 acid-base model`;
@@ -107,10 +108,11 @@ function speciesState(
   reduced: ReducedMolality,
   gamma: ActivityCoefficient,
   request: SolveRequest,
+  constants: AcidBaseConstants,
 ): ScientificState["species"][number] {
   const molality = physicalMolality(
     reduced,
-    DEFAULT_ACID_BASE_CONSTANTS.standardMolality,
+    constants.standardMolality,
   );
   const amount: Mol = mol(molality * request.waterMass);
   const speciesActivity: Activity = activity(gamma.value * reduced.value);
@@ -148,10 +150,11 @@ function buildScientificState(
   solved: ReducedSolveSuccess,
   model: ModelDescriptor,
   solverConfig: SolverConfig,
+  constants: AcidBaseConstants,
 ): ScientificState {
   const activities = daviesActivities(
     solved.ionicStrength,
-    DEFAULT_ACID_BASE_CONSTANTS,
+    constants,
   );
   const species = SPECIES_FIELDS.map(([symbol, field]) =>
     speciesState(
@@ -159,6 +162,7 @@ function buildScientificState(
       solved.species[field],
       activityCoefficientForField(field, activities),
       request,
+      constants,
     ),
   );
   const hydrogen = species[0]!;
@@ -167,7 +171,7 @@ function buildScientificState(
   return {
     species,
     ionicStrengthMolal: ionicStrengthMolal(
-      solved.ionicStrength.value * DEFAULT_ACID_BASE_CONSTANTS.standardMolality,
+      solved.ionicStrength.value * constants.standardMolality,
     ),
     ionicStrengthReduced: reducedIonicStrength(solved.ionicStrength.value),
     modelPh,
@@ -208,8 +212,9 @@ function solveRequest(
   if (reason !== undefined) return outOfDomain(model, reason);
 
   let totals: AcidBaseComponentTotals;
+  const constants = acidBaseConstantsFromSolverConfig(solverConfig);
   try {
-    totals = aggregateComponents(request);
+    totals = aggregateComponents(request, constants);
   } catch (error) {
     if (error instanceof RangeError) {
       return outOfDomain(model, error.message);
@@ -219,7 +224,7 @@ function solveRequest(
 
   const reducedResult = solveReduced({
     totals,
-    constants: DEFAULT_ACID_BASE_CONSTANTS,
+    constants,
   });
   if ("kind" in reducedResult) {
     if (reducedResult.kind === "OUT_OF_DOMAIN") {
@@ -238,7 +243,7 @@ function solveRequest(
     }
   }
 
-  const state = buildScientificState(request, reducedResult, model, solverConfig);
+  const state = buildScientificState(request, reducedResult, model, solverConfig, constants);
   return assertSolveResultIdentity({ status: "OK", state }, model, solverConfig);
 }
 

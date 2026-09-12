@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
   ionicStrengthMolal,
   kelvin,
+  ph,
+  reducedIonicStrength,
   type ScientificState,
   type SolveRequest,
   type ModelDescriptor,
@@ -13,6 +15,7 @@ import type { SolverAdapter } from "./adapter.js";
 import { StubSolverAdapter } from "./stub.js";
 import { parseSolverRequirements } from "./request.js";
 import { SolverRegistry, SolverResolver } from "./registry.js";
+import { createAcidBaseAdapter } from "./acidbase/index.js";
 
 function makeDescriptor(
   overrides: Partial<ModelDescriptor["validity"]> = {},
@@ -25,6 +28,7 @@ function makeDescriptor(
       temperature: { min: kelvin(273.15), max: kelvin(373.15) },
       ionicStrengthMolalMax: ionicStrengthMolal(0.5),
       species: ["H+", "OH-"],
+      components: ["HCl"],
       solvent: "water",
       phase: "aqueous",
       activityCorrected: true,
@@ -54,7 +58,52 @@ function notConverged(residual = 1, iterations = 1): SolveResult {
   };
 }
 
+function validState(provenance: Partial<ScientificState["provenance"]> = {}): ScientificState {
+  return {
+    species: [],
+    ionicStrengthMolal: ionicStrengthMolal(0),
+    ionicStrengthReduced: reducedIonicStrength(0),
+    modelPh: ph(7),
+    indicators: [],
+    validity: { inDomain: true, withinProposedAccuracyEnvelope: true },
+    provenance: {
+      modelId: "test-solver",
+      modelVersion: "1.0.0",
+      activityModel: "contract-test",
+      category: "calculated",
+      parameters: { Kw: 1e-14 },
+      ...provenance,
+    },
+  };
+}
+
 describe("exact solver registry", () => {
+  it("resolves the acid-base model for its equilibrium species requirements", () => {
+    const registry = new SolverRegistry([createAcidBaseAdapter()]);
+    const result = registry.resolve(
+      parseSolverRequirements({
+        temperature: { value: 298.15, unit: "K" },
+        species: ["H2O", "H+", "OH-", "Cl-", "Na+"],
+        solvent: "water",
+        phase: "aqueous",
+        activityCorrected: true,
+      }),
+    );
+
+    expect(result.status).toBe("compatible");
+  });
+
+  it("keeps accepted input components distinct from equilibrium species", () => {
+    const descriptor = createAcidBaseAdapter().model;
+    const validity = descriptor.validity as typeof descriptor.validity & {
+      components?: readonly string[];
+    };
+
+    expect(validity.components).toContain("HCl");
+    expect(descriptor.validity.species).toContain("H+");
+    expect(descriptor.validity.species).not.toContain("HCl");
+  });
+
   it("finds an adapter only at its exact id and version", () => {
     const adapter = new StubSolverAdapter({
       descriptor: makeDescriptor(),
@@ -101,8 +150,9 @@ describe("exact solver registry", () => {
     });
     const registry = new SolverRegistry([adapter]);
 
-    mutableDescriptor.version = "2.0.0";
-    mutableDescriptor.validity.species.push("Al3+");
+    (mutableDescriptor as unknown as { version: string }).version = "2.0.0";
+    (mutableDescriptor.validity.species as unknown as string[]).push("Al3+");
+    (mutableDescriptor.validity.ionicStrengthMolalMax as unknown as { value: number }).value = 9;
     mutableParameters.Kw = 9e-14;
 
     const lookup = registry.lookup("test-solver", "1.0.0");
@@ -110,10 +160,12 @@ describe("exact solver registry", () => {
     if (lookup.status !== "found") throw new Error("expected registered adapter");
     expect(lookup.adapter.model.version).toBe("1.0.0");
     expect(lookup.adapter.model.validity.species).toEqual(["H+", "OH-"]);
+    expect(lookup.adapter.model.validity.ionicStrengthMolalMax.value).toBe(0.5);
     expect(lookup.adapter.solverConfig.parameters).toEqual({ Kw: 1e-14 });
     expect(Object.isFrozen(lookup.adapter.model)).toBe(true);
     expect(Object.isFrozen(lookup.adapter.model.validity)).toBe(true);
     expect(Object.isFrozen(lookup.adapter.model.validity.species)).toBe(true);
+    expect(Object.isFrozen(lookup.adapter.model.validity.ionicStrengthMolalMax)).toBe(true);
     expect(Object.isFrozen(lookup.adapter.solverConfig)).toBe(true);
     expect(Object.isFrozen(lookup.adapter.solverConfig.parameters)).toBe(true);
 
@@ -135,15 +187,7 @@ describe("exact solver registry", () => {
       },
       solve: async (_request: SolveRequest) => ({
         status: "OK",
-        state: {
-          provenance: {
-            modelId: "different-solver",
-            modelVersion: model.version,
-            activityModel: "contract-test",
-            category: "calculated",
-            parameters: { Kw: 1e-14 },
-          },
-        } as ScientificState,
+        state: validState({ modelId: "different-solver" }),
       }),
     };
     const registry = new SolverRegistry([adapter]);
@@ -153,6 +197,46 @@ describe("exact solver registry", () => {
     await expect(found.adapter.solve({} as SolveRequest)).rejects.toThrow(
       /provenance.*identity/i,
     );
+  });
+
+  it.each([
+    {
+      name: "OK state without scientific fields",
+      outcome: {
+        status: "OK",
+        state: { provenance: validState().provenance },
+      },
+    },
+    {
+      name: "out-of-domain result without nearest descriptor",
+      outcome: { status: "MODEL_OUT_OF_DOMAIN", reason: "outside model" },
+    },
+    {
+      name: "not-converged result without diagnostic code",
+      outcome: { status: "NOT_CONVERGED", reason: "failed", iterations: 1 },
+    },
+    {
+      name: "invalid-input result with malformed violations",
+      outcome: { status: "INVALID_INPUT", violations: "not-an-array" },
+    },
+  ])("rejects malformed adapter output: $name", async ({ outcome }) => {
+    const model = makeDescriptor();
+    const adapter: SolverAdapter = {
+      id: model.id,
+      version: model.version,
+      model,
+      solverConfig: {
+        id: model.id,
+        version: model.version,
+        parameters: { Kw: 1e-14 },
+      },
+      solve: async (_request: SolveRequest) => outcome as unknown as SolveResult,
+    };
+    const registry = new SolverRegistry([adapter]);
+    const found = registry.lookup(model.id, model.version);
+    if (found.status !== "found") throw new Error("expected registered adapter");
+
+    await expect(found.adapter.solve({} as SolveRequest)).rejects.toThrow(/malformed|contract|schema/i);
   });
 
   it("resolves a compatible adapter from machine-checkable requirements", () => {

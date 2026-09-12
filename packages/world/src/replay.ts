@@ -75,14 +75,25 @@ function prefixHashAt(source: EventSource, sequence: number): string {
   return eventPrefixHash(prefix);
 }
 
+function worldIdAtPrefixTip(prefix: EventLog): string {
+  const genesis = prefix[0];
+  if (genesis?.type !== "WorldCreated") {
+    throw new Error("branch replay: prefix must begin with WorldCreated");
+  }
+  let worldId = genesis.payload.worldId;
+  for (const event of prefix) {
+    if (event.type === "WorldBranched") worldId = event.payload.childWorldId;
+  }
+  return worldId;
+}
+
 function branchSuffix(input: unknown, prefix: EventLog): EventLog {
   const parsed = DomainEventSchema.array().safeParse(input);
   if (!parsed.success || parsed.data.length === 0) {
     throw new Error("branch replay: suffix must contain at least WorldBranched");
   }
   const prefixTip = prefix[prefix.length - 1];
-  const genesis = prefix[0];
-  if (prefixTip === undefined || genesis?.type !== "WorldCreated") {
+  if (prefixTip === undefined || prefix[0]?.type !== "WorldCreated") {
     throw new Error("branch replay: prefix must be a valid root log");
   }
   let expectedSequence = prefixTip.seq + 1;
@@ -99,7 +110,7 @@ function branchSuffix(input: unknown, prefix: EventLog): EventLog {
   if (
     first?.type !== "WorldBranched" ||
     first.payload.forkSequence !== prefixTip.seq ||
-    first.payload.parentWorldId !== genesis.payload.worldId
+    first.payload.parentWorldId !== worldIdAtPrefixTip(prefix)
   ) {
     throw new Error("branch replay: suffix does not identify the prefix fork point");
   }

@@ -19,7 +19,7 @@ describe("World Runtime reducer", () => {
       },
     });
 
-    expect(next.canonical.byVessel.flask.waterMass).toBeCloseTo(0.0499, 14);
+    expect(next.canonical.byVessel.flask.waterMass).toBeCloseTo(0.99835391 * 0.05, 14);
     expect(next.canonical.byVessel.flask.liquidVolume).toBeCloseTo(0.05, 14);
     expect(next.canonical.byVessel.flask.componentAmounts).toEqual([
       { componentId: "HCl", amount: expect.closeTo(0.005, 14) },
@@ -60,12 +60,12 @@ describe("World Runtime reducer", () => {
       },
     });
 
-    expect(transferred.canonical.byVessel.flask.waterMass).toBeCloseTo(0.07485, 14);
+    expect(transferred.canonical.byVessel.flask.waterMass).toBeCloseTo(0.99835391 * 0.075, 14);
     expect(transferred.canonical.byVessel.flask.liquidVolume).toBeCloseTo(0.075, 14);
     expect(transferred.canonical.byVessel.flask.componentAmounts).toEqual([
       { componentId: "HCl", amount: expect.closeTo(0.0075, 14) },
     ]);
-    expect(transferred.canonical.byVessel.burette.waterMass).toBeCloseTo(0.04491, 14);
+    expect(transferred.canonical.byVessel.burette.waterMass).toBeCloseTo(0.99835391 * 0.045, 14);
     expect(transferred.canonical.byVessel.burette.liquidVolume).toBeCloseTo(0.045, 14);
     expect(transferred.canonical.byVessel.burette.componentAmounts).toEqual([
       { componentId: "HCl", amount: expect.closeTo(0.0045, 14) },

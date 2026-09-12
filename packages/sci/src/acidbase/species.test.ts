@@ -12,12 +12,12 @@ import {
 function species(values: readonly number[]): ReducedSpeciesMolalities {
   const [hydrogen, hydroxide, neutralAcid, conjugateBase, sodium, chloride] = values;
   return {
-    hydrogen: reducedMolality(hydrogen),
-    hydroxide: reducedMolality(hydroxide),
-    neutralAcid: reducedMolality(neutralAcid),
-    conjugateBase: reducedMolality(conjugateBase),
-    sodium: reducedMolality(sodium),
-    chloride: reducedMolality(chloride),
+    hydrogen: reducedMolality(hydrogen!),
+    hydroxide: reducedMolality(hydroxide!),
+    neutralAcid: reducedMolality(neutralAcid!),
+    conjugateBase: reducedMolality(conjugateBase!),
+    sodium: reducedMolality(sodium!),
+    chloride: reducedMolality(chloride!),
   };
 }
 

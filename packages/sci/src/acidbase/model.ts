@@ -47,6 +47,39 @@ export const DEFAULT_ACID_BASE_CONSTANTS: AcidBaseConstants = Object.freeze({
   waterActivityConvention: "unit",
 });
 
+function parameter(config: SolverConfig, name: string): number {
+  const value = config.parameters[name];
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new RangeError(`acid-base solver config parameter ${name} must be finite`);
+  }
+  return value;
+}
+
+/** Decode the frozen persisted config used by the production adapter. */
+export function acidBaseConstantsFromSolverConfig(
+  config: SolverConfig,
+): AcidBaseConstants {
+  if (config.id !== ACID_BASE_MODEL_ID || config.version !== ACID_BASE_MODEL_VERSION) {
+    throw new RangeError("solver config identity does not belong to the acid-base model");
+  }
+  const waterActivity = parameter(config, "waterActivity");
+  if (waterActivity <= 0) throw new RangeError("waterActivity must be positive");
+  return Object.freeze({
+    Kw: freezeQuantity(thermodynamicConstant(parameter(config, "Kw"))),
+    Ka_HOAc: freezeQuantity(thermodynamicConstant(parameter(config, "Ka_HOAc"))),
+    daviesA: parameter(config, "Davies_A"),
+    daviesB: parameter(config, "Davies_b"),
+    standardMolality: freezeQuantity(
+      molPerKilogram(parameter(config, "standardMolality")),
+    ),
+    neutralAcidActivityCoefficient: freezeQuantity(
+      activityCoefficient(parameter(config, "neutralAcidActivityCoefficient")),
+    ),
+    waterActivity: freezeQuantity(activity(waterActivity)),
+    waterActivityConvention: "unit",
+  });
+}
+
 export function buildAcidBaseModelDescriptor(): ModelDescriptor {
   return Object.freeze({
     id: ACID_BASE_MODEL_ID,
@@ -59,7 +92,8 @@ export function buildAcidBaseModelDescriptor(): ModelDescriptor {
         max: fromCelsius(25),
       }),
       ionicStrengthMolalMax: ionicStrengthMolal(0.5),
-      species: Object.freeze(["HCl", "NaOH", "HOAc", "NaOAc"]),
+      species: Object.freeze(["H2O", "H+", "OH-", "HOAc", "OAc-", "Na+", "Cl-"]),
+      components: Object.freeze(["HCl", "NaOH", "HOAc", "NaOAc"]),
       solvent: "water",
       phase: "aqueous",
       activityCorrected: true,

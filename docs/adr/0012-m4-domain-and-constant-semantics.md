@@ -40,6 +40,11 @@ For the v0 `acidbase-monoprotic-davies@1.0.0` model:
    arguments, and other solver failures return `NOT_CONVERGED` with diagnostics
    and never emit a partial state.
 
+   In particular, `INNER_BRACKET_NOT_FOUND` and
+   `OUTER_BRACKET_NOT_FOUND` are `NOT_CONVERGED` diagnostic codes. Their names
+   describe a numerical failure mode; they do not assert that the chemical
+   input is outside the model domain.
+
 The public `MODEL_OUT_OF_DOMAIN` result continues to include the required
 `nearestSupported` descriptor. The internal reduced solver uses a separate
 `OUT_OF_DOMAIN` failure tag only for an explicit model-domain condition that

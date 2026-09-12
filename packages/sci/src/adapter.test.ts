@@ -24,6 +24,7 @@ const descriptor: ModelDescriptor = {
     temperature: { min: kelvin(273.15), max: kelvin(373.15) },
     ionicStrengthMolalMax: ionicStrengthMolal(0.5),
     species: ["H+", "OH-"],
+    components: ["HCl"],
     solvent: "water",
     phase: "aqueous",
     activityCorrected: true,

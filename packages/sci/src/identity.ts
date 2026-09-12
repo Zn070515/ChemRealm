@@ -1,10 +1,19 @@
+import {
+  parseSolveResult,
+  serializeSolveResult,
+  SolveResultSchema,
+  type ModelDescriptor,
+  type SolveResult,
+  type SolverConfig,
+} from "@chemrealm/schema";
 import type {
-  ModelDescriptor,
   SolveRequest,
-  SolveResult,
-  SolverConfig,
 } from "@chemrealm/schema";
 import type { SolverAdapter } from "./adapter.js";
+
+function cloneAndFreezeObject<T extends object>(value: T): T {
+  return Object.freeze({ ...value }) as T;
+}
 
 /** Copy and freeze the nested model identity before it crosses a registry boundary. */
 export function cloneAndFreezeModelDescriptor(
@@ -19,8 +28,11 @@ export function cloneAndFreezeModelDescriptor(
         min: descriptor.validity.temperature.min,
         max: descriptor.validity.temperature.max,
       }),
-      ionicStrengthMolalMax: descriptor.validity.ionicStrengthMolalMax,
+      ionicStrengthMolalMax: cloneAndFreezeObject(
+        descriptor.validity.ionicStrengthMolalMax,
+      ),
       species: Object.freeze([...descriptor.validity.species]),
+      components: Object.freeze([...descriptor.validity.components]),
       solvent: descriptor.validity.solvent,
       phase: descriptor.validity.phase,
       activityCorrected: descriptor.validity.activityCorrected,
@@ -58,18 +70,28 @@ function hasExactParameters(
   );
 }
 
+function validateSolveResult(result: unknown): SolveResult {
+  try {
+    const dto = serializeSolveResult(result as SolveResult);
+    return parseSolveResult(SolveResultSchema.parse(dto));
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    throw new TypeError(`solver returned malformed result: ${detail}`, {
+      cause: error,
+    });
+  }
+}
+
 /** Enforce that a successful result names the identity that produced it. */
 export function assertSolveResultIdentity(
-  result: SolveResult,
+  result: unknown,
   model: ModelDescriptor,
   solverConfig: SolverConfig,
 ): SolveResult {
-  if (!isRecord(result)) {
-    throw new TypeError("solver returned a non-object result");
-  }
-  if (result.status !== "OK") return result as SolveResult;
+  const validated = validateSolveResult(result);
+  if (validated.status !== "OK") return validated;
 
-  const state = result.state;
+  const state = validated.state;
   const provenance = isRecord(state) && isRecord(state.provenance)
     ? state.provenance
     : undefined;
@@ -91,7 +113,7 @@ export function assertSolveResultIdentity(
       `solver returned OK state with provenance identity mismatch: ${mismatches.join(", ")}`,
     );
   }
-  return result as SolveResult;
+  return validated;
 }
 
 /** Freeze a registered adapter's public identity while preserving its solve seam. */

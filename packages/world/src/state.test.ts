@@ -54,7 +54,7 @@ const WORLD_CREATED: SerializedWorldCreated = {
             },
           ],
           resolvedInventoryPerLitre: {
-            waterMass: { value: 0.998, unit: "kg" },
+            waterMass: { value: 0.99835391, unit: "kg" },
             soluteAmounts: [{ soluteId: "HCl", amount: { value: 0.1, unit: "mol" } }],
           },
         },
@@ -288,5 +288,28 @@ describe("WorldState domain boundary", () => {
         contentHash: scenarioSnapshotHash(duplicateSnapshot),
       },
     })).toThrow(/DUPLICATE_ID: indicator/);
+  });
+
+  it("rejects a material snapshot whose frozen inventory disagrees with its recipe", () => {
+    const forgedSnapshot = {
+      ...WORLD_CREATED.payload.scenarioSnapshot,
+      materials: [
+        {
+          ...WORLD_CREATED.payload.scenarioSnapshot.materials[0]!,
+          resolvedInventoryPerLitre: {
+            waterMass: { value: 999, unit: "kg" as const },
+            soluteAmounts: [{ soluteId: "HCl", amount: { value: 999, unit: "mol" as const } }],
+          },
+        },
+      ],
+    };
+    expect(() => createInitialState({
+      ...WORLD_CREATED,
+      payload: {
+        ...WORLD_CREATED.payload,
+        scenarioSnapshot: forgedSnapshot,
+        contentHash: scenarioSnapshotHash(forgedSnapshot),
+      },
+    })).toThrow(/MATERIAL_INVENTORY_MISMATCH/);
   });
 });

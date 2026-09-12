@@ -7,6 +7,7 @@ import {
   ACID_BASE_MODEL_ID,
   ACID_BASE_MODEL_VERSION,
   DEFAULT_ACID_BASE_CONSTANTS,
+  type AcidBaseComponentId,
   buildAcidBaseModelDescriptor,
   buildAcidBaseSolverConfig,
 } from "./model.js";
@@ -134,7 +135,9 @@ describe("v0 acid-base component catalog", () => {
       ],
     },
   ])("rejects $name as an unsupported model request", ({ solutes }) => {
-    expect(() => aggregateComponents(request(solutes))).toThrow(/outside|unsupported|Ka|mode/i);
+    expect(() => aggregateComponents(request(solutes as SolveRequest["solutes"]))).toThrow(
+      /outside|unsupported|Ka|mode/i,
+    );
   });
 });
 
@@ -143,7 +146,7 @@ describe("fixed acid-base model identity", () => {
     const catalog = ACID_BASE_COMPONENT_CATALOG as Map<string, unknown>;
 
     expect(() => catalog.set("HNO3", {})).toThrow();
-    expect(ACID_BASE_COMPONENT_CATALOG.has("HNO3")).toBe(false);
+    expect(ACID_BASE_COMPONENT_CATALOG.has("HNO3" as AcidBaseComponentId)).toBe(false);
     expect(ACID_BASE_COMPONENT_CATALOG.get("HCl")?.mode).toBe(
       "fully-dissociated",
     );
@@ -174,8 +177,9 @@ describe("fixed acid-base model identity", () => {
     expect(descriptor.validity.temperature.max).toBe(298.15);
     expect(descriptor.validity.ionicStrengthMolalMax.value).toBe(0.5);
     expect(descriptor.validity.species).toEqual(
-      expect.arrayContaining(["HCl", "NaOH", "HOAc", "NaOAc"]),
+      expect.arrayContaining(["H2O", "H+", "OH-", "HOAc", "OAc-", "Na+", "Cl-"]),
     );
+    expect(descriptor.validity.components).toEqual(["HCl", "NaOH", "HOAc", "NaOAc"]);
     expect(descriptor.validity.activityCorrected).toBe(true);
   });
 
@@ -186,6 +190,7 @@ describe("fixed acid-base model identity", () => {
     expect(Object.isFrozen(descriptor)).toBe(true);
     expect(Object.isFrozen(descriptor.validity)).toBe(true);
     expect(Object.isFrozen(descriptor.validity.species)).toBe(true);
+    expect(Object.isFrozen(descriptor.validity.components)).toBe(true);
     expect(Object.isFrozen(config)).toBe(true);
     expect(Object.isFrozen(config.parameters)).toBe(true);
   });

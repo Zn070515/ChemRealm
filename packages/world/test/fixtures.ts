@@ -45,7 +45,7 @@ export const WORLD_CREATED: SerializedWorldCreated = {
             },
           ],
           resolvedInventoryPerLitre: {
-            waterMass: { value: 0.998, unit: "kg" },
+            waterMass: { value: 0.99835391, unit: "kg" },
             soluteAmounts: [{ soluteId: "HCl", amount: { value: 0.1, unit: "mol" } }],
           },
         },

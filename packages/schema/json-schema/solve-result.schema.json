@@ -5,7 +5,7 @@
       "additionalProperties": false,
       "properties": {
         "schemaVersion": {
-          "const": 2,
+          "const": 3,
           "type": "number"
         },
         "state": {
@@ -140,7 +140,7 @@
               "type": "object"
             },
             "schemaVersion": {
-              "const": 2,
+              "const": 3,
               "type": "number"
             },
             "species": {
@@ -323,6 +323,14 @@
                 "activityCorrected": {
                   "type": "boolean"
                 },
+                "components": {
+                  "items": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "minItems": 1,
+                  "type": "array"
+                },
                 "ionicStrengthMolalMax": {
                   "additionalProperties": false,
                   "properties": {
@@ -350,8 +358,10 @@
                 },
                 "species": {
                   "items": {
+                    "minLength": 1,
                     "type": "string"
                   },
+                  "minItems": 1,
                   "type": "array"
                 },
                 "temperature": {
@@ -409,6 +419,7 @@
                 "temperature",
                 "ionicStrengthMolalMax",
                 "species",
+                "components",
                 "solvent",
                 "phase",
                 "activityCorrected"
@@ -433,7 +444,7 @@
           "type": "string"
         },
         "schemaVersion": {
-          "const": 2,
+          "const": 3,
           "type": "number"
         },
         "status": {
@@ -475,7 +486,7 @@
           "type": "number"
         },
         "schemaVersion": {
-          "const": 2,
+          "const": 3,
           "type": "number"
         },
         "status": {
@@ -496,7 +507,7 @@
       "additionalProperties": false,
       "properties": {
         "schemaVersion": {
-          "const": 2,
+          "const": 3,
           "type": "number"
         },
         "status": {

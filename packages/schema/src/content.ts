@@ -15,6 +15,7 @@
 import { z } from "zod";
 
 import { quantityOfDimension } from "./quantity.js";
+import { DataProvenanceSchema } from "./scientific.js";
 import { CURRENT_SCHEMA_VERSION } from "./world.js";
 
 /**
@@ -32,9 +33,13 @@ const MolaritySoluteDefinitionSchema = z.strictObject({
   soluteId: z.string().min(1),
   basis: z.literal("molarity"),
   /** `c`, mol per litre of SOLUTION. The reagent-label and volumetric convention. */
-  amountConcentration: quantityOfDimension("molarity"),
+  amountConcentration: quantityOfDimension("molarity").extend({
+    provenance: DataProvenanceSchema.optional(),
+  }),
   /** Sourced. Feeds `waterMass`, so it is a scientific input. */
-  molarMass: quantityOfDimension("molarMass"),
+  molarMass: quantityOfDimension("molarMass").extend({
+    provenance: DataProvenanceSchema.optional(),
+  }),
   /** Whether the solute is fully dissociated at these concentrations. */
   fullyDissociated: z.boolean(),
 });
@@ -43,8 +48,12 @@ const MolalitySoluteDefinitionSchema = z.strictObject({
   soluteId: z.string().min(1),
   basis: z.literal("molality"),
   /** `m`, mol per kilogram of WATER. */
-  molality: quantityOfDimension("molality"),
-  molarMass: quantityOfDimension("molarMass"),
+  molality: quantityOfDimension("molality").extend({
+    provenance: DataProvenanceSchema.optional(),
+  }),
+  molarMass: quantityOfDimension("molarMass").extend({
+    provenance: DataProvenanceSchema.optional(),
+  }),
   fullyDissociated: z.boolean(),
 });
 
@@ -56,8 +65,9 @@ export type SoluteDefinition = z.infer<typeof SoluteDefinitionSchema>;
 
 /**
  * A material as the AUTHOR writes it: a composition on a named scale, plus
- * density, both sourced. Resolution into a frozen inventory happens once, at
- * genesis (`world.ts`).
+ * density. Source records may be attached while authoring; resolution into a
+ * frozen inventory happens once, at genesis (`world.ts`), where missing source
+ * data is rejected rather than invented.
  *
  * Density is required rather than optional because it is a scientific input,
  * not an implementation detail: it sets `waterMass`, hence molality, hence
@@ -84,7 +94,9 @@ export const MaterialDefinitionSchema = z.strictObject({
    * is declared on the molality scale, is what converts it to the snapshot's
    * molarity basis (`molalityToMolarity`).
    */
-  density: quantityOfDimension("density"),
+  density: quantityOfDimension("density").extend({
+    provenance: DataProvenanceSchema.optional(),
+  }),
 });
 export type MaterialDefinition = z.infer<typeof MaterialDefinitionSchema>;
 
@@ -143,6 +155,7 @@ export const IndicatorDefinitionSchema = z.strictObject({
   kaIn: z.strictObject({
     value: z.number().finite().positive(),
     unit: z.literal("1"),
+    provenance: DataProvenanceSchema.optional(),
   }),
 });
 export type IndicatorDefinition = z.infer<typeof IndicatorDefinitionSchema>;

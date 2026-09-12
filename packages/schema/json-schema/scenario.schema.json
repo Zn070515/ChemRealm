@@ -45,6 +45,92 @@
           "kaIn": {
             "additionalProperties": false,
             "properties": {
+              "provenance": {
+                "additionalProperties": false,
+                "properties": {
+                  "category": {
+                    "enum": [
+                      "measured",
+                      "evaluated",
+                      "calculated",
+                      "empirical",
+                      "pedagogicalApproximation"
+                    ],
+                    "type": "string"
+                  },
+                  "edition": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "lastVerified": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "pressure": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "unit": {
+                        "enum": [
+                          "kPa",
+                          "Pa",
+                          "atm"
+                        ],
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "value",
+                      "unit"
+                    ],
+                    "type": "object"
+                  },
+                  "reference": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "source": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "temperature": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "unit": {
+                        "enum": [
+                          "K",
+                          "degC"
+                        ],
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "value",
+                      "unit"
+                    ],
+                    "type": "object"
+                  },
+                  "uncertainty": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "version": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "source",
+                  "reference",
+                  "category"
+                ],
+                "type": "object"
+              },
               "unit": {
                 "const": "1",
                 "type": "string"
@@ -82,6 +168,92 @@
           "density": {
             "additionalProperties": false,
             "properties": {
+              "provenance": {
+                "additionalProperties": false,
+                "properties": {
+                  "category": {
+                    "enum": [
+                      "measured",
+                      "evaluated",
+                      "calculated",
+                      "empirical",
+                      "pedagogicalApproximation"
+                    ],
+                    "type": "string"
+                  },
+                  "edition": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "lastVerified": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "pressure": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "unit": {
+                        "enum": [
+                          "kPa",
+                          "Pa",
+                          "atm"
+                        ],
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "value",
+                      "unit"
+                    ],
+                    "type": "object"
+                  },
+                  "reference": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "source": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "temperature": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "unit": {
+                        "enum": [
+                          "K",
+                          "degC"
+                        ],
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "value",
+                      "unit"
+                    ],
+                    "type": "object"
+                  },
+                  "uncertainty": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "version": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "source",
+                  "reference",
+                  "category"
+                ],
+                "type": "object"
+              },
               "unit": {
                 "enum": [
                   "kg/L",
@@ -120,6 +292,92 @@
                     "amountConcentration": {
                       "additionalProperties": false,
                       "properties": {
+                        "provenance": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "category": {
+                              "enum": [
+                                "measured",
+                                "evaluated",
+                                "calculated",
+                                "empirical",
+                                "pedagogicalApproximation"
+                              ],
+                              "type": "string"
+                            },
+                            "edition": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "lastVerified": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "pressure": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "unit": {
+                                  "enum": [
+                                    "kPa",
+                                    "Pa",
+                                    "atm"
+                                  ],
+                                  "type": "string"
+                                },
+                                "value": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "value",
+                                "unit"
+                              ],
+                              "type": "object"
+                            },
+                            "reference": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "source": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "temperature": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "unit": {
+                                  "enum": [
+                                    "K",
+                                    "degC"
+                                  ],
+                                  "type": "string"
+                                },
+                                "value": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "value",
+                                "unit"
+                              ],
+                              "type": "object"
+                            },
+                            "uncertainty": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "version": {
+                              "minLength": 1,
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "source",
+                            "reference",
+                            "category"
+                          ],
+                          "type": "object"
+                        },
                         "unit": {
                           "enum": [
                             "mol/L",
@@ -147,6 +405,92 @@
                     "molarMass": {
                       "additionalProperties": false,
                       "properties": {
+                        "provenance": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "category": {
+                              "enum": [
+                                "measured",
+                                "evaluated",
+                                "calculated",
+                                "empirical",
+                                "pedagogicalApproximation"
+                              ],
+                              "type": "string"
+                            },
+                            "edition": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "lastVerified": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "pressure": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "unit": {
+                                  "enum": [
+                                    "kPa",
+                                    "Pa",
+                                    "atm"
+                                  ],
+                                  "type": "string"
+                                },
+                                "value": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "value",
+                                "unit"
+                              ],
+                              "type": "object"
+                            },
+                            "reference": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "source": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "temperature": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "unit": {
+                                  "enum": [
+                                    "K",
+                                    "degC"
+                                  ],
+                                  "type": "string"
+                                },
+                                "value": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "value",
+                                "unit"
+                              ],
+                              "type": "object"
+                            },
+                            "uncertainty": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "version": {
+                              "minLength": 1,
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "source",
+                            "reference",
+                            "category"
+                          ],
+                          "type": "object"
+                        },
                         "unit": {
                           "enum": [
                             "kg/mol",
@@ -194,6 +538,92 @@
                     "molality": {
                       "additionalProperties": false,
                       "properties": {
+                        "provenance": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "category": {
+                              "enum": [
+                                "measured",
+                                "evaluated",
+                                "calculated",
+                                "empirical",
+                                "pedagogicalApproximation"
+                              ],
+                              "type": "string"
+                            },
+                            "edition": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "lastVerified": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "pressure": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "unit": {
+                                  "enum": [
+                                    "kPa",
+                                    "Pa",
+                                    "atm"
+                                  ],
+                                  "type": "string"
+                                },
+                                "value": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "value",
+                                "unit"
+                              ],
+                              "type": "object"
+                            },
+                            "reference": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "source": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "temperature": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "unit": {
+                                  "enum": [
+                                    "K",
+                                    "degC"
+                                  ],
+                                  "type": "string"
+                                },
+                                "value": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "value",
+                                "unit"
+                              ],
+                              "type": "object"
+                            },
+                            "uncertainty": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "version": {
+                              "minLength": 1,
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "source",
+                            "reference",
+                            "category"
+                          ],
+                          "type": "object"
+                        },
                         "unit": {
                           "enum": [
                             "mol/kg"
@@ -213,6 +643,92 @@
                     "molarMass": {
                       "additionalProperties": false,
                       "properties": {
+                        "provenance": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "category": {
+                              "enum": [
+                                "measured",
+                                "evaluated",
+                                "calculated",
+                                "empirical",
+                                "pedagogicalApproximation"
+                              ],
+                              "type": "string"
+                            },
+                            "edition": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "lastVerified": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "pressure": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "unit": {
+                                  "enum": [
+                                    "kPa",
+                                    "Pa",
+                                    "atm"
+                                  ],
+                                  "type": "string"
+                                },
+                                "value": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "value",
+                                "unit"
+                              ],
+                              "type": "object"
+                            },
+                            "reference": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "source": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "temperature": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "unit": {
+                                  "enum": [
+                                    "K",
+                                    "degC"
+                                  ],
+                                  "type": "string"
+                                },
+                                "value": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "value",
+                                "unit"
+                              ],
+                              "type": "object"
+                            },
+                            "uncertainty": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "version": {
+                              "minLength": 1,
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "source",
+                            "reference",
+                            "category"
+                          ],
+                          "type": "object"
+                        },
                         "unit": {
                           "enum": [
                             "kg/mol",

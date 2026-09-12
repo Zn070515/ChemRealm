@@ -677,7 +677,9 @@ In⁻ look like" is perception.* This is stated once as a general rule in
 | Phenolphthalein | colourless | pink | 8.2 – 10.0 | ≈ 9.4 |
 | Methyl orange | red | yellow | 3.1 – 4.4 | ≈ 3.4 |
 
-**Provenance status: textbook/standard values, primary source to be pinned at M4.**
+**Provenance status: fixed model constants are source-recorded in the M4
+constants companion; indicator values remain provisional until their primary
+sources and usable precision are accepted.**
 `Ka_in` is a **scenario-specific scientific input**, not a global solver
 configuration parameter. Content resolution canonicalizes it and attaches
 datum-level `DataProvenance` in `ScenarioSnapshot.indicators`; that snapshot is
@@ -718,25 +720,33 @@ and are never stored as though they were thermodynamic.
 
 | Constant | v0 value | Basis | Source status |
 |---|---|---|---|
-| `Kw` (25 °C) | 1.0e-14 | molality, dimensionless | Standard; primary source to be pinned at M4 |
-| `Ka`(CH₃COOH) | **to be pinned at M4** | molality, dimensionless | **Do not carry more digits than the source.** See Open question 1 — the previous `1.8001e-5` was invented precision from a two-figure input. |
+| `Kw` (25 °C) | **1.0e-14** | molality, dimensionless | IUPAC Gold Book autoprotolysis definition; source literal and precision recorded in `docs/research/constants-provenance.json` |
+| `Ka`(CH₃COOH) | **1.7539e-5** | molality, dimensionless | Derived from cited `pKa = 4.7560`; propagated source uncertainty and effective precision are recorded in `docs/research/constants-provenance.json` |
 | HCl | fully dissociated | model choice | Not a constant |
 | NaOH | fully dissociated | model choice | Not a constant |
-| Davies `A` (25 °C) | **0.509** | **dimensionless**, reduced-`I` convention | Standard; primary source to be pinned at M4 |
-| Davies `b` | 0.3 | dimensionless, reduced-`I` convention | Empirical; primary source to be pinned at M4 |
+| Davies `A` (25 °C) | **0.509** | **dimensionless**, reduced-`I` convention | Model policy; source record retained in the M4 constants companion |
+| Davies `b` | 0.3 | dimensionless, reduced-`I` convention | Empirical model policy; source record retained in the M4 constants companion |
 | Standard molality `m°` | 1 mol/kg | defines `Î = I_m/m°` | Convention; recorded in solver config |
 | `γ_HA` (neutral) | 1.0 | molality basis | **Approximation**, bounded at +0.02 `log10 γ` at I=0.1 (F6) |
 | `a_w` | 1.0 | explicit `waterActivity` model parameter / unit-water-activity convention; not multiplied into the v0 `Kw = a_H · a_OH` equation | Valid over the supported domain only |
-| Indicator `Ka_in` | see table | molality, dimensionless | **Provisional**, see above |
+| Indicator `Ka_in` | see scenario snapshot | molality, dimensionless | **Scenario-specific provisional input**, not a global solver parameter |
 
 **`A` changed from 0.5085 to 0.509** because the basis changed from molarity to
 molality. The two differ by 0.1 %, far below tolerance — but the change is
 recorded because an undeclared basis change is exactly the class of silent error
 this review was about.
 
-All of the above enter the genesis event's `solverConfig` and are hashed into
-replay identity (`ADR-0007` §8). A change to any of them is a new solver version
-(`ADR-0008` open decision 2).
+The global model parameters (`Kw`, `Ka_HOAc`, Davies `A`/`b`, `m°`, neutral-acid
+convention, `waterActivity`, and numeric policy) enter the genesis event's
+`solverConfig` and are hashed into replay identity (`ADR-0007` §8). A change to
+one of those is a new solver version (`ADR-0008` open decision 2). Each
+scenario-specific indicator `Ka_in` instead belongs to the resolved
+`ScenarioSnapshot.indicators` datum, with its own provenance and content hash.
+
+The model descriptor has two distinct sets: `validity.components` names the
+authored input components accepted by the adapter (`HCl`, `NaOH`, `HOAc`, and
+`NaOAc`), while `validity.species` names the equilibrium species it can
+represent. A component is not itself an equilibrium species.
 
 ### Expected precision and tolerance
 
@@ -886,6 +896,13 @@ CanonicalContents {
   componentAmounts: { componentId, amount: Mol }[] // conserved components
 }
 ```
+
+The composition-level entry point for creating a new world accepts an authored
+`Scenario` and must resolve it into this canonical `ScenarioSnapshot` before
+emitting `WorldCreated`. A resolved snapshot is a persisted genesis value, not
+an alternate new-world input, and must not be accepted as a way to bypass
+authoring validation, provenance checks, canonicalization, or solver
+requirements resolution.
 
 **`Vessel` holds no contents.** An earlier revision carried
 `Vessel.contents: CanonicalContents` *and* `canonical.byVessel[vesselId]` — the

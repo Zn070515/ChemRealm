@@ -607,15 +607,19 @@
                       "type": "boolean"
                     },
                     "phase": {
+                      "const": "aqueous",
                       "type": "string"
                     },
                     "solvent": {
+                      "const": "water",
                       "type": "string"
                     },
                     "species": {
                       "items": {
+                        "minLength": 1,
                         "type": "string"
                       },
+                      "minItems": 1,
                       "type": "array"
                     },
                     "temperature": {

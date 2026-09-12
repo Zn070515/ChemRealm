@@ -48,7 +48,7 @@ function domainReason(
   }
 
   const unsupportedSolute = request.solutes.find(
-    (solute) => !descriptor.validity.species.includes(solute.soluteId),
+    (solute) => !descriptor.validity.components.includes(solute.soluteId),
   );
   if (unsupportedSolute) {
     return `solute ${unsupportedSolute.soluteId} is outside the model species set`;

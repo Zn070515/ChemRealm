@@ -57,6 +57,7 @@ import {
   sumIonicStrengthMolar,
   sumReducedIonicStrength,
   thermodynamicConstant,
+  type KilogramsPerMol,
   type MolPerKilogram,
   type ReducedMolality,
 } from "./units.js";
@@ -224,7 +225,11 @@ describe("molarity <-> molality — the conversion that needs a density", () => 
 
   it("refuses a solution where the solute exceeds the solution mass", () => {
     expect(() =>
-      molarityToMolality(molPerLitre(30), M_HCl, 1.0),
+      molarityToMolality(
+        molPerLitre(30),
+        M_HCl,
+        1.0 as unknown as ReturnType<typeof kilogramsPerLitre>,
+      ),
     ).toThrow(RangeError);
   });
 
@@ -278,7 +283,11 @@ describe("ionic strength bases are distinct quantities (AC-U2)", () => {
 describe("bad conversions fail loudly rather than returning a number", () => {
   it("refuses a non-positive solution mass", () => {
     expect(() =>
-      molalityToMolarity(molPerKilogram(1), (-1) as unknown, 1),
+      molalityToMolarity(
+        molPerKilogram(1),
+        -1 as unknown as KilogramsPerMol,
+        1 as unknown as ReturnType<typeof kilogramsPerLitre>,
+      ),
     ).toThrow(RangeError);
   });
 

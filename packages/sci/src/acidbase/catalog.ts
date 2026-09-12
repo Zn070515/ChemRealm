@@ -8,6 +8,7 @@ import {
 import {
   ACID_BASE_COMPONENT_IDS,
   DEFAULT_ACID_BASE_CONSTANTS,
+  type AcidBaseConstants,
   type AcidBaseComponentId,
 } from "./model.js";
 
@@ -113,6 +114,7 @@ function unsupported(message: string): never {
 /** Aggregate model-owned component stoichiometry into reduced analytical totals. */
 export function aggregateComponents(
   request: SolveRequest,
+  constants: AcidBaseConstants = DEFAULT_ACID_BASE_CONSTANTS,
 ): AcidBaseComponentTotals {
   if (!(request.waterMass > 0) || !Number.isFinite(request.waterMass)) {
     throw new RangeError("acid-base water mass must be finite and positive");
@@ -148,7 +150,7 @@ export function aggregateComponents(
     }
     if (
       solute.soluteId === "HOAc" &&
-      !Object.is(ka, DEFAULT_ACID_BASE_CONSTANTS.Ka_HOAc.value)
+      !Object.is(ka, constants.Ka_HOAc.value)
     ) {
       unsupported("HOAc Ka does not match the frozen model constant");
     }

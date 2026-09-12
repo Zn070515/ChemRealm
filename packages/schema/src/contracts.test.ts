@@ -166,12 +166,36 @@ describe("AC-C1 — content declares a scenario and cannot express chemistry", (
           {
             soluteId: "HCl",
             basis: "molarity",
-            amountConcentration: { value: 0.1, unit: "mol/L" },
-            molarMass: { value: 36.4609, unit: "g/mol" },
+            amountConcentration: {
+              value: 0.1,
+              unit: "mol/L",
+              provenance: {
+                source: "fixture",
+                reference: "HCl composition fixture",
+                category: "evaluated",
+              },
+            },
+            molarMass: {
+              value: 36.4609,
+              unit: "g/mol",
+              provenance: {
+                source: "fixture",
+                reference: "HCl molar mass fixture",
+                category: "evaluated",
+              },
+            },
             fullyDissociated: true,
           },
         ],
-        density: { value: 1.002, unit: "kg/L" },
+        density: {
+          value: 1.002,
+          unit: "kg/L",
+          provenance: {
+            source: "fixture",
+            reference: "HCl density fixture",
+            category: "evaluated",
+          },
+        },
       },
     ],
     vessels: [
@@ -416,12 +440,24 @@ describe("dimension coherence — the contract cannot express dimensional nonsen
           {
             soluteId: "HCl",
             basis: "molarity",
-            amountConcentration: { value: 0.1, unit: "mol/L" },
-            molarMass: { value: 36.46, unit: "g/mol" },
+            amountConcentration: {
+              value: 0.1,
+              unit: "mol/L",
+              provenance: { source: "fixture", reference: "composition", category: "evaluated" },
+            },
+            molarMass: {
+              value: 36.46,
+              unit: "g/mol",
+              provenance: { source: "fixture", reference: "molar mass", category: "evaluated" },
+            },
             fullyDissociated: true,
           },
         ],
-        density: { value: 1.002, unit: "kg/L" },
+        density: {
+          value: 1.002,
+          unit: "kg/L",
+          provenance: { source: "fixture", reference: "density", category: "evaluated" },
+        },
       },
     ],
     vessels: [
@@ -459,7 +495,10 @@ describe("dimension coherence — the contract cannot express dimensional nonsen
   it("rejects a VOLUME field holding an AMOUNT", () => {
     expect(
       acceptsIf((s) => {
-        (s.vessels[0] as Record<string, unknown>)["capacity"] = { value: 5, unit: "mol" };
+        (s.vessels as unknown as Record<string, unknown>[])[0]!["capacity"] = {
+          value: 5,
+          unit: "mol",
+        };
       }),
     ).toBe(false);
   });
@@ -467,7 +506,10 @@ describe("dimension coherence — the contract cannot express dimensional nonsen
   it("rejects a density declared in mol/L", () => {
     expect(
       acceptsIf((s) => {
-        (s.materials[0] as Record<string, unknown>)["density"] = { value: 1, unit: "mol/L" };
+        (s.materials as unknown as Record<string, unknown>[])[0]!["density"] = {
+          value: 1,
+          unit: "mol/L",
+        };
       }),
     ).toBe(false);
   });
@@ -525,6 +567,7 @@ describe("scientific contract carries the model's identity and validity", () => 
           },
           ionicStrengthMolalMax: { value: 0.5, unit: "mol/kg" },
           species: ["H+"],
+          components: ["HCl"],
           solvent: "water",
           phase: "aqueous",
           activityCorrected: true,
@@ -919,6 +962,7 @@ describe("model descriptors declare machine-checkable capabilities", () => {
       },
       ionicStrengthMolalMax: { value: 0.5, unit: "mol/kg" },
       species: ["H+"],
+      components: ["HCl"],
       solvent: "water",
       phase: "aqueous",
     },
@@ -932,6 +976,33 @@ describe("model descriptors declare machine-checkable capabilities", () => {
       }).success,
     ).toBe(true);
     expect(ModelDescriptorSchema.safeParse(base).success).toBe(false);
+  });
+});
+
+describe("persisted model requirements keep the v0 solvent and phase boundary", () => {
+  const baseSnapshot = {
+    scenarioRef: "requirements-boundary",
+    materials: [],
+    vessels: [],
+    apparatusDefaults: [],
+    indicators: [],
+    modelRequirements: {
+      temperature: { value: 298.15, unit: "K" as const },
+      species: ["H+"],
+      solvent: "water" as const,
+      phase: "aqueous" as const,
+      activityCorrected: true,
+    },
+  };
+
+  it("rejects a snapshot that asks for a non-water or non-aqueous runtime", () => {
+    const invalidSolvent = structuredClone(baseSnapshot);
+    (invalidSolvent.modelRequirements as unknown as Record<string, unknown>).solvent = "methanol";
+    expect(ScenarioSnapshotSchema.safeParse(invalidSolvent).success).toBe(false);
+
+    const invalidPhase = structuredClone(baseSnapshot);
+    (invalidPhase.modelRequirements as unknown as Record<string, unknown>).phase = "gas";
+    expect(ScenarioSnapshotSchema.safeParse(invalidPhase).success).toBe(false);
   });
 });
 
@@ -972,7 +1043,9 @@ describe("DTOs parse into domain quantities, not bare numbers", () => {
   });
 
   it("requires Ka only for the monoprotic-equilibrium solute mode", () => {
-    const weak = structuredClone(requestDto);
+    const weak = structuredClone(requestDto) as unknown as {
+      solutes: Array<Record<string, unknown>>;
+    };
     weak.solutes[0] = {
       soluteId: "HA",
       amount: { value: 0.005, unit: "mol" },
@@ -989,14 +1062,18 @@ describe("DTOs parse into domain quantities, not bare numbers", () => {
   });
 
   it("rejects contradictory or incomplete solute mode data", () => {
-    const withKaOnStrong = structuredClone(requestDto);
+    const withKaOnStrong = structuredClone(requestDto) as unknown as {
+      solutes: Array<Record<string, unknown>>;
+    };
     withKaOnStrong.solutes[0] = {
       soluteId: "HCl",
       amount: { value: 0.005, unit: "mol" },
       mode: "fully-dissociated",
       ka: { value: 1.8e-5, unit: "1" },
     };
-    const withoutKaOnEquilibrium = structuredClone(requestDto);
+    const withoutKaOnEquilibrium = structuredClone(requestDto) as unknown as {
+      solutes: Array<Record<string, unknown>>;
+    };
     withoutKaOnEquilibrium.solutes[0] = {
       soluteId: "HA",
       amount: { value: 0.005, unit: "mol" },
@@ -1067,6 +1144,7 @@ describe("DTOs parse into domain quantities, not bare numbers", () => {
             },
             ionicStrengthMolalMax: { value: 0.5, unit: "mol/kg" },
             species: ["H+"],
+            components: ["HCl"],
             solvent: "water",
             phase: "aqueous",
             activityCorrected: true,
@@ -1083,9 +1161,10 @@ describe("DTOs parse into domain quantities, not bare numbers", () => {
 });
 
 describe("a solute declares its composition scale by name", () => {
+  const provenance = { source: "fixture", reference: "solute datum", category: "evaluated" as const };
   const base = {
     soluteId: "HCl",
-    molarMass: { value: 36.4609, unit: "g/mol" },
+    molarMass: { value: 36.4609, unit: "g/mol", provenance },
     fullyDissociated: true,
   };
 
@@ -1094,7 +1173,7 @@ describe("a solute declares its composition scale by name", () => {
       SoluteDefinitionSchema.safeParse({
         ...base,
         basis: "molarity",
-        amountConcentration: { value: 0.1, unit: "mol/L" },
+        amountConcentration: { value: 0.1, unit: "mol/L", provenance },
       }).success,
     ).toBe(true);
   });
@@ -1106,7 +1185,7 @@ describe("a solute declares its composition scale by name", () => {
       SoluteDefinitionSchema.safeParse({
         ...base,
         basis: "molality",
-        molality: { value: 0.1, unit: "mol/kg" },
+        molality: { value: 0.1, unit: "mol/kg", provenance },
       }).success,
     ).toBe(true);
   });
@@ -1142,8 +1221,8 @@ describe("a solute declares its composition scale by name", () => {
     const nacl = {
       soluteId: "NaCl",
       basis: "molality" as const,
-      molality: { value: 0.1, unit: "mol/kg" as const },
-      molarMass: { value: 58.44, unit: "g/mol" as const },
+      molality: { value: 0.1, unit: "mol/kg" as const, provenance },
+      molarMass: { value: 58.44, unit: "g/mol" as const, provenance },
       fullyDissociated: true,
     };
     expect(
@@ -1152,7 +1231,7 @@ describe("a solute declares its composition scale by name", () => {
         label: "mixed molality",
         phase: "aqueous",
         solutes: [hcl, nacl],
-        density: { value: 1, unit: "kg/L" },
+        density: { value: 1, unit: "kg/L", provenance },
       }).success,
     ).toBe(false);
   });
@@ -1161,8 +1240,8 @@ describe("a solute declares its composition scale by name", () => {
     const molality = {
       soluteId: "NaCl",
       basis: "molality" as const,
-      molality: { value: 0.1, unit: "mol/kg" as const },
-      molarMass: { value: 58.44, unit: "g/mol" as const },
+      molality: { value: 0.1, unit: "mol/kg" as const, provenance },
+      molarMass: { value: 58.44, unit: "g/mol" as const, provenance },
       fullyDissociated: true,
     };
     expect(
@@ -1171,7 +1250,7 @@ describe("a solute declares its composition scale by name", () => {
         label: "mixed basis",
         phase: "aqueous",
         solutes: [base, molality],
-        density: { value: 1, unit: "kg/L" },
+        density: { value: 1, unit: "kg/L", provenance },
       }).success,
     ).toBe(false);
   });

@@ -6,10 +6,11 @@ import { describe, expect, it } from "vitest";
 
 import { WORLD_CREATED } from "../test/fixtures.js";
 import { emitCommand } from "./command.js";
+import { forkWorld } from "./branch.js";
 import { quantize } from "./hash.js";
 import { appendEvent, createLog } from "./log.js";
 import { reduce } from "./reduce.js";
-import { replay } from "./replay.js";
+import { replay, replayBranch } from "./replay.js";
 import { createSnapshot } from "./snapshot.js";
 import { createInitialState, stateHash } from "./state.js";
 
@@ -42,6 +43,19 @@ function eventLog(count: number) {
 }
 
 describe("World Runtime replay", () => {
+  it("replays a nested branch whose shared prefix already contains a branch event", () => {
+    const { log, state } = eventLog(3);
+    const child = forkWorld(state, log, "child-world");
+    const flattenedChildPrefix = [...child.log.prefix, ...child.log.suffix];
+    const grandchild = forkWorld(child.state, flattenedChildPrefix, "grandchild-world");
+
+    const replayed = replayBranch(grandchild.log);
+
+    expect(replayed.state.worldId).toBe("grandchild-world");
+    expect(replayed.state.lineage.parentWorldId).toBe("child-world");
+    expect(replayed.replayHash).toBe(stateHash(grandchild.state));
+  });
+
   it("replays a 500-event log with the same boundary hashes twice", () => {
     const { log } = eventLog(500);
     const started = performance.now();

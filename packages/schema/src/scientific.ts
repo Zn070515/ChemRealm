@@ -81,7 +81,7 @@ import {
  * crosses a language boundary is not an internal TypeScript type any more, and
  * an unversioned wire format cannot be migrated later without guesswork.
  */
-export const SCIENTIFIC_SCHEMA_VERSION = 2;
+export const SCIENTIFIC_SCHEMA_VERSION = 3;
 
 // ---------------------------------------------------------------------------
 // Provenance
@@ -173,7 +173,10 @@ export const ModelDescriptorSchema = z.strictObject({
       max: quantityOfDimension("temperature"),
     }),
     ionicStrengthMolalMax: quantityOfDimension("molality"),
-    species: z.array(z.string()),
+    /** Equilibrium species the model can represent. */
+    species: z.array(z.string().min(1)).min(1),
+    /** Input component identities accepted by SolveRequest. */
+    components: z.array(z.string().min(1)).min(1),
     solvent: z.string(),
     phase: z.string(),
     /** Whether the model accounts for activity coefficients. */
@@ -187,6 +190,7 @@ export interface ModelValidity {
   readonly temperature: { readonly min: Kelvin; readonly max: Kelvin };
   readonly ionicStrengthMolalMax: IonicStrengthMolal;
   readonly species: readonly string[];
+  readonly components: readonly string[];
   readonly solvent: string;
   readonly phase: string;
   readonly activityCorrected: boolean;
@@ -214,6 +218,7 @@ export function parseModelDescriptor(dto: ModelDescriptorDto): ModelDescriptor {
         toCanonical(dto.validity.ionicStrengthMolalMax).value,
       ),
       species: dto.validity.species,
+      components: dto.validity.components,
       solvent: dto.validity.solvent,
       phase: dto.validity.phase,
       activityCorrected: dto.validity.activityCorrected,
@@ -565,6 +570,88 @@ export function parseSolveResult(dto: SolveResultDto): SolveResult {
       };
     case "INVALID_INPUT":
       return { status: "INVALID_INPUT", violations: dto.violations };
+  }
+}
+
+/** Domain → DTO bridge used to validate results returned by adapter code. */
+export function serializeModelDescriptor(
+  descriptor: ModelDescriptor,
+): ModelDescriptorDto {
+  return {
+    id: descriptor.id,
+    version: descriptor.version,
+    description: descriptor.description,
+    validity: {
+      temperature: {
+        min: { value: descriptor.validity.temperature.min, unit: "K" },
+        max: { value: descriptor.validity.temperature.max, unit: "K" },
+      },
+      ionicStrengthMolalMax: {
+        value: descriptor.validity.ionicStrengthMolalMax.value,
+        unit: "mol/kg",
+      },
+      species: [...descriptor.validity.species],
+      components: [...descriptor.validity.components],
+      solvent: descriptor.validity.solvent,
+      phase: descriptor.validity.phase,
+      activityCorrected: descriptor.validity.activityCorrected,
+    },
+  };
+}
+
+export function serializeScientificState(
+  state: ScientificState,
+): ScientificStateDto {
+  return {
+    schemaVersion: SCIENTIFIC_SCHEMA_VERSION,
+    species: state.species.map((species) => ({
+      symbol: species.symbol,
+      reducedMolality: { value: species.reducedMolality.value, unit: "1" },
+      molality: { value: species.molality, unit: "mol/kg" },
+      amount: { value: species.amount, unit: "mol" },
+      activityCoefficient: { value: species.activityCoefficient.value, unit: "1" },
+      activity: { value: species.activity.value, unit: "1" },
+    })),
+    ionicStrengthMolal: { value: state.ionicStrengthMolal.value, unit: "mol/kg" },
+    ionicStrengthReduced: { value: state.ionicStrengthReduced.value, unit: "1" },
+    modelPh: { value: state.modelPh.value, unit: "1" },
+    indicators: state.indicators.map((indicator) => ({ ...indicator })),
+    validity: { ...state.validity },
+    provenance: { ...state.provenance, parameters: { ...state.provenance.parameters } },
+  };
+}
+
+/** Validate a domain-form result through the same DTO contract used on the wire. */
+export function serializeSolveResult(result: SolveResult): SolveResultDto {
+  switch (result.status) {
+    case "OK":
+      return {
+        schemaVersion: SCIENTIFIC_SCHEMA_VERSION,
+        status: "OK",
+        state: serializeScientificState(result.state),
+      };
+    case "MODEL_OUT_OF_DOMAIN":
+      return {
+        schemaVersion: SCIENTIFIC_SCHEMA_VERSION,
+        status: "MODEL_OUT_OF_DOMAIN",
+        reason: result.reason,
+        nearestSupported: serializeModelDescriptor(result.nearestSupported),
+      };
+    case "NOT_CONVERGED":
+      return {
+        schemaVersion: SCIENTIFIC_SCHEMA_VERSION,
+        status: "NOT_CONVERGED",
+        code: result.code,
+        reason: result.reason,
+        ...(result.residual === undefined ? {} : { residual: result.residual }),
+        iterations: result.iterations,
+      };
+    case "INVALID_INPUT":
+      return {
+        schemaVersion: SCIENTIFIC_SCHEMA_VERSION,
+        status: "INVALID_INPUT",
+        violations: result.violations.map((violation) => ({ ...violation })),
+      };
   }
 }
 

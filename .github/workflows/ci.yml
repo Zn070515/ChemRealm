@@ -28,6 +28,7 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
+      - run: pnpm typecheck:tests
       - run: pnpm build
       - run: pnpm test
 
@@ -47,6 +48,7 @@ jobs:
       - run: pnpm depcruise
       - run: pnpm guards
       - run: pnpm verify:scientific-math
+      - run: pnpm verify:m4-contracts
       - run: pnpm verify:world
 
       # Product properties asserted against the shipped artifact: no

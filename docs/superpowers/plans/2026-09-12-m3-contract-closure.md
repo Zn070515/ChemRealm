@@ -2,6 +2,12 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+> **Historical status:** This plan has been superseded by the cross-system
+> remediation. Its original genesis-builder sketch below is retained as an
+> implementation record; the current contract accepts an authored `Scenario`
+> only and resolves it before emitting `WorldCreated`. See
+> `docs/evidence/cross-system-contract-remediation.md` and the current SPEC.
+
 **Goal:** Close the M3 solver contract gaps so asynchronous science orchestration, exact solver identity, typed solute semantics, out-of-domain diagnostics, and world-creation rejection are verifiable before M4.
 
 **Architecture:** Keep `packages/world` a synchronous, deterministic event reducer that never invokes a `SolverAdapter`. Keep asynchronous solving at the composition boundary, where a resolver produces the complete `SolverConfig` frozen into `WorldCreated` and later orchestration awaits `solve`. Make the v0 adapter one-model/one-config identity, and make the scientific request/result unions reject semantically contradictory states at the schema boundary.
@@ -193,7 +199,7 @@ Expected: no world package imports `@chemrealm/sci`, no Promise is dropped, and 
 ```ts
 type WorldCreationInput = {
   readonly worldId: string;
-  readonly scenarioSnapshot: unknown;
+  readonly scenario: unknown;
   readonly seed: number | null;
 };
 ```
@@ -207,7 +213,7 @@ type WorldCreationInput = {
 or:
 
 ```ts
-{ accepted: false; status: "incompatible" | "unavailable"; reason: string }
+{ accepted: false; status: "invalid" | "incompatible" | "unavailable"; reason: string }
 ```
 
 The rejected result has no `event` property. The builder is synchronous because it resolves registry compatibility only; solving remains an awaited orchestration operation after the world exists.
@@ -222,7 +228,7 @@ pnpm vitest run apps/web/src/world-creation.test.ts
 
 Expected: module/function-not-found or missing workspace dependency failure before implementation.
 
-- [ ] **Step 3: Implement the composition boundary.** Parse `ScenarioSnapshotSchema`, parse/canonicalize its model requirements, call `registry.resolve`, return a reasoned rejection for incompatible/unavailable resolution, and on compatibility construct `WorldCreated` with the input world id, snapshot, snapshot hash, returned complete solver config, and seed. Parse the event through `WorldCreatedSchema` and call `createInitialState` as a final structural validation before returning it.
+- [ ] **Step 3: Implement the composition boundary.** Parse authored `Scenario`, resolve it into a canonical `ScenarioSnapshot`, parse/canonicalize its model requirements, call `registry.resolve`, return a reasoned rejection for invalid/incompatible/unavailable resolution, and on compatibility construct `WorldCreated` with the resolved snapshot, snapshot hash, returned complete solver config, and seed. A resolved snapshot must not be accepted as an alternate new-world input. Parse the event through `WorldCreatedSchema` and call `createInitialState` as a final structural validation before returning it.
 
 - [ ] **Step 4: Wire workspace dependencies and run the green cycle.** Add `@chemrealm/sci` and `@chemrealm/world` to `apps/web`, update the lockfile, then run:
 
