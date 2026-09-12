@@ -8,9 +8,9 @@ REF-1…REF-10 and PHREEQC execution. It does not claim M4 scientific acceptance
 The current M4 packet remains the stage truth for M4 and deliberately keeps
 reference/oracle criteria pending.
 
-**Implementation baseline:** to be pinned after the remediation commit is
-created. No hosted CI result is claimed by this packet until that workflow has
-completed.
+**Implementation baseline:** `91620c9` — Close cross-system contract gaps
+before M4 references. Local verification below passed before this evidence pin;
+no hosted CI result is claimed by this packet.
 
 ## Acceptance matrix
 
