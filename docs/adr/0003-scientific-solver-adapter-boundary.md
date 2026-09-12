@@ -58,7 +58,8 @@ and units. Consumers cannot obtain a bare number.**
 interface SolverAdapter {
   readonly id: SolverId;            // e.g. "acidbase-monoprotic-davies"
   readonly version: string;         // semver, participates in replay identity
-  readonly models: readonly ModelDescriptor[];
+  readonly model: ModelDescriptor;  // exactly one model in v0
+  readonly solverConfig: SolverConfig; // exact identity frozen into genesis
 
   solve(request: SolveRequest): Promise<SolveResult>;
 }
@@ -89,6 +90,37 @@ type SolveResult =
    returns an explicit unavailable/incompatible reason when no adapter
    satisfies them. ADR-0008's Tier A/B/C replay, re-solve, and archive product
    workflows remain M8 scope.
+
+### M3 contract closure candidate (owner review pending)
+
+The implementation now makes the following additions explicit. They are a
+candidate amendment to the accepted decisions above and remain pending the
+owner's M3 S3 review.
+
+1. **World Runtime and science have separate execution boundaries.**
+   `packages/world` remains a synchronous, deterministic reducer and replay
+   engine. It never calls or awaits a `SolverAdapter`. Composition code builds a
+   `SolveRequest` from a committed `WorldState` and awaits the adapter after the
+   event boundary; `ReplayOptions.deriveScience` is only a synchronous
+   projection/hash callback. Async completion order therefore cannot change
+   world truth.
+2. **v0 has one adapter, one model, and one exact config.** An adapter's
+   `id`/`version`, its `model.id`/`model.version`, and its
+   `solverConfig.id`/`solverConfig.version` must be identical. Registry
+   registration rejects any mismatch, and compatible resolution returns the
+   complete `SolverConfig` that the genesis builder writes to `WorldCreated`.
+   Multi-model adapters are deferred until a separate contract is accepted.
+3. **SolveRequest solutes are discriminated.** A fully dissociated solute is
+   `{ soluteId, amount, mode: "fully-dissociated" }`; a finite-equilibrium
+   solute is `{ soluteId, amount, mode: "monoprotic-equilibrium", ka }` with a
+   positive dimensionless `ka`. The schema rejects contradictory or incomplete
+   combinations.
+4. **Domain refusal is actionable.** Every `MODEL_OUT_OF_DOMAIN` result
+   carries a required `nearestSupported` `ModelDescriptor`.
+5. **Genesis rejects unsatisfied requirements.** The composition-level
+   `createWorld` builder resolves canonical requirements before emitting
+   `WorldCreated`; incompatible or unavailable resolution returns a reason and
+   no event. The builder does not invoke the async solver.
 
 **Correction (2026-09-11, owner-approved).** The OK branch was sketched above as
 `{ state, provenance }`, with provenance a SIBLING of state. The implementation

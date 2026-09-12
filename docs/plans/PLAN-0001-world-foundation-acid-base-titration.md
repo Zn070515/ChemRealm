@@ -477,7 +477,8 @@ the scientific engine is built means rebuilding both.
 ## M3 — Solver adapter contract
 
 **Status:** **S2 — Implemented Candidate / Owner Verification Pending** · evidence
-`docs/evidence/M3.md` · implementation `66c5971` · CI pending
+`docs/evidence/M3.md` · implementation baseline `1807979` plus preceding M3
+closure commits · CI pending for the final evidence baseline
 **Authorization:** Owner-authorized 2026-09-12 after M2 S3 acceptance at
 baseline `778fadbd` (CI `34677042056`)
 **Target stage:** S3
@@ -491,52 +492,67 @@ provenance and validity as first-class return values.
 ### Files and modules
 
 ```
-packages/sci/src/adapter.ts          SolverAdapter interface
-packages/sci/src/result.ts           SolveResult union, Provenance, ModelDescriptor
-packages/sci/src/request.ts          SolveRequest
-packages/sci/src/stub.ts             a deliberately-trivial adapter for contract tests
-packages/sci/src/registry.ts         adapter registry, id+version lookup
+packages/schema/src/scientific.ts   DTO/domain bridges, solute and result unions
+packages/sci/src/adapter.ts         one-model SolverAdapter + exact SolverConfig
+packages/sci/src/request.ts         canonical requirements and request validation
+packages/sci/src/stub.ts            deliberately-trivial async contract adapter
+packages/sci/src/registry.ts        exact identity registration and resolution
+packages/world/src/reduce.ts        synchronous world reducer with no solver hook
+packages/world/src/replay.ts        synchronous replay and projection/hash callback
+apps/web/src/world-creation.ts      composition-level requirements/genesis builder
 ```
 
 ### Contracts changed
 
-`SolverAdapter`, `SolveRequest`, `SolveResult`, `Provenance`, `ModelDescriptor`.
+`SolverAdapter`, exact `SolverConfig` binding, `SolveRequestSolute`,
+`SolveResult`, `Provenance`, `ModelDescriptor`, `ReduceOptions`, and the
+composition-level `createWorld` result union.
 
 ### Implementation
 
-1. The result union from ADR-0003, with **no** convenience scalar accessor. If a
-   call site wants a number, it reads it from the returned state, visibly.
-2. Async from the start, per the accepted ADR-0003 M3 owner decision: a future PHREEQC adapter
-   may be out-of-process, and retrofitting async later is a breaking change
-   across every call site.
-3. Solver `Provenance` carries `{ modelId, modelVersion, activityModel, parameters,
-   uncertainty, source, category }`. It records the model run, not citations for
-   material inputs. Genesis `MaterialSnapshot` attaches `DataProvenance` to
-   density and to every composition and molar-mass datum; it does not use an
-   aggregate provenance array.
-   Its `category ∈ { measured, evaluated, calculated, empirical, pedagogicalApproximation }`
-   (`GOAL.md` §12). The indicator colour model will use `empirical`.
-4. `registry.ts` resolves by id **and** version, and refuses to return a
-   different version. This is what makes AC-R6 enforceable.
-5. Domain declaration: each adapter publishes its `validityRange` (T, ionic
-   strength, species set, solvent, phase). `MODEL_OUT_OF_DOMAIN` is checked
-   **before** solving, not inferred from a converged result.
+1. The result union has no convenience scalar accessor. `OK` contains a
+   `ScientificState`; `MODEL_OUT_OF_DOMAIN` always contains a required
+   `nearestSupported` descriptor; all quantities cross the DTO bridge through
+   dimension validation, `toCanonical()`, and an opaque constructor.
+2. `SolverAdapter.solve(request)` is async from the start. v0 exposes exactly
+   one `model` and one `solverConfig`, and registry registration rejects any
+   adapter/model/config `id` or `version` mismatch. Compatible resolution returns
+   the complete config that genesis persists.
+3. `SolveRequest` uses a discriminated solute union: fully dissociated solutes
+   have no `ka`, while monoprotic-equilibrium solutes require a positive,
+   dimensionless `ka`. Contradictory combinations are rejected by schema and
+   defensive runtime validation.
+4. The World Runtime reducer and replay remain synchronous, pure, and unaware
+   of scientific adapters. Composition code may await a solver only after a
+   committed world state exists; async completion order cannot alter world truth.
+5. `apps/web/src/world-creation.ts` parses a scenario, canonicalizes and
+   resolves model requirements, and returns a reasoned rejection without an
+   event when no exact adapter is compatible. A compatible result includes a
+   schema-valid `WorldCreated` with the resolver's exact `SolverConfig`.
+6. Solver `Provenance` records the model run, not citations for material inputs.
+   Genesis `MaterialSnapshot` attaches `DataProvenance` to density and every
+   composition and molar-mass datum. Persistence availability tiers, re-solve,
+   and archive behavior remain M8 scope under ADR-0008.
 
 ### Tests and evidence
 
 | Test | Proves |
 |---|---|
-| Stub adapter returns each of the four statuses | Union is complete and exercisable |
-| Registry refuses a version mismatch | AC-R6 foundation |
-| A request outside the declared domain returns `MODEL_OUT_OF_DOMAIN` with no state | AC-S4 |
+| Stub adapter returns each of the four statuses asynchronously | Union is complete and exercisable |
+| Registry refuses a version mismatch and identity mismatch | AC-R6 and exact adapter/model/config identity |
+| A request outside the declared domain returns `MODEL_OUT_OF_DOMAIN` with a required descriptor | AC-S4 and actionable refusal |
+| Schema/runtime tests reject contradictory solute modes and incomplete `ka` data | Scientific request semantics cannot be ambiguous |
 | Type test: `SolveResult` has no `ph: number` field | The convenience shortcut cannot be added quietly |
 | `Provenance.category` is required, not optional | `GOAL.md` §12 is enforceable |
-| **`SolverResolver` returns `incompatible` for a scenario whose `modelRequirements` no available solver satisfies; world creation fails with the reason** | AC-R20 — requirements are a constraint, not a comment that `solverConfig` may override |
+| Reducer regression proves a solver callback is not invoked and return remains synchronous | Async orchestration is outside World Runtime |
+| `apps/web/src/world-creation.test.ts` proves incompatible requirements return no event and compatible requirements persist the complete config | AC-R20 — requirements reject genesis rather than being overridden |
 
 ### Stop condition
 
-The interface can express every v0 scientific outcome **and** every refusal,
-without a caller ever holding a bare number lacking provenance.
+The interface can express every v0 scientific outcome and refusal, exact solver
+identity is ready for `WorldCreated`, and no world event can be emitted when
+requirements are unsatisfiable. M4 may begin only after owner S3 verification
+of the M3 evidence packet.
 
 ---
 

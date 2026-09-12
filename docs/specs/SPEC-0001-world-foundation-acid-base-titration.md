@@ -3,9 +3,10 @@
 - **Status:** **Accepted** — S1 baseline and M1 S3 contract amendments
   accepted. Owner, 2026-09-11.
 - **Accepted baseline:** commit `8310c685`, `SPEC-0001` revision 6
-- **Current revision:** **9** — M1 S3 VERIFIED / ACCEPTED. Revision 7 was the
-  last previously owner-approved amendment; revisions 8–9 are now accepted
-  contract amendments. See "Amendments since acceptance" below.
+- **Current revision:** **10 candidate** — M3 Contract Closure is implemented
+  pending owner S3 verification. Revisions 7–9 are accepted contract
+  amendments; revision 10 is recorded for review and is not self-accepted.
+  See "Amendments since acceptance" below.
 - **Acceptance scope:** the specification and its acceptance criteria. Deferred
   items listed under Open questions remain open and must be resolved before the
   milestone that names them. Acceptance does **not** assert that any criterion
@@ -26,6 +27,7 @@
 | 7 | 2026-09-11 | `CanonicalContents` conserves **components**, not materials (M1 contract remediation item 1). `AC-R21` added to carry that contract; `AC-S3` and `AC-R14` wording aligned to it. Round 6's claim at §"Round 6" that this file was "unchanged at revision 6" corrected. | Owner, 2026-09-11 |
 | 8 | 2026-09-11 | M1 Contract Closure R2: all persisted `MaterialSnapshot` scientific inputs are tagged quantities; source-data provenance is distinct from solver/model provenance; v0 material definitions reject mixed bases and more than one molality solute until the joint resolver is implemented. | Owner, 2026-09-11 |
 | 9 | 2026-09-11 | M1 Final Closure: material snapshot provenance follows each datum; snapshot scientific quantities are persisted only in canonical units; export wording is aligned with the v1 bundle contract (`events[0]` carries solver config, lineage ids are allowed, and learner evidence has no v1 payload). | Owner, 2026-09-11 |
+| 10 | 2026-09-12 | M3 Contract Closure candidate: World Runtime reduction/replay stays synchronous; async solving is composition-level orchestration; v0 binds one adapter, one model, and one exact `SolverConfig`; solute modes are discriminated; `MODEL_OUT_OF_DOMAIN` requires `nearestSupported`; incompatible requirements reject genesis before `WorldCreated`. | Owner review pending |
 
 A revision bump is recorded here rather than only in the body because the header
 is what a reader checks before deciding whether the file they are reading is the
@@ -212,8 +214,11 @@ Command ──validate against WorldState──► rejected (no event) | accepte
    ▼
 DomainEvent ──appended──► event log ──fold──► WorldState
                                                 │
-                                                │  (chemistry recomputed by the reducer
-                                                │   through the SolverAdapter)
+                                                │  apps/web builds a SolveRequest
+                                                │  from the committed world state
+                                                ▼
+                                    await SolverAdapter.solve(request)
+                                                │
                                                 ▼
                                        ScientificState
                                                 │
@@ -1150,15 +1155,19 @@ screenshots change. That is correct. Observables are a projection, not history.
 Visual regression baselines are versioned alongside the observable model for
 exactly this reason.
 
-### Explicit design decision: chemistry is recomputed, not stored in events
+### Explicit design decision: chemistry is recomputed outside the world reducer
 
-The reducer calls the `SolverAdapter` on each `TransferCommitted`. Events carry
-the *action* (`volume transferred`), not the *result* (`resulting pH`).
+The synchronous World Runtime reducer never calls or awaits a `SolverAdapter`.
+Events carry the *action* (`volume transferred`), not the *result* (`resulting
+pH`). After a committed `WorldState` exists, composition-level orchestration
+builds a `SolveRequest` and awaits the adapter. This keeps event folding,
+branching, and replay deterministic even when a solver runs in a worker, WASM
+module, or separate process.
 
 Rationale: `state = fold(events)` is the honest event-sourcing position. If the
 event stored the answer, replay would merely re-read it and would no longer
-verify the solver. Recomputation means a solver regression surfaces as a replay
-mismatch instead of being masked.
+verify the solver. Recompute the scientific projection after the world boundary
+instead of making event folding depend on async completion order.
 
 Consequence, stated plainly: **replay requires the same solver version.** A world
 created under `acidbase-monoprotic-davies@1.0.0` is not replayable under
