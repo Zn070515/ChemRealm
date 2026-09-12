@@ -186,7 +186,7 @@ Both functions reject non-finite or invalid arguments with a typed/routable rang
 
 **Tests to add/run:**
 
-- arbitrary-precision reference vectors across the entire declared domain (`detExp10` is currently validated only for the Davies band `[-0.135, 0]`; `detLog10` accepts normal positive doubles);
+- arbitrary-precision reference vectors across the entire declared domain (`detExp10` is currently validated only for the Davies band `[-0.137, 0]`; `detLog10` accepts normal positive doubles);
 - boundary, subnormal-adjacent, sign, zero, non-finite, and out-of-domain cases;
 - ulp measurement with the accepted `<= 1.5 ulp` in-domain bound and explicit refusal outside;
 - Cody–Waite reduction boundary cases around integer powers and the solver's minimum/maximum hydrogen values;

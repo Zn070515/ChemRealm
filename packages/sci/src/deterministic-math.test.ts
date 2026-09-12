@@ -37,6 +37,7 @@ describe("deterministic base-10 math", () => {
   });
 
   it.each([
+    [-0.137, "0.7294575102545687214141455472302692669374"],
     [-0.135, "0.7328245331389040846182252915434901346266"],
     [-0.117099, "0.7636616825301398363695933656006664336279"],
     [-0.1, "0.794328234724281502065918282836387932589"],
@@ -48,7 +49,7 @@ describe("deterministic base-10 math", () => {
   });
 
   it("declares the measured exp10 domain explicitly", () => {
-    expect(DET_EXP10_DOMAIN).toEqual([-0.135, 0]);
+    expect(DET_EXP10_DOMAIN).toEqual([-0.137, 0]);
     expect(Number.isFinite(detExp10(DET_EXP10_DOMAIN[0]))).toBe(true);
     expect(Number.isFinite(detExp10(DET_EXP10_DOMAIN[1]))).toBe(true);
   });
@@ -59,7 +60,7 @@ describe("deterministic base-10 math", () => {
     ["log subnormal", () => detLog10(Number.MIN_VALUE)],
     ["log infinity", () => detLog10(Number.POSITIVE_INFINITY)],
     ["log NaN", () => detLog10(Number.NaN)],
-    ["exp below domain", () => detExp10(-0.135001)],
+    ["exp below domain", () => detExp10(-0.137001)],
     ["exp above domain", () => detExp10(0.000001)],
     ["exp infinity", () => detExp10(Number.POSITIVE_INFINITY)],
     ["exp NaN", () => detExp10(Number.NaN)],

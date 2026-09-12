@@ -18,7 +18,7 @@ const SQRT2 = 1.4142135623730951;
 const MIN_NORMAL = 2.2250738585072014e-308;
 
 /** The measured public range used by the M4 solver and its validation cases. */
-export const DET_EXP10_DOMAIN = [-0.135, 0] as const;
+export const DET_EXP10_DOMAIN = [-0.137, 0] as const;
 export const DET_LOG10_DOMAIN = [MIN_NORMAL, Number.MAX_VALUE] as const;
 
 type DoubleDouble = {

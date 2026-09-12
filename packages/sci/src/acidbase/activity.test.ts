@@ -16,6 +16,7 @@ describe("Davies activity coefficients", () => {
     [0.001, 0.9650506422971322],
     [0.01, 0.9020991481709937],
     [0.1, 0.7815939439468334],
+    [0.4, 0.7309374666232693],
     [0.5, 0.7336945562067271],
   ])("computes monovalent gamma at reduced I=%s", (ionicStrength, expected) => {
     const activities = daviesActivities(

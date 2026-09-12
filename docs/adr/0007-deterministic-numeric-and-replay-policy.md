@@ -44,8 +44,9 @@ built only from `+ - * /` and exactly-specified integer operations are
 bit-identical on every conforming engine by construction. The accepted
 reference suite measures no more than 1.5 ulp for `detLog10` over its normal
 positive-double domain and no more than 1.5 ulp for `detExp10` in the validated
-Davies band `[-0.135, 0]`. The wider exp10 sweep is deliberately outside the
-public domain and is refused.
+Davies call band `[-0.137, 0]`. The lower bound conservatively covers the
+minimum of the fixed v0 Davies curve (about `-0.136125` at `Î ≈ 0.395`). The
+wider exp10 sweep is deliberately outside the public domain and is refused.
 
 **4. Independent quantization of species breaks conservation.** 100-step serial
 transfer of 0.1 mol, 500 trials: quantizing the **transfer amount** once gives
@@ -88,7 +89,7 @@ order — 1 ulp is nine orders of magnitude below the ±0.02 pH tolerance — bu
 is a real trade and is recorded as one.
 
 **Domain restriction is mandatory.** `detExp10` is publicly validated only for
-the Davies activity-coefficient band `[-0.135, 0]`. Its two-part Cody–Waite
+the Davies activity-coefficient band `[-0.137, 0]`. Its two-part Cody–Waite
 reduction is implemented at M4, but the wider former spike sweep is not part of
 the accepted domain until it has its own reference measurement. Calls outside
 the domain must refuse rather than silently degrade, and activity-model call
