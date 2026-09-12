@@ -12,6 +12,9 @@
     "selectionReason": "The v0 oracle uses the phreeqc.dat database shipped in the same pinned USGS release."
   },
   "executable": {
+    "binaryName": "phreeqc",
+    "ciInstallScript": "tools/oracle/phreeqc/install_ci.sh",
+    "runner": "tools/oracle/phreeqc/run_batch.py",
     "linuxBuild": "Build the pinned source archive with the checked-in CI script.",
     "windowsOverride": "PHREEQC_BIN may point to a locally installed executable for developer runs."
   }

@@ -15,6 +15,7 @@ import {
   parseScientificState,
   parseSolveRequest,
   parseSolveResult,
+  SCIENTIFIC_SCHEMA_VERSION,
 } from "./scientific.js";
 import {
   CURRENT_SCHEMA_VERSION,
@@ -501,7 +502,7 @@ describe("scientific contract carries the model's identity and validity", () => 
 
   it("treats refusal as a normal outcome, not an exception", () => {
     const refused = SolveResultSchema.safeParse({
-      schemaVersion: 1,
+      schemaVersion: SCIENTIFIC_SCHEMA_VERSION,
       status: "MODEL_OUT_OF_DOMAIN",
       reason: "temperature outside the model's range",
     });
@@ -510,7 +511,7 @@ describe("scientific contract carries the model's identity and validity", () => 
 
   it("requires an actionable nearest-supported descriptor for refusal", () => {
     const refused = SolveResultSchema.safeParse({
-      schemaVersion: 1,
+      schemaVersion: SCIENTIFIC_SCHEMA_VERSION,
       status: "MODEL_OUT_OF_DOMAIN",
       reason: "temperature outside the model's range",
       nearestSupported: {
@@ -531,6 +532,25 @@ describe("scientific contract carries the model's identity and validity", () => 
       },
     });
     expect(refused.success).toBe(true);
+  });
+
+  it("requires a diagnostic code and reason for non-convergence", () => {
+    const failure = SolveResultSchema.safeParse({
+      schemaVersion: SCIENTIFIC_SCHEMA_VERSION,
+      status: "NOT_CONVERGED",
+      code: "OUTER_BRACKET_NOT_FOUND",
+      reason: "no valid outer bracket was found",
+      iterations: 4,
+    });
+    expect(failure.success).toBe(true);
+
+    const legacyFailure = SolveResultSchema.safeParse({
+      schemaVersion: SCIENTIFIC_SCHEMA_VERSION,
+      status: "NOT_CONVERGED",
+      residual: 0,
+      iterations: 4,
+    });
+    expect(legacyFailure.success).toBe(false);
   });
 
   it("has no bare-number shortcut in the outcome union", () => {
@@ -917,7 +937,7 @@ describe("model descriptors declare machine-checkable capabilities", () => {
 
 describe("DTOs parse into domain quantities, not bare numbers", () => {
   const requestDto = {
-    schemaVersion: 1,
+    schemaVersion: SCIENTIFIC_SCHEMA_VERSION,
     waterMass: { value: 0.998, unit: "kg" },
     liquidVolume: { value: 0.05, unit: "L" },
     solutes: [
@@ -1004,7 +1024,7 @@ describe("DTOs parse into domain quantities, not bare numbers", () => {
   it("canonicalizes the nested scientific state and nearest-supported descriptor", () => {
     const state = parseScientificState(
       ScientificStateSchema.parse({
-        schemaVersion: 1,
+        schemaVersion: SCIENTIFIC_SCHEMA_VERSION,
         species: [
           {
             symbol: "H+",
@@ -1033,7 +1053,7 @@ describe("DTOs parse into domain quantities, not bare numbers", () => {
 
     const result = parseSolveResult(
       SolveResultSchema.parse({
-        schemaVersion: 1,
+        schemaVersion: SCIENTIFIC_SCHEMA_VERSION,
         status: "MODEL_OUT_OF_DOMAIN",
         reason: "temperature outside the model range",
         nearestSupported: {

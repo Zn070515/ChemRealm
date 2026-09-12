@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "model": {
+    "id": "acidbase-monoprotic-davies",
+    "version": "1.0.0"
+  },
+  "records": [
+    {
+      "key": "Kw",
+      "canonicalValue": 1e-14,
+      "canonicalSignificantDigits": 2,
+      "sourceLiteral": "1.0e-14",
+      "sourceSignificantDigits": 2,
+      "kind": "sourced",
+      "derivation": "Direct activity-product convention: Kw = a_H * a_OH.",
+      "citation": "https://goldbook.iupac.org/terms/view/A00532",
+      "condition": "aqueous, 25 degC, activity/molality convention"
+    },
+    {
+      "key": "Ka_HOAc",
+      "canonicalValue": 1.7539e-5,
+      "canonicalSignificantDigits": 5,
+      "sourceLiteral": "pKa=4.7560",
+      "sourceSignificantDigits": 5,
+      "kind": "derived",
+      "derivation": "10^(-pKa), frozen as the displayed canonical decimal and not recomputed at runtime.",
+      "citation": "https://pubs.usgs.gov/of/1990/0408/report.pdf",
+      "condition": "aqueous, 25 degC"
+    },
+    {
+      "key": "Davies_A",
+      "canonicalValue": 0.509,
+      "canonicalSignificantDigits": 3,
+      "sourceLiteral": "0.509",
+      "sourceSignificantDigits": 3,
+      "kind": "sourced",
+      "derivation": "Davies activity convention on the reduced ionic-strength basis.",
+      "citation": "Davies, C. W. (1962), Ion Association, Butterworths",
+      "condition": "water, 25 degC"
+    },
+    {
+      "key": "Davies_b",
+      "canonicalValue": 0.3,
+      "canonicalSignificantDigits": 1,
+      "sourceLiteral": "0.3",
+      "sourceSignificantDigits": 1,
+      "kind": "sourced",
+      "derivation": "Original Davies empirical extension coefficient.",
+      "citation": "Davies, C. W. (1962), Ion Association, Butterworths",
+      "condition": "water, 25 degC"
+    },
+    {
+      "key": "standardMolality",
+      "canonicalValue": 1,
+      "canonicalSignificantDigits": 1,
+      "sourceLiteral": "1 mol/kg",
+      "sourceSignificantDigits": 1,
+      "kind": "convention",
+      "derivation": "Standard-state scale used to make reduced molality dimensionless.",
+      "citation": "docs/science/quantity-ontology.md; ADR-0004",
+      "condition": "molality basis"
+    },
+    {
+      "key": "neutralAcidActivityCoefficient",
+      "canonicalValue": 1,
+      "canonicalSignificantDigits": 1,
+      "sourceLiteral": "1",
+      "sourceSignificantDigits": 1,
+      "kind": "approximation",
+      "derivation": "Explicit v0 neutral-HA unit-activity-coefficient approximation.",
+      "citation": "SPEC-0001; ADR-0003",
+      "condition": "dilute aqueous v0 domain"
+    },
+    {
+      "key": "waterActivity",
+      "canonicalValue": 1,
+      "canonicalSignificantDigits": 1,
+      "sourceLiteral": "1",
+      "sourceSignificantDigits": 1,
+      "kind": "approximation",
+      "derivation": "Explicit v0 unit-water-activity convention; not multiplied into Kw = a_H * a_OH.",
+      "citation": "SPEC-0001; ADR-0012",
+      "condition": "dilute aqueous v0 domain"
+    },
+    {
+      "key": "numericPrecisionSignificantDigits",
+      "canonicalValue": 12,
+      "canonicalSignificantDigits": 2,
+      "sourceLiteral": "12",
+      "sourceSignificantDigits": 2,
+      "kind": "convention",
+      "derivation": "Accepted deterministic numeric/replay precision policy.",
+      "citation": "ADR-0007",
+      "condition": "canonical independent dynamic quantities"
+    },
+    {
+      "key": "numericPolicyVersion",
+      "canonicalValue": 1,
+      "canonicalSignificantDigits": 1,
+      "sourceLiteral": "1",
+      "sourceSignificantDigits": 1,
+      "kind": "convention",
+      "derivation": "Version of the accepted numeric policy, part of solver identity.",
+      "citation": "ADR-0007",
+      "condition": "solver configuration identity"
+    }
+  ]
+}

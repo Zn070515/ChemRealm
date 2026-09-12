@@ -39,6 +39,8 @@ new ADR**, not quietly edited.
 | [0008](0008-persisted-world-solver-compatibility.md) | Persisted-world solver compatibility | **Accepted** (new) | M8 |
 | [0009](0009-ace-control-loop-architecture.md) | ACE control-loop architecture | **Accepted** (new) | M9 |
 | [0010](0010-material-genesis-resolution-boundary.md) | Material genesis composition-basis boundary | **Accepted** (M1) | M2 |
+| [0011](0011-scenario-scientific-input-freezing.md) | Scenario scientific-input freezing | **Proposed** (M4) | M4 |
+| [0012](0012-m4-domain-and-constant-semantics.md) | M4 domain and equilibrium-constant semantics | **Proposed** (M4) | M4 |
 
 > **Revision note (2026-09-11, owner review remediation).** ADR-0004 and ADR-0007
 > were rewritten rather than amended: the original ADR-0004 overstated what

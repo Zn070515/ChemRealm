@@ -37,6 +37,17 @@ function expectOk(result: SolveResult) {
 }
 
 describe("production acid-base SolverAdapter", () => {
+  it.each([0.26, 0.3, 0.4, 0.49])(
+    "solves a legal high-concentration HCl request at %s mol/kg",
+    async (concentration) => {
+      const result = await createAcidBaseAdapter().solve(
+        request([{ soluteId: "HCl", amount: mol(concentration), mode: "fully-dissociated" }]),
+      );
+
+      expectOk(result);
+    },
+  );
+
   it("solves a strong-acid request asynchronously with complete ScientificState", async () => {
     const adapter = createAcidBaseAdapter();
     const pending = adapter.solve(

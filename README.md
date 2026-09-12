@@ -34,8 +34,8 @@ teaching workflows, and learner exploration share one verifiable reality layer.
 Its first focused product subsystem supports Chinese senior-high and Gaokao
 chemistry teaching and learning. Students and teachers should be able to
 explore, predict, manipulate, observe, explain, and verify — with the current
-M3 foundation growing toward that broader platform rather than stopping at a
-single exercise or simulation.
+platform foundation growing toward that broader platform rather than stopping
+at a single exercise or simulation.
 
 ChemRealm is source-available and free for noncommercial educational, research,
 and personal use. It is local-first by design and built on defensible scientific
@@ -46,13 +46,10 @@ license includes a noncommercial restriction. Commercial use not covered by the
 applicable public license requires a separate written license; see
 [Commercial Licensing](COMMERCIAL-LICENSING.md).
 
-> **Status: M3 — Solver Adapter Contract (S3 verified / accepted); M4
-> authorized.** The repository builds, its architectural rules are enforced,
-> and the solver boundary is verified at baseline `573c36f` with CI
-> `34682646131`. See the
-> [M3 evidence packet](docs/evidence/M3.md), the
-> [SPEC-0001](docs/specs/SPEC-0001-world-foundation-acid-base-titration.md), and
-> the [milestone plan](docs/plans/PLAN-0001-world-foundation-acid-base-titration.md).
+> **Project status:** Milestone stage, acceptance baseline, CI evidence, and
+> authorization are maintained in the [milestone plan](docs/plans/PLAN-0001-world-foundation-acid-base-titration.md)
+> and the relevant [evidence packets](docs/evidence/). This README intentionally
+> does not duplicate exact stage, commit, or CI-run facts.
 
 ## Read these first
 

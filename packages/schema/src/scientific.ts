@@ -81,7 +81,7 @@ import {
  * crosses a language boundary is not an internal TypeScript type any more, and
  * an unversioned wire format cannot be migrated later without guesswork.
  */
-export const SCIENTIFIC_SCHEMA_VERSION = 1;
+export const SCIENTIFIC_SCHEMA_VERSION = 2;
 
 // ---------------------------------------------------------------------------
 // Provenance
@@ -476,6 +476,15 @@ export const InputViolationSchema = z.strictObject({
 export type InputViolationDto = z.infer<typeof InputViolationSchema>;
 export type InputViolation = InputViolationDto;
 
+export const SolveFailureCodeSchema = z.enum([
+  "INNER_BRACKET_NOT_FOUND",
+  "OUTER_BRACKET_NOT_FOUND",
+  "INNER_ITERATION_LIMIT",
+  "OUTER_ITERATION_LIMIT",
+  "INVALID_NUMERIC_ARGUMENT",
+]);
+export type SolveFailureCode = z.infer<typeof SolveFailureCodeSchema>;
+
 /**
  * The solver's return envelope (`ADR-0003`). A caller cannot obtain a bare
  * number: every outcome is a tagged result, and validity is a normal return
@@ -506,9 +515,10 @@ export const SolveResultSchema = z.discriminatedUnion("status", [
   z.strictObject({
     schemaVersion: z.literal(SCIENTIFIC_SCHEMA_VERSION),
     status: z.literal("NOT_CONVERGED"),
-    /** A convergence diagnostic, not a physical quantity: bounded by the
-     *  iteration scheme, unitless by construction, and never stored. */
-    residual: z.number(),
+    code: SolveFailureCodeSchema,
+    reason: z.string().min(1),
+    /** Present only when the failed iteration produced a meaningful residual. */
+    residual: z.number().finite().optional(),
     iterations: z.number().int().nonnegative(),
   }),
   z.strictObject({
@@ -526,7 +536,13 @@ export type SolveResult =
       reason: string;
       nearestSupported: ModelDescriptor;
     }
-  | { status: "NOT_CONVERGED"; residual: number; iterations: number }
+  | {
+      status: "NOT_CONVERGED";
+      code: SolveFailureCode;
+      reason: string;
+      residual?: number;
+      iterations: number;
+    }
   | { status: "INVALID_INPUT"; violations: readonly InputViolation[] };
 
 export function parseSolveResult(dto: SolveResultDto): SolveResult {
@@ -542,7 +558,9 @@ export function parseSolveResult(dto: SolveResultDto): SolveResult {
     case "NOT_CONVERGED":
       return {
         status: "NOT_CONVERGED",
-        residual: dto.residual,
+        code: dto.code,
+        reason: dto.reason,
+        ...(dto.residual === undefined ? {} : { residual: dto.residual }),
         iterations: dto.iterations,
       };
     case "INVALID_INPUT":

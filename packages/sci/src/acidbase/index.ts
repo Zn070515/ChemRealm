@@ -228,7 +228,11 @@ function solveRequest(
     if (reducedResult.kind === "NOT_CONVERGED") {
       return {
         status: "NOT_CONVERGED",
-        residual: reducedResult.residual,
+        code: reducedResult.code,
+        reason: reducedResult.reason,
+        ...(reducedResult.residual === undefined
+          ? {}
+          : { residual: reducedResult.residual }),
         iterations: reducedResult.iterations,
       };
     }

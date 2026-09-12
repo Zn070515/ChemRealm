@@ -40,7 +40,13 @@ function registry(): SolverRegistry {
     new StubSolverAdapter({
       descriptor,
       parameters: { Kw: 1e-14 },
-      outcome: { status: "NOT_CONVERGED", residual: 1, iterations: 1 },
+      outcome: {
+        status: "NOT_CONVERGED",
+        code: "OUTER_ITERATION_LIMIT",
+        reason: "composition-root numerical failure",
+        residual: 1,
+        iterations: 1,
+      },
     }),
   ]);
 }

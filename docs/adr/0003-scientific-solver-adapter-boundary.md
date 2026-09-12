@@ -67,9 +67,22 @@ interface SolverAdapter {
 type SolveResult =
   | { status: "OK";             state: ScientificState }   // provenance lives INSIDE state
   | { status: "MODEL_OUT_OF_DOMAIN"; reason: string; nearestSupported: ModelDescriptor }
-  | { status: "NOT_CONVERGED";  residual: number; iterations: number }
+  | {
+      status: "NOT_CONVERGED";
+      code: SolveFailureCode;
+      reason: string;
+      residual?: number;
+      iterations: number;
+    }
   | { status: "INVALID_INPUT";  violations: readonly InputViolation[] };
 ```
+
+`NOT_CONVERGED` diagnostics are versioned with the scientific wire schema.
+`code` and `reason` are always required; `residual` is present only when
+the failed iteration produced a finite, meaningful residual. A missing bracket
+or an invalid numeric argument must not be represented by a fabricated zero
+residual. The failure code identifies the numerical failure class; it does not
+turn that failure into a model-domain refusal.
 
 ### M3 owner decisions (accepted 2026-09-12)
 

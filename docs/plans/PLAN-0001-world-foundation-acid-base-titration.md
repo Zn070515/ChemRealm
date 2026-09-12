@@ -1,7 +1,7 @@
 # PLAN-0001 — World Foundation & Acid-Base Titration
 
 - **Status:** **M0–M3 S3 Verified / Accepted; M4 S2 in progress** — the original plan was approved
-  on 2026-09-11 at `SPEC-0001` revision 6; the current contract is revisions 13–14 candidates.
+  on 2026-09-11 at `SPEC-0001` revision 6; the current contract is revisions 13–15 candidates.
 - **Completed:** `M0 — Repository foundation` reached **S3 — Verified** on
   2026-09-11. Evidence: `docs/evidence/M0.md`, commits `1f3dfee`/`565a2e8`,
   CI run `34595967023` (13/13 gate steps on a clean `ubuntu-latest` checkout).
@@ -610,7 +610,10 @@ Scenario-specific indicator constants are resolved with per-datum provenance int
 `ScenarioSnapshot.indicators` and enter genesis content identity under the
 revision-13 candidate and `ADR-0011`. The revision-14 candidate and `ADR-0012`
 add the analytical total-solute gate, the pinned `Kw = a_H · a_OH`
-interpretation, and distinct numerical-failure tagging.
+interpretation, and distinct numerical-failure tagging. Revision 15 adds the
+version-2 `NOT_CONVERGED` diagnostic code/reason contract and assigns solvent,
+phase, and required-species compatibility to requirements resolution before
+genesis rather than duplicating those fields in `SolveRequest`.
 
 ### Implementation
 

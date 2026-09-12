@@ -5,6 +5,8 @@ self-review. Implementation is in progress; the M4 Chemical Identity Closure
 is recorded as the revision-13 candidate in `SPEC-0001` and `ADR-0011`. The
 M4 Scientific Domain & Constant Semantics Closure is recorded as the
 revision-14 candidate and `ADR-0012`; both remain pending owner review.
+The scientific wire result diagnostics are revision-15 candidate material:
+schema version 2 requires an explicit numerical failure code and reason.
 
 ## Context
 
@@ -57,11 +59,13 @@ consumed by later composition and observable layers:
 
 - valid supported input produces a ScientificState;
 - malformed input produces INVALID_INPUT with field-level violations;
-- a temperature, species, solvent, phase, or ionic-strength condition outside
-  the model domain produces MODEL_OUT_OF_DOMAIN with a reason and nearest
-  supported descriptor;
-- a numerical failure produces NOT_CONVERGED with residual and iteration count,
-  never a plausible fallback number; and
+- requirements-stage solvent, phase, and required-species incompatibility is
+  rejected before `WorldCreated`; solve-stage temperature, component,
+  analytical-total, and converged ionic-strength refusals produce
+  MODEL_OUT_OF_DOMAIN with a reason and nearest supported descriptor;
+- a numerical failure produces NOT_CONVERGED with a code, reason, iteration
+  count, and a residual only when one was meaningfully computed — never a
+  plausible fallback number; and
 - results identify the activity model and solver identity so a later inspection
   view can describe model pH honestly rather than call it “true pH”.
 
@@ -313,11 +317,12 @@ bump is introduced.
 | Failure | Required behavior |
 |---|---|
 | Missing, malformed, non-finite, or physically impossible request field | INVALID_INPUT with violations; no solver callback and no exception escape |
-| Unsupported species, solvent, phase, or temperature | MODEL_OUT_OF_DOMAIN with reason and nearest supported descriptor |
+| Incompatible solvent, phase, or required species in `SolverRequirements` | Resolver rejects before `WorldCreated`, with an actionable reason |
+| Unsupported component or temperature in `SolveRequest` | MODEL_OUT_OF_DOMAIN with reason and nearest supported descriptor |
 | Total analytical solute molality below 1e-9 or above 0.5 mol/kg | MODEL_OUT_OF_DOMAIN before aggregation/solve |
 | Final converged ionic strength exceeds 0.5 mol/kg | MODEL_OUT_OF_DOMAIN; do not emit ScientificState |
 | Positive non-unit water activity | MODEL_OUT_OF_DOMAIN; v0 uses the unit-water-activity convention only |
-| Root bracket cannot be established for an otherwise in-domain request | NOT_CONVERGED with residual and iterations; domain failures are rejected before this path |
+| Root bracket cannot be established for an otherwise in-domain request | NOT_CONVERGED with diagnostic code/reason and iterations; residual is optional and never invented |
 | Inner or outer solve reaches iteration limit | NOT_CONVERGED; no stale or partial state |
 | Deterministic math argument outside the model's declared validated band | MODEL_OUT_OF_DOMAIN; never silently call a native substitute |
 | Internal solver invariant produces an invalid math argument | NOT_CONVERGED with a diagnostic; the invariant is a test failure and no partial state is emitted |
@@ -355,7 +360,7 @@ internals.
 | AC-S1 | REF-1..REF-10 pass within their stated tolerances | Vitest reference suite and Python fixture validation |
 | AC-S2 | Unquantized charge residual is below 1e-14 mol/kg across the reference sweep | solver invariant report |
 | AC-S3 | Na, Cl, and acid-group totals are conserved over 100 transfers | World/science integration fixture |
-| AC-S4 | Temperature, ionic-strength, species, solvent, and phase domain matrix refuses correctly and re-checks converged I_m | domain matrix test |
+| AC-S4 | Requirements resolution refuses unsupported solvent, phase, and required species before genesis; the adapter refuses unsupported temperature, component/analytical totals, and converged I_m | resolver + adapter domain matrix |
 | AC-S5 | 1e-6 mol/kg acetic acid matches the exact solve and reproduces the 0.65 pH Henderson–Hasselbalch divergence | adversarial solver test |
 | AC-S6 | PHREEQC and TypeScript differ by no more than ±0.02 pH, including equivalence | cross-check report |
 | AC-S7 | Every constant has source, precision, and provenance record | constants provenance review |

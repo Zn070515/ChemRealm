@@ -36,6 +36,21 @@ function expectSelfConsistent(result: ReducedSolveSuccess): void {
 }
 
 describe("nested reduced acid-base solve", () => {
+  it.each([0.26, 0.3, 0.4, 0.49])(
+    "solves a legal high-concentration strong-acid case at %s mol/kg",
+    (concentration) => {
+      const result = expectSuccess(
+        solveReduced({
+          totals: totals(concentration, 0),
+          constants: DEFAULT_ACID_BASE_CONSTANTS,
+        }),
+      );
+
+      expectSelfConsistent(result);
+      expect(result.ionicStrength.value).toBeLessThanOrEqual(0.5);
+    },
+  );
+
   it.each([
     ["strong acid excess", totals(0.1, 0), "acid"],
     ["strong base excess", totals(0, 0.1), "base"],
@@ -160,7 +175,12 @@ describe("nested reduced acid-base solve", () => {
       totals: totals(0.5, 0.5),
       constants: DEFAULT_ACID_BASE_CONSTANTS,
     });
-    expect(outside).toMatchObject({ kind: "NOT_CONVERGED" });
+    expect(outside).toMatchObject({
+      kind: "NOT_CONVERGED",
+      code: "OUTER_BRACKET_NOT_FOUND",
+      reason: expect.stringContaining("outer charge-balance bracket"),
+    });
+    expect("residual" in outside).toBe(false);
     expect("species" in outside).toBe(false);
   });
 
@@ -191,6 +211,10 @@ describe("nested reduced acid-base solve", () => {
         totals: totals(0.1, 0),
         constants: invalidConstants,
       }),
-    ).toMatchObject({ kind: "NOT_CONVERGED" });
+    ).toMatchObject({
+      kind: "NOT_CONVERGED",
+      code: "INVALID_NUMERIC_ARGUMENT",
+      reason: expect.stringContaining("Davies A"),
+    });
   });
 });

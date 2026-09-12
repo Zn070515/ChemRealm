@@ -5,7 +5,7 @@
       "additionalProperties": false,
       "properties": {
         "schemaVersion": {
-          "const": 1,
+          "const": 2,
           "type": "number"
         },
         "state": {
@@ -140,7 +140,7 @@
               "type": "object"
             },
             "schemaVersion": {
-              "const": 1,
+              "const": 2,
               "type": "number"
             },
             "species": {
@@ -433,7 +433,7 @@
           "type": "string"
         },
         "schemaVersion": {
-          "const": 1,
+          "const": 2,
           "type": "number"
         },
         "status": {
@@ -452,16 +452,30 @@
     {
       "additionalProperties": false,
       "properties": {
+        "code": {
+          "enum": [
+            "INNER_BRACKET_NOT_FOUND",
+            "OUTER_BRACKET_NOT_FOUND",
+            "INNER_ITERATION_LIMIT",
+            "OUTER_ITERATION_LIMIT",
+            "INVALID_NUMERIC_ARGUMENT"
+          ],
+          "type": "string"
+        },
         "iterations": {
           "maximum": 9007199254740991,
           "minimum": 0,
           "type": "integer"
         },
+        "reason": {
+          "minLength": 1,
+          "type": "string"
+        },
         "residual": {
           "type": "number"
         },
         "schemaVersion": {
-          "const": 1,
+          "const": 2,
           "type": "number"
         },
         "status": {
@@ -472,7 +486,8 @@
       "required": [
         "schemaVersion",
         "status",
-        "residual",
+        "code",
+        "reason",
         "iterations"
       ],
       "type": "object"
@@ -481,7 +496,7 @@
       "additionalProperties": false,
       "properties": {
         "schemaVersion": {
-          "const": 1,
+          "const": 2,
           "type": "number"
         },
         "status": {

@@ -45,6 +45,12 @@ The public `MODEL_OUT_OF_DOMAIN` result continues to include the required
 `OUT_OF_DOMAIN` failure tag only for an explicit model-domain condition that
 the adapter can map to that public result.
 
+Scientific wire schema version 2 makes numerical diagnostics explicit:
+`NOT_CONVERGED` carries a failure `code` and non-empty `reason`, while
+`residual` is optional and is emitted only when a finite residual was actually
+computed. A missing bracket or a numeric argument error is never reported with
+a fabricated zero residual.
+
 ## Alternatives considered
 
 **Use only equilibrium ionic strength as the solute-domain gate.** Rejected:
@@ -75,8 +81,9 @@ therefore a numerical failure, not an assertion about chemistry.
   analytical solute before solving;
 - the default solve satisfies `a_H · a_OH = Kw`, while a non-unit water
   activity is refused and does not produce a state;
-- direct bracket/iteration failure fixtures return `NOT_CONVERGED`, and no
-  obsolete bracket-specific status remains in production code or evidence;
+- direct bracket/iteration failure fixtures return `NOT_CONVERGED` with a
+  diagnostic code/reason, and no bracket-specific *status* is used to disguise
+  a numerical failure as a domain refusal;
 - the M4 acceptance packet records this candidate decision separately from the
   still-pending REF-1…REF-10 and PHREEQC evidence.
 

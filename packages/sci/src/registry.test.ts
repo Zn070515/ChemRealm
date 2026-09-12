@@ -6,6 +6,7 @@ import {
   type ScientificState,
   type SolveRequest,
   type ModelDescriptor,
+  type SolveResult,
 } from "@chemrealm/schema";
 
 import type { SolverAdapter } from "./adapter.js";
@@ -43,12 +44,22 @@ function requirements(overrides: Record<string, unknown> = {}) {
   });
 }
 
+function notConverged(residual = 1, iterations = 1): SolveResult {
+  return {
+    status: "NOT_CONVERGED",
+    code: "OUTER_ITERATION_LIMIT",
+    reason: "registry-test numerical failure",
+    residual,
+    iterations,
+  };
+}
+
 describe("exact solver registry", () => {
   it("finds an adapter only at its exact id and version", () => {
     const adapter = new StubSolverAdapter({
       descriptor: makeDescriptor(),
       parameters: { Kw: 1e-14 },
-      outcome: { status: "NOT_CONVERGED", residual: 1, iterations: 1 },
+      outcome: notConverged(),
     });
     const registry = new SolverRegistry();
     registry.register(adapter);
@@ -68,11 +79,11 @@ describe("exact solver registry", () => {
   it("rejects duplicate exact registrations", () => {
     const first = new StubSolverAdapter({
       descriptor: makeDescriptor(),
-      outcome: { status: "NOT_CONVERGED", residual: 1, iterations: 1 },
+      outcome: notConverged(),
     });
     const second = new StubSolverAdapter({
       descriptor: makeDescriptor(),
-      outcome: { status: "NOT_CONVERGED", residual: 2, iterations: 2 },
+      outcome: notConverged(2, 2),
     });
     const registry = new SolverRegistry();
     registry.register(first);
@@ -86,7 +97,7 @@ describe("exact solver registry", () => {
     const adapter = new StubSolverAdapter({
       descriptor: mutableDescriptor,
       parameters: mutableParameters,
-      outcome: { status: "NOT_CONVERGED", residual: 1, iterations: 1 },
+      outcome: notConverged(),
     });
     const registry = new SolverRegistry([adapter]);
 
@@ -148,7 +159,7 @@ describe("exact solver registry", () => {
     const adapter = new StubSolverAdapter({
       descriptor: makeDescriptor(),
       parameters: { Kw: 1e-14 },
-      outcome: { status: "NOT_CONVERGED", residual: 1, iterations: 1 },
+      outcome: notConverged(),
     });
     const registry = new SolverRegistry([adapter]);
 
@@ -176,7 +187,7 @@ describe("exact solver registry", () => {
         version: "1.0.0",
         parameters: {},
       },
-      solve: async () => ({ status: "NOT_CONVERGED", residual: 1, iterations: 1 }),
+      solve: async () => notConverged(),
     } as unknown as SolverAdapter;
 
     expect(() => new SolverRegistry([invalid])).toThrow(/identity/);
@@ -185,7 +196,7 @@ describe("exact solver registry", () => {
   it("returns incompatible instead of falling back when requirements are unsatisfied", () => {
     const adapter = new StubSolverAdapter({
       descriptor: makeDescriptor(),
-      outcome: { status: "NOT_CONVERGED", residual: 1, iterations: 1 },
+      outcome: notConverged(),
     });
     const registry = new SolverRegistry([adapter]);
 
@@ -212,7 +223,7 @@ describe("exact solver registry", () => {
   it("rejects an activity-corrected requirement for a non-activity model", () => {
     const adapter = new StubSolverAdapter({
       descriptor: makeDescriptor({ activityCorrected: false }),
-      outcome: { status: "NOT_CONVERGED", residual: 1, iterations: 1 },
+      outcome: notConverged(),
     });
     const registry = new SolverRegistry([adapter]);
 

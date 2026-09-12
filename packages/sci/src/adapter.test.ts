@@ -64,13 +64,19 @@ function makeState(
 
 const validState = makeState();
 
+function notConverged(residual = 1, iterations = 1): SolveResult {
+  return {
+    status: "NOT_CONVERGED",
+    code: "OUTER_ITERATION_LIMIT",
+    reason: "contract-test numerical failure",
+    residual,
+    iterations,
+  };
+}
+
 describe("SolverAdapter contract", () => {
   it("returns a Promise of the tagged result envelope", async () => {
-    const expected: SolveResult = {
-      status: "NOT_CONVERGED",
-      residual: 1e-9,
-      iterations: 12,
-    };
+    const expected = notConverged(1e-9, 12);
     const adapter = new StubSolverAdapter({ descriptor, outcome: expected });
 
     expect(adapter.model).toEqual(descriptor);
@@ -101,7 +107,7 @@ describe("SolverAdapter contract", () => {
         reason: "contract test",
         nearestSupported: descriptor,
       },
-      NOT_CONVERGED: { status: "NOT_CONVERGED", residual: 1, iterations: 1 },
+      NOT_CONVERGED: notConverged(),
       INVALID_INPUT: {
         status: "INVALID_INPUT",
         violations: [{ field: "test", message: "contract test" }],
@@ -179,7 +185,7 @@ describe("SolverAdapter contract", () => {
       descriptor,
       outcome: () => {
         invoked = true;
-        return { status: "NOT_CONVERGED", residual: 1, iterations: 1 };
+        return notConverged();
       },
     });
 
@@ -228,7 +234,7 @@ describe("SolverAdapter contract", () => {
   ] as const)("returns INVALID_INPUT for %s decoded data", async (_name, patch) => {
     const adapter = new StubSolverAdapter({
       descriptor,
-      outcome: { status: "NOT_CONVERGED", residual: 1, iterations: 1 },
+      outcome: notConverged(),
     });
 
     const result = await adapter.solve({

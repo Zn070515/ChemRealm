@@ -2,6 +2,7 @@ import {
   reducedIonicStrength,
   reducedMolality,
   type ReducedIonicStrength,
+  type SolveFailureCode,
 } from "@chemrealm/schema";
 import { daviesActivities, type DaviesActivities } from "./activity.js";
 import type { AcidBaseComponentTotals } from "./catalog.js";
@@ -27,7 +28,13 @@ export interface ReducedSolveSuccess {
 
 export type ReducedSolveFailure =
   | { readonly kind: "OUT_OF_DOMAIN"; readonly reason: string }
-  | { readonly kind: "NOT_CONVERGED"; readonly residual: number; readonly iterations: number };
+  | {
+      readonly kind: "NOT_CONVERGED";
+      readonly code: SolveFailureCode;
+      readonly reason: string;
+      readonly residual?: number;
+      readonly iterations: number;
+    };
 
 type Candidate = {
   readonly species: ReducedSpeciesMolalities;
@@ -52,12 +59,21 @@ function failOutOfDomain(reason: string): ReducedSolveFailure {
   };
 }
 
-function failNotConverged(residual: number, iterations: number): ReducedSolveFailure {
-  return {
+function failNotConverged(
+  code: SolveFailureCode,
+  reason: string,
+  iterations: number,
+  residual?: number,
+): ReducedSolveFailure {
+  const failure = {
     kind: "NOT_CONVERGED",
-    residual: Number.isFinite(residual) ? residual : 0,
+    code,
+    reason,
     iterations,
-  };
+  } as const;
+  return residual !== undefined && Number.isFinite(residual)
+    ? { ...failure, residual }
+    : failure;
 }
 
 function validateReducedValue(value: number, name: string): void {
@@ -209,7 +225,12 @@ function solveInner(
   let upperResidual = ionicStrengthResidual(hydrogen, upper, input);
 
   if (lowerResidual < 0 || upperResidual > 0) {
-    return failNotConverged(upperResidual, 0);
+    return failNotConverged(
+      "INNER_BRACKET_NOT_FOUND",
+      "inner ionic-strength fixed-point bracket could not be established",
+      0,
+      upperResidual,
+    );
   }
   if (Math.abs(lowerResidual) <= INNER_TOLERANCE) {
     return candidateAt(hydrogen, lower, input, 0);
@@ -240,14 +261,21 @@ function solveInner(
       if (Math.abs(finalResidual) <= INNER_TOLERANCE) {
         return candidateAt(hydrogen, finalValue, input, iteration);
       }
-      return failNotConverged(finalResidual, iteration);
+      return failNotConverged(
+        "INNER_ITERATION_LIMIT",
+        "inner ionic-strength solve reached a floating-point interval without meeting tolerance",
+        iteration,
+        finalResidual,
+      );
     }
   }
 
   const finalValue = reducedIonicStrength(lower.value + 0.5 * (upper.value - lower.value));
   return failNotConverged(
-    ionicStrengthResidual(hydrogen, finalValue, input),
+    "INNER_ITERATION_LIMIT",
+    "inner ionic-strength solve reached its iteration limit",
     INNER_ITERATION_LIMIT,
+    ionicStrengthResidual(hydrogen, finalValue, input),
   );
 }
 
@@ -273,7 +301,16 @@ export function solveReduced(
 
     for (const span of OUTER_BRACKET_SPANS) {
       const candidateLower = Math.max(HYDROGEN_LOWER, idealRoot / span);
-      const candidateUpper = Math.min(HYDROGEN_UPPER, idealRoot * span);
+      // A hydrogen trial above the declared ionic-strength domain can make
+      // the inner solve refuse even when the actual outer root is valid. The
+      // analytical total-solute gate bounds the supported hydrogen scale, so
+      // keep the exploratory upper endpoint inside the same half-molal
+      // envelope instead of discarding the whole bracket span.
+      const candidateUpper = Math.min(
+        HYDROGEN_UPPER,
+        IONIC_STRENGTH_UPPER,
+        idealRoot * span,
+      );
       const evaluatedLower = solveInner(candidateLower, input);
       const evaluatedUpper = solveInner(candidateUpper, input);
       if ("kind" in evaluatedLower || "kind" in evaluatedUpper) continue;
@@ -291,7 +328,11 @@ export function solveReduced(
     }
 
     if (!bracketFound || lowerCandidate === undefined || upperCandidate === undefined) {
-      return failNotConverged(0, OUTER_BRACKET_SPANS.length);
+      return failNotConverged(
+        "OUTER_BRACKET_NOT_FOUND",
+        "outer charge-balance bracket could not be established within the valid ionic-strength envelope",
+        OUTER_BRACKET_SPANS.length,
+      );
     }
 
     let finalCandidate: Candidate | undefined;
@@ -309,13 +350,29 @@ export function solveReduced(
       else upper = midpoint;
 
       if (collapsed) {
-        return failNotConverged(candidate.reducedChargeResidual, outerIterations);
+        return failNotConverged(
+          "OUTER_ITERATION_LIMIT",
+          "outer charge-balance interval collapsed before meeting tolerance",
+          outerIterations,
+          candidate.reducedChargeResidual,
+        );
       }
     }
 
-    if (finalCandidate === undefined) return failNotConverged(0, outerIterations);
+    if (finalCandidate === undefined) {
+      return failNotConverged(
+        "OUTER_BRACKET_NOT_FOUND",
+        "outer charge-balance solve produced no candidate",
+        outerIterations,
+      );
+    }
     if (Math.abs(finalCandidate.reducedChargeResidual) > OUTER_TOLERANCE) {
-      return failNotConverged(finalCandidate.reducedChargeResidual, outerIterations);
+      return failNotConverged(
+        "OUTER_ITERATION_LIMIT",
+        "outer charge-balance solve reached its iteration limit",
+        outerIterations,
+        finalCandidate.reducedChargeResidual,
+      );
     }
 
     const recomputedIonicStrength = ionicStrengthFromSpecies(finalCandidate.species);
@@ -337,7 +394,13 @@ export function solveReduced(
       }),
     });
   } catch (error) {
-    if (error instanceof RangeError) return failNotConverged(0, 0);
+    if (error instanceof RangeError) {
+      return failNotConverged(
+        "INVALID_NUMERIC_ARGUMENT",
+        error.message,
+        0,
+      );
+    }
     throw error;
   }
 }

@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript, Vitest, Zod contracts from `@chemrealm/schema`, Node 22, pnpm 11, Python 3.12, uv, pytest, PHREEQC CLI in test tooling only, and a committed PHREEQC/database manifest with checksums.
 
-**Spec:** `docs/superpowers/specs/2026-09-12-m4-acid-base-engine-design.md` (Design v2, approved); `docs/specs/SPEC-0001-world-foundation-acid-base-titration.md` revisions 13–14 candidates; `docs/adr/0003-scientific-solver-adapter-boundary.md`; `docs/adr/0007-deterministic-numeric-and-replay-policy.md`; `docs/adr/0011-scenario-scientific-input-freezing.md`; `docs/adr/0012-m4-domain-and-constant-semantics.md`.
+**Spec:** `docs/superpowers/specs/2026-09-12-m4-acid-base-engine-design.md` (Design v2, approved); `docs/specs/SPEC-0001-world-foundation-acid-base-titration.md` revisions 13–15 candidates; `docs/adr/0003-scientific-solver-adapter-boundary.md`; `docs/adr/0007-deterministic-numeric-and-replay-policy.md`; `docs/adr/0011-scenario-scientific-input-freezing.md`; `docs/adr/0012-m4-domain-and-constant-semantics.md`.
 
 ## Global Constraints
 
@@ -289,7 +289,13 @@ export interface ReducedSolveSuccess {
 
 export type ReducedSolveFailure =
   | { readonly kind: "OUT_OF_DOMAIN"; readonly reason: string }
-  | { readonly kind: "NOT_CONVERGED"; readonly residual: number; readonly iterations: number };
+  | {
+      readonly kind: "NOT_CONVERGED";
+      readonly code: SolveFailureCode;
+      readonly reason: string;
+      readonly residual?: number;
+      readonly iterations: number;
+    };
 
 export function solveReduced(
   input: ReducedSolveInput,
@@ -457,7 +463,7 @@ The returned adapter is frozen and exposes the fixed model/config identity from 
 **Implementation detail:**
 
 1. Validate `unknown` defensively through the existing request guard before touching nested fields. Malformed casts yield `INVALID_INPUT`, never an exception escape.
-2. Apply exact component/domain checks before solving. Unsupported species, temperature, solvent, phase, incompatible HOAc Ka, converged ionic-strength overflow, deterministic-math refusal, and numerical failure must each retain their prescribed tagged result/reason.
+2. Apply exact component/domain checks before solving. Requirements resolution owns solvent, phase, and required-species compatibility before genesis; the adapter owns temperature, component identity, analytical totals, converged ionic-strength overflow, deterministic-math refusal, and numerical diagnostics. Each retains its prescribed tagged result/reason without duplicating requirements in `SolveRequest`.
 3. Convert request inputs once at the boundary: amounts/water mass to reduced analytical totals; temperature and other quantities are already canonical domain values. Do not read a liquid-volume value as a concentration or use it in equilibrium equations.
 4. Construct each `SpeciesState` with reduced molality, physical molality, amount, γ, and activity using the schema constructors. Construct activity-based `modelPh` with `ph`; set `withinProposedAccuracyEnvelope` from the converged domain/accuracy rule; place the exact M3 provenance identity inside the state.
 5. Call `assertSolveResultIdentity()` before returning `OK`. The adapter must never return a successful state whose provenance disagrees with its model/config.
@@ -467,7 +473,7 @@ The returned adapter is frozen and exposes the fixed model/config identity from 
 
 - OK result for each reference category;
 - INVALID_INPUT for malformed/non-finite/contradictory cast data;
-- MODEL_OUT_OF_DOMAIN with required `nearestSupported` for unsupported ID, temperature, solvent/phase, mode, and ionic strength;
+- MODEL_OUT_OF_DOMAIN with required `nearestSupported` for unsupported component ID, temperature, analytical totals, and ionic strength; resolver tests cover solvent, phase, and required-species incompatibility before genesis;
 - NOT_CONVERGED fixture with no partial state;
 - exact provenance identity, schema round-trip, and frozen adapter/config mutation tests;
 - no scalar convenience `solvePh`/bare number export;
@@ -602,7 +608,7 @@ def require_phreeqc() -> PhreeqcToolchain: ...
 | AC-S1 | REF-1..REF-10 Vitest plus fixture/Python validation |
 | AC-S2 | Unquantized charge residual report `< 1e-14 mol/kg` |
 | AC-S3 | 100-transfer element/component conservation integration fixture |
-| AC-S4 | Temperature, ionic-strength, species, solvent, phase matrix plus converged-I recheck |
+| AC-S4 | Requirements resolver matrix for solvent/phase/required species plus adapter matrix for temperature/component/analytical total/converged-I recheck |
 | AC-S5 | `1e-6 mol/kg` exact weak-acid result and measured HH divergence |
 | AC-S6 | Pinned PHREEQC cross-check including equivalence |
 | AC-S7 | Constants provenance table and source-precision test |

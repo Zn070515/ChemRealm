@@ -1,13 +1,14 @@
 # SPEC-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** **Accepted through revision 12** — revisions 13–14 are M4
+- **Status:** **Accepted through revision 12** — revisions 13–15 are M4
   implementation candidates pending owner review.
 - **Accepted baseline:** commit `8310c685`, `SPEC-0001` revision 6
-- **Current revision:** **14 Candidate** — M4 chemical identity closure adds
+- **Current revision:** **15 Candidate** — M4 chemical identity closure adds
   scenario-frozen indicator inputs, the explicit water-activity parameter, and
   common acetate-family semantics; revision 14 adds the total-solute domain and
-  equilibrium-constant failure semantics. Revisions 7–12 are accepted
-  amendments; revisions 13–14 remain pending owner review.
+  equilibrium-constant failure semantics; revision 15 makes numerical failure
+  diagnostics explicit. Revisions 7–12 are accepted amendments; revisions
+  13–15 remain pending owner review.
   See "Amendments since acceptance" below.
 - **Acceptance scope:** the specification and its acceptance criteria. Deferred
   items listed under Open questions remain open and must be resolved before the
@@ -34,6 +35,8 @@
 | 12 | 2026-09-12 | M4 pre-implementation contract closure: the proposed accuracy-envelope qualification is represented by the existing `ValidityStatus.withinProposedAccuracyEnvelope` boolean; no parallel `accuracyStatus` field is introduced. | Owner, 2026-09-12 |
 | 13 | 2026-09-12 | M4 Chemical Identity Closure candidate: NaOAc contributes to the common HA/A⁻ analytical family rather than a permanent acetate pool; scenario-specific indicator `Ka_in` is resolved with per-datum provenance into `ScenarioSnapshot.indicators` and frozen by the genesis content hash; the explicit v0 `waterActivity` parameter is recorded in solver identity; world/content schema version 2 adds a forward migration from v1. | Pending owner review |
 | 14 | 2026-09-12 | M4 Scientific Domain & Constant Semantics Closure candidate: total analytical solute molality is gated at `1e-9..0.5 mol/kg` before solving; the pinned `Kw` means `a_H · a_OH` while `waterActivity: 1` records a unit convention without multiplying the equation; failed numerical brackets/iterations return `NOT_CONVERGED` rather than `MODEL_OUT_OF_DOMAIN`. | Pending owner review |
+
+| 15 | 2026-09-12 | M4 numerical diagnostic closure candidate: scientific wire schema version 2 requires NOT_CONVERGED.code and non-empty reason; residual is optional and appears only when a finite meaningful residual was computed. AC-S4 assigns solvent/phase/required-species compatibility to requirements resolution before genesis and keeps solve-stage checks in the adapter. | Pending owner review |
 
 A revision bump is recorded here rather than only in the body because the header
 is what a reader checks before deciding whether the file they are reading is the
@@ -1696,7 +1699,7 @@ Binary and verifiable. Every criterion maps to an evidence method.
 | AC-S1 | REF-1..REF-10 pass within stated tolerances, on the **self-consistent molality-basis** formulation | `vitest packages/sci`, `pytest tools/oracle` |
 | AC-S2 | Charge balance residual < 1e-14 mol/kg on the **unquantized solver state** across the reference sweep | invariant test output |
 | AC-S3 | Na, Cl, and acid-group totals conserved across a 100-transfer sequence. The conserved world state is a **component** inventory (`AC-R21`); these totals are read through the component→element composition the model declares | conservation test + state dump |
-| AC-S4 | Inputs outside the validity domain return `MODEL_OUT_OF_DOMAIN` and produce no number — checked **both** before the solve and on the converged `I_m` | domain test matrix |
+| AC-S4 | Requirements resolution refuses unsupported solvent, phase, and required species before genesis; the adapter refuses unsupported temperature, component/analytical totals, and converged `I_m` without producing a number | resolver + adapter domain test matrix |
 | AC-S5 | The 1e-6 mol/kg acetic acid case matches the exact solve, and the HH divergence (0.65 pH) is reproduced | adversarial test |
 | AC-S6 | The PHREEQC oracle agrees within ±0.02 pH over the swept curve, **including the equivalence region**, with constants **and the molality basis** aligned | oracle comparison report; see the caveat above |
 | AC-S7 | **Every scientific input** is traced to a citable source in `docs/research/constants-provenance.md`: `Ka`, `Kw`, Davies `A` and `b`, `γ_HA`, `a_w`, the indicator `Ka_in`, the solution **densities**, and the **molar masses** (`ρ` and `M` jointly set `waterMass → molality → activity → model pH`; both are scientific inputs, not implementation details) | provenance review; **currently open — see Open questions** |
