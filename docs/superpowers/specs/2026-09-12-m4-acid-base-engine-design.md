@@ -1,8 +1,7 @@
 # M4 Acid-Base Engine and Oracle Validation Design
 
-Status: Design v1 approved by the project owner on 2026-09-12. Self-review
-revision is pending one owner-level accuracy-field decision. Implementation has
-not started.
+Status: Design v2 approved by the project owner on 2026-09-12 after
+self-review. Implementation has not started.
 
 ## Context
 
@@ -290,13 +289,9 @@ scientific output, implementation must stop and propose a separate schema ADR
 instead of widening the schema silently.
 
 The current runtime schema represents the proposed accuracy-envelope result as
-ValidityStatus.withinProposedAccuracyEnvelope, a boolean. The accepted SPEC
-currently also contains the older prose form
-accuracyStatus: "outside-validated-envelope". M4 must not implement both or
-silently choose between them: before production code is planned, the owner
-must accept a wording amendment that makes the SPEC use the existing boolean
-field, unless a separate schema decision intentionally introduces a new tagged
-field.
+ValidityStatus.withinProposedAccuracyEnvelope, a boolean. SPEC-0001 revision 12
+now uses that same field. No parallel accuracyStatus field or schema version
+bump is introduced.
 
 ## Failure modes
 
@@ -352,7 +347,7 @@ internals.
 | AC-S10 | Deterministic log/exp functions meet the stated ulp bound in-domain and refuse outside | numeric vectors |
 | AC-S11 | Outer residual is strictly increasing over the expanded sweep and domain boundary | monotonicity test |
 | AC-S12 | No UI or documentation calls model pH “true” or “thermodynamic” pH | copy review and existing inspection contract |
-| AC-S13 | Results outside the proposed accuracy envelope carry withinProposedAccuracyEnvelope: false after the SPEC/schema wording is reconciled | validity-domain test |
+| AC-S13 | Results outside the proposed accuracy envelope carry withinProposedAccuracyEnvelope: false | validity-domain test |
 | AC-S14 | The v0 scenario maximum ionic strength is checked against the proposed envelope | boundary evidence |
 | AC-S15 | Missing scenario density is rejected rather than defaulted | schema/content negative test |
 | AC-S16 | Constant precision never exceeds the cited source precision | provenance review |
@@ -370,13 +365,10 @@ document:
 - REF-5/REF-10 are explicitly assigned to ScientificProjection rather than
   being smuggled into ScientificState.
 
-One owner-level contract decision remains before an implementation plan can be
-written:
-
-- reconcile the accepted SPEC's accuracyStatus wording with the existing
-  ValidityStatus.withinProposedAccuracyEnvelope schema field. The recommended
-  resolution is to amend the SPEC wording and keep the existing schema, with no
-  schema version bump.
+The owner accepted the recommended resolution: the existing boolean field is
+the sole accuracy-envelope representation, and SPEC-0001 revision 12 records
+that decision. The design is ready for an implementation plan; the remaining
+open questions are evidence-pinning tasks only.
 
 ## Rollout/migration
 

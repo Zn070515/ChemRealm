@@ -1,7 +1,7 @@
 # PLAN-0001 — World Foundation & Acid-Base Titration
 
 - **Status:** **M0–M3 S3 Verified / Accepted; M4 authorized** — the original plan was approved
-  on 2026-09-11 at `SPEC-0001` revision 6; the current contract is revision 11.
+  on 2026-09-11 at `SPEC-0001` revision 6; the current contract is revision 12.
 - **Completed:** `M0 — Repository foundation` reached **S3 — Verified** on
   2026-09-11. Evidence: `docs/evidence/M0.md`, commits `1f3dfee`/`565a2e8`,
   CI run `34595967023` (13/13 gate steps on a clean `ubuntu-latest` checkout).
@@ -686,7 +686,7 @@ starting; the concentration-only formulation they describe is superseded.**
 | Indicator ratio is activity-coupled, continuous across the transition, no threshold branch | AC-V2 precursor |
 | Above pH 12, the monoprotic indicator approximation reports reduced validity | `SPEC-0001` failure mode 10 |
 | Copy review + DOM assertion: model pH is never described as "the true/thermodynamic pH"; the inspection view names the activity model | AC-S12 |
-| Domain-matrix test at `I_m` = 0.15 and 0.30: the result carries `accuracyStatus: outside-proposed-envelope` | AC-S13 |
+| Domain-matrix test at `I_m` = 0.15 and 0.30: the result carries `withinProposedAccuracyEnvelope: false` | AC-S13 |
 | Boundary test: the v0 scenario sweep's max `I_m` (0.1002 mol/kg) is checked against the envelope limit | AC-S14 |
 | Negative content test: a scenario without a declared density is rejected, not defaulted | AC-S15 |
 | Provenance review: no constant carries more significant figures than its source; the source's own precision is recorded | AC-S16 |

@@ -1,17 +1,17 @@
 # SPEC-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** **Accepted** — S1 baseline, M1 S3, and M3 S3 contract
-  amendments accepted. Owner, 2026-09-12.
+- **Status:** **Accepted** — S1 baseline, M1 S3, M3 S3, and M4
+  pre-implementation contract amendments accepted. Owner, 2026-09-12.
 - **Accepted baseline:** commit `8310c685`, `SPEC-0001` revision 6
-- **Current revision:** **11 Accepted** — M3 Identity & Defensive Boundary
-  Closure was verified at implementation baseline `573c36f` with CI
-  `34682646131`. Revisions 7–11 are accepted contract amendments.
+- **Current revision:** **12 Accepted** — M4 pre-implementation accuracy
+  contract wording was aligned with the existing runtime schema. Revisions 7–12
+  are accepted contract amendments.
   See "Amendments since acceptance" below.
 - **Acceptance scope:** the specification and its acceptance criteria. Deferred
   items listed under Open questions remain open and must be resolved before the
   milestone that names them. Acceptance does **not** assert that any criterion
   has been demonstrated — that is what the S3 evidence packet is for.
-- **Date:** 2026-09-11 (round 5: event-sourced identity, genesis resolution, contract closure)
+- **Date:** 2026-09-12 (M4 pre-implementation contract closure)
 - **Owner:** Project owner
 - **Supersedes:** revisions 1–5 of this spec
 - **Coverage:** all 71 acceptance criteria below are both **claimed** by a
@@ -29,6 +29,7 @@
 | 9 | 2026-09-11 | M1 Final Closure: material snapshot provenance follows each datum; snapshot scientific quantities are persisted only in canonical units; export wording is aligned with the v1 bundle contract (`events[0]` carries solver config, lineage ids are allowed, and learner evidence has no v1 payload). | Owner, 2026-09-11 |
 | 10 | 2026-09-12 | M3 Contract Closure: World Runtime reduction/replay stays synchronous; async solving is composition-level orchestration; v0 binds one adapter, one model, and one exact `SolverConfig`; solute modes are discriminated; `MODEL_OUT_OF_DOMAIN` requires `nearestSupported`; incompatible requirements reject genesis before `WorldCreated`. | Owner, 2026-09-12 |
 | 11 | 2026-09-12 | M3 Identity & Defensive Boundary Closure: decoded/cast request data always returns tagged `INVALID_INPUT`; adapter/model/config identity is defensively copied and deeply frozen across construction and registry boundaries; every `OK` result must carry provenance exactly matching the adapter model and solver configuration. | Owner, 2026-09-12 |
+| 12 | 2026-09-12 | M4 pre-implementation contract closure: the proposed accuracy-envelope qualification is represented by the existing `ValidityStatus.withinProposedAccuracyEnvelope` boolean; no parallel `accuracyStatus` field is introduced. | Owner, 2026-09-12 |
 
 A revision bump is recorded here rather than only in the body because the header
 is what a reader checks before deciding whether the file they are reading is the
@@ -548,7 +549,7 @@ equivalents) reach a maximum `I_m` of **0.1002 mol/kg** over the full sweep
 a 0.3 mol/L system in the sandbox): the solver computes, and the result carries
 
 ```
-accuracyStatus: "outside-validated-envelope"
+withinProposedAccuracyEnvelope: false
 ```
 
 The UI displays it with that qualification rather than suppressing it or
@@ -1627,7 +1628,7 @@ Enumerated with the detection that makes each one non-silent.
 | 18 | Taught `−lg c(H⁺)` reported as model pH, or vice versa | Distinct types (AC-S9); REF-5 and REF-6 sit side by side in the reference set |
 | 19 | **`−lg c(H⁺)` derived from a molality** — the defect this review round found | `c(H⁺)` is produced only by `ScientificProjection` from amounts and solution volume (AC-S8); REF-5 is exact at 1.0000 and a molality-derived value would give 0.9993 and fail it |
 | 20 | Model pH presented as "the true pH" rather than a model-dependent quantity | Display copy asserts the IUPAC notional definition and names the activity model (AC-S12) |
-| 21 | A result computed outside the proposed validation envelope shown as equally trustworthy | `accuracyStatus` travels with the result; AC-S13 |
+| 21 | A result computed outside the proposed validation envelope shown as equally trustworthy | `withinProposedAccuracyEnvelope` travels with the result; AC-S13 |
 | 22 | Cross-engine variation in a transcendental flips a hash | `detLog10`/`detExp10` replace the native calls (AC-S10); perturbed-path replay (AC-R3) |
 | 23 | Derived quantities quantized independently, breaking conservation | AC-R9 design guard, which **requires the wrong strategy to fail** |
 | 24 | An ACE tuning value becomes structural, so a guess cannot be corrected | AC-A7 replaces the whole policy object without touching the control loop |
@@ -1684,7 +1685,7 @@ Binary and verifiable. Every criterion maps to an evidence method.
 | AC-S10 | `detLog10` and `detExp10` meet their stated accuracy (≤1.5 ulp in domain) against arbitrary-precision references, and refuse outside their validated domain | `spikes/numeric-policy` promoted to a package test |
 | AC-S11 | The outer residual is strictly increasing in `m_H` across a sweep **including the domain boundary**, machine-checked | monotonicity sweep test |
 | AC-S12 | Model pH is never labelled or described as "the true/thermodynamic pH"; the inspection view states the IUPAC notional definition and names the activity model it depends on | copy review + DOM assertion on the inspection view |
-| AC-S13 | A result computed beyond the proposed validation envelope carries `accuracyStatus: "outside-validated-envelope"` and is displayed with that qualification | domain-matrix test at `I_m` = 0.15 and 0.30 mol/kg |
+| AC-S13 | A result computed beyond the proposed validation envelope carries `withinProposedAccuracyEnvelope: false` and is displayed with that qualification | domain-matrix test at `I_m` = 0.15 and 0.30 mol/kg |
 | AC-S14 | The proposed validation envelope is asserted, not assumed: the v0 scenario sweep's maximum `I_m` (0.1002 mol/kg) is checked against the envelope limit at test time | boundary test derived from `spikes/activity-equilibrium` §K |
 
 ### Runtime
