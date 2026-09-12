@@ -4,3 +4,5 @@ export * from "./request.js";
 export * from "./result.js";
 export * from "./registry.js";
 export * from "./stub.js";
+export * from "./acidbase/indicator.js";
+export * from "./projection.js";
