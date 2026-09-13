@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "v0-acid-base-titration-envelope-reference",
+  "inputManifestSha256": "bd069b7d8b187fdf91c677731bbb5fbdc5ed540bbbf67bea797e9c80fda2a8f7",
+  "expectedMaximum": {
+    "ionicStrengthMolal": 0.09996461252716539,
+    "familyId": "strong-acid-strong-base",
+    "equivalentFactor": 0,
+    "absoluteTolerance": 5e-10
+  },
+  "derivation": {
+    "kind": "independent-analytic-boundary",
+    "description": "At zero equivalents, the frozen 0.1000 mol/L HCl stock has one analytical HCl mole per litre and water mass ρ − cM. The strong-acid limiting ionic strength is therefore c/(ρ − cM). The production activity solve may differ only by the explicitly bounded water-autoprotolysis correction.",
+    "equation": "I_m,limit = c_HCl / (rho_HCl - c_HCl * M_HCl)",
+    "inputFields": [
+      "stocks[hcl-stock].concentrationMolPerL",
+      "stocks[hcl-stock].densityKgPerL",
+      "stocks[hcl-stock].molarMassKgPerMol"
+    ],
+    "independence": "This acceptance output is intentionally separate from the scientific-input manifest. Updating frozen inputs requires an explicit reference review and input-manifest digest update; it must not silently retune the expected envelope result."
+  }
+}

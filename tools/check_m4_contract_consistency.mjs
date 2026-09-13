@@ -6,7 +6,7 @@ async function document(relativePath) {
   return readFile(new URL(relativePath, root), "utf8");
 }
 
-const [spec, design, adr0011, adr0012, content, world, worldCreation, solve, activity, migrate, scenarioMigrate, plan, evidence, integrity, oraclePlan, enginePlan] = await Promise.all([
+const [spec, design, adr0011, adr0012, content, world, worldCreation, solve, activity, migrate, scenarioMigrate, plan, evidence, integrity, oraclePlan, enginePlan, v0Inputs, envelopeReference, acceptanceTest] = await Promise.all([
   document("docs/specs/SPEC-0001-world-foundation-acid-base-titration.md"),
   document("docs/superpowers/specs/2026-09-12-m4-acid-base-engine-design.md"),
   document("docs/adr/0011-scenario-scientific-input-freezing.md"),
@@ -23,6 +23,9 @@ const [spec, design, adr0011, adr0012, content, world, worldCreation, solve, act
   document("docs/research/m4-evidence-integrity.md"),
   document("docs/superpowers/plans/2026-09-13-m4-reference-oracle-validation.md"),
   document("docs/superpowers/plans/2026-09-12-m4-acid-base-engine.md"),
+  document("docs/research/v0-scientific-inputs.json"),
+  document("docs/research/v0-envelope-reference.json"),
+  document("apps/web/src/m4-acceptance.test.ts"),
 ]);
 const quantityBoundaryGuard = await document("tools/check_scientific_quantity_boundary.mjs");
 
@@ -50,6 +53,9 @@ mustNot(spec, /World and content `schemaVersion` is currently `2`/i, "SPEC does 
 must(spec, /AC-S12\s*\|[^\n]*activity-based[^\n]*\|[^\n]*ScientificState/i, "M4 AC-S12 owns the scientific model-pH distinction");
 must(spec, /AC-V10[\s\S]{0,260}inspection view/i, "M5 owns the model-pH inspection presentation criterion");
 must(spec, /AC-V11[\s\S]{0,260}withinProposedAccuracyEnvelope/i, "M5 owns visible accuracy-envelope qualification");
+must(spec, /\*\*Current revision:\*\* \*\*20 Candidate\*\*/, "SPEC records the rev20 semantic-evidence candidate");
+must(spec, /\| 20 \|[\s\S]{0,500}AST guard confines molarity/i, "SPEC amendment history records rev20");
+must(spec, /0\.09996461252716539 mol\/kg/, "SPEC records the current independently frozen envelope maximum");
 
 must(design, /Kw\s*=\s*a_H\s*·\s*a_OH/, "M4 design uses the accepted Kw convention");
 must(design, /total analytical solute molality/i, "M4 design records the analytical domain gate");
@@ -78,11 +84,24 @@ must(migrate, /migrateWorld/, "persisted migration namespace has an explicit ent
 must(scenarioMigrate, /SCENARIO_MIGRATIONS/, "authoring migration namespace is explicit");
 must(plan, /\*\*Addresses:\*\*[\s\S]{0,160}AC-V10[\s\S]{0,40}AC-V11/, "M5 claims the deferred presentation criteria");
 must(plan, /v0-scientific-inputs\.json/, "M4 plan names the canonical v0 input manifest");
+must(plan, /v0-envelope-reference\.json/, "M4 plan names the independent envelope reference");
 must(plan, /verify:scientific-quantities/, "M4 plan names the scientific quantity boundary guard");
 must(evidence, /AC-V10[\s\S]{0,180}M5|M5[\s\S]{0,180}AC-V10/i, "M4 evidence points presentation criteria to M5");
 must(evidence, /v0-scientific-inputs\.json/, "M4 evidence names the canonical v0 input manifest");
+must(evidence, /v0-envelope-reference\.json/, "M4 evidence names the independent envelope reference");
 must(evidence, /verify:scientific-quantities/, "M4 evidence names the scientific quantity boundary guard");
-must(quantityBoundaryGuard, /illegal-core quantity fixture|MolPerLitre/, "scientific quantity guard contains a negative fixture");
+must(quantityBoundaryGuard, /import ts from "typescript"/, "scientific quantity guard is AST-based");
+must(quantityBoundaryGuard, /dynamic namespace access/, "scientific quantity guard tests dynamic-property bypasses");
+must(quantityBoundaryGuard, /generic unit/, "scientific quantity guard tests generic-unit bypasses");
+must(v0Inputs, /"schemaVersion": 2/, "v0 input manifest has the source-fidelity schema version");
+mustNot(v0Inputs, /expectedMaximum/, "v0 input manifest does not contain its own acceptance output");
+must(v0Inputs, /"sourceLiteral": "1 g\/cm³ \(25 °C\)"/, "NaOH source literal preserves reported precision");
+must(v0Inputs, /"edition": "8th"/, "HOAc Perry provenance uses the matching edition");
+must(envelopeReference, /"inputManifestSha256": "[a-f0-9]{64}"/, "envelope reference pins the input manifest digest");
+must(envelopeReference, /"ionicStrengthMolal": 0\.09996461252716539/, "envelope reference pins the independently derived maximum");
+must(acceptanceTest, /v0-envelope-reference\.json/, "AC-S14 reads the separate envelope reference");
+must(acceptanceTest, /createWorldFromScenario/, "AC-S14 enters through scenario/world creation");
+mustNot(acceptanceTest, /densityKgPerL -/, "AC-S14 does not duplicate world-resolution water-mass arithmetic");
 mustNot(integrity, /AC-S3、AC-S7、AC-S10…AC-S16/, "evidence-integrity note has no stale merged M4 status");
 mustNot(oraclePlan, /AC-S3, AC-S7, and AC-S10…AC-S16/, "oracle plan has no stale merged M4 status");
 mustNot(enginePlan, /AC-S3, AC-S7, and AC-S10…AC-S16/, "engine plan has no stale merged M4 status");

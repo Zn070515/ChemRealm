@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
@@ -49,13 +50,10 @@ type V0Stock = {
 };
 
 type V0Manifest = {
-  readonly schemaVersion: 1;
+  readonly schemaVersion: 2;
   readonly id: string;
   readonly temperatureK: number;
   readonly proposedEnvelopeIonicStrengthMolal: number;
-  readonly expectedMaximumIonicStrengthMolal: number;
-  readonly expectedMaximumFamilyId: string;
-  readonly expectedMaximumEquivalentFactor: number;
   readonly equivalentFactors: readonly number[];
   readonly stocks: readonly V0Stock[];
   readonly families: readonly {
@@ -67,10 +65,27 @@ type V0Manifest = {
   }[];
 };
 
-const v0Inputs = JSON.parse(readFileSync(
+type V0EnvelopeReference = {
+  readonly schemaVersion: 1;
+  readonly id: "v0-acid-base-titration-envelope-reference";
+  readonly inputManifestSha256: string;
+  readonly expectedMaximum: {
+    readonly ionicStrengthMolal: number;
+    readonly familyId: string;
+    readonly equivalentFactor: number;
+    readonly absoluteTolerance: number;
+  };
+};
+
+const v0InputText = readFileSync(
   new URL("../../../docs/research/v0-scientific-inputs.json", import.meta.url),
   "utf8",
-)) as V0Manifest;
+);
+const v0Inputs = JSON.parse(v0InputText) as V0Manifest;
+const v0EnvelopeReference = JSON.parse(readFileSync(
+  new URL("../../../docs/research/v0-envelope-reference.json", import.meta.url),
+  "utf8",
+)) as V0EnvelopeReference;
 
 const stockById = new Map(v0Inputs.stocks.map((stock) => [stock.stockId, stock]));
 function stock(stockId: string): V0Stock {
@@ -173,6 +188,71 @@ const scenario = {
   },
 };
 
+function scenarioForEnvelopePoint(
+  family: V0Manifest["families"][number],
+  factor: number,
+) {
+  const acid = stock(family.acidStockId);
+  const base = stock(family.baseStockId);
+  return {
+    schemaVersion: SCENARIO_SCHEMA_VERSION,
+    contentVersion: 1,
+    scenarioRef: `m4-envelope-${family.familyId}-${factor}`,
+    title: `M4 envelope ${family.familyId} at ${factor} equivalents`,
+    materials: factor === 0
+      ? [material(acid.stockId)]
+      : [material(acid.stockId), material(base.stockId)],
+    vessels: [{
+      vesselId: "flask",
+      kind: "conicalFlask" as const,
+      capacity: { value: 3, unit: "L" as const },
+      geometryRef: "flask-3L",
+      position: { unit: "mm" as const, x: 0, y: 0 },
+      initialContents: [
+        { materialId: acid.materialId, volume: { value: 1, unit: "L" as const } },
+        ...(factor === 0 ? [] : [{
+          materialId: base.materialId,
+          volume: { value: factor, unit: "L" as const },
+        }]),
+      ],
+    }],
+    apparatus: [],
+    indicators: [],
+    modelRequirements: {
+      temperature: { value: v0Inputs.temperatureK, unit: "K" as const },
+      species: [...descriptor.validity.species],
+      solvent: "water" as const,
+      phase: "aqueous" as const,
+      activityCorrected: true,
+    },
+  };
+}
+
+function requestFromEnvelopeWorld(
+  state: WorldState,
+  family: V0Manifest["families"][number],
+): SolveRequest {
+  const contents = state.canonical.byVessel.flask;
+  if (contents === undefined) throw new Error("missing envelope flask");
+  const acid = stock(family.acidStockId);
+  const base = stock(family.baseStockId);
+  return {
+    waterMass: kilogram(contents.waterMass),
+    liquidVolume: litre(contents.liquidVolume),
+    temperature: kelvin(v0Inputs.temperatureK),
+    solutes: contents.componentAmounts.map((component) => {
+      if (component.componentId === acid.soluteId) {
+        return solveSolute(acid, component.amount, family.acidMode);
+      }
+      if (component.componentId === base.soluteId) {
+        return solveSolute(base, component.amount, family.baseMode);
+      }
+      throw new Error(`unexpected envelope component ${component.componentId}`);
+    }),
+    indicators: [],
+  };
+}
+
 type ConservedTotals = {
   strongAcidChloride: number;
   strongBaseSodium: number;
@@ -210,6 +290,9 @@ describe("M4 world/science acceptance evidence", () => {
       "strong-acid-strong-base",
       "weak-acid-strong-base",
     ]);
+    expect(v0EnvelopeReference.inputManifestSha256).toBe(
+      createHash("sha256").update(v0InputText).digest("hex"),
+    );
   });
 
   it("conserves model-declared Na, Cl, and acid-family totals over 100 transfers", async () => {
@@ -260,7 +343,7 @@ describe("M4 world/science acceptance evidence", () => {
     expect(result.status).toBe("OK");
   });
 
-  it("checks the v0 scenario sweep maximum against the proposed envelope", async () => {
+  it("checks the complete v0 scenario-to-world-to-solver sweep against the proposed envelope", async () => {
     const adapter = createAcidBaseAdapter();
     const measurements: Array<{
       readonly familyId: string;
@@ -268,27 +351,15 @@ describe("M4 world/science acceptance evidence", () => {
       readonly ionicStrengthMolal: number;
     }> = [];
     for (const family of v0Inputs.families) {
-      const acid = stock(family.acidStockId);
-      const base = stock(family.baseStockId);
-      const acidWaterMassPerLitre = acid.densityKgPerL -
-        acid.concentrationMolPerL * acid.molarMassKgPerMol;
-      const baseWaterMassPerLitre = base.densityKgPerL -
-        base.concentrationMolPerL * base.molarMassKgPerMol;
       for (const factor of v0Inputs.equivalentFactors) {
-        const baseAmount = base.concentrationMolPerL * factor;
-        const solutes: SolveRequest["solutes"] = baseAmount === 0
-          ? [solveSolute(acid, acid.concentrationMolPerL, family.acidMode)]
-          : [
-            solveSolute(acid, acid.concentrationMolPerL, family.acidMode),
-            solveSolute(base, baseAmount, family.baseMode),
-          ];
-        const result = await adapter.solve({
-          waterMass: kilogram(acidWaterMassPerLitre + factor * baseWaterMassPerLitre),
-          liquidVolume: litre(1 + factor),
-          temperature: kelvin(v0Inputs.temperatureK),
-          solutes,
-          indicators: [],
+        const created = createWorldFromScenario(registry(), {
+          worldId: `m4-envelope-world-${family.familyId}-${factor}`,
+          scenario: scenarioForEnvelopePoint(family, factor),
+          seed: null,
         });
+        expect(created.accepted).toBe(true);
+        if (!created.accepted) throw new Error(created.reason);
+        const result = await adapter.solve(requestFromEnvelopeWorld(created.state, family));
         expect(result.status).toBe("OK");
         if (result.status !== "OK") throw new Error(result.status);
         const ionicStrengthMolal = result.state.ionicStrengthMolal.value;
@@ -307,9 +378,10 @@ describe("M4 world/science acceptance evidence", () => {
     );
     expect(maximumMeasurement.ionicStrengthMolal)
       .toBeLessThanOrEqual(v0Inputs.proposedEnvelopeIonicStrengthMolal);
-    expect(maximumMeasurement.ionicStrengthMolal)
-      .toBeCloseTo(v0Inputs.expectedMaximumIonicStrengthMolal, 3);
-    expect(maximumMeasurement.familyId).toBe(v0Inputs.expectedMaximumFamilyId);
-    expect(maximumMeasurement.factor).toBe(v0Inputs.expectedMaximumEquivalentFactor);
+    expect(Math.abs(
+      maximumMeasurement.ionicStrengthMolal - v0EnvelopeReference.expectedMaximum.ionicStrengthMolal,
+    )).toBeLessThanOrEqual(v0EnvelopeReference.expectedMaximum.absoluteTolerance);
+    expect(maximumMeasurement.familyId).toBe(v0EnvelopeReference.expectedMaximum.familyId);
+    expect(maximumMeasurement.factor).toBe(v0EnvelopeReference.expectedMaximum.equivalentFactor);
   });
 });

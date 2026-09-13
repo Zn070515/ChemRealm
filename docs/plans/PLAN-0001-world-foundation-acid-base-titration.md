@@ -1,7 +1,7 @@
 # PLAN-0001 — World Foundation & Acid-Base Titration
 
 - **Status:** **M0–M3 S3 Verified / Accepted; M4 S2 in progress** — the original plan was approved
-  on 2026-09-11 at `SPEC-0001` revision 6; the current contract is revisions 13–19 candidates.
+  on 2026-09-11 at `SPEC-0001` revision 6; the current contract is revisions 13–20 candidates.
 - **Completed:** `M0 — Repository foundation` reached **S3 — Verified** on
   2026-09-11. Evidence: `docs/evidence/M0.md`, commits `1f3dfee`/`565a2e8`,
   CI run `34595967023` (13/13 gate steps on a clean `ubuntu-latest` checkout).
@@ -609,6 +609,7 @@ tools/oracle/phreeqc/cases/*.pqi.in
 tools/oracle/tests/test_reference.py      oracle vs published standards
 tools/oracle/tests/test_cross_check.py    ORACLE vs TS solver over a swept curve
 docs/research/v0-scientific-inputs.json   canonical v0 material and sweep inputs
+docs/research/v0-envelope-reference.json  digest-bound independent AC-S14 maximum
 docs/research/constants-provenance.md     pin every constant to a citable source
 ```
 
@@ -710,7 +711,7 @@ starting; the concentration-only formulation they describe is superseded.**
 | 1e-6 mol/kg acetic acid: exact solve matched; HH divergence (0.65 pH) reproduced | AC-S5 |
 | PHREEQC vs TS within ±0.02 pH **including the equivalence region**, in molality with aligned constants | AC-S6 |
 | Every solver constant, indicator input, and v0 material concentration/density/molar mass has a citable datum-level source | AC-S7 |
-| No `MolPerLitre` value reaches `packages/sci` internals | AC-S8; `pnpm verify:scientific-quantities` |
+| No molarity value reaches `packages/sci` internals outside `ScientificProjection` | AC-S8; AST-based `pnpm verify:scientific-quantities` rejects direct, aliased, namespace, and generic-unit construction |
 | `−lg c(H⁺)` and `pH` are distinct types; REF-5 and REF-6 both pass and differ by the expected amount | AC-S9 |
 | `detLog10`/`detExp10` ≤1.5 ulp in domain vs arbitrary-precision; **refuse outside domain** | AC-S10 |
 | Outer residual strictly increasing in `m_H` across a sweep including the domain boundary | AC-S11 |
@@ -718,7 +719,7 @@ starting; the concentration-only formulation they describe is superseded.**
 | Above pH 12, the monoprotic indicator approximation reports reduced validity | `SPEC-0001` failure mode 10 |
 | ScientificState/provenance and scientific-document review identify model pH as activity-based and model-dependent, never as "the true/thermodynamic pH"; inspection copy is AC-V10 in M5 | AC-S12 |
 | Domain-matrix test at `I_m` = 0.15 and 0.30: the result carries `withinProposedAccuracyEnvelope: false`; visible qualification is AC-V11 in M5 | AC-S13 |
-| Boundary test: the manifest-driven v0 scenario sweep's max `I_m` (0.1002 mol/kg) is checked against the envelope limit for both declared families; all Davies evaluations stay at or below the 0.5 computational boundary | AC-S14 |
+| Boundary test: both v0 scenario families run through `Scenario → WorldCreated → WorldState → SolveRequest → SolverAdapter`; their maximum `I_m` is checked against the `0.12 mol/kg` envelope and a digest-bound independent reference (`0.09996461252716539 mol/kg`) | AC-S14 |
 | Negative content test: a scenario without a declared density is rejected, not defaulted | AC-S15 |
 | Provenance review: no constant carries more significant figures than its source; the source's own precision is recorded | AC-S16 |
 

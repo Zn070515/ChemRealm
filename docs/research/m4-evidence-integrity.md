@@ -51,7 +51,9 @@ namespace 的通过不能替代另一个 namespace 的验收。
 | REF 编号被重新赋予另一种 chemistry | TS/Python 都对每个 canonical ID 检查具体组分、数量、basis、case 列表与 published anchor |
 | ORACLE 被伪装成 REF | manifest 要求 namespace 前缀、集合互斥、目录无 orphan JSON；report 只接受 ORACLE 顺序 |
 | derivation 偷藏旧 case list | Python 检查 derivation 从 manifest 读取，并拒绝嵌入 `REF-*` catalog |
-| v0 material input is silently copied or a stock loses provenance | `v0-scientific-inputs.json` is the sole acceptance input manifest; Python traverses every stock datum/source record and the TypeScript sweep reads the same file |
+| v0 material input is silently copied, a stock loses provenance, or source precision/conditions are invented | `v0-scientific-inputs.json` is the sole acceptance input manifest; Python traverses every stock datum/source record, rejects invented density pressure, and checks source-faithful NaOH/Perry records |
+| an input edit silently retunes the accepted envelope maximum | `v0-envelope-reference.json` is separate, pins the SHA-256 of the reviewed input manifest, and stores the maximum/location/tolerance independently |
+| molarity reaches thermodynamic internals through lower-case, alias, namespace, dynamic property, or generic construction | AST quantity gate rejects `MolPerLitre`, `molPerLitre`, `molarityOf`, their dynamic string keys, and `"mol/L"` construction outside `ScientificProjection`, with direct-import, namespace, dynamic-property, and generic-unit negative fixtures |
 | REF-9 的 post-equivalence 输入漂移 | 逐 case 检查 `0.14` 的 post point 与合法的 `0.15` strong-base point 分属不同 case |
 | report 缺点或 engine 输出不完整 | comparison 要求完整 ordered rows、OK 状态和 pH/ionic-strength 数值 |
 | systematic offset 被误写成已解释 | report 保留 signed summary；mixed-sign fixture 必须得到 mixed classification |

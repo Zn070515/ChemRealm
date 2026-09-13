@@ -1,11 +1,8 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "v0-acid-base-titration-inputs",
   "temperatureK": 298.15,
   "proposedEnvelopeIonicStrengthMolal": 0.12,
-  "expectedMaximumIonicStrengthMolal": 0.1002,
-  "expectedMaximumFamilyId": "strong-acid-strong-base",
-  "expectedMaximumEquivalentFactor": 0,
   "equivalentFactors": [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2],
   "stocks": [
     {
@@ -25,9 +22,8 @@
         "source": "VWR International product record",
         "reference": "Titrant Hydrochloric Acid 0.100 Normal N10; density reported at 25 degC",
         "category": "evaluated",
-        "uncertainty": "Reported to 0.001 kg/L; product-record value, not a universal solution-density law",
+        "uncertainty": "Product-record value, not a universal solution-density law",
         "temperature": { "value": 298.15, "unit": "K" },
-        "pressure": { "value": 101.325, "unit": "kPa" },
         "lastVerified": "2026-09-13"
       },
       "molarMassProvenance": {
@@ -42,21 +38,24 @@
         "sourceLiteral": "0.1000 mol/L",
         "citation": "docs/specs/SPEC-0001-world-foundation-acid-base-titration.md#acs14",
         "unit": "mol/L",
-        "precision": "four decimal places in the scenario contract",
+        "reportedPrecision": { "kind": "decimal-places", "decimalPlaces": 4 },
         "method": "scenario-defined analytical stock concentration"
       },
       "densitySourceRecord": {
-        "sourceLiteral": "1.004 g/mL at 25 degC",
+        "sourceLiteral": "1.004 g/cm³ (25 °C)",
         "citation": "https://www.vwr.com/us/en/product/4547084/tightrant-hydrochloric-acid-0100-normal-n10-tested-in-an-iso-17025-accredited-facility",
         "unit": "kg/L",
-        "precision": "reported to 0.001 g/mL",
+        "reportedPrecision": { "kind": "decimal-places", "decimalPlaces": 3 },
+        "sourceConditions": {
+          "temperature": { "value": 298.15, "unit": "K" }
+        },
         "method": "unit conversion: 1 g/mL = 1 kg/L"
       },
       "molarMassSourceRecord": {
         "sourceLiteral": "HCl = 1.008 + 35.45 g/mol",
         "citation": "https://iupac.qmul.ac.uk/AtWt/AtWt21.html",
         "unit": "kg/mol",
-        "precision": "formula sum frozen to five decimal places in kg/mol",
+        "reportedPrecision": { "kind": "derived" },
         "method": "IUPAC atomic-weight formula sum"
       }
     },
@@ -77,9 +76,8 @@
         "source": "VWR International product record",
         "reference": "Titrant Sodium Hydroxide 0.100 Normal; density reported at 25 degC",
         "category": "evaluated",
-        "uncertainty": "Reported to 0.001 kg/L; product-record value, not a universal solution-density law",
+        "uncertainty": "The product page displays 1 g/cm³; it does not state decimal-place precision or a universal solution-density law",
         "temperature": { "value": 298.15, "unit": "K" },
-        "pressure": { "value": 101.325, "unit": "kPa" },
         "lastVerified": "2026-09-13"
       },
       "molarMassProvenance": {
@@ -94,21 +92,24 @@
         "sourceLiteral": "0.1000 mol/L",
         "citation": "docs/specs/SPEC-0001-world-foundation-acid-base-titration.md#acs14",
         "unit": "mol/L",
-        "precision": "four decimal places in the scenario contract",
+        "reportedPrecision": { "kind": "decimal-places", "decimalPlaces": 4 },
         "method": "scenario-defined analytical stock concentration"
       },
       "densitySourceRecord": {
-        "sourceLiteral": "1.000 g/mL at 25 degC",
+        "sourceLiteral": "1 g/cm³ (25 °C)",
         "citation": "https://us-prod2.vwr.com/store/catalog/product.jsp?catalog_number=RC735032&originalCatNum=RC640032",
         "unit": "kg/L",
-        "precision": "reported to 0.001 g/mL",
+        "reportedPrecision": { "kind": "not-stated" },
+        "sourceConditions": {
+          "temperature": { "value": 298.15, "unit": "K" }
+        },
         "method": "unit conversion: 1 g/mL = 1 kg/L"
       },
       "molarMassSourceRecord": {
         "sourceLiteral": "NaOH = 22.98976928 + 15.999 + 1.008 g/mol",
         "citation": "https://iupac.qmul.ac.uk/AtWt/AtWt21.html",
         "unit": "kg/mol",
-        "precision": "formula sum frozen to six decimal places in kg/mol",
+        "reportedPrecision": { "kind": "derived" },
         "method": "IUPAC atomic-weight formula sum"
       }
     },
@@ -127,12 +128,11 @@
       },
       "densityProvenance": {
         "source": "Perry's Chemical Engineers' Handbook",
-        "reference": "9th ed., Table 2-109, aqueous acetic acid density rows at 25 degC; interpolated near 0.60 mass% for a 0.100 mol/L stock",
-        "edition": "9th",
+        "reference": "8th ed., Table 2-109, aqueous acetic-acid density rows at 25 degC; interpolated near 0.60 mass% for a 0.100 mol/L stock",
+        "edition": "8th",
         "category": "evaluated",
         "uncertainty": "Table display plus dilute-solution interpolation: approximately +/-0.0008 kg/L",
         "temperature": { "value": 298.15, "unit": "K" },
-        "pressure": { "value": 101.325, "unit": "kPa" },
         "lastVerified": "2026-09-13"
       },
       "molarMassProvenance": {
@@ -147,21 +147,24 @@
         "sourceLiteral": "0.1000 mol/L",
         "citation": "docs/specs/SPEC-0001-world-foundation-acid-base-titration.md#acs14",
         "unit": "mol/L",
-        "precision": "four decimal places in the scenario contract",
+        "reportedPrecision": { "kind": "decimal-places", "decimalPlaces": 4 },
         "method": "scenario-defined analytical stock concentration"
       },
       "densitySourceRecord": {
-        "sourceLiteral": "0.9981 kg/L, interpolated at approximately 0.60 mass% acetic acid",
-        "citation": "https://www.scribd.com/document/841594977/densidades-perry",
+        "sourceLiteral": "Table 2-109 at 25 °C: 0 mass% → 0.9971 g/mL; 1 mass% → 0.9987 g/mL",
+        "citation": "https://www.mheducation.com/highered/mhp/product/perry-s-chemical-engineers-handbook-eighth-edition.html",
         "unit": "kg/L",
-        "precision": "table display to 0.0001 g/mL with explicit interpolation uncertainty",
-        "method": "dilute-solution interpolation, not a direct measurement of this exact stock"
+        "reportedPrecision": { "kind": "decimal-places", "decimalPlaces": 4 },
+        "sourceConditions": {
+          "temperature": { "value": 298.15, "unit": "K" }
+        },
+        "method": "Linear interpolation of the cited 25 °C rows at approximately 0.60 mass%; 0.9981 kg/L is a derived model value, not a direct measurement of this exact stock"
       },
       "molarMassSourceRecord": {
         "sourceLiteral": "CH3COOH = 2(12.011) + 4(1.008) + 2(15.999) g/mol",
         "citation": "https://iupac.qmul.ac.uk/AtWt/AtWt21.html",
         "unit": "kg/mol",
-        "precision": "formula sum frozen to six decimal places in kg/mol",
+        "reportedPrecision": { "kind": "derived" },
         "method": "IUPAC atomic-weight formula sum"
       }
     },
@@ -181,10 +184,9 @@
       "densityProvenance": {
         "source": "Kharat et al., Journal of Molecular Liquids",
         "reference": "140 (2008), aqueous sodium acetate density series at 25 degC; rounded v0 input for a 0.100 mol/L stock",
-        "category": "evaluated",
-        "uncertainty": "Rounded model input with an estimated +/-0.001 kg/L uncertainty",
+        "category": "pedagogicalApproximation",
+        "uncertainty": "Frozen v0 approximation of +/-0.001 kg/L. The cited study establishes the aqueous sodium-acetate density series and conditions; this rounded 0.100 mol/L model input is not presented as a verbatim table datum.",
         "temperature": { "value": 298.15, "unit": "K" },
-        "pressure": { "value": 101.325, "unit": "kPa" },
         "lastVerified": "2026-09-13"
       },
       "molarMassProvenance": {
@@ -199,21 +201,24 @@
         "sourceLiteral": "0.1000 mol/L",
         "citation": "docs/specs/SPEC-0001-world-foundation-acid-base-titration.md#acs14",
         "unit": "mol/L",
-        "precision": "four decimal places in the scenario contract",
+        "reportedPrecision": { "kind": "decimal-places", "decimalPlaces": 4 },
         "method": "scenario-defined analytical stock concentration"
       },
       "densitySourceRecord": {
-        "sourceLiteral": "1.002 kg/L at 25 degC, rounded v0 input",
+        "sourceLiteral": "The study reports aqueous sodium-acetate density measurements at 298.15 K and atmospheric pressure over 6.09×10⁻² to 7.314×10⁻¹ mol/kg",
         "citation": "https://www.sciencedirect.com/science/article/pii/S0167732207002450",
         "unit": "kg/L",
-        "precision": "rounded to 0.001 kg/L with explicit uncertainty",
-        "method": "rounded interpolation from the cited aqueous density study"
+        "reportedPrecision": { "kind": "model-approximation" },
+        "sourceConditions": {
+          "temperature": { "value": 298.15, "unit": "K" }
+        },
+        "method": "Frozen v0 model approximation: 1.002 kg/L. It is not a source-quoted density value or source-quoted precision; replace with a table-extracted datum before NaOAc becomes a displayed v0 titration stock"
       },
       "molarMassSourceRecord": {
         "sourceLiteral": "NaCH3COO = 22.98976928 + 2(12.011) + 3(1.008) + 2(15.999) g/mol",
         "citation": "https://iupac.qmul.ac.uk/AtWt/AtWt21.html",
         "unit": "kg/mol",
-        "precision": "formula sum frozen to six decimal places in kg/mol",
+        "reportedPrecision": { "kind": "derived" },
         "method": "IUPAC atomic-weight formula sum"
       }
     }

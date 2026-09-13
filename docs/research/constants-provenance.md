@@ -12,8 +12,12 @@ The v0 titration acceptance inputs have a separate canonical manifest:
 [`v0-scientific-inputs.json`](v0-scientific-inputs.json). It is the single
 machine-readable source for the four v0 stock concentrations, solution
 densities, molar masses, provenance records, and the two complete AC-S14 sweep
-families. Acceptance tests must read that manifest rather than reproducing
-scientific input literals in a second catalog.
+families. It deliberately contains **inputs only**. The independent measured
+maximum, location, tolerance, and input digest belong in
+[`v0-envelope-reference.json`](v0-envelope-reference.json), so an input edit
+cannot silently edit the acceptance result at the same time. Acceptance tests
+must read these records rather than reproducing scientific input literals in a
+second catalog.
 
 ## Fixed model parameters
 

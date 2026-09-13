@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 from pathlib import Path
@@ -10,6 +11,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[3]
 PROVENANCE_PATH = REPO_ROOT / "docs" / "research" / "constants-provenance.json"
 V0_INPUTS_PATH = REPO_ROOT / "docs" / "research" / "v0-scientific-inputs.json"
+V0_ENVELOPE_REFERENCE_PATH = REPO_ROOT / "docs" / "research" / "v0-envelope-reference.json"
 M4_ACCEPTANCE_TEST_PATH = REPO_ROOT / "apps" / "web" / "src" / "m4-acceptance.test.ts"
 
 
@@ -24,6 +26,16 @@ def load_provenance() -> dict:
 def load_v0_inputs() -> dict:
     assert V0_INPUTS_PATH.is_file(), f"missing v0 scientific-input manifest: {V0_INPUTS_PATH}"
     with V0_INPUTS_PATH.open(encoding="utf-8") as handle:
+        value = json.load(handle)
+    assert isinstance(value, dict)
+    return value
+
+
+def load_v0_envelope_reference() -> dict:
+    assert V0_ENVELOPE_REFERENCE_PATH.is_file(), (
+        f"missing independent v0 envelope reference: {V0_ENVELOPE_REFERENCE_PATH}"
+    )
+    with V0_ENVELOPE_REFERENCE_PATH.open(encoding="utf-8") as handle:
         value = json.load(handle)
     assert isinstance(value, dict)
     return value
@@ -134,14 +146,12 @@ def test_indicator_records_are_citable_and_preserve_logarithmic_precision() -> N
 
 def test_v0_material_inputs_have_datum_level_sources_and_are_complete() -> None:
     document = load_v0_inputs()
-    assert document["schemaVersion"] == 1
+    assert document["schemaVersion"] == 2
     assert document["id"] == "v0-acid-base-titration-inputs"
     assert document["temperatureK"] == 298.15
     assert document["equivalentFactors"] == [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2]
     assert document["proposedEnvelopeIonicStrengthMolal"] == 0.12
-    assert document["expectedMaximumIonicStrengthMolal"] == 0.1002
-    assert document["expectedMaximumFamilyId"] == "strong-acid-strong-base"
-    assert document["expectedMaximumEquivalentFactor"] == 0
+    assert not any(key.startswith("expectedMaximum") for key in document)
     assert {family["familyId"] for family in document["families"]} == {
         "strong-acid-strong-base",
         "weak-acid-strong-base",
@@ -172,7 +182,10 @@ def test_v0_material_inputs_have_datum_level_sources_and_are_complete() -> None:
             }
             if datum_key == "density":
                 assert record["temperature"] == {"value": 298.15, "unit": "K"}
-                assert record["pressure"] == {"value": 101.325, "unit": "kPa"}
+                # Product/table sources may report temperature without a numeric
+                # pressure. Absence is faithful; a standard-atmosphere value must
+                # never be fabricated as a source observation.
+                assert "pressure" not in record
             else:
                 assert "temperature" not in record
                 assert "pressure" not in record
@@ -187,11 +200,77 @@ def test_v0_material_inputs_have_datum_level_sources_and_are_complete() -> None:
             assert source_record["sourceLiteral"].strip()
             assert source_record["citation"].startswith(("https://", "http://", "docs/"))
             assert source_record["unit"] == expected_unit
-            assert source_record["precision"].strip()
+            precision = source_record["reportedPrecision"]
+            assert precision["kind"] in {
+                "decimal-places",
+                "not-stated",
+                "derived",
+                "model-approximation",
+            }
+            if precision["kind"] == "decimal-places":
+                assert isinstance(precision["decimalPlaces"], int)
+                assert precision["decimalPlaces"] >= 0
+            else:
+                assert "decimalPlaces" not in precision
+
+            # Conditions and precision must be observations, not made-up defaults.
+            if source_record_key == "densitySourceRecord":
+                assert source_record["sourceConditions"] == {
+                    "temperature": {"value": 298.15, "unit": "K"}
+                }
+            else:
+                assert "sourceConditions" not in source_record
+
+    naoh = next(stock for stock in stocks if stock["stockId"] == "naoh-stock")
+    assert naoh["densitySourceRecord"]["sourceLiteral"] == "1 g/cm³ (25 °C)"
+    assert naoh["densitySourceRecord"]["reportedPrecision"] == {
+        "kind": "not-stated"
+    }
+
+    hoac = next(stock for stock in stocks if stock["stockId"] == "hoac-stock")
+    assert hoac["densityProvenance"]["edition"] == "8th"
+    assert "Table 2-109" in hoac["densityProvenance"]["reference"]
+    assert "0 mass%" in hoac["densitySourceRecord"]["sourceLiteral"]
+    assert "1 mass%" in hoac["densitySourceRecord"]["sourceLiteral"]
+    assert "interpol" in hoac["densitySourceRecord"]["method"].lower()
+
+
+def test_v0_envelope_reference_is_separate_from_inputs_and_pins_current_result() -> None:
+    inputs = load_v0_inputs()
+    reference = load_v0_envelope_reference()
+    assert reference["schemaVersion"] == 1
+    assert reference["id"] == "v0-acid-base-titration-envelope-reference"
+    assert reference["inputManifestSha256"] == hashlib.sha256(
+        V0_INPUTS_PATH.read_bytes()
+    ).hexdigest()
+    assert reference["expectedMaximum"] == {
+        "ionicStrengthMolal": 0.09996461252716539,
+        "familyId": "strong-acid-strong-base",
+        "equivalentFactor": 0,
+        "absoluteTolerance": 5e-10,
+    }
+    assert reference["derivation"]["kind"] == "independent-analytic-boundary"
+    assert "0.1002" not in json.dumps(reference)
+    assert "expectedMaximum" not in inputs
+
+    hcl = next(stock for stock in inputs["stocks"] if stock["stockId"] == "hcl-stock")
+    independently_derived_limit = hcl["concentrationMolPerL"] / (
+        hcl["densityKgPerL"]
+        - hcl["concentrationMolPerL"] * hcl["molarMassKgPerMol"]
+    )
+    assert math.isclose(
+        independently_derived_limit,
+        reference["expectedMaximum"]["ionicStrengthMolal"],
+        abs_tol=1e-14,
+    )
 
 
 def test_m4_acceptance_uses_the_canonical_manifest_not_duplicate_scientific_inputs() -> None:
     source = M4_ACCEPTANCE_TEST_PATH.read_text(encoding="utf-8")
     assert "v0-scientific-inputs.json" in source
+    assert "v0-envelope-reference.json" in source
+    assert "createWorldFromScenario" in source
+    assert "requestFromEnvelopeWorld" in source
+    assert "densityKgPerL -" not in source
     for literal in ("1.002", "1.004", "1.001", "1.02", "0.0364609", "0.0399971"):
         assert literal not in source

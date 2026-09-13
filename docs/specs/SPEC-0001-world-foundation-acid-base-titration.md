@@ -1,9 +1,9 @@
 # SPEC-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** **Accepted through revision 12** — revisions 13–19 are M4
+- **Status:** **Accepted through revision 12** — revisions 13–20 are M4
   implementation candidates pending owner review.
 - **Accepted baseline:** commit `8310c685`, `SPEC-0001` revision 6
-- **Current revision:** **19 Candidate** — M4 chemical identity closure adds
+- **Current revision:** **20 Candidate** — M4 chemical identity closure adds
   scenario-frozen indicator inputs, the explicit water-activity parameter, and
   common acetate-family semantics; revision 14 adds the total-solute domain and
   equilibrium-constant failure semantics; revision 15 makes numerical failure
@@ -14,7 +14,11 @@
   scientific halves of M4 criteria to M4 and inspection/display halves to M5;
   revision 19 clarifies that Strategy A's paired runtime fold and snapshot
   cache preserve exact arithmetic while only the replay-identity projection is
-  quantized. Revisions 7–12 are accepted amendments; revisions 13–19 remain
+  quantized. Revision 20 separates v0 scientific inputs from the independently
+  frozen envelope result, records source-faithful datum precision/conditions,
+  uses the production scenario-to-world-to-solver route for the complete AC-S14
+  sweep, and makes AC-S8's quantity boundary AST-enforced. Revisions 7–12 are
+  accepted amendments; revisions 13–20 remain
   pending owner review.
   See "Amendments since acceptance" below.
 - **Acceptance scope:** the specification and its acceptance criteria. Deferred
@@ -48,6 +52,7 @@
 | 17 | 2026-09-13 | Persisted schema migration closure candidate: persisted World/Event schema advances from v2 to v3; v2 requirement temperatures are explicitly canonicalized to Kelvin with a rebuilt genesis `contentHash`; persisted and authored Scenario migration namespaces are separate, and no automatic rewrite deletes the removed `fullyDissociated` authoring field. | Pending owner review |
 | 18 | 2026-09-13 | M4/M5 acceptance ownership closure candidate: AC-S12 is the scientific model-pH naming/provenance contract; AC-S13 is the scientific accuracy-envelope flag; inspection copy/DOM and visible qualification are separate M5 criteria AC-V10 and AC-V11. | Pending owner review |
 | 19 | 2026-09-13 | World Runtime numeric-semantics clarification candidate: Strategy A quantizes each conserved transfer delta once and applies it as a paired zero-sum update; post-transfer runtime values and exact snapshot caches are not independently rounded, while the explicit replay-identity projection remains quantized. Snapshots carry a separate exact serialized-state checksum so semantic replay equality cannot mask cache corruption. | Pending owner review |
+| 20 | 2026-09-13 | M4 semantic-evidence closure candidate: v0 provenance records distinguish source observations, derived values, and model approximations without inventing precision or pressure; the input manifest is separate from a digest-bound envelope reference; AC-S14 executes the complete family sweep through `Scenario → WorldCreated → WorldState → SolveRequest → SolverAdapter`; and an AST guard confines molarity construction to `ScientificProjection`. | Pending owner review |
 
 A revision bump is recorded here rather than only in the body because the header
 is what a reader checks before deciding whether the file they are reading is the
@@ -559,8 +564,11 @@ do not count toward the envelope.
 
 **The envelope is not a guess about the scenarios — it is measured against
 them.** The v0 titration scenarios (0.1 mol/L HCl/NaOH and HOAc/NaOH, 0–2
-equivalents) reach a maximum `I_m` of **0.1002 mol/kg** over the full sweep
-(`spikes/activity-equilibrium` §K), comfortably inside the proposed envelope.
+equivalents) reach a maximum `I_m` of **0.09996461252716539 mol/kg** over the
+full sweep: strong-acid/strong-base at zero equivalents. The frozen result and
+its input-manifest digest live in `docs/research/v0-envelope-reference.json`,
+not beside the mutable inputs, and remain comfortably inside the proposed
+envelope.
 
 
 **Behaviour between the envelope and the domain limit** (e.g. a learner building
@@ -1759,15 +1767,15 @@ Binary and verifiable. Every criterion maps to an evidence method.
 | AC-S4 | Requirements resolution refuses unsupported solvent, phase, required species, and actual scenario components before genesis; the adapter refuses unsupported temperature, component/analytical totals, and converged `I_m` without producing a number | resolver + genesis component test + adapter domain test matrix |
 | AC-S5 | The 1e-6 mol/kg acetic acid case matches the exact solve, and the HH divergence (0.65 pH) is reproduced | adversarial test |
 | AC-S6 | The PHREEQC oracle agrees within ±0.02 pH over the swept curve, **including the equivalence region**, with constants **and the molality basis** aligned | oracle comparison report; see the caveat above |
-| AC-S7 | **Every scientific input** is traced to a citable source in `docs/research/constants-provenance.md` and the canonical v0 input manifest: `Ka`, `Kw`, Davies `A` and `b`, `γ_HA`, `a_w`, the indicator `Ka_in`, the solution **densities**, and the **molar masses** (`ρ` and `M` jointly set `waterMass → molality → activity → model pH`; both are scientific inputs, not implementation details) | provenance review; machine-readable solver, indicator, and v0 material records plus frozen-world fixture |
+| AC-S7 | **Every scientific input** is traced to a citable source in `docs/research/constants-provenance.md` and the canonical v0 input manifest: `Ka`, `Kw`, Davies `A` and `b`, `γ_HA`, `a_w`, the indicator `Ka_in`, the solution **densities**, and the **molar masses** (`ρ` and `M` jointly set `waterMass → molality → activity → model pH`; both are scientific inputs, not implementation details). Source observations, reported precision/conditions, derived values, and explicit model approximations must remain distinguishable; missing source conditions must not be fabricated. | provenance review; machine-readable solver, indicator, and v0 material records plus frozen-world fixture |
 | AC-S15 | If `ρ` is treated as a scenario input, the scenario schema must **require** it — a missing density is a validation error, never a default | negative content test |
-| AC-S8 | Every thermodynamic calculation runs on the **molality** basis; no `MolPerLitre` value reaches scientific-core internals; **`m(H⁺)`, `c(H⁺)`, and `a(H⁺)` are produced by distinct code paths and none is derived from another by renaming** | static check + type test on the `packages/sci` public surface; `c(H⁺)` construction unit test |
+| AC-S8 | Every thermodynamic calculation runs on the **molality** basis; no `MolPerLitre` value reaches scientific-core internals; **`m(H⁺)`, `c(H⁺)`, and `a(H⁺)` are produced by distinct code paths and none is derived from another by renaming** | AST-based production-core boundary check rejects direct/aliased/namespace/dynamic-property molarity imports and generic `"mol/L"` construction outside `ScientificProjection`; public-surface type test; `c(H⁺)` construction unit test |
 | AC-S9 | `−lg c(H⁺)` (taught) and activity-based model pH are distinct types, both computed, neither assignable to the other | compile fixture + named reference cases REF-5/REF-6 |
 | AC-S10 | `detLog10` and `detExp10` meet their stated accuracy (≤1.5 ulp in domain) against arbitrary-precision references, and refuse outside their validated domain | `spikes/numeric-policy` promoted to a package test |
 | AC-S11 | The outer residual is strictly increasing in `m_H` across a sweep **including the domain boundary**, machine-checked | monotonicity sweep test |
 | AC-S12 | The scientific result and scientific documentation identify model pH as an activity-based, model-dependent quantity and never call it "the true/thermodynamic pH"; inspection copy is covered separately by AC-V10 | ScientificState/provenance contract and scientific-document review |
 | AC-S13 | A result computed beyond the proposed validation envelope carries `withinProposedAccuracyEnvelope: false`; visible presentation of that flag is covered separately by AC-V11 | domain-matrix test at `I_m` = 0.15 and 0.30 mol/kg |
-| AC-S14 | The proposed validation envelope is asserted, not assumed: the complete v0 strong-acid/strong-base and weak-acid/strong-base scenario families are swept from the canonical input manifest, and the measured global maximum `I_m` (0.1002 mol/kg) is checked against the envelope limit at test time | manifest-driven boundary test derived from `spikes/activity-equilibrium` §K |
+| AC-S14 | The proposed validation envelope is asserted, not assumed: the complete v0 strong-acid/strong-base and weak-acid/strong-base scenario families are swept through `Scenario → WorldCreated → canonical WorldState → SolveRequest → SolverAdapter` from the canonical input manifest. The measured global maximum is checked against the proposed envelope and separately frozen, digest-bound envelope reference (`0.09996461252716539 mol/kg`, strong-acid/strong-base, 0 equivalents) at test time. | manifest-driven production-path boundary test plus independent envelope reference |
 
 ### Runtime
 
