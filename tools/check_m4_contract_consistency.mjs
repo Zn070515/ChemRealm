@@ -53,8 +53,9 @@ mustNot(spec, /World and content `schemaVersion` is currently `2`/i, "SPEC does 
 must(spec, /AC-S12\s*\|[^\n]*activity-based[^\n]*\|[^\n]*ScientificState/i, "M4 AC-S12 owns the scientific model-pH distinction");
 must(spec, /AC-V10[\s\S]{0,260}inspection view/i, "M5 owns the model-pH inspection presentation criterion");
 must(spec, /AC-V11[\s\S]{0,260}withinProposedAccuracyEnvelope/i, "M5 owns visible accuracy-envelope qualification");
-must(spec, /\*\*Current revision:\*\* \*\*20 Candidate\*\*/, "SPEC records the rev20 semantic-evidence candidate");
-must(spec, /\| 20 \|[\s\S]{0,500}AST guard confines molarity/i, "SPEC amendment history records rev20");
+must(spec, /\*\*Current revision:\*\* \*\*20 Accepted\*\*/, "SPEC records the accepted rev20 semantic-evidence amendment");
+must(spec, /\| 20 \|[\s\S]{0,500}Owner, 2026-09-13/i, "SPEC amendment history records owner acceptance of rev20");
+mustNot(spec, /revisions 13–20 remain[\s\S]{0,80}pending owner review/i, "SPEC does not leave accepted M4 amendments pending");
 must(spec, /0\.09996461252716539 mol\/kg/, "SPEC records the current independently frozen envelope maximum");
 
 must(design, /Kw\s*=\s*a_H\s*·\s*a_OH/, "M4 design uses the accepted Kw convention");
@@ -90,6 +91,7 @@ must(evidence, /AC-V10[\s\S]{0,180}M5|M5[\s\S]{0,180}AC-V10/i, "M4 evidence poin
 must(evidence, /v0-scientific-inputs\.json/, "M4 evidence names the canonical v0 input manifest");
 must(evidence, /v0-envelope-reference\.json/, "M4 evidence names the independent envelope reference");
 must(evidence, /verify:scientific-quantities/, "M4 evidence names the scientific quantity boundary guard");
+must(evidence, /\*\*Status:\*\* \*\*S3 — Verified \/ Accepted\*\*/i, "M4 evidence records S3 acceptance");
 must(quantityBoundaryGuard, /import ts from "typescript"/, "scientific quantity guard is AST-based");
 must(quantityBoundaryGuard, /dynamic namespace access/, "scientific quantity guard tests dynamic-property bypasses");
 must(quantityBoundaryGuard, /generic dimension constructor/, "scientific quantity guard tests generic-dimension constructor bypasses");
@@ -100,6 +102,9 @@ must(quantityBoundaryGuard, /unitsOfDimension/, "scientific quantity guard names
 must(quantityBoundaryGuard, /parseQuantity/, "scientific quantity guard names the generic quantity parser");
 must(quantityBoundaryGuard, /FORBIDDEN_DIMENSION_LITERALS/, "scientific quantity guard checks dimension literals");
 must(quantityBoundaryGuard, /isNoSubstitutionTemplateLiteral/, "scientific quantity guard checks template-literal dimension values");
+must(adr0011, /\*\*Status:\*\* \*\*Accepted\*\*/i, "ADR-0011 is accepted");
+must(adr0012, /\*\*Status:\*\* \*\*Accepted\*\*/i, "ADR-0012 is accepted");
+must(plan, /\*\*Status:\*\* \*\*M0–M4 S3 Verified \/ Accepted; M5 authorized\*\*/i, "PLAN authorizes M5 after M4 S3");
 must(v0Inputs, /"schemaVersion": 2/, "v0 input manifest has the source-fidelity schema version");
 mustNot(v0Inputs, /expectedMaximum/, "v0 input manifest does not contain its own acceptance output");
 must(v0Inputs, /"sourceLiteral": "1 g\/cm³ \(25 °C\)"/, "NaOH source literal preserves reported precision");

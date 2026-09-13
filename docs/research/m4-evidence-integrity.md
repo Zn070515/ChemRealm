@@ -85,6 +85,7 @@ provenance, quantity-boundary, and manifest-driven sweep checks.
 
 这套防线关闭的是“验收对象、命名空间和报告解释漂移”。当前 M4 packet
 已经为 AC-S3、AC-S4、AC-S7、AC-S8、AC-S11、AC-S13、AC-S14 建立逐项
-本地证据，但本 note 不因此改变 M4 当前的 S2 状态：最终 CI attestation、
-PHREEQC 有界非等价处置和 owner acceptance 仍然需要。AC-V10 与 AC-V11
-的展示证据由 M5 负责。
+本地证据；M4 S3 的最终 CI attestation、PHREEQC 有界非等价处置和 owner
+acceptance 已记录在 `docs/evidence/M4.md`。本 note 仍只是 supporting
+research，不独立构成 milestone acceptance。AC-V10 与 AC-V11 的展示证据
+由 M5 负责。

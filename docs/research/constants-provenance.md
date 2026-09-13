@@ -1,6 +1,7 @@
 # M4 Scientific Constant Provenance
 
-Status: **implementation evidence in progress; not an S3 acceptance record**.
+Status: **Accepted M4 supporting evidence**; source records remain the
+authoritative provenance companion for the M4 S3 packet.
 
 This file is the source record for the fixed `acidbase-monoprotic-davies@1.0.0`
 identity and for scenario-frozen indicator constants. A number in the TypeScript
@@ -24,7 +25,7 @@ second catalog.
 | Parameter | Value used by M4 | Interpretation | Basis/condition | Source and precision | Status |
 |---|---:|---|---|---|---|
 | `Kw` | `1.0e-14` | thermodynamic autoprotolysis constant of water | activity/molality convention, 25 °C | [IUPAC Gold Book, autoprotolysis constant](https://goldbook.iupac.org/terms/view/A00532); source literal is `1.0e-14` at 25 °C | pinned at the recorded source precision |
-| `Ka_HOAc` | `1.7539e-5` | thermodynamic dissociation constant for CH₃COOH ⇌ H⁺ + CH₃COO⁻ | aqueous, 25 °C, pKa `4.7560`; converted as `10^-pKa` | [USGS acetic-acid data report](https://pubs.usgs.gov/of/1990/0408/report.pdf), table value `pKa = 4.7560` at 25 °C | pinned derived value; oracle alignment still required |
+| `Ka_HOAc` | `1.7539e-5` | thermodynamic dissociation constant for CH₃COOH ⇌ H⁺ + CH₃COO⁻ | aqueous, 25 °C, pKa `4.7560`; converted as `10^-pKa` | [USGS acetic-acid data report](https://pubs.usgs.gov/of/1990/0408/report.pdf), table value `pKa = 4.7560` at 25 °C | pinned derived value; bounded oracle comparison recorded, no equivalence claim |
 | `Davies A` | `0.509` | Davies coefficient on the reduced ionic-strength convention | water, 25 °C | Davies, C. W. (1962), *Ion Association*, Butterworths; value and convention are fixed by `SPEC-0001` and `ADR-0003` | model policy, source record retained |
 | `Davies b` | `0.3` | original Davies empirical extension coefficient | water, 25 °C | Davies, C. W. (1962), *Ion Association*, Butterworths; fixed by `SPEC-0001` and `ADR-0003` | model policy, source record retained |
 | `standardMolality` | `1 mol/kg` | standard molality / standard-state scale used to make reduced molality dimensionless | molality basis | `docs/science/quantity-ontology.md` and `ADR-0004`; a convention, not an empirical fit | pinned convention |
@@ -60,7 +61,7 @@ canonical positive `kaIn` and a per-datum `DataProvenance` record to
 `ScenarioSnapshot.indicators`; the genesis content hash then freezes the value.
 SolveRequest builders copy indicators only from that snapshot and never read a
 mutable catalog at replay time. The current v0 teaching contract names these
-candidate values:
+accepted v0 values:
 
 | Indicator | Selected `pKa_in` | Frozen `Ka_in` fixture value | Source/status |
 |---|---:|---:|---|

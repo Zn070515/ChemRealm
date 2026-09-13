@@ -1,10 +1,11 @@
 # ADR-0012: M4 domain and equilibrium-constant semantics
 
-- **Status:** **Proposed** — M4 Scientific Domain & Constant Semantics Closure; owner review pending
+- **Status:** **Accepted** — owner acceptance recorded 2026-09-13 as part of M4 S3
 - **Date:** 2026-09-12
 - **Deciders:** Project owner
 - **Related:** `SPEC-0001`, `ADR-0003`, `ADR-0007`, `ADR-0011`
-- **Blocks:** M4 S3 until the independent reference and oracle evidence is complete
+- **Accepted evidence:** `docs/evidence/M4.md` AC-S1–AC-S16 and the committed
+  baseline attestation for `bb6a477d` / CI `34747266204`
 
 ## Context
 
@@ -20,7 +21,7 @@ future non-unit water activity could silently change the meaning of `Kw`, and
 an ordinary numerical failure could be reported to a learner as an invalid
 chemical system.
 
-## Decision candidate
+## Decision
 
 For the v0 `acidbase-monoprotic-davies@1.0.0` model:
 
@@ -102,11 +103,11 @@ therefore a numerical failure, not an assertion about chemistry.
 - direct bracket/iteration failure fixtures return `NOT_CONVERGED` with a
   diagnostic code/reason, and no bracket-specific *status* is used to disguise
   a numerical failure as a domain refusal;
-- the M4 acceptance packet records this candidate decision separately from the
-  remaining full acceptance-matrix evidence; canonical REF-1…REF-10 and the
-  separately named ORACLE PHREEQC sweep are already exercised locally.
+- the M4 acceptance packet records this accepted decision alongside the full
+  acceptance matrix; canonical REF-1…REF-10 and the separately named ORACLE
+  PHREEQC sweep are exercised and included in the accepted evidence.
 
 ## Open questions
 
-Owner acceptance of this proposed scientific boundary amendment remains open
-until the M4 independent-reference and PHREEQC evidence packet is complete.
+None for M4. Future non-unit water-activity conventions or expanded numerical
+domains require a new versioned model identity and independent validation.

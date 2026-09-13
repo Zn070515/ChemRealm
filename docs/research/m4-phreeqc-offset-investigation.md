@@ -1,7 +1,7 @@
 # M4 PHREEQC Offset Investigation
 
-> **Status:** S2 scientific investigation; no causal attribution or M4 S3
-> acceptance claim.
+> **Status:** M4 S3 supporting disposition; causal attribution remains
+> unisolated and no model-equivalence claim is made.
 
 ## Question
 

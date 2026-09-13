@@ -8,7 +8,13 @@
 
 **Tech Stack:** TypeScript, Vitest, Zod contracts from `@chemrealm/schema`, Node 22, pnpm 11, Python 3.12, uv, pytest, PHREEQC CLI in test tooling only, and a committed PHREEQC/database manifest with checksums.
 
-**Spec:** `docs/superpowers/specs/2026-09-12-m4-acid-base-engine-design.md` (Design v2, approved); `docs/specs/SPEC-0001-world-foundation-acid-base-titration.md` revisions 13–20 candidates; `docs/adr/0003-scientific-solver-adapter-boundary.md`; `docs/adr/0007-deterministic-numeric-and-replay-policy.md`; `docs/adr/0011-scenario-scientific-input-freezing.md`; `docs/adr/0012-m4-domain-and-constant-semantics.md`.
+**Spec:** `docs/superpowers/specs/2026-09-12-m4-acid-base-engine-design.md` (Design v2, approved); `docs/specs/SPEC-0001-world-foundation-acid-base-titration.md` revisions 13–20 accepted by the owner on 2026-09-13; `docs/adr/0003-scientific-solver-adapter-boundary.md`; `docs/adr/0007-deterministic-numeric-and-replay-policy.md`; `docs/adr/0011-scenario-scientific-input-freezing.md`; `docs/adr/0012-m4-domain-and-constant-semantics.md`.
+
+**Completion status:** This implementation plan records the completed M4 work.
+M4 is **S3 — Verified / Accepted** at implementation baseline `bb6a477d` with
+hosted CI `34747266204`; M5 is authorized. The task-level stop conditions below
+are retained as the implementation record and are superseded by the canonical
+status in `docs/evidence/M4.md` and `docs/plans/PLAN-0001-world-foundation-acid-base-titration.md`.
 
 ## Global Constraints
 
@@ -32,7 +38,7 @@
 12. `ScientificState` contains molal species, activity coefficients, activities, ionic strength, activity-based model pH, indicator protonation ratios, validity, and solver provenance. It does not contain molarity or taught `−lg c(H⁺)`.
 13. `ScientificProjection` may use `ScientificState` plus `waterMass` and `liquidVolume` to produce molarity and taught `−lg c(H⁺)`. It remains in `packages/sci`, imports neither `packages/world` nor `packages/render`, and never changes the scientific state.
 14. PHREEQC is an independent test oracle, not a runtime dependency and not a replacement solver. TS/PHREEQC disagreement is reported and investigated; values are never averaged. Python `pyproject.toml` does not gain a fake package dependency for a CLI executable.
-15. A missing or unpinned PHREEQC executable/database is a failed oracle prerequisite, not a passing test. Local unit work may run without the executable, but no M4 S3 claim may be made until the CI oracle path is exercised.
+15. A missing or unpinned PHREEQC executable/database is a failed oracle prerequisite, not a passing test. Local unit work may run without the executable; the accepted M4 baseline exercised the pinned CI oracle path and records its bounded non-equivalence disposition in the evidence packet.
 16. No visual, ACE, privacy, World Runtime, or persisted-event feature is in scope. M4 may add scientific evidence and test fixtures only.
 
 ## Preflight Contract Answers

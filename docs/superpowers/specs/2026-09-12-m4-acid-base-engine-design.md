@@ -1,27 +1,30 @@
 # M4 Acid-Base Engine and Oracle Validation Design
 
-Status: Design v2 approved by the project owner on 2026-09-12 after
-self-review. Implementation and the local scientific acceptance matrix are
-complete; M4 S3 still requires final committed-baseline CI attestation,
-bounded PHREEQC disposition, and owner acceptance. The M4 Chemical Identity Closure
-is recorded as the revision-13 candidate in `SPEC-0001` and `ADR-0011`. The
-M4 Scientific Domain & Constant Semantics Closure is recorded as the
-revision-14 candidate and `ADR-0012`; both remain pending owner review.
-The scientific wire result diagnostics are revision-15 candidate material:
+Status: Design v2 and M4 implementation accepted by the project owner on
+2026-09-13 as part of M4 S3 after self-review, committed-baseline CI
+attestation, and bounded PHREEQC disposition. The M4 Chemical Identity Closure
+is recorded as the accepted revision-13 amendment in `SPEC-0001` and
+`ADR-0011`. The M4 Scientific Domain & Constant Semantics Closure is recorded
+as the accepted revision-14 amendment in `SPEC-0001` and `ADR-0012`.
+The scientific wire result diagnostics are the accepted revision-15 amendment:
 scientific schema v2 introduced an explicit numerical failure code and reason.
 The current scientific wire schema is v3; v3 additionally separates accepted
 input components from equilibrium species. The cross-system compatibility
-closure is revision-16 candidate material: actual scenario components
+closure is the accepted revision-16 amendment: actual scenario components
 participate in genesis resolution, authoring scenarios are shape version 3,
 resolved requirement temperatures are canonical Kelvin, and the Davies solver
 never evaluates activity outside its declared domain. Persisted world/event
-schema v3 is revision-17 candidate material: v2 temperature snapshots migrate
+schema v3 is the accepted revision-17 amendment: v2 temperature snapshots migrate
 to canonical Kelvin rather than being reinterpreted in place. Revision 18 is
-the M4/M5 acceptance-ownership candidate: M4 owns the scientific halves of
+the accepted M4/M5 acceptance-ownership amendment: M4 owns the scientific halves of
 model-pH naming and accuracy-envelope qualification, while M5 owns inspection
 copy and DOM presentation. Revision 19 records the World Runtime numeric
 clarification that Strategy A preserves paired transfer arithmetic in runtime
 and snapshots while quantizing the explicit replay-identity projection.
+Revision 20 records the accepted semantic-evidence closure: source-faithful v0
+inputs, a separate digest-bound envelope reference, production-path AC-S14
+coverage, and the AST-enforced molarity boundary. Revisions 13–20 are accepted
+by the owner as part of M4 S3.
 
 ## Context
 
@@ -29,16 +32,15 @@ M0–M3 establish the Scientific Reality Core boundary, typed quantities,
 defensive DTO parsing, exact solver identity, and the synchronous World Runtime
 boundary. The repository now has a deterministic production adapter for the
 v0 slice, independently derived REF fixtures, and a pinned PHREEQC comparison
-report. The remaining gate is interpretation and owner acceptance of that
-evidence, not an unimplemented solver path.
+report. The remaining work is downstream product integration, not an
+unimplemented M4 solver path.
 
 The first scientific slice is aqueous monoprotic acid/strong-base chemistry at
 25 °C with Davies activity correction. The activity-equilibrium spike proves
 that the intended formulation is a coupled solve, but its inner ionic-strength
 iteration is a damped fixed point and its Python implementation is not a
-production path. M4 must promote the formulation only after implementing a
-deterministic TypeScript solver and comparing it with independently authored
-references and a PHREEQC CLI oracle.
+production path. M4 promoted the formulation through a deterministic TypeScript
+solver, independently authored references, and a PHREEQC CLI oracle.
 
 ## Goal
 
@@ -446,21 +448,16 @@ rebuilds the derived genesis checksum after the snapshot changes. The authored
 Scenario shape is a separate version 3 contract with an independent migration
 namespace; removal of the ignored dissociation field has no automatic rewrite.
 
-The adapter is not registered as the default application solver until its
-reference and PHREEQC evidence pass. Before S3, any disagreement or missing
-oracle capability remains visible as a blocked evidence item rather than being
-relabelled as a successful validation.
+The adapter is eligible for the v0 application composition after the reference
+and PHREEQC evidence pass. The bounded disagreement remains visible in the
+evidence and is not relabelled as solver equivalence.
 
 ## Open questions
 
-The algorithm and ownership decisions are otherwise closed. Two external
-evidence details must be pinned during implementation before M4 S3:
-
-1. the exact citable source and precision for the acetic-acid Ka, densities,
-   molar masses, Kw, Davies constants, neutral-acid approximation, and
-   indicator constant; and
-2. the exact PHREEQC executable/database version and checksum used by the oracle
-   runner.
-
-These are evidence-pinning tasks, not permission to change the model or to
-replace PHREEQC with a weaker self-check.
+The M4 design and evidence-pinning questions are closed by the owner as part of
+M4 S3. The accepted sources, precision semantics, executable/database identity,
+and bounded PHREEQC non-equivalence disposition are recorded in
+`docs/evidence/M4.md` and the linked provenance/investigation documents.
+Controlled one-factor attribution experiments remain a post-M4 scientific
+follow-up; they are required before any claim of model equivalence or causal
+attribution, not before using the bounded v0 comparison.

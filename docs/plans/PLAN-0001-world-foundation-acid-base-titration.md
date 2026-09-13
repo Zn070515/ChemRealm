@@ -1,12 +1,15 @@
 # PLAN-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** **M0–M3 S3 Verified / Accepted; M4 S2 in progress** — the original plan was approved
-  on 2026-09-11 at `SPEC-0001` revision 6; the current contract is revisions 13–20 candidates.
+- **Status:** **M0–M4 S3 Verified / Accepted; M5 authorized** — the original plan was approved
+  on 2026-09-11 at `SPEC-0001` revision 6; the current contract is revisions 13–20 accepted
+  on 2026-09-13.
 - **Completed:** `M0 — Repository foundation` reached **S3 — Verified** on
   2026-09-11. Evidence: `docs/evidence/M0.md`, commits `1f3dfee`/`565a2e8`,
   CI run `34595967023` (13/13 gate steps on a clean `ubuntu-latest` checkout).
-- **Authorized:** `M4 — Acid-base reference engine and oracle validation` is
-  authorized. `M1 — Schema and units`
+- **Completed:** `M4 — Acid-base reference engine and oracle validation` is
+  **S3 — Verified / Accepted** at implementation baseline `bb6a477d` with
+  hosted CI `34747266204`; evidence is in `docs/evidence/M4.md`. **Authorized:**
+  `M5 — Observable state` is the next milestone. `M1 — Schema and units`
   is **S3 — Verified / Accepted** with evidence in `docs/evidence/M1.md`; `M2 —
   Event runtime and replay` is **S3 — Verified / Accepted** at baseline
   `778fadbd` with CI `34677042056` and evidence in `docs/evidence/M2.md`.
@@ -19,8 +22,8 @@
 - **Implements:** `docs/specs/SPEC-0001-world-foundation-acid-base-titration.md`
 - **Related ADRs:** 0001–0009 were accepted at the baseline; ADR-0001 and
   ADR-0003 M1 Final Closure and M3 owner decisions, ADR-0001's M1 amendment,
-  and ADR-0010 are accepted. ADR-0011 and ADR-0012 are proposed M4
-  amendments and remain pending owner review. Load-bearing here: 0004 (revised), 0007 (revised),
+  and ADR-0010 are accepted. ADR-0011 and ADR-0012 are accepted as part of M4
+  S3 on 2026-09-13. Load-bearing here: 0004 (revised), 0007 (revised),
   0008, 0009, and ADR-0010's
   M2 basis-boundary gate.
 - **Audience:** an agent that did not participate in the design. Nothing below
@@ -37,7 +40,7 @@
 > construction; every resolved snapshot datum is canonical, carries its own
 > `DataProvenance`, and is required structurally; export contracts are aligned
 > with the v1 export format, v3 persisted world schema, and v3 authored Scenario shape; persisted v2→v3 temperature migration is explicit; and v0 rejects mixed composition bases until the Scientific
-> Reality Core owns the joint resolver. M1 and M2 are S3 verified; M3 is
+> Reality Core owns the joint resolver. M1–M4 are S3 verified; M5 is
 > authorized.
 
 ## How to read this plan
@@ -576,9 +579,9 @@ requirements are unsatisfiable. M3 evidence is owner-verified at baseline
 
 ## M4 — Acid-base reference engine and oracle validation
 
-**Status:** **S2 — Implementation and bounded reference/oracle validation
-complete locally**; the M4 scientific matrix is exercised by reproducible
-fixtures, while owner review and final stage attestation remain before S3.
+**Status:** **S3 — Verified / Accepted** on 2026-09-13 at implementation
+baseline `bb6a477d` with hosted CI `34747266204`; the complete scientific
+matrix and bounded PHREEQC disposition are recorded in `docs/evidence/M4.md`.
 Presentation criteria AC-V10 and AC-V11 belong to M5 and are not M4
 prerequisites.
 **Target stage:** S3
@@ -619,7 +622,8 @@ docs/research/constants-provenance.md     pin every constant to a citable source
 the explicit `waterActivity: 1` convention, enter solver replay identity.
 Scenario-specific indicator constants are resolved with per-datum provenance into
 `ScenarioSnapshot.indicators` and enter genesis content identity under the
-revision-13 candidate and `ADR-0011`. The revision-14 candidate and `ADR-0012`
+accepted revision-13 amendment and `ADR-0011`. The accepted revision-14
+amendment and `ADR-0012`
 add the analytical total-solute gate, the pinned `Kw = a_H · a_OH`
 interpretation, and distinct numerical-failure tagging. Revision 15 records that
 scientific wire schema v2 introduced the `NOT_CONVERGED` diagnostic code/reason
@@ -725,7 +729,8 @@ starting; the concentration-only formulation they describe is superseded.**
 
 ### Stop condition (revised)
 
-AC-S1 through AC-S11 evaluated.
+AC-S1 through AC-S16 are evaluated for the M4 scientific scope. AC-V10 and
+AC-V11 are explicitly owned by M5 and are not M4 stop conditions.
 
 **Three specific conditions require stopping rather than proceeding:**
 

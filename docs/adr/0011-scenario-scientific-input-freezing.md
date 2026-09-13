@@ -1,10 +1,11 @@
 # ADR-0011: Freeze scenario-specific scientific inputs at genesis
 
-- **Status:** **Proposed** — M4 Chemical Identity Closure; owner review pending
+- **Status:** **Accepted** — owner acceptance recorded 2026-09-13 as part of M4 S3
 - **Date:** 2026-09-12
 - **Deciders:** Project owner
 - **Related:** `SPEC-0001`, `ADR-0002`, `ADR-0003`, `ADR-0004`, `ADR-0007`
-- **Blocks:** M4 S3 until the owner accepts the amendment and its evidence
+- **Accepted evidence:** `docs/evidence/M4.md` AC-S7, AC-S14, and the committed
+  baseline attestation for `bb6a477d` / CI `34747266204`
 
 ## Context
 
@@ -18,7 +19,7 @@ The v1 `ScenarioSnapshot` had no place for a resolved indicator definition, so
 the old contract could not prove that a later `SolveRequest` used the same
 scientific input as the original world.
 
-## Decision candidate
+## Decision
 
 Use the scenario-specific path:
 
@@ -105,5 +106,6 @@ scientific input was forgotten”. Empty selection is represented explicitly by
 
 ## Open questions
 
-Owner acceptance of this proposed amendment and the source/precision of each
-indicator constant remain open until the M4 evidence packet is complete.
+None for M4. Owner acceptance and the source/precision records for the v0
+indicator inputs are recorded in the M4 S3 evidence packet. Future indicators
+remain subject to the same datum-level provenance contract.

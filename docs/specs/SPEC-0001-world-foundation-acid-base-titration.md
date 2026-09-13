@@ -1,9 +1,9 @@
 # SPEC-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** **Accepted through revision 12** — revisions 13–20 are M4
-  implementation candidates pending owner review.
+- **Status:** **Accepted through revision 20** — M4 S3 owner acceptance recorded
+  on 2026-09-13 against the committed implementation baseline and CI attestation.
 - **Accepted baseline:** commit `8310c685`, `SPEC-0001` revision 6
-- **Current revision:** **20 Candidate** — M4 chemical identity closure adds
+- **Current revision:** **20 Accepted** — M4 chemical identity closure adds
   scenario-frozen indicator inputs, the explicit water-activity parameter, and
   common acetate-family semantics; revision 14 adds the total-solute domain and
   equilibrium-constant failure semantics; revision 15 makes numerical failure
@@ -17,9 +17,9 @@
   quantized. Revision 20 separates v0 scientific inputs from the independently
   frozen envelope result, records source-faithful datum precision/conditions,
   uses the production scenario-to-world-to-solver route for the complete AC-S14
-  sweep, and makes AC-S8's quantity boundary AST-enforced. Revisions 7–12 are
-  accepted amendments; revisions 13–20 remain
-  pending owner review.
+  sweep, and makes AC-S8's quantity boundary AST-enforced. Revisions 7–20 are
+  accepted amendments; revisions 13–20 were accepted by the owner on
+  2026-09-13.
   See "Amendments since acceptance" below.
 - **Acceptance scope:** the specification and its acceptance criteria. Deferred
   items listed under Open questions remain open and must be resolved before the
@@ -44,15 +44,15 @@
 | 10 | 2026-09-12 | M3 Contract Closure: World Runtime reduction/replay stays synchronous; async solving is composition-level orchestration; v0 binds one adapter, one model, and one exact `SolverConfig`; solute modes are discriminated; `MODEL_OUT_OF_DOMAIN` requires `nearestSupported`; incompatible requirements reject genesis before `WorldCreated`. | Owner, 2026-09-12 |
 | 11 | 2026-09-12 | M3 Identity & Defensive Boundary Closure: decoded/cast request data always returns tagged `INVALID_INPUT`; adapter/model/config identity is defensively copied and deeply frozen across construction and registry boundaries; every `OK` result must carry provenance exactly matching the adapter model and solver configuration. | Owner, 2026-09-12 |
 | 12 | 2026-09-12 | M4 pre-implementation contract closure: the proposed accuracy-envelope qualification is represented by the existing `ValidityStatus.withinProposedAccuracyEnvelope` boolean; no parallel `accuracyStatus` field is introduced. | Owner, 2026-09-12 |
-| 13 | 2026-09-12 | M4 Chemical Identity Closure candidate: NaOAc contributes to the common HA/A⁻ analytical family rather than a permanent acetate pool; scenario-specific indicator `Ka_in` is resolved with per-datum provenance into `ScenarioSnapshot.indicators` and frozen by the genesis content hash; the explicit v0 `waterActivity` parameter is recorded in solver identity; persisted world/event schema version 2 adds a forward migration from v1. | Pending owner review |
-| 14 | 2026-09-12 | M4 Scientific Domain & Constant Semantics Closure candidate: total analytical solute molality is gated at `1e-9..0.5 mol/kg` before solving; the pinned `Kw` means `a_H · a_OH` while `waterActivity: 1` records a unit convention without multiplying the equation; failed numerical brackets/iterations return `NOT_CONVERGED` rather than `MODEL_OUT_OF_DOMAIN`. | Pending owner review |
+| 13 | 2026-09-12 | M4 Chemical Identity Closure: NaOAc contributes to the common HA/A⁻ analytical family rather than a permanent acetate pool; scenario-specific indicator `Ka_in` is resolved with per-datum provenance into `ScenarioSnapshot.indicators` and frozen by the genesis content hash; the explicit v0 `waterActivity` parameter is recorded in solver identity; persisted world/event schema version 2 adds a forward migration from v1. | Owner, 2026-09-13 |
+| 14 | 2026-09-12 | M4 Scientific Domain & Constant Semantics Closure: total analytical solute molality is gated at `1e-9..0.5 mol/kg` before solving; the pinned `Kw` means `a_H · a_OH` while `waterActivity: 1` records a unit convention without multiplying the equation; failed numerical brackets/iterations return `NOT_CONVERGED` rather than `MODEL_OUT_OF_DOMAIN`. | Owner, 2026-09-13 |
 
-| 15 | 2026-09-12 | M4 numerical diagnostic closure candidate: scientific wire schema v2 introduced `NOT_CONVERGED.code` and non-empty `reason`; residual is optional and appears only when a finite meaningful residual was computed. AC-S4 assigns solvent/phase/required-species compatibility to requirements resolution before genesis and keeps solve-stage checks in the adapter. | Pending owner review |
-| 16 | 2026-09-12 | M4 cross-system compatibility closure candidate: genesis derives actual scenario input components from the resolved snapshot before solver resolution; authoring scenarios use shape version 3 and no longer carry an ignored dissociation flag; resolved requirement temperatures are canonical Kelvin; Davies activity evaluation never leaves its declared `I_m ≤ 0.5 mol/kg` domain, including boundary classification. | Pending owner review |
-| 17 | 2026-09-13 | Persisted schema migration closure candidate: persisted World/Event schema advances from v2 to v3; v2 requirement temperatures are explicitly canonicalized to Kelvin with a rebuilt genesis `contentHash`; persisted and authored Scenario migration namespaces are separate, and no automatic rewrite deletes the removed `fullyDissociated` authoring field. | Pending owner review |
-| 18 | 2026-09-13 | M4/M5 acceptance ownership closure candidate: AC-S12 is the scientific model-pH naming/provenance contract; AC-S13 is the scientific accuracy-envelope flag; inspection copy/DOM and visible qualification are separate M5 criteria AC-V10 and AC-V11. | Pending owner review |
-| 19 | 2026-09-13 | World Runtime numeric-semantics clarification candidate: Strategy A quantizes each conserved transfer delta once and applies it as a paired zero-sum update; post-transfer runtime values and exact snapshot caches are not independently rounded, while the explicit replay-identity projection remains quantized. Snapshots carry a separate exact serialized-state checksum so semantic replay equality cannot mask cache corruption. | Pending owner review |
-| 20 | 2026-09-13 | M4 semantic-evidence closure candidate: v0 provenance records distinguish source observations, derived values, and model approximations without inventing precision or pressure; the input manifest is separate from a digest-bound envelope reference; AC-S14 executes the complete family sweep through `Scenario → WorldCreated → WorldState → SolveRequest → SolverAdapter`; and an AST guard confines molarity construction to `ScientificProjection`. | Pending owner review |
+| 15 | 2026-09-12 | M4 numerical diagnostic closure: scientific wire schema v2 introduced `NOT_CONVERGED.code` and non-empty `reason`; residual is optional and appears only when a finite meaningful residual was computed. AC-S4 assigns solvent/phase/required-species compatibility to requirements resolution before genesis and keeps solve-stage checks in the adapter. | Owner, 2026-09-13 |
+| 16 | 2026-09-12 | M4 cross-system compatibility closure: genesis derives actual scenario input components from the resolved snapshot before solver resolution; authoring scenarios use shape version 3 and no longer carry an ignored dissociation flag; resolved requirement temperatures are canonical Kelvin; Davies activity evaluation never leaves its declared `I_m ≤ 0.5 mol/kg` domain, including boundary classification. | Owner, 2026-09-13 |
+| 17 | 2026-09-13 | Persisted schema migration closure: persisted World/Event schema advances from v2 to v3; v2 requirement temperatures are explicitly canonicalized to Kelvin with a rebuilt genesis `contentHash`; persisted and authored Scenario migration namespaces are separate, and no automatic rewrite deletes the removed `fullyDissociated` authoring field. | Owner, 2026-09-13 |
+| 18 | 2026-09-13 | M4/M5 acceptance ownership closure: AC-S12 is the scientific model-pH naming/provenance contract; AC-S13 is the scientific accuracy-envelope flag; inspection copy/DOM and visible qualification are separate M5 criteria AC-V10 and AC-V11. | Owner, 2026-09-13 |
+| 19 | 2026-09-13 | World Runtime numeric-semantics clarification: Strategy A quantizes each conserved transfer delta once and applies it as a paired zero-sum update; post-transfer runtime values and exact snapshot caches are not independently rounded, while the explicit replay-identity projection remains quantized. Snapshots carry a separate exact serialized-state checksum so semantic replay equality cannot mask cache corruption. | Owner, 2026-09-13 |
+| 20 | 2026-09-13 | M4 semantic-evidence closure: v0 provenance records distinguish source observations, derived values, and model approximations without inventing precision or pressure; the input manifest is separate from a digest-bound envelope reference; AC-S14 executes the complete family sweep through `Scenario → WorldCreated → WorldState → SolveRequest → SolverAdapter`; and an AST guard confines molarity construction to `ScientificProjection`. | Owner, 2026-09-13 |
 
 A revision bump is recorded here rather than only in the body because the header
 is what a reader checks before deciding whether the file they are reading is the
@@ -1889,17 +1889,20 @@ Binary and verifiable. Every criterion maps to an evidence method.
 
 Only questions that genuinely need the owner.
 
-1. **Which acetic acid `Ka` is authoritative?** It enters replay identity and
-   appears in the symbolic view, so it cannot be changed casually.
+1. ~~**Which acetic acid `Ka` is authoritative?**~~ **DECIDED by owner,
+   2026-09-13, as part of M4 S3.** The USGS source record with `pKa = 4.7560`
+   at 25 °C is authoritative; M4 stores the derived `Ka = 1.7539e-5` in the
+   frozen solver identity, records the logarithmic uncertainty propagation, and
+   does not claim more source precision than the pKa supports.
 
-   **The previous recommendation was itself an instance of fake precision**
+   **Historical note.** The previous recommendation was itself an instance of fake precision
    (round 4, finding P2-4). It proposed pinning `Ka = 1.8001e-5` as "derived
    from the commonly cited `1.8e-5`". A two-significant-figure source cannot
    yield five significant figures; the extra digits were invented. `GOAL.md`
    §5.2 prohibits precisely this.
 
    **The rule: a recorded constant carries exactly the precision of its
-   source.** Two acceptable resolutions, and the choice depends on what M4 finds:
+   source.** The accepted M4 resolution is the first option below:
 
    - Source states `pKa = 4.7447` → record that source and derive
      `Ka = 10^−4.7447`, documenting that the derivation is exact given the pKa.
@@ -1909,10 +1912,13 @@ Only questions that genuinely need the owner.
    Either way the textbook discrepancy (4.75 / 4.76) is shown in the symbolic
    view rather than hidden. **M4 pins the source; the value and its precision
    both come from it.**
-2. **Is ±0.02 pH an acceptable accuracy claim for the first release?** It is what
-   the activity model delivers against IUPAC buffers. A tighter claim would
-   require SIT or Pitzer activity models and a larger constant database, which is
-   beyond this slice.
+2. ~~**Is ±0.02 pH an acceptable accuracy claim for the first release?**~~
+   **DECIDED by owner, 2026-09-13, as part of M4 S3.** It is accepted as a
+   bounded cross-engine comparison envelope for v0, including the equivalence
+   region, with the recorded systematic-offset and explicit
+   `no-equivalence-claim` disposition. It is not a universal accuracy guarantee;
+   a tighter claim would require SIT or Pitzer activity models and a larger
+   constant database.
 3. **Micro view: honest composition, or engaging animation?** A particle view is
    more engaging and is what comparable products do, but it would imply
    dynamics and structure the equilibrium model does not contain. This is a
@@ -1957,22 +1963,23 @@ Only questions that genuinely need the owner.
    | 4 | One convention per view — a view never mixes the two | AC-V8 |
    | 5 | The choice is a **policy object**, swappable without touching `packages/sci` or the observable model | AC-V8 |
    | 6 | `−lg c(H⁺)` is never derived from a molality | AC-S8, REF-5 |
-6. **(New, from P1-2.)** Should `detLog10`/`detExp10` be implemented in
-   TypeScript as in the spike, or via a WASM/fdlibm build? The spike shows the
-   TypeScript route is feasible at 1.5 ulp; WASM would be faster but adds a build
-   artifact and a second toolchain. **Recommendation: TypeScript**, consistent
-   with keeping the v0 runtime free of extra native artifacts. Confirm at M4.
+6. ~~**(New, from P1-2.)** Should `detLog10`/`detExp10` be implemented in
+   TypeScript as in the spike, or via a WASM/fdlibm build?~~ **DECIDED by owner,
+   2026-09-13, as part of M4 S3:** use the TypeScript implementation for v0,
+   consistent with keeping the runtime free of extra native artifacts. A future
+   WASM/fdlibm implementation requires a new ADR and deterministic reference
+   comparison before substitution.
 7. **(New, from P2-3.)** `ADR-0008` lists five open decisions on persisted-world
    solver compatibility, including the version support window. These need owner
    input before M8, not now.
 
 ## What this spec does not claim
 
-This spec is at **S1 — Specified**. No code exists. No acceptance criterion has
-been evaluated. The `±0.02` tolerance is established by an isolated spike for the
-buffer and strong-acid regimes only, and **the weak-acid equivalence region
-remains independently unvalidated**. Nothing here should be read as a claim that
-acid-base titration works.
+This specification is **Accepted through revision 20**. M4 S3 evidence verifies
+the current acid-base scientific slice and its bounded PHREEQC comparison; the
+bounded offset is explicitly not a claim of model equivalence. Future M5–M10
+work remains subject to its own stage gates, and the open questions below are
+limited to milestones that have not yet been authorized or accepted.
 
 ### What changed in the 2026-09-11 revision
 
