@@ -165,6 +165,6 @@
     "ciHardGate": false,
     "ciRun": "local-run-not-hosted-ci",
     "executionEnvironment": "local oracle run; CI repeats the pinned installation and sweep",
-    "sourceCommit": "uncommitted-working-tree"
+    "sourceCommit": "b3ab71d3019ea3830903c97b51ceb657870a8d36"
   }
 }
