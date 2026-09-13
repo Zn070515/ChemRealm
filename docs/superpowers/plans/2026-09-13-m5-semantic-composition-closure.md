@@ -10,6 +10,10 @@
 
 **Spec:** `docs/specs/SPEC-0001-world-foundation-acid-base-titration.md` and M5 composition evidence remain authoritative. Any changed cross-boundary meaning must receive a candidate SPEC revision; subordinate M5 documents may refine but not redefine `AC-*` criteria.
 
+**Handoff:** Implemented in commit `fdfec91` with local and hosted verification;
+M4 remains S3 accepted, M5 remains S2, and M6 is not authorized. The remaining
+M5 visual/owner evidence is intentionally not claimed by this plan.
+
 ## Global Constraints
 
 - Work directly in the current shared working tree; do not create a worktree.
