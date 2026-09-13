@@ -11,14 +11,33 @@ import {
   composeProductionTitration,
   type ProductionTitrationComposition,
 } from "./composition.js";
+import { accuracyEnvelopeProbeScenario } from "./production-scenario.js";
 
 type PolicyId = "taught" | "scientific-model";
 
-let productionCompositionPromise: Promise<ProductionTitrationComposition> | undefined;
+const productionCompositionPromises = new Map<
+  "default" | "accuracy-probe",
+  Promise<ProductionTitrationComposition>
+>();
 
 function loadProductionComposition(): Promise<ProductionTitrationComposition> {
-  productionCompositionPromise ??= composeProductionTitration();
-  return productionCompositionPromise;
+  const isAccuracyProbe =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("fixture") === "accuracy-probe";
+  const fixture = isAccuracyProbe ? "accuracy-probe" : "default";
+  const existing = productionCompositionPromises.get(fixture);
+  if (existing !== undefined) return existing;
+
+  const promise = composeProductionTitration(
+    isAccuracyProbe
+      ? {
+          scenario: accuracyEnvelopeProbeScenario,
+          worldId: "m5-accuracy-envelope-probe-world",
+        }
+      : undefined,
+  );
+  productionCompositionPromises.set(fixture, promise);
+  return promise;
 }
 function textFromNode(node: RenderNode | undefined): string {
   const text = node?.data.text;
@@ -98,7 +117,7 @@ export function App({ schemaVersion }: { schemaVersion: number }): ReactElement 
             <p data-testid="ph-readout" data-policy={policyId}>{textFromNode(pHNode)}</p>
             {policyId === "scientific-model" ? (
               <p data-testid="model-ph-convention">
-                Model pH uses the IUPAC notional activity convention; activity model: Davies.
+                Model pH uses the IUPAC notional activity convention; activity model: {composition.observable.readouts.activityModel}.
               </p>
             ) : undefined}
             <button
@@ -150,6 +169,7 @@ export function App({ schemaVersion }: { schemaVersion: number }): ReactElement 
                 <li key={point.sourceStateHash} data-testid="curve-point">
                   <span data-testid="curve-sequence">{point.sequence}</span>
                   <span data-testid="curve-source">{point.sourceStateHash}</span>
+                  <span data-testid="curve-delivered-volume">{point.deliveredTitrantVolume.toFixed(3)} L</span>
                   <span>{point.taughtHydrogenIonExponent.value.toFixed(2)}</span>
                 </li>
               ))}

@@ -6,10 +6,13 @@ describe("symbolic observable", () => {
   it("presents supplied scientific expressions without rewriting them", () => {
     const source: ScientificExpression[] = [
       {
-        schemaVersion: 2,
+        schemaVersion: 3,
         id: "exact",
+        equationId: "charge-balance",
         label: "exact",
         expression: "supplied-exact-expression",
+        formula: "m(H+) = m(OH-)",
+        substitutions: [{ symbol: "m(H+)", value: 0.1, unit: "mol/kg" }],
         omittedTerms: [],
         producerId: "scientific-core",
         producerVersion: "1.0.0",
@@ -18,10 +21,13 @@ describe("symbolic observable", () => {
         sourceStateHash: "state-hash",
       },
       {
-        schemaVersion: 2,
+        schemaVersion: 3,
         id: "shortcut",
+        equationId: "acid-family-equilibrium",
         label: "shortcut",
         expression: "supplied-shortcut-expression",
+        formula: "Ka = a(H+) a(OAc-) / a(HOAc)",
+        substitutions: [{ symbol: "Ka", value: 1e-5, unit: "1" }],
         omittedTerms: ["activity correction"],
         producerId: "scientific-core",
         producerVersion: "1.0.0",
@@ -47,10 +53,13 @@ describe("symbolic observable", () => {
       presentSymbolicLines(
         [
           {
-            schemaVersion: 2,
+            schemaVersion: 3,
             id: "exact",
+            equationId: "charge-balance",
             label: "exact",
             expression: "supplied-expression",
+            formula: "m(H+) = m(OH-)",
+            substitutions: [{ symbol: "m(H+)", value: 0.1, unit: "mol/kg" }],
             omittedTerms: [],
             producerId: "scientific-core",
             producerVersion: "1.0.0",
@@ -73,10 +82,13 @@ describe("symbolic observable", () => {
       presentSymbolicLines(
         [
           {
-            schemaVersion: 2,
+            schemaVersion: 3,
             id: "exact",
+            equationId: "charge-balance",
             label: "exact",
             expression: "supplied-expression",
+            formula: "m(H+) = m(OH-)",
+            substitutions: [{ symbol: "m(H+)", value: 0.1, unit: "mol/kg" }],
             omittedTerms: [],
             producerId: "scientific-core",
             producerVersion: "1.0.0",

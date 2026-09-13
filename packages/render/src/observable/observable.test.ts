@@ -66,6 +66,26 @@ describe("observable model", () => {
     expect(model.burette?.containedVolume).toBe(0.04);
   });
 
+  it("re-presents the activity model supplied by the scientific state", () => {
+    const source = input();
+    const model = buildObservableModel({
+      ...source,
+      frame: {
+        ...source.frame,
+        scientificState: {
+          ...source.frame.scientificState,
+          provenance: {
+            ...source.frame.scientificState.provenance,
+            activityModel: "Pitzer",
+          },
+        },
+      },
+    });
+
+    expect(model.readouts.activityModel).toBe("Pitzer");
+    expect(model.readouts.modelPh).toContain("model pH (Pitzer)");
+  });
+
   it("is deterministic, frozen, and does not mutate its input", () => {
     const source = input();
     const first = buildObservableModel(source);

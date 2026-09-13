@@ -2,7 +2,7 @@
 
 - **Status:** **M0–M4 S3 Verified / Accepted; M5 S2 production composition locally verified** — the original plan was approved
   on 2026-09-11 at `SPEC-0001` revision 6; revisions 13–20 were accepted
-  on 2026-09-13 and revision 24 is a candidate amendment for the current M5
+  on 2026-09-13 and revision 25 is a candidate amendment for the current M5
   replay/provenance closure.
 - **Completed:** `M0 — Repository foundation` reached **S3 — Verified** on
   2026-09-11. Evidence: `docs/evidence/M0.md`, commits `1f3dfee`/`565a2e8`,
@@ -770,7 +770,7 @@ closure and a deterministic DOM composition slice are locally verified, while
 M5 S3 evidence remains open. The governing scopes are
 `docs/superpowers/specs/2026-09-13-m5-contract-remediation.md` and
 `docs/superpowers/specs/2026-09-13-m5-production-composition.md`, subordinate to
-`SPEC-0001` revision 24 Candidate and not overrides of it.
+`SPEC-0001` revision 25 Candidate and not overrides of it.
 **Addresses:** ADR-0006, ADR-0007; `SPEC-0001` AC-V2..AC-V4, AC-V6, AC-V8, AC-V9, AC-V10, AC-V11
 
 `AC-V1` (`packages/render` has no import path to `packages/sci`) is **not**

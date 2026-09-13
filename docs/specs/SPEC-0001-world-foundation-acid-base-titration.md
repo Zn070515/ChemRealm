@@ -3,12 +3,17 @@
 - **Status:** **Accepted through revision 20** — M4 S3 owner acceptance recorded
   on 2026-09-13 against the committed implementation baseline and CI attestation.
 - **Accepted baseline:** commit `8310c685`, `SPEC-0001` revision 6
-- **Current revision:** **24 Candidate** — M5 replay/provenance closure freezes
+- **Current revision:** **25 Candidate** — M5 semantic composition closure
+  makes Scientific Core expressions equation-bearing with current substitutions,
+  moves model-specific request construction into the Scientific Core, and
+  defines curve x-values as cumulative committed titrant delivery rather than
+  final vessel volume. Revision 24's M5 replay/provenance closure freezes
   a serializable, content-addressed `V(h)`/`h(V)` volume profile in every
   persisted genesis vessel; binds `ScientificFrame` to its event sequence,
   liquid volume, and volume-profile hash; removes the duplicate Observable
   liquid-volume input; makes the hydrogen-ion policy discriminated; and
-  version-2 scientific expressions identify their Scientific Core producer.
+  version-3 scientific expressions identify their Scientific Core producer and
+  carry equation/formula/substitution records.
   Revision 21's M5 contract remediation removes the
   unused `ScientificProjection` water-mass input; restores AC-V4's complete
   `V(h)`/`h(V)` inverse contract; distinguishes burette contained volume,
@@ -77,6 +82,7 @@
 
 | 23 | 2026-09-13 | M5 executable-profile boundary closure: Observable receives only the replay-frozen serializable `VolumeProfileSnapshot` whose hash matches `ScientificFrame.physical.volumeProfileHash`; it reconstructs the runtime interpolation adapter internally and no longer accepts caller-supplied `heightAtVolume`/`volumeAtHeight` functions. This prevents a self-reported profile hash from authorizing executable geometry that was not derived from genesis truth. | Candidate — owner review pending |
 | 24 | 2026-09-13 | M5 profile content-address closure: the canonical schema owns the shared canonical JSON/SHA-256 helper; `VolumeProfileSnapshot` parsing recomputes and verifies `profileHash` over the hash-excluded payload before render or world code constructs an executable profile adapter. World and composition callers use the same helper, and tampered-but-structurally-valid profile payloads are rejected. | Candidate — owner review pending |
+| 25 | 2026-09-13 | M5 semantic composition closure: Scientific Core expressions are equation-bearing records with current numerical substitutions and explicit v0 omissions; acid-base component/mode/constant selection is owned by the Scientific Core request builder rather than web composition; curve x-values are cumulative committed source→target titrant delivery with an explicit initial zero point; burette derivation filters the same committed transfer relation; and the deterministic composition DOM exposes model/accuracy metadata from ObservableModel. | Candidate — owner review pending |
 
 A revision bump is recorded here rather than only in the body because the header
 is what a reader checks before deciding whether the file they are reading is the
@@ -1455,10 +1461,10 @@ dependency rule.
 | Readout text and precision policy | ObservableModel — pure string/precision presentation |
 | DOM/Pixi text drawing | Renderer — actual visual drawing only |
 | Burette state and reading | Observable model (derived: scale reading `initialScaleReading + Σ delivered`; contained volume is separate) |
-| Curve points | ScientificProjection supplies values; Observable model gives geometry |
+| Curve points | Scientific Core/ScientificProjection supplies values at committed prefixes; Observable model gives geometry and preserves cumulative delivered-titrant x-values |
 | Axes, gridlines, labels, tooltips | Renderer |
 | Species composition (micro view) | Observable model — **re-presents** scientific values |
-| Equilibrium expressions (symbolic view) | Scientific Core supplies schema-owned, identity-bearing records; Observable model **re-presents** them and computes nothing |
+| Equilibrium expressions (symbolic view) | Scientific Core supplies schema-owned, equation-bearing, identity-bearing records with current substitutions; Observable model **re-presents** them and computes nothing |
 | Bubbles / precipitate / flame | **Not in v0**; presence will be Scientific Core when added |
 
 **The observable layer's rule:** it may re-present a scientific value — list,

@@ -9,7 +9,7 @@ describe("pH-volume curve observable", () => {
       sequence: 0,
       modelId: "acidbase-monoprotic-davies",
       modelVersion: "1.0.0",
-      volume: litre(0),
+      deliveredTitrantVolume: litre(0),
       taughtHydrogenIonExponent: taughtHydrogenIonExponent(1),
       modelPh: ph(1.1),
     },
@@ -18,7 +18,7 @@ describe("pH-volume curve observable", () => {
       sequence: 1,
       modelId: "acidbase-monoprotic-davies",
       modelVersion: "1.0.0",
-      volume: litre(0.025),
+      deliveredTitrantVolume: litre(0.025),
       taughtHydrogenIonExponent: taughtHydrogenIonExponent(2),
       modelPh: ph(2.1),
     },
@@ -26,7 +26,7 @@ describe("pH-volume curve observable", () => {
 
   it("preserves the ordered values supplied by scientific projection", () => {
     const curve = buildCurve(frames);
-    expect(curve.map((point) => point.volume)).toEqual([0, 0.025]);
+    expect(curve.map((point) => point.deliveredTitrantVolume)).toEqual([0, 0.025]);
     expect(curve.map((point) => point.sourceStateHash)).toEqual(["world-state-42", "world-state-43"]);
     expect(curve.map((point) => point.sequence)).toEqual([0, 1]);
     expect(curve.map((point) => point.taughtHydrogenIonExponent.value)).toEqual([1, 2]);
@@ -59,6 +59,6 @@ describe("pH-volume curve observable", () => {
     expect(Object.isFrozen(curve[0])).toBe(true);
     expect(Object.isFrozen(curve[0]?.modelPh)).toBe(true);
     expect(curve[0]?.modelPh).not.toBe(frames[0]?.modelPh);
-    expect(frames[0]?.volume).toBe(0);
+    expect(frames[0]?.deliveredTitrantVolume).toBe(0);
   });
 });

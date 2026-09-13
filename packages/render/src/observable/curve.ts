@@ -11,7 +11,8 @@ export interface CurveFrame {
   readonly sequence: number;
   readonly modelId: string;
   readonly modelVersion: string;
-  readonly volume: Litre;
+  /** Cumulative titrant delivered from the committed burette, not flask volume. */
+  readonly deliveredTitrantVolume: Litre;
   readonly taughtHydrogenIonExponent: TeachingHydrogenIonExponent;
   readonly modelPh: Ph;
 }
@@ -50,8 +51,10 @@ export function buildCurve(frames: readonly CurveFrame[]): readonly CurvePoint[]
       throw new RangeError("curve frames must share one solver identity");
     }
     previousSequence = frame.sequence;
-    finite(frame.volume, "curve volume");
-    if (frame.volume < 0) throw new RangeError("curve volume cannot be negative");
+    finite(frame.deliveredTitrantVolume, "curve delivered titrant volume");
+    if (frame.deliveredTitrantVolume < 0) {
+      throw new RangeError("curve delivered titrant volume cannot be negative");
+    }
     finite(frame.taughtHydrogenIonExponent.value, "taught hydrogen exponent");
     finite(frame.modelPh.value, "model pH");
     return Object.freeze({
@@ -59,7 +62,7 @@ export function buildCurve(frames: readonly CurveFrame[]): readonly CurvePoint[]
       sequence: frame.sequence,
       modelId: frame.modelId,
       modelVersion: frame.modelVersion,
-      volume: frame.volume,
+      deliveredTitrantVolume: frame.deliveredTitrantVolume,
       taughtHydrogenIonExponent: Object.freeze(
         taughtHydrogenIonExponent(frame.taughtHydrogenIonExponent.value),
       ),

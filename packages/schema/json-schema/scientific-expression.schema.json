@@ -2,7 +2,20 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
   "properties": {
+    "equationId": {
+      "enum": [
+        "charge-balance",
+        "water-autoprotolysis",
+        "acid-family-equilibrium",
+        "acid-family-balance"
+      ],
+      "type": "string"
+    },
     "expression": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "formula": {
       "minLength": 1,
       "type": "string"
     },
@@ -40,19 +53,48 @@
       "type": "string"
     },
     "schemaVersion": {
-      "const": 2,
+      "const": 3,
       "type": "number"
     },
     "sourceStateHash": {
       "minLength": 1,
       "type": "string"
+    },
+    "substitutions": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "symbol": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "unit": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "value": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "symbol",
+          "value",
+          "unit"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
     }
   },
   "required": [
     "schemaVersion",
     "id",
+    "equationId",
     "label",
     "expression",
+    "formula",
+    "substitutions",
     "omittedTerms",
     "producerId",
     "producerVersion",

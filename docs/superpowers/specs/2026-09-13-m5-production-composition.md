@@ -62,10 +62,12 @@ choose chemistry.
 ## Scientific design
 
 The fixture uses the existing v0 acid-base Davies adapter at 25 °C. Solute
-mode and the HOAc constant are selected from the model-owned catalog and fixed
-model identity. Indicator constants are copied from the resolved genesis
-snapshot. A non-OK solver result is surfaced as a composition error; no
-fallback number is substituted.
+mode and the HOAc constant are selected by the model-owned Scientific Core
+request builder and fixed model identity. Indicator constants are copied from
+the resolved genesis snapshot. A non-OK solver result is surfaced as a
+composition error; no fallback number is substituted. The optional accuracy
+probe changes only the authored concentration fixture and remains inside the
+solver domain while deliberately outside the proposed accuracy envelope.
 
 ## World/event design
 
@@ -78,10 +80,12 @@ ScientificFrame. No new persisted schema or event type is introduced.
 
 ## Representation design
 
-The composition creates one frame per committed target prefix. The final frame
-owns the target volume and replay-frozen profile hash. Curve points are derived
-from the ordered frame sequence, expressions are produced by
-`createScientificExpressions`, and `buildObservableModel` is the only render
+The composition creates one frame for the initial target prefix and one frame
+per relevant committed source→target titrant transfer. The curve x-axis is
+cumulative `deliveredTitrantVolume` starting at zero; it is not the target
+flask's final liquid volume. Acid-base request construction and expressions are
+produced by Scientific Core (`buildAcidBaseSolveRequest` and
+`createScientificExpressions`), and `buildObservableModel` is the only render
 observable composition entry. The DOM adapter consumes generic RenderState and
 approved observable outputs. It is an inspection/evidence surface, not the M6
 visual renderer.
@@ -100,7 +104,13 @@ browser network gates remain applicable.
 ## API/schema changes
 
 `apps/web` adds the composition-root function
-`composeProductionTitration(): Promise<ProductionTitrationComposition>`.
+`composeProductionTitration(options?): Promise<ProductionTitrationComposition>`.
+The web root supplies canonical world contents and frozen indicator inputs to
+the Sci-owned acid-base request builder; it does not own component modes or
+equilibrium constants.
+The schema-owned ScientificExpression wire contract is version 3 and requires
+an equation id, formula, and current substitutions in addition to producer and
+source identity.
 `@chemrealm/render`'s `BuretteInput` and `BuretteState` carry the committed
 `sourceStateHash` and `sequence` so the Observable boundary can reject a
 delivery prefix from another frame. No persisted World/Event schema changes.
@@ -136,7 +146,7 @@ delivery prefix from another frame. No persisted World/Event schema changes.
 | Shared identity | final frame, projection, symbolic output, curve/burette inputs, and ObservableModel share the committed source identity; burette also matches sequence | composition and render tests |
 | AC-V6 | built page displays pH at two decimals and the burette scale in mL | Playwright DOM assertion |
 | AC-V8 | switching policy changes the one selected convention and never emits two pH readouts | Playwright DOM assertion |
-| M5-FRAME / M5-SYMBOLIC / M5-CURVE | production composition uses the Scientific Core frame/expression producer and committed frame sequence | composition tests + browser markers |
+| M5-FRAME / M5-SYMBOLIC / M5-CURVE | production composition uses the Scientific Core frame/expression producer, committed frame sequence, and cumulative titrant-delivery x-axis | composition tests + browser markers |
 | Privacy | no third-party request is introduced | existing network-boundary browser test |
 | M6 boundary | no Pixi/final-art/gesture/animation/persistence change is required | diff and dependency review |
 

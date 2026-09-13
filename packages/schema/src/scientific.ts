@@ -84,7 +84,27 @@ import {
 export const SCIENTIFIC_SCHEMA_VERSION = 3;
 
 /** Standalone schema version for model-generated symbolic expressions. */
-export const SCIENTIFIC_EXPRESSION_SCHEMA_VERSION = 2;
+export const SCIENTIFIC_EXPRESSION_SCHEMA_VERSION = 3;
+
+export const ScientificExpressionEquationIdSchema = z.enum([
+  "charge-balance",
+  "water-autoprotolysis",
+  "acid-family-equilibrium",
+  "acid-family-balance",
+]);
+export type ScientificExpressionEquationId = z.infer<
+  typeof ScientificExpressionEquationIdSchema
+>;
+
+/** A current value substituted into a Scientific Core-owned equation. */
+export const ScientificExpressionSubstitutionSchema = z.strictObject({
+  symbol: z.string().min(1),
+  value: z.number().finite(),
+  unit: z.string().min(1),
+});
+export type ScientificExpressionSubstitution = z.infer<
+  typeof ScientificExpressionSubstitutionSchema
+>;
 
 /**
  * A symbolic expression is a scientific output, not free-form render copy.
@@ -94,8 +114,11 @@ export const SCIENTIFIC_EXPRESSION_SCHEMA_VERSION = 2;
 export const ScientificExpressionSchema = z.strictObject({
   schemaVersion: z.literal(SCIENTIFIC_EXPRESSION_SCHEMA_VERSION),
   id: z.string().min(1),
+  equationId: ScientificExpressionEquationIdSchema,
   label: z.enum(["exact", "shortcut"]),
   expression: z.string().min(1),
+  formula: z.string().min(1),
+  substitutions: z.array(ScientificExpressionSubstitutionSchema).min(1),
   omittedTerms: z.array(z.string()),
   producerId: z.literal("scientific-core"),
   producerVersion: z.string().min(1),

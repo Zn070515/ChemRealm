@@ -14,16 +14,24 @@ import {
 import { createScientificExpressions } from "./expressions.js";
 import { projectScientificFrame } from "./frame.js";
 
-function frame() {
+function frame(withAcidFamily = false) {
+  const species = (symbol: string, value: number, gamma = 1) => ({
+    symbol,
+    reducedMolality: reducedMolality(value),
+    molality: molPerKilogram(value),
+    amount: mol(value * 0.25),
+    activityCoefficient: activityCoefficient(gamma),
+    activity: activity(value * gamma),
+  });
   const state: ScientificState = {
-    species: [{
-      symbol: "H+",
-      reducedMolality: reducedMolality(0.1),
-      molality: molPerKilogram(0.1),
-      amount: mol(0.05),
-      activityCoefficient: activityCoefficient(0.8),
-      activity: activity(0.08),
-    }],
+    species: [
+      species("H+", 0.1, 0.8),
+      species("OH-", 1e-13, 0.8),
+      species("HOAc", withAcidFamily ? 0.06 : 0),
+      species("OAc-", withAcidFamily ? 0.04 : 0, 0.8),
+      species("Na+", 0.02, 0.8),
+      species("Cl-", 0.12, 0.8),
+    ],
     ionicStrengthMolal: ionicStrengthMolal(0.2),
     ionicStrengthReduced: reducedIonicStrength(0.2),
     modelPh: ph(1.1),
@@ -34,7 +42,7 @@ function frame() {
       modelVersion: "1.0.0",
       activityModel: "Davies",
       category: "calculated",
-      parameters: { Kw: 1e-14 },
+      parameters: { Kw: 1e-14, Ka_HOAc: 1.7539e-5 },
     },
   };
   return projectScientificFrame(state, {
@@ -48,15 +56,49 @@ function frame() {
 describe("Scientific Core expression producer", () => {
   it("creates identity-bearing expressions from a bound frame", () => {
     const expressions = createScientificExpressions(frame());
-    expect(expressions).toHaveLength(1);
+    expect(expressions).toHaveLength(2);
     expect(expressions[0]).toMatchObject({
       producerId: "scientific-core",
-      producerVersion: "1.0.0",
+      producerVersion: "2.0.0",
       label: "exact",
       sourceStateHash: "world-state-44",
       modelId: "acidbase-monoprotic-davies",
+      equationId: "charge-balance",
     });
+    expect(expressions[0]?.formula).toContain("m(H+)");
+    expect(expressions[0]?.expression).toContain("0.1");
+    expect(expressions[0]?.substitutions).toEqual(
+      expect.arrayContaining([{ symbol: "m(H+)", value: 0.1, unit: "mol/kg" }]),
+    );
+    expect(expressions[1]?.equationId).toBe("water-autoprotolysis");
+    expect(expressions[1]?.omittedTerms).toContain(
+      "non-unit water activity is not modeled in the v0 unit-water-activity convention",
+    );
     expect(Object.isFrozen(expressions)).toBe(true);
     expect(Object.isFrozen(expressions[0])).toBe(true);
+    expect(Object.isFrozen(expressions[0]?.substitutions)).toBe(true);
+    expect(Object.isFrozen(expressions[1]?.omittedTerms)).toBe(true);
+    expect(() => {
+      (expressions[0]?.substitutions as Array<unknown>).push({});
+    }).toThrow();
+  });
+
+  it("emits acid-family equilibrium and balance equations when that family is present", () => {
+    const expressions = createScientificExpressions(frame(true));
+
+    expect(expressions.map((entry) => entry.equationId)).toEqual([
+      "charge-balance",
+      "water-autoprotolysis",
+      "acid-family-equilibrium",
+      "acid-family-balance",
+    ]);
+    expect(expressions[2]?.formula).toBe("Ka_HOAc = a(H+) · a(OAc-) / a(HOAc)");
+    expect(expressions[2]?.substitutions).toEqual(
+      expect.arrayContaining([
+        { symbol: "Ka_HOAc", value: 1.7539e-5, unit: "1" },
+        { symbol: "a(OAc-)", value: 0.032, unit: "1" },
+      ]),
+    );
+    expect(expressions[3]?.expression).toContain("m_A,total");
   });
 });

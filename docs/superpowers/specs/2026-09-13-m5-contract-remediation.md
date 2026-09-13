@@ -2,7 +2,7 @@
 
 **Status:** S1 specified; owner-approved remediation direction, 2026-09-13
 
-**Canonical amendment:** `SPEC-0001` revision 24 Candidate. This document
+**Canonical amendment:** `SPEC-0001` revision 25 Candidate. This document
 does not override `SPEC-0001`; it describes the implementation needed to bring
 the M5 slice back into alignment with that amendment.
 
@@ -95,9 +95,11 @@ allowed only in this declared palette catalogue; render components may not
 embed ad-hoc chemical colours. The ratio remains the only scientific numeric
 input to interpolation.
 
-Scientific expressions are schema-owned records with expression classification,
-model identity, and source-state identity. Render may copy and freeze them but
-may not author an `exact` expression or rewrite an expression.
+Scientific expressions are schema-owned, equation-bearing records with current
+numeric substitutions, expression classification, model identity, and
+source-state identity. Render may copy and freeze them but may not author an
+`exact` expression or rewrite an expression. The Scientific Core owns the
+acid-base component-to-request mapping.
 
 ## World/event design
 

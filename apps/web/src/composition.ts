@@ -1,16 +1,11 @@
 import {
   COMMAND_SCHEMA_VERSION,
-  kilogram,
-  kelvin,
   litre,
-  mol,
-  thermodynamicConstant,
-  type SolveRequest,
+  type Scenario,
 } from "@chemrealm/schema";
 import {
-  ACID_BASE_COMPONENT_CATALOG,
-  DEFAULT_ACID_BASE_CONSTANTS,
   SolverRegistry,
+  buildAcidBaseSolveRequest,
   createAcidBaseAdapter,
   createScientificExpressions,
   projectScientificFrame,
@@ -19,6 +14,7 @@ import {
 } from "@chemrealm/sci";
 import {
   buildObservableModel,
+  deriveBuretteState,
   toRenderState,
   type BuretteInput,
   type ObservableModel,
@@ -52,6 +48,11 @@ export interface ProductionTitrationComposition {
   readonly renderState: RenderState;
 }
 
+export interface ProductionTitrationOptions {
+  readonly scenario?: Scenario;
+  readonly worldId?: string;
+}
+
 function targetContents(state: WorldState) {
   const contents = state.canonical.byVessel[TARGET_VESSEL_ID];
   if (contents === undefined) throw new Error("production composition: target contents are missing");
@@ -66,38 +67,15 @@ function targetProfile(state: WorldState) {
   return vessel.volumeProfile;
 }
 
-function solveRequestFromState(state: WorldState): SolveRequest {
+function solveRequestFromState(state: WorldState) {
   const contents = targetContents(state);
-  const solutes = contents.componentAmounts.map((component) => {
-    const entry = ACID_BASE_COMPONENT_CATALOG.get(component.componentId as never);
-    if (entry === undefined) {
-      throw new Error(`production composition: unsupported component ${component.componentId}`);
-    }
-    if (entry.mode === "monoprotic-equilibrium") {
-      return {
-        soluteId: component.componentId,
-        amount: mol(component.amount),
-        mode: entry.mode,
-        ka: thermodynamicConstant(DEFAULT_ACID_BASE_CONSTANTS.Ka_HOAc.value),
-      };
-    }
-    return {
-      soluteId: component.componentId,
-      amount: mol(component.amount),
-      mode: entry.mode,
-    };
-  });
-
-  return {
-    waterMass: kilogram(contents.waterMass),
+  return buildAcidBaseSolveRequest({
+    waterMass: contents.waterMass,
     liquidVolume: litre(contents.liquidVolume),
-    temperature: kelvin(state.scenarioSnapshot.modelRequirements.temperature),
-    solutes,
-    indicators: state.scenarioSnapshot.indicators.map((indicator) => ({
-      indicatorId: indicator.indicatorId,
-      kaIn: thermodynamicConstant(indicator.kaIn.value),
-    })),
-  };
+    temperature: state.scenarioSnapshot.modelRequirements.temperature,
+    componentAmounts: contents.componentAmounts,
+    indicators: state.scenarioSnapshot.indicators,
+  });
 }
 
 function exactAdapterForState(
@@ -111,17 +89,61 @@ function exactAdapterForState(
   return lookup.adapter;
 }
 
-function statesAtCommittedTargetPrefixes(eventLog: EventLog): readonly WorldState[] {
-  const states: WorldState[] = [];
-  for (let length = 1; length <= eventLog.length; length += 1) {
-    const prefix = eventLog.slice(0, length);
-    const state = replay(prefix).state;
-    const contents = state.canonical.byVessel[TARGET_VESSEL_ID];
-    if (contents !== undefined && contents.liquidVolume > 0) {
-      states.push(state);
-    }
+type TransferCommittedEvent = Extract<
+  EventLog[number],
+  { type: "TransferCommitted" }
+>;
+
+/** Only the committed source→target titrant facts define the curve x-axis. */
+export function selectCommittedTitrantTransfers(
+  eventLog: EventLog,
+): readonly TransferCommittedEvent[] {
+  return eventLog.filter(
+    (event): event is TransferCommittedEvent =>
+      event.type === "TransferCommitted" &&
+      event.payload.fromVesselId === SOURCE_VESSEL_ID &&
+      event.payload.toVesselId === TARGET_VESSEL_ID,
+  );
+}
+
+interface TitrationPrefixState {
+  readonly state: WorldState;
+  readonly deliveredTitrantVolume: ReturnType<typeof litre>;
+}
+
+export function statesAtCommittedTargetPrefixes(
+  eventLog: EventLog,
+): readonly TitrationPrefixState[] {
+  const relevant = selectCommittedTitrantTransfers(eventLog);
+  if (relevant.length === 0) {
+    throw new Error("production composition: no committed titrant transfers found");
   }
-  return states;
+  const firstIndex = eventLog.findIndex((event) => event === relevant[0]);
+  if (firstIndex < 1) {
+    throw new Error("production composition: titrant transfer precedes genesis");
+  }
+
+  const initialState = replay(eventLog.slice(0, firstIndex)).state;
+  const initialContents = initialState.canonical.byVessel[TARGET_VESSEL_ID];
+  if (initialContents === undefined || initialContents.liquidVolume <= 0) {
+    throw new Error("production composition: target initial state is missing");
+  }
+
+  const states: TitrationPrefixState[] = [{
+    state: initialState,
+    deliveredTitrantVolume: litre(0),
+  }];
+  let delivered = 0;
+  for (const event of relevant) {
+    const eventIndex = eventLog.findIndex((candidate) => candidate === event);
+    if (eventIndex < 0) throw new Error("production composition: transfer index is missing");
+    delivered += event.payload.volume.value;
+    states.push({
+      state: replay(eventLog.slice(0, eventIndex + 1)).state,
+      deliveredTitrantVolume: litre(delivered),
+    });
+  }
+  return Object.freeze(states);
 }
 
 async function frameForState(
@@ -149,22 +171,29 @@ function buretteInput(
   if (sourceContents === undefined) {
     throw new Error("production composition: source contents are missing");
   }
-  const initialCharge = eventLog.find(
+  const initialCharges = eventLog.filter(
     (event) => event.type === "MaterialCharged" && event.payload.vesselId === SOURCE_VESSEL_ID,
   );
-  if (initialCharge?.type !== "MaterialCharged") {
-    throw new Error("production composition: source initial volume is missing");
+  if (initialCharges.length !== 1 || initialCharges[0]?.type !== "MaterialCharged") {
+    throw new Error("production composition: source must have exactly one initial charge");
   }
-  const deliveredVolumes = eventLog
-    .filter((event) => event.type === "TransferCommitted")
+  const deliveredVolumes = selectCommittedTitrantTransfers(eventLog)
     .map((event) => litre(event.payload.volume.value));
-  return {
+  const input: BuretteInput = {
     sourceStateHash: stateHash(finalState),
     sequence: finalState.sequence,
     initialScaleReading: litre(0),
-    initialContainedVolume: litre(initialCharge.payload.volume.value),
+    initialContainedVolume: litre(initialCharges[0].payload.volume.value),
     deliveredVolumes,
   };
+  const derived = deriveBuretteState(input);
+  const discrepancy = Math.abs(derived.containedVolume - sourceContents.liquidVolume);
+  const comparisonBound = Number.EPSILON *
+    Math.max(1, Math.abs(derived.containedVolume), Math.abs(sourceContents.liquidVolume)) * 32;
+  if (discrepancy > comparisonBound) {
+    throw new Error("production composition: burette derivation disagrees with world source volume");
+  }
+  return input;
 }
 
 /**
@@ -172,12 +201,19 @@ function buretteInput(
  * Every downstream value is derived from the committed event log and the
  * exact adapter selected by the persisted genesis solver identity.
  */
-export async function composeProductionTitration(): Promise<ProductionTitrationComposition> {
+export async function composeProductionTitration(
+  options: ProductionTitrationOptions = {},
+): Promise<ProductionTitrationComposition> {
   const registry = new SolverRegistry([createAcidBaseAdapter()]);
-  const worldId = "m5-production-world";
+  const scenario = options.scenario ?? productionTitrationScenario;
+  const worldId = options.worldId ?? (
+    scenario === productionTitrationScenario
+      ? "m5-production-world"
+      : `${scenario.scenarioRef}-world`
+  );
   const created = createWorldFromScenario(registry, {
     worldId,
-    scenario: productionTitrationScenario,
+    scenario,
     seed: null,
   });
   if (!created.accepted) throw new Error(`production composition: ${created.reason}`);
@@ -207,18 +243,18 @@ export async function composeProductionTitration(): Promise<ProductionTitrationC
   const adapter = exactAdapterForState(registry, state);
   const prefixStates = statesAtCommittedTargetPrefixes(eventLog);
   const frames: ScientificFrame[] = [];
-  for (const prefixState of prefixStates) {
-    frames.push(await frameForState(prefixState, adapter));
+  for (const prefix of prefixStates) {
+    frames.push(await frameForState(prefix.state, adapter));
   }
   const finalFrame = frames[frames.length - 1];
   if (finalFrame === undefined) throw new Error("production composition: no target frame was produced");
 
-  const curveFrames = frames.map((frame) => ({
+  const curveFrames = frames.map((frame, index) => ({
     sourceStateHash: frame.sourceStateHash,
     sequence: frame.sequence,
     modelId: frame.scientificState.provenance.modelId,
     modelVersion: frame.scientificState.provenance.modelVersion,
-    volume: frame.physical.liquidVolume,
+    deliveredTitrantVolume: prefixStates[index]!.deliveredTitrantVolume,
     taughtHydrogenIonExponent: frame.projection.taughtHydrogenIonExponent,
     modelPh: frame.scientificState.modelPh,
   }));

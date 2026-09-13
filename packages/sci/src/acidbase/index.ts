@@ -47,6 +47,10 @@ export {
   ACID_BASE_MIN_TOTAL_SOLUTE_MOLALITY,
   DEFAULT_ACID_BASE_CONSTANTS,
 } from "./model.js";
+export {
+  buildAcidBaseSolveRequest,
+  type AcidBaseSolveRequestInput,
+} from "./request.js";
 
 /** The proposed validation envelope is narrower than the Davies compute domain. */
 export const PROPOSED_ACCURACY_ENVELOPE_IONIC_STRENGTH = 0.12;

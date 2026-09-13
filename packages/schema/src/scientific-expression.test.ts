@@ -1,14 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { ScientificExpressionSchema } from "./scientific.js";
+import {
+  SCIENTIFIC_EXPRESSION_SCHEMA_VERSION,
+  ScientificExpressionSchema,
+} from "./scientific.js";
 
 describe("scientific expression contract", () => {
   it("requires model and source-state identity", () => {
     expect(() =>
       ScientificExpressionSchema.parse({
-        schemaVersion: 2,
+        schemaVersion: SCIENTIFIC_EXPRESSION_SCHEMA_VERSION,
         id: "equilibrium",
+        equationId: "charge-balance",
         label: "exact",
         expression: "supplied-expression",
+        formula: "m(H+) = m(OH-)",
+        substitutions: [{ symbol: "m(H+)", value: 0.1, unit: "mol/kg" }],
         omittedTerms: [],
         producerId: "scientific-core",
         producerVersion: "1.0.0",
@@ -22,10 +28,13 @@ describe("scientific expression contract", () => {
   it("rejects an expression without source identity", () => {
     expect(() =>
       ScientificExpressionSchema.parse({
-        schemaVersion: 2,
+        schemaVersion: SCIENTIFIC_EXPRESSION_SCHEMA_VERSION,
         id: "equilibrium",
+        equationId: "charge-balance",
         label: "exact",
         expression: "supplied-expression",
+        formula: "m(H+) = m(OH-)",
+        substitutions: [{ symbol: "m(H+)", value: 0.1, unit: "mol/kg" }],
         omittedTerms: [],
       }),
     ).toThrow();
