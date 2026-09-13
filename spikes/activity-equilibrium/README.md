@@ -209,6 +209,11 @@ Expected: `RESULT: 18/18 checks`.
   the M4 PHREEQC oracle closes this.
 - The inner ionic-strength solve is a **damped fixed point**, not a bracketed
   solve. M4 replaces it so convergence is guaranteed rather than observed.
-- Density values (1.0020 kg/L for 0.1 M HCl, 1.0040 for NaOH) are **provisional
-  scenario inputs**; they must be pinned to a citable source at M4.
-- Volume additivity is an unmeasured display approximation.
+- The density literals in this historical spike are not the current v0 input
+  contract. M4 acceptance uses the cited, manifest-owned records in
+  `docs/research/v0-scientific-inputs.json`; changing those records requires
+  rerunning the provenance and full-family sweep evidence.
+- Volume additivity is an unmeasured **operational** approximation, not a
+  display-only approximation: metering changes subsequent composition and can
+  therefore affect later molality and model output. It is not part of the
+  equilibrium algebra itself.

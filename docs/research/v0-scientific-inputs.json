@@ -1,0 +1,237 @@
+{
+  "schemaVersion": 1,
+  "id": "v0-acid-base-titration-inputs",
+  "temperatureK": 298.15,
+  "proposedEnvelopeIonicStrengthMolal": 0.12,
+  "expectedMaximumIonicStrengthMolal": 0.1002,
+  "expectedMaximumFamilyId": "strong-acid-strong-base",
+  "expectedMaximumEquivalentFactor": 0,
+  "equivalentFactors": [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2],
+  "stocks": [
+    {
+      "stockId": "hcl-stock",
+      "materialId": "hcl-stock",
+      "soluteId": "HCl",
+      "concentrationMolPerL": 0.1,
+      "densityKgPerL": 1.004,
+      "molarMassKgPerMol": 0.03646,
+      "concentrationProvenance": {
+        "source": "ChemRealm v0 scenario contract",
+        "reference": "SPEC-0001 AC-S14: 0.1000 mol/L strong-acid stock definition",
+        "category": "evaluated",
+        "lastVerified": "2026-09-13"
+      },
+      "densityProvenance": {
+        "source": "VWR International product record",
+        "reference": "Titrant Hydrochloric Acid 0.100 Normal N10; density reported at 25 degC",
+        "category": "evaluated",
+        "uncertainty": "Reported to 0.001 kg/L; product-record value, not a universal solution-density law",
+        "temperature": { "value": 298.15, "unit": "K" },
+        "pressure": { "value": 101.325, "unit": "kPa" },
+        "lastVerified": "2026-09-13"
+      },
+      "molarMassProvenance": {
+        "source": "IUPAC Commission on Isotopic Abundances and Atomic Weights",
+        "reference": "Standard Atomic Weights 2021, Table 1; formula sum for HCl",
+        "edition": "2021",
+        "category": "calculated",
+        "uncertainty": "Formula sum from the cited standard atomic weights; frozen to 0.03646 kg/mol for v0",
+        "lastVerified": "2026-09-13"
+      },
+      "concentrationSourceRecord": {
+        "sourceLiteral": "0.1000 mol/L",
+        "citation": "docs/specs/SPEC-0001-world-foundation-acid-base-titration.md#acs14",
+        "unit": "mol/L",
+        "precision": "four decimal places in the scenario contract",
+        "method": "scenario-defined analytical stock concentration"
+      },
+      "densitySourceRecord": {
+        "sourceLiteral": "1.004 g/mL at 25 degC",
+        "citation": "https://www.vwr.com/us/en/product/4547084/tightrant-hydrochloric-acid-0100-normal-n10-tested-in-an-iso-17025-accredited-facility",
+        "unit": "kg/L",
+        "precision": "reported to 0.001 g/mL",
+        "method": "unit conversion: 1 g/mL = 1 kg/L"
+      },
+      "molarMassSourceRecord": {
+        "sourceLiteral": "HCl = 1.008 + 35.45 g/mol",
+        "citation": "https://iupac.qmul.ac.uk/AtWt/AtWt21.html",
+        "unit": "kg/mol",
+        "precision": "formula sum frozen to five decimal places in kg/mol",
+        "method": "IUPAC atomic-weight formula sum"
+      }
+    },
+    {
+      "stockId": "naoh-stock",
+      "materialId": "naoh-stock",
+      "soluteId": "NaOH",
+      "concentrationMolPerL": 0.1,
+      "densityKgPerL": 1,
+      "molarMassKgPerMol": 0.039997,
+      "concentrationProvenance": {
+        "source": "ChemRealm v0 scenario contract",
+        "reference": "SPEC-0001 AC-S14: 0.1000 mol/L strong-base stock definition",
+        "category": "evaluated",
+        "lastVerified": "2026-09-13"
+      },
+      "densityProvenance": {
+        "source": "VWR International product record",
+        "reference": "Titrant Sodium Hydroxide 0.100 Normal; density reported at 25 degC",
+        "category": "evaluated",
+        "uncertainty": "Reported to 0.001 kg/L; product-record value, not a universal solution-density law",
+        "temperature": { "value": 298.15, "unit": "K" },
+        "pressure": { "value": 101.325, "unit": "kPa" },
+        "lastVerified": "2026-09-13"
+      },
+      "molarMassProvenance": {
+        "source": "IUPAC Commission on Isotopic Abundances and Atomic Weights",
+        "reference": "Standard Atomic Weights 2021, Table 1; formula sum for NaOH",
+        "edition": "2021",
+        "category": "calculated",
+        "uncertainty": "Formula sum from the cited standard atomic weights; frozen to 0.039997 kg/mol for v0",
+        "lastVerified": "2026-09-13"
+      },
+      "concentrationSourceRecord": {
+        "sourceLiteral": "0.1000 mol/L",
+        "citation": "docs/specs/SPEC-0001-world-foundation-acid-base-titration.md#acs14",
+        "unit": "mol/L",
+        "precision": "four decimal places in the scenario contract",
+        "method": "scenario-defined analytical stock concentration"
+      },
+      "densitySourceRecord": {
+        "sourceLiteral": "1.000 g/mL at 25 degC",
+        "citation": "https://us-prod2.vwr.com/store/catalog/product.jsp?catalog_number=RC735032&originalCatNum=RC640032",
+        "unit": "kg/L",
+        "precision": "reported to 0.001 g/mL",
+        "method": "unit conversion: 1 g/mL = 1 kg/L"
+      },
+      "molarMassSourceRecord": {
+        "sourceLiteral": "NaOH = 22.98976928 + 15.999 + 1.008 g/mol",
+        "citation": "https://iupac.qmul.ac.uk/AtWt/AtWt21.html",
+        "unit": "kg/mol",
+        "precision": "formula sum frozen to six decimal places in kg/mol",
+        "method": "IUPAC atomic-weight formula sum"
+      }
+    },
+    {
+      "stockId": "hoac-stock",
+      "materialId": "hoac-stock",
+      "soluteId": "HOAc",
+      "concentrationMolPerL": 0.1,
+      "densityKgPerL": 0.9981,
+      "molarMassKgPerMol": 0.060052,
+      "concentrationProvenance": {
+        "source": "ChemRealm v0 scenario contract",
+        "reference": "SPEC-0001 AC-S14: 0.1000 mol/L weak-acid stock definition",
+        "category": "evaluated",
+        "lastVerified": "2026-09-13"
+      },
+      "densityProvenance": {
+        "source": "Perry's Chemical Engineers' Handbook",
+        "reference": "9th ed., Table 2-109, aqueous acetic acid density rows at 25 degC; interpolated near 0.60 mass% for a 0.100 mol/L stock",
+        "edition": "9th",
+        "category": "evaluated",
+        "uncertainty": "Table display plus dilute-solution interpolation: approximately +/-0.0008 kg/L",
+        "temperature": { "value": 298.15, "unit": "K" },
+        "pressure": { "value": 101.325, "unit": "kPa" },
+        "lastVerified": "2026-09-13"
+      },
+      "molarMassProvenance": {
+        "source": "IUPAC Commission on Isotopic Abundances and Atomic Weights",
+        "reference": "Standard Atomic Weights 2021, Table 1; formula sum for CH3COOH",
+        "edition": "2021",
+        "category": "calculated",
+        "uncertainty": "Formula sum from the cited standard atomic weights; frozen to 0.060052 kg/mol for v0",
+        "lastVerified": "2026-09-13"
+      },
+      "concentrationSourceRecord": {
+        "sourceLiteral": "0.1000 mol/L",
+        "citation": "docs/specs/SPEC-0001-world-foundation-acid-base-titration.md#acs14",
+        "unit": "mol/L",
+        "precision": "four decimal places in the scenario contract",
+        "method": "scenario-defined analytical stock concentration"
+      },
+      "densitySourceRecord": {
+        "sourceLiteral": "0.9981 kg/L, interpolated at approximately 0.60 mass% acetic acid",
+        "citation": "https://www.scribd.com/document/841594977/densidades-perry",
+        "unit": "kg/L",
+        "precision": "table display to 0.0001 g/mL with explicit interpolation uncertainty",
+        "method": "dilute-solution interpolation, not a direct measurement of this exact stock"
+      },
+      "molarMassSourceRecord": {
+        "sourceLiteral": "CH3COOH = 2(12.011) + 4(1.008) + 2(15.999) g/mol",
+        "citation": "https://iupac.qmul.ac.uk/AtWt/AtWt21.html",
+        "unit": "kg/mol",
+        "precision": "formula sum frozen to six decimal places in kg/mol",
+        "method": "IUPAC atomic-weight formula sum"
+      }
+    },
+    {
+      "stockId": "naoac-stock",
+      "materialId": "naoac-stock",
+      "soluteId": "NaOAc",
+      "concentrationMolPerL": 0.1,
+      "densityKgPerL": 1.002,
+      "molarMassKgPerMol": 0.082034,
+      "concentrationProvenance": {
+        "source": "ChemRealm v0 scenario contract",
+        "reference": "SPEC-0001 AC-S14: 0.1000 mol/L sodium-acetate stock definition",
+        "category": "evaluated",
+        "lastVerified": "2026-09-13"
+      },
+      "densityProvenance": {
+        "source": "Kharat et al., Journal of Molecular Liquids",
+        "reference": "140 (2008), aqueous sodium acetate density series at 25 degC; rounded v0 input for a 0.100 mol/L stock",
+        "category": "evaluated",
+        "uncertainty": "Rounded model input with an estimated +/-0.001 kg/L uncertainty",
+        "temperature": { "value": 298.15, "unit": "K" },
+        "pressure": { "value": 101.325, "unit": "kPa" },
+        "lastVerified": "2026-09-13"
+      },
+      "molarMassProvenance": {
+        "source": "IUPAC Commission on Isotopic Abundances and Atomic Weights",
+        "reference": "Standard Atomic Weights 2021, Table 1; formula sum for anhydrous NaCH3COO",
+        "edition": "2021",
+        "category": "calculated",
+        "uncertainty": "Formula sum from the cited standard atomic weights; frozen to 0.082034 kg/mol for v0",
+        "lastVerified": "2026-09-13"
+      },
+      "concentrationSourceRecord": {
+        "sourceLiteral": "0.1000 mol/L",
+        "citation": "docs/specs/SPEC-0001-world-foundation-acid-base-titration.md#acs14",
+        "unit": "mol/L",
+        "precision": "four decimal places in the scenario contract",
+        "method": "scenario-defined analytical stock concentration"
+      },
+      "densitySourceRecord": {
+        "sourceLiteral": "1.002 kg/L at 25 degC, rounded v0 input",
+        "citation": "https://www.sciencedirect.com/science/article/pii/S0167732207002450",
+        "unit": "kg/L",
+        "precision": "rounded to 0.001 kg/L with explicit uncertainty",
+        "method": "rounded interpolation from the cited aqueous density study"
+      },
+      "molarMassSourceRecord": {
+        "sourceLiteral": "NaCH3COO = 22.98976928 + 2(12.011) + 3(1.008) + 2(15.999) g/mol",
+        "citation": "https://iupac.qmul.ac.uk/AtWt/AtWt21.html",
+        "unit": "kg/mol",
+        "precision": "formula sum frozen to six decimal places in kg/mol",
+        "method": "IUPAC atomic-weight formula sum"
+      }
+    }
+  ],
+  "families": [
+    {
+      "familyId": "strong-acid-strong-base",
+      "acidStockId": "hcl-stock",
+      "baseStockId": "naoh-stock",
+      "acidMode": "fully-dissociated",
+      "baseMode": "fully-dissociated"
+    },
+    {
+      "familyId": "weak-acid-strong-base",
+      "acidStockId": "hoac-stock",
+      "baseStockId": "naoh-stock",
+      "acidMode": "monoprotic-equilibrium",
+      "baseMode": "fully-dissociated"
+    }
+  ]
+}

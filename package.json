@@ -16,6 +16,7 @@
     "depcruise": "depcruise --config .dependency-cruiser.cjs packages apps",
     "guards": "node tools/check_dependency_rules.mjs",
     "verify:scientific-math": "node tools/check_scientific_math.mjs",
+    "verify:scientific-quantities": "node tools/check_scientific_quantity_boundary.mjs",
     "verify:m4-contracts": "node tools/check_m4_contract_consistency.mjs",
     "verify:world": "node tools/check_world_runtime_contract.mjs",
     "artifacts": "node tools/check_build_artifacts.mjs",

@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -8,6 +9,7 @@ import {
   litre,
   mol,
   type ModelDescriptor,
+  type SolveRequest,
 } from "@chemrealm/schema";
 import {
   ACID_BASE_COMPONENT_CATALOG,
@@ -24,11 +26,78 @@ import {
   type WorldState,
 } from "@chemrealm/world";
 
-const provenance = {
-  source: "M4 acceptance fixture",
-  reference: "controlled component-conservation fixture",
-  category: "evaluated" as const,
+type V0Provenance = {
+  readonly source: string;
+  readonly reference: string;
+  readonly category: "measured" | "evaluated" | "calculated" | "empirical" | "pedagogicalApproximation";
+  readonly uncertainty?: string;
+  readonly temperature?: { readonly value: number; readonly unit: "K" };
+  readonly pressure?: { readonly value: number; readonly unit: "kPa" };
+  readonly lastVerified?: string;
 };
+
+type V0Stock = {
+  readonly stockId: string;
+  readonly materialId: string;
+  readonly soluteId: "HCl" | "NaOH" | "HOAc" | "NaOAc";
+  readonly concentrationMolPerL: number;
+  readonly densityKgPerL: number;
+  readonly molarMassKgPerMol: number;
+  readonly concentrationProvenance: V0Provenance;
+  readonly densityProvenance: V0Provenance;
+  readonly molarMassProvenance: V0Provenance;
+};
+
+type V0Manifest = {
+  readonly schemaVersion: 1;
+  readonly id: string;
+  readonly temperatureK: number;
+  readonly proposedEnvelopeIonicStrengthMolal: number;
+  readonly expectedMaximumIonicStrengthMolal: number;
+  readonly expectedMaximumFamilyId: string;
+  readonly expectedMaximumEquivalentFactor: number;
+  readonly equivalentFactors: readonly number[];
+  readonly stocks: readonly V0Stock[];
+  readonly families: readonly {
+    readonly familyId: string;
+    readonly acidStockId: string;
+    readonly baseStockId: string;
+    readonly acidMode: "fully-dissociated" | "monoprotic-equilibrium";
+    readonly baseMode: "fully-dissociated" | "monoprotic-equilibrium";
+  }[];
+};
+
+const v0Inputs = JSON.parse(readFileSync(
+  new URL("../../../docs/research/v0-scientific-inputs.json", import.meta.url),
+  "utf8",
+)) as V0Manifest;
+
+const stockById = new Map(v0Inputs.stocks.map((stock) => [stock.stockId, stock]));
+function stock(stockId: string): V0Stock {
+  const value = stockById.get(stockId);
+  if (value === undefined) throw new Error(`missing v0 stock ${stockId}`);
+  return value;
+}
+
+function solveSolute(
+  source: V0Stock,
+  amount: number,
+  mode: V0Manifest["families"][number]["acidMode"],
+): SolveRequest["solutes"][number] {
+  if (mode === "monoprotic-equilibrium") {
+    return {
+      soluteId: source.soluteId,
+      amount: mol(amount),
+      mode,
+      ka: DEFAULT_ACID_BASE_CONSTANTS.Ka_HOAc,
+    };
+  }
+  return {
+    soluteId: source.soluteId,
+    amount: mol(amount),
+    mode,
+  };
+}
 
 const descriptor: ModelDescriptor = createAcidBaseAdapter().model;
 
@@ -36,23 +105,31 @@ function registry(): SolverRegistry {
   return new SolverRegistry([createAcidBaseAdapter()]);
 }
 
-function material(
-  materialId: string,
-  soluteId: string,
-  molarMass: number,
-  density: number,
-) {
+function material(stockId: string) {
+  const source = stock(stockId);
   return {
-    materialId,
-    label: `${soluteId} acceptance stock`,
+    materialId: source.materialId,
+    label: `${source.soluteId} acceptance stock`,
     phase: "aqueous" as const,
     solutes: [{
-      soluteId,
+      soluteId: source.soluteId,
       basis: "molarity" as const,
-      amountConcentration: { value: 0.02, unit: "mol/L" as const, provenance },
-      molarMass: { value: molarMass, unit: "kg/mol" as const, provenance },
+      amountConcentration: {
+        value: source.concentrationMolPerL,
+        unit: "mol/L" as const,
+        provenance: source.concentrationProvenance,
+      },
+      molarMass: {
+        value: source.molarMassKgPerMol,
+        unit: "kg/mol" as const,
+        provenance: source.molarMassProvenance,
+      },
     }],
-    density: { value: density, unit: "kg/L" as const, provenance },
+    density: {
+      value: source.densityKgPerL,
+      unit: "kg/L" as const,
+      provenance: source.densityProvenance,
+    },
   };
 }
 
@@ -61,12 +138,7 @@ const scenario = {
   contentVersion: 1,
   scenarioRef: "m4-component-conservation",
   title: "M4 component conservation",
-  materials: [
-    material("hcl-stock", "HCl", 0.0364609, 1.002),
-    material("naoh-stock", "NaOH", 0.0399971, 1.004),
-    material("hoac-stock", "HOAc", 0.060052, 1.001),
-    material("naoac-stock", "NaOAc", 0.0820343, 1.02),
-  ],
+  materials: v0Inputs.stocks.map((source) => material(source.stockId)),
   vessels: [
     {
       vesselId: "source",
@@ -93,7 +165,7 @@ const scenario = {
   apparatus: [],
   indicators: [],
   modelRequirements: {
-    temperature: { value: 298.15, unit: "K" as const },
+    temperature: { value: v0Inputs.temperatureK, unit: "K" as const },
     species: [...descriptor.validity.species],
     solvent: "water" as const,
     phase: "aqueous" as const,
@@ -132,6 +204,14 @@ function relativeError(actual: number, expected: number): number {
 }
 
 describe("M4 world/science acceptance evidence", () => {
+  it("uses the complete v0 family and equivalent-factor contract", () => {
+    expect(v0Inputs.equivalentFactors).toEqual([0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2]);
+    expect(v0Inputs.families.map((family) => family.familyId).sort()).toEqual([
+      "strong-acid-strong-base",
+      "weak-acid-strong-base",
+    ]);
+  });
+
   it("conserves model-declared Na, Cl, and acid-family totals over 100 transfers", async () => {
     const created = createWorldFromScenario(registry(), {
       worldId: "m4-conservation-world",
@@ -167,7 +247,7 @@ describe("M4 world/science acceptance evidence", () => {
     const result = await createAcidBaseAdapter().solve({
       waterMass: kilogram(target.waterMass),
       liquidVolume: litre(target.liquidVolume),
-      temperature: kelvin(298.15),
+      temperature: kelvin(v0Inputs.temperatureK),
       solutes: target.componentAmounts.map((component) => ({
         soluteId: component.componentId,
         amount: mol(component.amount),
@@ -182,34 +262,54 @@ describe("M4 world/science acceptance evidence", () => {
 
   it("checks the v0 scenario sweep maximum against the proposed envelope", async () => {
     const adapter = createAcidBaseAdapter();
-    const stockCases = [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2].map((factor) => ({
-      waterMass: (1.002 - 0.1 * 0.0364609) + factor * (1.004 - 0.1 * 0.0399971),
-      hcl: 0.1,
-      naoh: 0.1 * factor,
-      factor,
-    }));
-    const ionicStrengths: number[] = [];
-    for (const stock of stockCases) {
-      const result = await adapter.solve({
-        waterMass: kilogram(stock.waterMass),
-        liquidVolume: litre(1 + stock.factor),
-        temperature: kelvin(298.15),
-        solutes: [
-          { soluteId: "HCl", amount: mol(stock.hcl), mode: "fully-dissociated" },
-          ...(stock.naoh === 0
-            ? []
-            : [{ soluteId: "NaOH", amount: mol(stock.naoh), mode: "fully-dissociated" as const }]),
-        ],
-        indicators: [],
-      });
-      expect(result.status).toBe("OK");
-      if (result.status !== "OK") throw new Error(result.status);
-      ionicStrengths.push(result.state.ionicStrengthMolal.value);
-      expect(result.state.validity.withinProposedAccuracyEnvelope).toBe(true);
+    const measurements: Array<{
+      readonly familyId: string;
+      readonly factor: number;
+      readonly ionicStrengthMolal: number;
+    }> = [];
+    for (const family of v0Inputs.families) {
+      const acid = stock(family.acidStockId);
+      const base = stock(family.baseStockId);
+      const acidWaterMassPerLitre = acid.densityKgPerL -
+        acid.concentrationMolPerL * acid.molarMassKgPerMol;
+      const baseWaterMassPerLitre = base.densityKgPerL -
+        base.concentrationMolPerL * base.molarMassKgPerMol;
+      for (const factor of v0Inputs.equivalentFactors) {
+        const baseAmount = base.concentrationMolPerL * factor;
+        const solutes: SolveRequest["solutes"] = baseAmount === 0
+          ? [solveSolute(acid, acid.concentrationMolPerL, family.acidMode)]
+          : [
+            solveSolute(acid, acid.concentrationMolPerL, family.acidMode),
+            solveSolute(base, baseAmount, family.baseMode),
+          ];
+        const result = await adapter.solve({
+          waterMass: kilogram(acidWaterMassPerLitre + factor * baseWaterMassPerLitre),
+          liquidVolume: litre(1 + factor),
+          temperature: kelvin(v0Inputs.temperatureK),
+          solutes,
+          indicators: [],
+        });
+        expect(result.status).toBe("OK");
+        if (result.status !== "OK") throw new Error(result.status);
+        const ionicStrengthMolal = result.state.ionicStrengthMolal.value;
+        measurements.push({ familyId: family.familyId, factor, ionicStrengthMolal });
+        expect(result.state.validity.withinProposedAccuracyEnvelope).toBe(true);
+      }
     }
 
-    const maximum = Math.max(...ionicStrengths);
-    expect(maximum).toBeLessThanOrEqual(0.12);
-    expect(maximum).toBeCloseTo(0.1002, 3);
+    expect(measurements).toHaveLength(v0Inputs.families.length * v0Inputs.equivalentFactors.length);
+    for (const family of v0Inputs.families) {
+      expect(measurements.filter((measurement) => measurement.familyId === family.familyId))
+        .toHaveLength(v0Inputs.equivalentFactors.length);
+    }
+    const maximumMeasurement = measurements.reduce((maximum, measurement) =>
+      measurement.ionicStrengthMolal > maximum.ionicStrengthMolal ? measurement : maximum,
+    );
+    expect(maximumMeasurement.ionicStrengthMolal)
+      .toBeLessThanOrEqual(v0Inputs.proposedEnvelopeIonicStrengthMolal);
+    expect(maximumMeasurement.ionicStrengthMolal)
+      .toBeCloseTo(v0Inputs.expectedMaximumIonicStrengthMolal, 3);
+    expect(maximumMeasurement.familyId).toBe(v0Inputs.expectedMaximumFamilyId);
+    expect(maximumMeasurement.factor).toBe(v0Inputs.expectedMaximumEquivalentFactor);
   });
 });

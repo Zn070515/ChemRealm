@@ -396,14 +396,14 @@ internals.
 | AC-S4 | Requirements resolution refuses unsupported solvent, phase, and required species before genesis; the adapter refuses unsupported temperature, component/analytical totals, and converged I_m | resolver + adapter domain matrix |
 | AC-S5 | 1e-6 mol/kg acetic acid matches the exact solve and reproduces the 0.65 pH Henderson–Hasselbalch divergence | adversarial solver test |
 | AC-S6 | PHREEQC and TypeScript differ by no more than ±0.02 pH, including equivalence | cross-check report |
-| AC-S7 | Every constant has source, precision, and provenance record | constants provenance review |
-| AC-S8 | No molarity reaches acid-base internals; m(H⁺), c(H⁺), and a(H⁺) have distinct paths | static/type tests and projection test |
+| AC-S7 | Every solver constant, indicator input, and v0 material concentration/density/molar mass has a source, precision, and datum-level provenance record | constants provenance review plus the canonical v0 input manifest |
+| AC-S8 | No molarity reaches acid-base internals; m(H⁺), c(H⁺), and a(H⁺) have distinct paths | static/type tests, quantity-boundary guard, and projection test |
 | AC-S9 | Taught −lg c(H⁺) and model pH remain distinct types and both references pass | compile fixture plus REF-5/REF-6 |
 | AC-S10 | Deterministic log/exp functions meet the stated ulp bound in-domain and refuse outside | numeric vectors |
 | AC-S11 | Outer residual is strictly increasing over the expanded sweep and domain boundary | monotonicity test |
 | AC-S12 | ScientificState and scientific documentation identify model pH as activity-based and model-dependent, never as “true” or “thermodynamic” pH; inspection presentation is AC-V10 in M5 | scientific contract/document review |
 | AC-S13 | Results outside the proposed accuracy envelope carry `withinProposedAccuracyEnvelope: false`; visible presentation is AC-V11 in M5 | validity-domain test |
-| AC-S14 | The v0 scenario maximum ionic strength is checked against the proposed envelope | boundary evidence |
+| AC-S14 | The complete v0 strong-acid/strong-base and weak-acid/strong-base scenario families are swept and their measured maximum ionic strength is checked against the proposed envelope | manifest-driven boundary evidence |
 | AC-S15 | Missing scenario density is rejected rather than defaulted | schema/content negative test |
 | AC-S16 | Constant precision never exceeds the cited source precision | provenance review |
 

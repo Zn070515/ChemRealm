@@ -18,6 +18,9 @@
 - `stateHash`/semantic replay identity and exact cache integrity remain separate contracts.
 - PHREEQC is an independent test oracle; disagreement is reported, never averaged or hidden.
 - M5 presentation criteria AC-V10/AC-V11 remain deferred and are not implemented here.
+- The v0 stock inputs used by acceptance evidence are read from
+  `docs/research/v0-scientific-inputs.json`; tests must not maintain a second
+  scientific-input catalog.
 
 ### Task 1: Add the failing M4 integration and domain acceptance tests
 
@@ -40,17 +43,20 @@
 **Files:**
 - Modify: `docs/research/constants-provenance.md`
 - Modify: `docs/research/constants-provenance.json`
+- Create: `docs/research/v0-scientific-inputs.json`
+- Create: `docs/research/v0-scientific-inputs.md`
 - Modify: `tools/oracle/tests/test_constants_provenance.py`
 - Modify: `packages/world/test/fixtures.ts`
 
 **Interfaces:**
 - Consumes: the current fixed solver identity and scenario-frozen phenolphthalein datum.
-- Produces: citable primary-source records, source precision/uncertainty propagation, and machine-checked indicator provenance for AC-S7/AC-S16.
+- Produces: citable primary-source records, source precision/uncertainty propagation, and machine-checked solver, indicator, and v0 material provenance for AC-S7/AC-S16.
 
 - [x] **Step 1: Add the failing provenance assertions for indicator records and remove the provisional-source allowance from the fixture.**
 - [x] **Step 2: Run the Python provenance tests and confirm the new assertions fail before the record is added.**
 - [x] **Step 3: Add primary-source citations, logarithmic derivation metadata, and the exact fixture provenance.**
 - [x] **Step 4: Run provenance tests and inspect the rendered record for approximation/source distinctions.**
+- [x] **Step 5: Make AC-S14 consume the same manifest and require both v0 scenario families and every equivalent factor.**
 
 ### Task 3: Produce explicit PHREEQC attribution disposition
 
@@ -76,6 +82,9 @@
 - Modify: `docs/plans/PLAN-0001-world-foundation-acid-base-titration.md`
 - Modify: `docs/superpowers/specs/2026-09-12-m4-acid-base-engine-design.md`
 - Modify: `docs/research/m4-evidence-integrity.md`
+- Create: `tools/check_scientific_quantity_boundary.mjs`
+- Modify: `tools/check_acceptance_coverage.py`
+- Modify: `package.json`, `.github/workflows/ci.yml`
 - Modify: `docs/adr/README.md`
 
 **Interfaces:**
@@ -84,6 +93,7 @@
 
 - [x] **Step 1: Update evidence rows only from completed commands and measured artifacts.**
 - [x] **Step 2: Run acceptance coverage and M4 consistency checks to catch stale or duplicated claims.**
+- [x] **Step 2a: Add a criterion-specific scientific quantity boundary guard and state that mapping coverage does not prove semantic sufficiency.**
 - [x] **Step 3: Run the complete local gate, inspect the diff and generated artifacts, then commit and push the round.**
 
 ## Stop/Go Conditions

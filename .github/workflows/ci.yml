@@ -48,6 +48,7 @@ jobs:
       - run: pnpm depcruise
       - run: pnpm guards
       - run: pnpm verify:scientific-math
+      - run: pnpm verify:scientific-quantities
       - run: pnpm verify:m4-contracts
       - run: pnpm verify:world
 

@@ -67,5 +67,8 @@ following visible:
 - the factor matrix and next control for each factor;
 - an explicit statement that tolerance pass does not establish equivalence.
 
-The next M4 scientific step is to execute the controlled variants, not to
-retrofit a causal explanation onto the existing ten-point sweep.
+The controlled one-factor variants are a post-M4 scientific follow-up in the
+current disposition, not an M4 S3 prerequisite. They remain required before
+any claim of model equivalence or causal attribution. If the owner later makes
+that investigation an M4 gate, M4 must remain S2 until the variants are run;
+the bounded-offset disposition must not be silently upgraded.

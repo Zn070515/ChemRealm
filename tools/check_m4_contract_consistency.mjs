@@ -24,6 +24,7 @@ const [spec, design, adr0011, adr0012, content, world, worldCreation, solve, act
   document("docs/superpowers/plans/2026-09-13-m4-reference-oracle-validation.md"),
   document("docs/superpowers/plans/2026-09-12-m4-acid-base-engine.md"),
 ]);
+const quantityBoundaryGuard = await document("tools/check_scientific_quantity_boundary.mjs");
 
 const failures = [];
 function must(text, pattern, message) {
@@ -76,7 +77,12 @@ must(migrate, /from:\s*2,[\s\S]{0,120}to:\s*3/, "persisted migrations include th
 must(migrate, /migrateWorld/, "persisted migration namespace has an explicit entry point");
 must(scenarioMigrate, /SCENARIO_MIGRATIONS/, "authoring migration namespace is explicit");
 must(plan, /\*\*Addresses:\*\*[\s\S]{0,160}AC-V10[\s\S]{0,40}AC-V11/, "M5 claims the deferred presentation criteria");
+must(plan, /v0-scientific-inputs\.json/, "M4 plan names the canonical v0 input manifest");
+must(plan, /verify:scientific-quantities/, "M4 plan names the scientific quantity boundary guard");
 must(evidence, /AC-V10[\s\S]{0,180}M5|M5[\s\S]{0,180}AC-V10/i, "M4 evidence points presentation criteria to M5");
+must(evidence, /v0-scientific-inputs\.json/, "M4 evidence names the canonical v0 input manifest");
+must(evidence, /verify:scientific-quantities/, "M4 evidence names the scientific quantity boundary guard");
+must(quantityBoundaryGuard, /illegal-core quantity fixture|MolPerLitre/, "scientific quantity guard contains a negative fixture");
 mustNot(integrity, /AC-S3、AC-S7、AC-S10…AC-S16/, "evidence-integrity note has no stale merged M4 status");
 mustNot(oraclePlan, /AC-S3, AC-S7, and AC-S10…AC-S16/, "oracle plan has no stale merged M4 status");
 mustNot(enginePlan, /AC-S3, AC-S7, and AC-S10…AC-S16/, "engine plan has no stale merged M4 status");

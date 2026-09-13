@@ -2,6 +2,10 @@
 milestone in PLAN-0001, that no milestone references a criterion that does not
 exist, and that every claimed criterion has evidence attached.
 
+This is an acceptance mapping/evidence-attachment checker. It does not prove
+that the attached test is semantically sufficient for the criterion; load-
+bearing criteria need their own criterion-specific semantic gate.
+
 WHY THIS EXISTS
 ---------------
 The same defect recurred across four consecutive owner-review rounds: a
@@ -139,7 +143,7 @@ def main():
         key=lambda pair: (_key(pair[0]), int(pair[1][1:])),
     )
 
-    print("SPEC-0001 acceptance-criterion coverage across PLAN-0001 milestones")
+    print("SPEC-0001 acceptance mapping/evidence-attachment coverage across PLAN-0001 milestones")
     print("=" * 74)
     print(f"  defined in SPEC     : {len(defined)}")
     print(f"  claimed in a PLAN ms: {len(claimed)}")
@@ -175,6 +179,8 @@ def main():
     print("=" * 74)
     print(f"RESULT: {'PASS' if ok else 'FAIL'}  ({len(unmapped)} unmapped, "
           f"{len(dangling)} dangling, {len(unevidenced)} unevidenced)")
+    print("NOTE: this checker validates mapping and evidence attachment only; "
+          "criterion semantic sufficiency remains criterion-specific.")
     return 0 if ok else 1
 
 

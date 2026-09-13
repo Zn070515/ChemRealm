@@ -56,6 +56,7 @@ describe("production acid-base SolverAdapter", () => {
       ));
 
       expect(state.ionicStrengthMolal.value).toBeGreaterThan(0.12);
+      expect(state.ionicStrengthMolal.value).toBeCloseTo(concentration, 10);
       expect(state.validity.inDomain).toBe(true);
       expect(state.validity.withinProposedAccuracyEnvelope).toBe(false);
     },

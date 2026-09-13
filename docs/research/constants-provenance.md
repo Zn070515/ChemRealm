@@ -8,6 +8,13 @@ implementation is not accepted merely because it is familiar or appears in a
 textbook. The source, basis, temperature, precision, and approximation status
 must be recorded here first.
 
+The v0 titration acceptance inputs have a separate canonical manifest:
+[`v0-scientific-inputs.json`](v0-scientific-inputs.json). It is the single
+machine-readable source for the four v0 stock concentrations, solution
+densities, molar masses, provenance records, and the two complete AC-S14 sweep
+families. Acceptance tests must read that manifest rather than reproducing
+scientific input literals in a second catalog.
+
 ## Fixed model parameters
 
 | Parameter | Value used by M4 | Interpretation | Basis/condition | Source and precision | Status |

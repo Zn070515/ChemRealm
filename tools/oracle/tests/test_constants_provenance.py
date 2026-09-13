@@ -9,11 +9,21 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 PROVENANCE_PATH = REPO_ROOT / "docs" / "research" / "constants-provenance.json"
+V0_INPUTS_PATH = REPO_ROOT / "docs" / "research" / "v0-scientific-inputs.json"
+M4_ACCEPTANCE_TEST_PATH = REPO_ROOT / "apps" / "web" / "src" / "m4-acceptance.test.ts"
 
 
 def load_provenance() -> dict:
     assert PROVENANCE_PATH.is_file(), f"missing constants provenance: {PROVENANCE_PATH}"
     with PROVENANCE_PATH.open(encoding="utf-8") as handle:
+        value = json.load(handle)
+    assert isinstance(value, dict)
+    return value
+
+
+def load_v0_inputs() -> dict:
+    assert V0_INPUTS_PATH.is_file(), f"missing v0 scientific-input manifest: {V0_INPUTS_PATH}"
+    with V0_INPUTS_PATH.open(encoding="utf-8") as handle:
         value = json.load(handle)
     assert isinstance(value, dict)
     return value
@@ -120,3 +130,68 @@ def test_indicator_records_are_citable_and_preserve_logarithmic_precision() -> N
     )
     assert "10.1016/0143-7208(91)85014-Y" in methyl_orange["citation"]
     assert "± 0.01" in methyl_orange["sourceLiteral"]
+
+
+def test_v0_material_inputs_have_datum_level_sources_and_are_complete() -> None:
+    document = load_v0_inputs()
+    assert document["schemaVersion"] == 1
+    assert document["id"] == "v0-acid-base-titration-inputs"
+    assert document["temperatureK"] == 298.15
+    assert document["equivalentFactors"] == [0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2]
+    assert document["proposedEnvelopeIonicStrengthMolal"] == 0.12
+    assert document["expectedMaximumIonicStrengthMolal"] == 0.1002
+    assert document["expectedMaximumFamilyId"] == "strong-acid-strong-base"
+    assert document["expectedMaximumEquivalentFactor"] == 0
+    assert {family["familyId"] for family in document["families"]} == {
+        "strong-acid-strong-base",
+        "weak-acid-strong-base",
+    }
+    assert len(document["families"]) == 2
+    for family in document["families"]:
+        assert family["acidStockId"] in {"hcl-stock", "hoac-stock"}
+        assert family["baseStockId"] == "naoh-stock"
+        assert family["acidMode"] in {"fully-dissociated", "monoprotic-equilibrium"}
+        assert family["baseMode"] == "fully-dissociated"
+
+    stocks = document["stocks"]
+    assert {stock["soluteId"] for stock in stocks} == {"HCl", "NaOH", "HOAc", "NaOAc"}
+    assert len(stocks) == 4
+    for stock in stocks:
+        for value_key in ("concentrationMolPerL", "densityKgPerL", "molarMassKgPerMol"):
+            assert math.isfinite(stock[value_key]) and stock[value_key] > 0
+        for datum_key in ("concentration", "density", "molarMass"):
+            record = stock[f"{datum_key}Provenance"]
+            assert record["source"].strip()
+            assert record["reference"].strip()
+            assert record["category"] in {
+                "measured",
+                "evaluated",
+                "calculated",
+                "empirical",
+                "pedagogicalApproximation",
+            }
+            if datum_key == "density":
+                assert record["temperature"] == {"value": 298.15, "unit": "K"}
+                assert record["pressure"] == {"value": 101.325, "unit": "kPa"}
+            else:
+                assert "temperature" not in record
+                assert "pressure" not in record
+            assert record["lastVerified"] == "2026-09-13"
+        expected_units = {
+            "concentrationSourceRecord": "mol/L",
+            "densitySourceRecord": "kg/L",
+            "molarMassSourceRecord": "kg/mol",
+        }
+        for source_record_key, expected_unit in expected_units.items():
+            source_record = stock[source_record_key]
+            assert source_record["sourceLiteral"].strip()
+            assert source_record["citation"].startswith(("https://", "http://", "docs/"))
+            assert source_record["unit"] == expected_unit
+            assert source_record["precision"].strip()
+
+
+def test_m4_acceptance_uses_the_canonical_manifest_not_duplicate_scientific_inputs() -> None:
+    source = M4_ACCEPTANCE_TEST_PATH.read_text(encoding="utf-8")
+    assert "v0-scientific-inputs.json" in source
+    for literal in ("1.002", "1.004", "1.001", "1.02", "0.0364609", "0.0399971"):
+        assert literal not in source
