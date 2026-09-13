@@ -64,8 +64,9 @@ schema ScientificState + ScientificProjection + ScientificExpression
                     RenderState
 ```
 
-The composition root supplies a `ScientificFrame` containing the state,
-projection, and source identity. The render package does not compute or verify
+The Scientific Core composition boundary supplies a `ScientificFrame` created
+by `projectScientificFrame(...)`, containing the state, projection, and source
+identity. The render package does not compute or verify
 chemistry; it preserves and labels the supplied identity. Presentation policy
 chooses one hydrogen-ion readout at scene construction time.
 
@@ -74,8 +75,10 @@ chooses one hydrogen-ion readout at scene construction time.
 Indicator palette selection is an empirical observable transform, not an
 equilibrium calculation. The palette is keyed by the declared indicator
 identity and contains named acid/base endpoint tokens plus an explicit
-observable provenance note. The ratio remains the only scientific numeric input
-to interpolation.
+observable provenance note. Provenance-bearing empirical colour literals are
+allowed only in this declared palette catalogue; render components may not
+embed ad-hoc chemical colours. The ratio remains the only scientific numeric
+input to interpolation.
 
 Scientific expressions are schema-owned records with expression classification,
 model identity, and source-state identity. Render may copy and freeze them but
@@ -111,7 +114,13 @@ No network, identity, telemetry, persistence, or retention behavior changes.
 
 ## API/schema changes
 
-`ScientificProjectionInput` retains only `scientificState` and `liquidVolume`.
+`ScientificProjectionInput` retains only `sourceStateHash` and `liquidVolume`;
+`projectScientificFrame` is the preferred composition-boundary constructor and
+calls the projection with the same authoritative identity.
+
+The ObservableModel owns readout strings and precision policy; a later DOM/Pixi
+Renderer owns actual text drawing. This separation keeps formatting testable
+without making the renderer a second source of display semantics.
 The schema package adds a versioned `ScientificExpression` contract. Render's
 input is:
 
@@ -146,6 +155,8 @@ expression is presented. No persisted world/event schema version changes.
 - A policy never produces both pH conventions in one RenderState.
 - A symbolic line with missing or mismatched model/source identity is rejected.
 - A frame with an empty source identity is rejected.
+- A projection/frame pair is created by one source-identified factory; render
+  rejects a frame whose projection identity differs from its frame identity.
 
 ## Test plan
 

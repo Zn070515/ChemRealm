@@ -66,7 +66,8 @@ Renderer               packages/render/pixi
 | Indicator **colour** | ObservableModel | Empirical perceptual mapping: `(indicatorId, ratio)` → colour via a declared palette |
 | Model pH value | Scientific Core | `−log₁₀ a(H⁺)` |
 | `c(H⁺)` / `−lg c(H⁺)` | **ScientificProjection** | Needs scientific state **and** world volume |
-| Readout text and precision | Renderer | Formatting only; precision rule from `ADR-0004` §5 |
+| Readout text and precision policy | ObservableModel | Pure formatting/presentation policy; precision rule from `ADR-0004` §5 |
+| DOM/Pixi text drawing | Renderer | Actual visual drawing only |
 | pH-volume curve points | ScientificProjection (values) + ObservableModel (geometry) | Values from the state sequence; the renderer draws |
 | Curve axes, gridlines, labels | Renderer | Pure presentation |
 | Burette state | ObservableModel | Derived: scale reading `initialScaleReading + Σ delivered`; contained volume is tracked separately |
@@ -97,7 +98,10 @@ readouts and then expected to hide one later.
 
 Scientific expressions are schema-owned records carrying model and source-state
 identity. Render may present and freeze them, but it cannot author an arbitrary
-string as an exact scientific expression.
+string as an exact scientific expression. The Scientific Core composition
+boundary creates a `ScientificFrame` with `projectScientificFrame(...)`; the
+projection carries the same `sourceStateHash` as the frame, and render consumes
+that bound structural contract rather than inventing a second identity.
 
 ### The indicator boundary — corrected
 

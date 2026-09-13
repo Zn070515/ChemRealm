@@ -161,7 +161,9 @@ Every item is pass/fail. Any fail blocks the stage (`GOAL.md` §16 Gate D).
 
 **State linkage**
 - [ ] Every coloured element traces to an `ObservableModel` output.
-- [ ] No hard-coded chemical colour literal anywhere in the render path.
+- [ ] Empirical chemical colour literals appear only in the declared,
+      provenance-bearing, identity-keyed palette catalogue; no render component
+      embeds an ad-hoc chemical colour or makes an equilibrium decision.
 - [ ] Dependency rule verified: `packages/render` does not import `packages/sci`.
 
 **Evidence**

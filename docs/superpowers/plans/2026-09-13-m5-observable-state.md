@@ -39,8 +39,10 @@ World Runtime and Scientific Core; M5 does not change either.
 - Modify: `packages/sci/src/projection.ts`
 
 **Interfaces:**
-- Consumes: `ScientificState` and `liquidVolume`.
-- Produces: `ScientificProjectionInput = { liquidVolume: Litre }`.
+- Consumes: `ScientificState`, an authoritative `sourceStateHash`, and
+  `liquidVolume`.
+- Produces: `ScientificProjectionInput = { sourceStateHash, liquidVolume }`;
+  the preferred composition boundary is `projectScientificFrame(...)`.
 
 - [x] **Step 1: Write the failing test**
 
@@ -49,7 +51,10 @@ Remove `waterMass` from every projection test input and remove the old
 first existing test must call:
 
 ```ts
-projectScientificState(scientificState, { liquidVolume: litre(0.5) });
+projectScientificState(scientificState, {
+  sourceStateHash: "state-hash",
+  liquidVolume: litre(0.5),
+});
 ```
 
 - [x] **Step 2: Run the test to verify it fails**

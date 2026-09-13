@@ -11,11 +11,13 @@ import {
 import { detLog10 } from "./deterministic-math.js";
 
 export interface ScientificProjection {
+  readonly sourceStateHash: string;
   readonly hydrogenIonMolarity: MolPerLitre;
   readonly taughtHydrogenIonExponent: TeachingHydrogenIonExponent;
 }
 
 export interface ScientificProjectionInput {
+  readonly sourceStateHash: string;
   readonly liquidVolume: Litre;
 }
 
@@ -29,6 +31,13 @@ function asRecord(value: unknown, name: string): Record<string, unknown> {
 function positiveNumber(value: unknown, name: string): number {
   if (typeof value !== "number" || !Number.isFinite(value) || value <= 0) {
     throw new RangeError(`${name}: expected a finite positive value`);
+  }
+  return value;
+}
+
+function nonEmptySourceStateHash(value: unknown): string {
+  if (typeof value !== "string" || value.trim().length === 0) {
+    throw new RangeError("projection source state hash: expected a non-empty string");
   }
   return value;
 }
@@ -61,6 +70,7 @@ export function projectScientificState(
   state: ScientificState,
   input: ScientificProjectionInput,
 ): ScientificProjection {
+  const sourceStateHash = nonEmptySourceStateHash(input?.sourceStateHash);
   const volumeValue = positiveNumber(input?.liquidVolume, "projection liquid volume");
   const hydrogen = findHydrogenSpecies(state);
   const amountValue = positiveNumber(hydrogen.amount, "H+ amount");
@@ -70,6 +80,7 @@ export function projectScientificState(
   const taughtValue = -detLog10(hydrogenIonMolarity);
 
   return Object.freeze({
+    sourceStateHash,
     hydrogenIonMolarity,
     taughtHydrogenIonExponent: taughtHydrogenIonExponent(taughtValue),
   });

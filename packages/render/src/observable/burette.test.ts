@@ -24,6 +24,30 @@ describe("burette observable", () => {
     ).toMatchObject({ currentScaleReading: 0.05, containedVolume: 0 });
   });
 
+  it("treats a compensated floating-point full draw as exact semantic zero", () => {
+    expect(
+      deriveBuretteState({
+        initialScaleReading: litre(0),
+        initialContainedVolume: litre(0.3),
+        deliveredVolumes: [litre(0.1), litre(0.1), litre(0.1)],
+      }),
+    ).toMatchObject({
+      currentScaleReading: 0.3,
+      deliveredVolume: 0.3,
+      containedVolume: 0,
+    });
+  });
+
+  it("does not turn a genuine near-boundary overdraw into a full draw", () => {
+    expect(() =>
+      deriveBuretteState({
+        initialScaleReading: litre(0),
+        initialContainedVolume: litre(0.3),
+        deliveredVolumes: [litre(0.1), litre(0.1), litre(0.1000000001)],
+      }),
+    ).toThrow(RangeError);
+  });
+
   it("rejects a delivery sequence that overdraws the burette", () => {
     expect(() =>
       deriveBuretteState({

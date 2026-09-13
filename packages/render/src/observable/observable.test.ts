@@ -51,6 +51,21 @@ describe("observable model", () => {
     expect(source.frame.scientificState.indicators[0]?.protonationRatio).toBe(0.5);
   });
 
+  it("rejects a projection from a different source-state identity", () => {
+    expect(() =>
+      buildObservableModel({
+        ...input(),
+        frame: {
+          ...input().frame,
+          projection: {
+            ...input().frame.projection,
+            sourceStateHash: "other-state",
+          },
+        },
+      }),
+    ).toThrow(/source identities differ/);
+  });
+
   it("uses the declared identity when presenting multiple indicator palettes", () => {
     const source = input();
     const withMethylOrange: ObservableInput = {

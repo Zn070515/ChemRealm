@@ -51,8 +51,10 @@ describe("scientific projection", () => {
     const scientificState = state(0.05, 0.1);
     const projection = projectScientificState(scientificState, {
       liquidVolume: litre(0.5),
+      sourceStateHash: "state-a",
     });
 
+    expect(projection.sourceStateHash).toBe("state-a");
     expect(projection.hydrogenIonMolarity).toBeCloseTo(0.1, 15);
     expect(projection.taughtHydrogenIonExponent.value).toBeCloseTo(1, 14);
     expect(scientificState.modelPh.value).toBeCloseTo(1.1064, 4);
@@ -64,6 +66,7 @@ describe("scientific projection", () => {
   it("does not substitute molality for amount when projecting concentration", () => {
     const projection = projectScientificState(state(0.05, 0.2), {
       liquidVolume: litre(0.5),
+      sourceStateHash: "state-b",
     });
 
     expect(projection.hydrogenIonMolarity).toBeCloseTo(0.1, 15);
@@ -75,10 +78,12 @@ describe("scientific projection", () => {
     const species = scientificState.species;
     const projection = projectScientificState(scientificState, {
       liquidVolume: litre(0.5),
+      sourceStateHash: "state-c",
     });
 
     expect(Object.isFrozen(projection)).toBe(true);
     expect(Object.keys(projection)).toEqual([
+      "sourceStateHash",
       "hydrogenIonMolarity",
       "taughtHydrogenIonExponent",
     ]);
@@ -87,13 +92,13 @@ describe("scientific projection", () => {
   });
 
   it.each([
-    ["zero volume", state(), { liquidVolume: litre(0) }],
-    ["zero hydrogen amount", state(0), { liquidVolume: litre(0.5) }],
-    ["missing hydrogen species", { ...state(), species: [] }, { liquidVolume: litre(0.5) }],
+    ["zero volume", state(), { liquidVolume: litre(0), sourceStateHash: "invalid" }],
+    ["zero hydrogen amount", state(0), { liquidVolume: litre(0.5), sourceStateHash: "invalid" }],
+    ["missing hydrogen species", { ...state(), species: [] }, { liquidVolume: litre(0.5), sourceStateHash: "invalid" }],
     [
       "duplicate hydrogen species",
       { ...state(), species: [...state().species, ...state().species] },
-      { liquidVolume: litre(0.5) },
+      { liquidVolume: litre(0.5), sourceStateHash: "invalid" },
     ],
   ])("rejects %s rather than producing a projection", (_label, scientificState, input) => {
     expect(() => projectScientificState(scientificState, input)).toThrow(RangeError);

@@ -249,9 +249,10 @@ async function assertSingleFixture(fixture: ReferenceFixture): Promise<void> {
     expectNear(species[symbol]!, expectedValue, tolerance);
   }
 
-  const projection = projectScientificState(result.state, {
-    liquidVolume: request.liquidVolume,
-  });
+    const projection = projectScientificState(result.state, {
+      sourceStateHash: `reference-${fixture.id}`,
+      liquidVolume: request.liquidVolume,
+    });
   if (fixture.publishedAnchor?.taughtHydrogenIonExponent !== undefined) {
     expectNear(
       projection.taughtHydrogenIonExponent.value,

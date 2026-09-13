@@ -50,6 +50,7 @@ jobs:
       - run: pnpm verify:scientific-math
       - run: pnpm verify:scientific-quantities
       - run: pnpm verify:m4-contracts
+      - run: pnpm verify:m5-contracts
       - run: pnpm verify:world
 
       # Product properties asserted against the shipped artifact: no

@@ -69,7 +69,7 @@ for (const fixture of loadFixtures()) {
 
   const hydrogen = result.state.species.find((species) => species.symbol === "H+");
   const projection = projectScientificState(result.state, {
-    waterMass: request.waterMass,
+    sourceStateHash: `reference-${fixture.id}`,
     liquidVolume: request.liquidVolume,
   });
   outputs.push({

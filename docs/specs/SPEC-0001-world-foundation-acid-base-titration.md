@@ -8,7 +8,11 @@
   `V(h)`/`h(V)` inverse contract; distinguishes burette contained volume,
   delivered volume, and graduated scale reading (displayed in `mL` at `0.01
   mL`); makes empirical indicator palettes identity-specific; and makes the
-  one-pH-convention presentation policy executable. Revision 20 accepted the
+  one-pH-convention presentation policy executable; revision 21 also confines
+  empirical colour literals to a provenance-bearing identity-keyed palette
+  catalogue, assigns readout precision policy to the ObservableModel boundary,
+  and binds projections to a source-identified ScientificFrame created by the
+  Scientific Core composition boundary. Revision 20 accepted the
   M4 chemical identity closure, which added scenario-frozen indicator inputs,
   the explicit water-activity parameter, and
   common acetate-family semantics; revision 14 adds the total-solute domain and
@@ -60,7 +64,7 @@
 | 19 | 2026-09-13 | World Runtime numeric-semantics clarification: Strategy A quantizes each conserved transfer delta once and applies it as a paired zero-sum update; post-transfer runtime values and exact snapshot caches are not independently rounded, while the explicit replay-identity projection remains quantized. Snapshots carry a separate exact serialized-state checksum so semantic replay equality cannot mask cache corruption. | Owner, 2026-09-13 |
 | 20 | 2026-09-13 | M4 semantic-evidence closure: v0 provenance records distinguish source observations, derived values, and model approximations without inventing precision or pressure; the input manifest is separate from a digest-bound envelope reference; AC-S14 executes the complete family sweep through `Scenario → WorldCreated → WorldState → SolveRequest → SolverAdapter`; and an AST guard confines molarity construction to `ScientificProjection`. | Owner, 2026-09-13 |
 
-| 21 | 2026-09-13 | M5 contract remediation: `ScientificProjection` accepts only the solution volume needed for its conversion; AC-V4 retains both declared `V(h)` and `h(V)` with a stated round-trip tolerance; burette state separates contained/delivered volume from graduated scale reading and displays the latter in `mL` at `0.01 mL`; empirical indicator palettes are keyed by indicator identity; one hydrogen-ion convention is selected by a replaceable presentation policy; and scientific expressions carry schema-owned model/source identity. | Candidate — owner review pending |
+| 21 | 2026-09-13 | M5 contract remediation: `ScientificProjection` accepts only the solution volume and source-state identity needed for its conversion; the Scientific Core composition boundary creates a bound `ScientificFrame`; AC-V4 retains both declared `V(h)` and `h(V)` with a stated round-trip tolerance; burette state separates contained/delivered volume from graduated scale reading and displays the latter in `mL` at `0.01 mL`; empirical indicator palettes are keyed by identity and are the only permitted home for provenance-bearing colour literals; one hydrogen-ion convention is selected by a replaceable presentation policy; ObservableModel owns readout text/precision policy while DOM/Pixi drawing remains Renderer-owned; and scientific expressions carry schema-owned model/source identity. | Candidate — owner review pending |
 
 A revision bump is recorded here rather than only in the body because the header
 is what a reader checks before deciding whether the file they are reading is the
@@ -489,9 +493,14 @@ the world's solution volume — which is why `ScientificProjection` exists as a
 named layer rather than being called "the presentation layer".
 
 `ScientificProjection` lives in `packages/sci` and takes **plain data**
-(`liquidVolume`) needed to convert the Scientific Core's H⁺ amount to a
+(`sourceStateHash`, `liquidVolume`) needed to convert the Scientific Core's H⁺ amount to a
 molarity-based teaching quantity, so it does not import `packages/world`
 (`ADR-0001` forbids `sci → world`).
+
+The composition boundary should call `projectScientificFrame(...)`, which calls
+the projection once and returns the ScientificState, projection, and the same
+authoritative `sourceStateHash` as one immutable frame. Render consumes this
+structural frame and must not hand-author a second projection identity.
 
 There is no code path that derives `−lg c(H⁺)` from a molality. That is a
 structural guarantee, not a convention.
@@ -1429,7 +1438,8 @@ dependency rule.
 | Indicator colour | Observable model — perceptual mapping of the ratio |
 | **Activity-based model pH value** | **Scientific Core** |
 | **`c(H⁺)` and `−lg c(H⁺)`** | **ScientificProjection** — needs scientific state + world volume |
-| Readout text, 2 dp formatting | Renderer |
+| Readout text and precision policy | ObservableModel — pure string/precision presentation |
+| DOM/Pixi text drawing | Renderer — actual visual drawing only |
 | Burette state and reading | Observable model (derived: scale reading `initialScaleReading + Σ delivered`; contained volume is separate) |
 | Curve points | ScientificProjection supplies values; Observable model gives geometry |
 | Axes, gridlines, labels, tooltips | Renderer |
@@ -1822,7 +1832,7 @@ Binary and verifiable. Every criterion maps to an evidence method.
 |---|---|---|
 | AC-V1 | `packages/render` has no import path to `packages/sci`; the build fails if one is added | dependency-rule test (deliberate violation fixture) |
 | AC-V2 | Indicator colour is continuous in the computed ratio, with no threshold branch | observable-model unit test |
-| AC-V3 | No hard-coded chemical colour literal exists in the render path | lint / grep-based test fixture |
+| AC-V3 | Chemical colour literals may exist only in a declared, provenance-bearing, identity-keyed empirical palette catalogue; render components and transforms may not embed ad-hoc chemical colour literals or make equilibrium decisions | palette catalogue/source review + boundary guard fixture |
 | AC-V4 | Liquid level is obtained by calling the vessel's declared `h(V)`; `V(h)` and `h(V)` are mutually consistent within a stated tolerance | observable-model test against a fixture |
 | AC-V5 | Screenshots at all four named viewports match the approved baseline | visual regression + owner review |
 | AC-V6 | pH is displayed to at most 2 decimal places | DOM assertion in Playwright |

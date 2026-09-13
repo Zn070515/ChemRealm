@@ -7,3 +7,4 @@ export * from "./stub.js";
 export * from "./acidbase/indicator.js";
 export * from "./acidbase/index.js";
 export * from "./projection.js";
+export * from "./frame.js";

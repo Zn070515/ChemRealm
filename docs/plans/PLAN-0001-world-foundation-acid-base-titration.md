@@ -792,6 +792,12 @@ packages/render/src/observable/format.ts      display precision rules
 packages/render/src/state/scene.ts            ObservableModel → RenderState
 ```
 
+The Scientific Core composition boundary creates the source-identified frame
+with `projectScientificFrame(...)`; render consumes its structural output and
+does not invent a second projection identity. Burette delivery aggregation uses
+a deterministic compensated sum and only treats a full draw as exact when the
+discrepancy is within its explicit floating-point round-off bound.
+
 **No PixiJS import anywhere in this milestone.** Everything here runs in Node.
 
 ### Contracts changed
@@ -850,8 +856,9 @@ packages/render/src/state/scene.ts            ObservableModel → RenderState
    version, and source-state identity. It may present the Henderson–Hasselbalch
    form **flagged `label: "shortcut"`** alongside the exact solve, but cannot
    author an untraceable exact expression.
-7. Colour values come from a declarative indicator-identity palette catalogue,
-   not chemistry-specific branches or unlabelled literals.
+7. Colour values come from a declarative indicator-identity palette catalogue;
+   provenance-bearing empirical colour literals are allowed only in that
+   catalogue, not in chemistry-specific branches or unlabelled transforms.
 8. `toRenderState` receives a replaceable hydrogen-ion presentation policy and
    emits exactly one convention-specific pH readout per view.
 
@@ -860,9 +867,9 @@ packages/render/src/state/scene.ts            ObservableModel → RenderState
 | Test | Proves |
 |---|---|
 | Colour varies continuously with the ratio; no discontinuity at any threshold | AC-V2 |
-| Grep/lint fixture: no chemical colour literal in `packages/render` | AC-V3 |
+| Palette-boundary fixture: empirical colour literals are confined to the declared identity-keyed catalogue | AC-V3 |
 | Liquid level calls `h(V)` and its `V(h)` inverse round-trips within the declared tolerance | AC-V4 |
-| `currentScaleReading == initialScaleReading + Σ delivered`, while `containedVolume` remains separate | Burette semantics / failure mode 14 |
+| `currentScaleReading == initialScaleReading + Σ delivered`, while `containedVolume` remains separate; compensated full-draw boundary does not false-overdraw | Burette semantics / failure mode 14 |
 | pH is formatted to exactly 2 dp and a scale reading such as 0.025 L is `25.00 mL` | AC-V6 |
 | Observable output is a pure function: same input → deep-equal output, no DOM, no PixiJS | Testability of the whole layer |
 | Curve points derive from a state sequence, not from a stored array | No pre-authored curves |
