@@ -5,9 +5,9 @@
  * Molality/activity are Scientific Reality Core quantities. Molarity is a
  * ScientificProjection-only quantity, created after the core has produced
  * species amounts and the caller supplies world liquid volume. This check uses
- * the TypeScript AST instead of text matching so comments and strings cannot
- * create false positives, while imports, aliases, namespace access, and a
- * generic `"mol/L"` construction attempt are all rejected in production core
+ * the TypeScript AST instead of text matching so comments cannot create false
+ * positives, while imports, aliases, namespace access, and generic dimension
+ * or parser construction attempts are all rejected in production core
  * modules.
  */
 
@@ -20,8 +20,16 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const SOURCE_ROOT = join(ROOT, "packages", "sci", "src");
 const SOURCE_EXTENSIONS = new Set([".ts", ".tsx"]);
 const PROJECTION_PATH = "projection.ts";
-const FORBIDDEN_SCHEMA_SYMBOLS = new Set(["MolPerLitre", "molPerLitre", "molarityOf"]);
-const FORBIDDEN_UNIT_LITERAL = "mol/L";
+const FORBIDDEN_SCHEMA_SYMBOLS = new Set([
+  "MolPerLitre",
+  "molPerLitre",
+  "molarityOf",
+  "quantityOfDimension",
+  "canonicalQuantityOfDimension",
+  "unitsOfDimension",
+  "parseQuantity",
+]);
+const FORBIDDEN_DIMENSION_LITERALS = new Set(["molarity", "mol/L", "mmol/L"]);
 
 function filesUnder(directory) {
   const files = [];
@@ -54,7 +62,9 @@ export function findForbiddenQuantityUses(relativePath, source) {
       found.push(node.text);
     }
     if (ts.isStringLiteral(node)) {
-      if (node.text === FORBIDDEN_UNIT_LITERAL) found.push(`unit:${FORBIDDEN_UNIT_LITERAL}`);
+      if (FORBIDDEN_DIMENSION_LITERALS.has(node.text)) {
+        found.push(`dimension:${node.text}`);
+      }
       if (FORBIDDEN_SCHEMA_SYMBOLS.has(node.text)) found.push(`dynamic:${node.text}`);
     }
     ts.forEachChild(node, visit);
@@ -73,12 +83,20 @@ const failures = [];
 const directImportFixture = "import { molPerLitre as concentration } from '@chemrealm/schema';\nconst value = concentration(1);";
 const namespaceFixture = "import * as schema from '@chemrealm/schema';\nconst value = schema.molPerLitre(1);";
 const dynamicNamespaceFixture = "import * as schema from '@chemrealm/schema';\nconst value = schema['molPerLitre'](1);";
-const genericUnitFixture = "const value = quantityOfDimension('molarity', { value: 1, unit: 'mol/L' });";
+const genericDimensionFixture = "import { quantityOfDimension } from '@chemrealm/schema';\nconst value = quantityOfDimension('molarity').parse({ value: 100, unit: 'mmol/L' });";
+const canonicalDimensionFixture = "import { canonicalQuantityOfDimension } from '@chemrealm/schema';\nconst value = canonicalQuantityOfDimension('molarity');";
+const dimensionUnitLookupFixture = "import { unitsOfDimension } from '@chemrealm/schema';\nconst value = unitsOfDimension('molarity');";
+const genericParserFixture = "import { parseQuantity, toCanonical } from '@chemrealm/schema';\nconst value = toCanonical(parseQuantity({ value: 100, unit: 'mmol/L' }));";
+const directCanonicalizerFixture = "import { toCanonical } from '@chemrealm/schema';\nconst value = toCanonical({ value: 100, unit: 'mmol/L' });";
 for (const [name, fixture] of [
   ["direct import", directImportFixture],
   ["namespace access", namespaceFixture],
   ["dynamic namespace access", dynamicNamespaceFixture],
-  ["generic unit", genericUnitFixture],
+  ["generic dimension constructor", genericDimensionFixture],
+  ["canonical dimension constructor", canonicalDimensionFixture],
+  ["dimension unit lookup", dimensionUnitLookupFixture],
+  ["generic quantity parser", genericParserFixture],
+  ["direct canonicalizer", directCanonicalizerFixture],
 ]) {
   if (violationsForSource("acidbase/illegal-fixture.ts", fixture).length === 0) {
     failures.push(`self-test: ${name} molarity fixture was not rejected`);
@@ -103,6 +121,6 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log("ok    AST boundary confines MolPerLitre/molPerLitre/molarityOf and mol/L construction to ScientificProjection");
-console.log("ok    direct-import, namespace, dynamic-property, and generic-unit illegal fixtures are rejected");
+console.log("ok    AST boundary confines branded molarity symbols and generic molarity construction to ScientificProjection");
+console.log("ok    direct-import, namespace, dynamic-property, generic-dimension, generic-parser, and canonicalizer illegal fixtures are rejected");
 console.log("\nRESULT: PASS");

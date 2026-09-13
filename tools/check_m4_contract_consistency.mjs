@@ -92,7 +92,13 @@ must(evidence, /v0-envelope-reference\.json/, "M4 evidence names the independent
 must(evidence, /verify:scientific-quantities/, "M4 evidence names the scientific quantity boundary guard");
 must(quantityBoundaryGuard, /import ts from "typescript"/, "scientific quantity guard is AST-based");
 must(quantityBoundaryGuard, /dynamic namespace access/, "scientific quantity guard tests dynamic-property bypasses");
-must(quantityBoundaryGuard, /generic unit/, "scientific quantity guard tests generic-unit bypasses");
+must(quantityBoundaryGuard, /generic dimension constructor/, "scientific quantity guard tests generic-dimension constructor bypasses");
+must(quantityBoundaryGuard, /generic quantity parser/, "scientific quantity guard tests generic parser bypasses");
+must(quantityBoundaryGuard, /quantityOfDimension/, "scientific quantity guard names the generic dimension constructor");
+must(quantityBoundaryGuard, /canonicalQuantityOfDimension/, "scientific quantity guard names the canonical dimension constructor");
+must(quantityBoundaryGuard, /unitsOfDimension/, "scientific quantity guard names the generic dimension unit lookup");
+must(quantityBoundaryGuard, /parseQuantity/, "scientific quantity guard names the generic quantity parser");
+must(quantityBoundaryGuard, /FORBIDDEN_DIMENSION_LITERALS/, "scientific quantity guard checks dimension literals");
 must(v0Inputs, /"schemaVersion": 2/, "v0 input manifest has the source-fidelity schema version");
 mustNot(v0Inputs, /expectedMaximum/, "v0 input manifest does not contain its own acceptance output");
 must(v0Inputs, /"sourceLiteral": "1 g\/cm³ \(25 °C\)"/, "NaOH source literal preserves reported precision");
