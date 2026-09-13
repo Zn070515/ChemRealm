@@ -257,11 +257,13 @@ git diff --check
 Expected: every command exits 0. Browser and final-quality visual criteria
 remain explicitly unverified because M6 owns real renderer/assets.
 
-- [ ] **Step 3: Update status and commit**
+- [x] **Step 3: Update status and commit**
 
 Record M5 as `S2 — implementation in progress/locally verified`, list exact
 commands and remaining AC-V10/V11/M6 visual evidence, inspect the diff, then
-commit and push the completed round. Do not claim M5 S3.
+commit and push the completed round. The implementation baseline is
+`06190818d971c87e0ac84c5d480f660ed62aa90f`; hosted CI attestation remains a
+post-push evidence update. Do not claim M5 S3.
 
 ## Stop/Go
 
