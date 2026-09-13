@@ -3,7 +3,9 @@
 - **Status:** **Accepted through revision 20** — M4 S3 owner acceptance recorded
   on 2026-09-13 against the committed implementation baseline and CI attestation.
 - **Accepted baseline:** commit `8310c685`, `SPEC-0001` revision 6
-- **Current revision:** **25 Candidate** — M5 semantic composition closure
+- **Current revision:** **26 Candidate** — native Scientific Core/WASM backend
+  supersession contract and complete Scientific Core expression requirements;
+  M5 semantic composition closure remains a candidate amendment
   makes Scientific Core expressions equation-bearing with current substitutions,
   moves model-specific request construction into the Scientific Core, and
   defines curve x-values as cumulative committed titrant delivery rather than
@@ -83,6 +85,7 @@
 | 23 | 2026-09-13 | M5 executable-profile boundary closure: Observable receives only the replay-frozen serializable `VolumeProfileSnapshot` whose hash matches `ScientificFrame.physical.volumeProfileHash`; it reconstructs the runtime interpolation adapter internally and no longer accepts caller-supplied `heightAtVolume`/`volumeAtHeight` functions. This prevents a self-reported profile hash from authorizing executable geometry that was not derived from genesis truth. | Candidate — owner review pending |
 | 24 | 2026-09-13 | M5 profile content-address closure: the canonical schema owns the shared canonical JSON/SHA-256 helper; `VolumeProfileSnapshot` parsing recomputes and verifies `profileHash` over the hash-excluded payload before render or world code constructs an executable profile adapter. World and composition callers use the same helper, and tampered-but-structurally-valid profile payloads are rejected. | Candidate — owner review pending |
 | 25 | 2026-09-13 | M5 semantic composition closure: Scientific Core expressions are equation-bearing records with current numerical substitutions and explicit v0 omissions; acid-base component/mode/constant selection is owned by the Scientific Core request builder rather than web composition; curve x-values are cumulative committed source→target titrant delivery with an explicit initial zero point; burette derivation filters the same committed transfer relation; and the deterministic composition DOM exposes model/accuracy metadata from ObservableModel. | Candidate — owner review pending |
+| 26 | 2026-09-13 | Native Scientific Core/WASM backend supersession candidate: Rust becomes the next production implementation for new worlds after a dedicated differential/oracle gate; the exact TypeScript 1.0.0 adapter remains the legacy replay/reference backend; no silent cross-version fallback is allowed; Scientific Core expressions must include the ionic-strength fixed point, Davies activity relation, and `activity = γ · m̂` alongside existing equations; and the M4 scientific matrix plus M5 production composition must be rerun against the native backend before supersession. | Candidate — owner review pending |
 
 A revision bump is recorded here rather than only in the body because the header
 is what a reader checks before deciding whether the file they are reading is the
@@ -170,8 +173,10 @@ eventually need; none is a thing this slice should quietly grow into.
   diffusion. The slice assumes instantaneous equilibrium, stated as an
   assumption rather than hidden.
 - **Temperature variation.** Fixed at 25.0 °C. Not "settable and ignored".
-- **A Python service on the production path.** Owner decision, 2026-09-11:
-  TypeScript solves at runtime; Python produces oracle values at test time only.
+- **A Python service on the production path.** Python remains oracle tooling only;
+  it does not become a runtime service. The accepted TypeScript 1.0.0 backend
+  remains the legacy replay/reference path while the revision-26 native backend
+  candidate is validated.
 - **Account systems, cloud sync, analytics, AI tutor, forums, uploads.**
   `GOAL.md` §18 non-goals and §20 amendment triggers.
 - **More than two indicators and two analytes.** The point is the architecture,
@@ -2009,11 +2014,12 @@ Only questions that genuinely need the owner.
    | 5 | The choice is a **policy object**, swappable without touching `packages/sci` or the observable model | AC-V8 |
    | 6 | `−lg c(H⁺)` is never derived from a molality | AC-S8, REF-5 |
 6. ~~**(New, from P1-2.)** Should `detLog10`/`detExp10` be implemented in
-   TypeScript as in the spike, or via a WASM/fdlibm build?~~ **DECIDED by owner,
-   2026-09-13, as part of M4 S3:** use the TypeScript implementation for v0,
-   consistent with keeping the runtime free of extra native artifacts. A future
-   WASM/fdlibm implementation requires a new ADR and deterministic reference
-   comparison before substitution.
+   TypeScript as in the spike, or via a WASM/fdlibm build?~~ **Resolved for the
+   accepted M4 baseline:** TypeScript is the v1.0.0 implementation and remains
+   available for exact legacy replay. **Revision 26 Candidate** proposes a
+   Rust/WASM v2.0.0 implementation; it requires ADR-0014 and a complete
+   deterministic/differential/oracle gate before becoming the default for new
+   worlds.
 7. **(New, from P2-3.)** `ADR-0008` lists five open decisions on persisted-world
    solver compatibility, including the version support window. These need owner
    input before M8, not now.

@@ -40,7 +40,7 @@ function mustNot(text, pattern, message) {
   if (pattern.test(text)) failures.push(`stale: ${message}`);
 }
 
-must(spec, /\*\*Current revision:\*\* \*\*25 Candidate\*\*/i, "SPEC is revision 25 Candidate");
+must(spec, /\*\*Current revision:\*\* \*\*26 Candidate\*\*/i, "SPEC is revision 26 Candidate");
 must(spec, /AC-V3 \|[^\n]*declared[^\n]*provenance[^\n]*empirical[^\n]*palette/i, "canonical AC-V3 permits only declared provenance-bearing empirical palettes");
 mustNot(spec, /AC-V3 \| No hard-coded chemical colour literal exists in the render path/i, "old unqualified AC-V3 wording is removed");
 must(spec, /Readout (?:labels|text)[^\n]*precision[^\n]*ObservableModel/i, "canonical ownership assigns readout precision policy to ObservableModel");

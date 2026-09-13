@@ -43,6 +43,8 @@ new ADR**, not quietly edited.
 | [0010](0010-material-genesis-resolution-boundary.md) | Material genesis composition-basis boundary | **Accepted** (M1) | M2 |
 | [0011](0011-scenario-scientific-input-freezing.md) | Scenario scientific-input freezing | **Accepted** (M4) | M4 |
 | [0012](0012-m4-domain-and-constant-semantics.md) | M4 domain and equilibrium-constant semantics | **Accepted** (M4) | M4 |
+| [0013](0013-replayable-geometry-and-scientific-frame.md) | Replayable geometry and bound scientific frames | **Proposed** | M5, M6 |
+| [0014](0014-native-scientific-core-and-wasm-deployment.md) | Native Scientific Core and WebAssembly deployment | **Proposed** (owner-approved direction) | M4 backend gate, M5, M6 |
 
 > **Revision note (2026-09-11, owner review remediation).** ADR-0004 and ADR-0007
 > were rewritten rather than amended: the original ADR-0004 overstated what

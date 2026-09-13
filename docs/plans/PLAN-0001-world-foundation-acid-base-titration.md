@@ -1,9 +1,9 @@
 # PLAN-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** **M0–M4 S3 Verified / Accepted; M5 S2 production composition locally verified** — the original plan was approved
+- **Status:** **M0–M4 S3 Verified / Accepted; M5 S2 production composition locally verified; native backend supersession S1 specified** — the original plan was approved
   on 2026-09-11 at `SPEC-0001` revision 6; revisions 13–20 were accepted
-  on 2026-09-13 and revision 25 is a candidate amendment for the current M5
-  replay/provenance closure.
+  on 2026-09-13 and revisions 25–26 are candidate amendments for the current
+  M5/native-backend closure.
 - **Completed:** `M0 — Repository foundation` reached **S3 — Verified** on
   2026-09-11. Evidence: `docs/evidence/M0.md`, commits `1f3dfee`/`565a2e8`,
   CI run `34595967023` (13/13 gate steps on a clean `ubuntu-latest` checkout).
@@ -15,9 +15,10 @@
   Event runtime and replay` is **S3 — Verified / Accepted** at baseline
   `778fadbd` with CI `34677042056` and evidence in `docs/evidence/M2.md`.
 - **M5 composition handoff:** the committed local DOM composition baseline is
-  `cb73528e7be25b7269d0d121d9128c71be10beff` with hosted CI
-  `34759135844` — **success**. M5 remains S2; final visual, interaction, and
-  owner acceptance evidence remain open.
+  `cad8461bb5654d489234a968bbcfd9aaa99b315c` with hosted CI
+  `34761601096` — **success**. M5 remains S2; final visual, interaction, and
+  owner acceptance evidence remain open. Native backend work is governed by
+  `docs/superpowers/plans/2026-09-13-m4-native-scientific-backend.md`.
 - **Coverage check:** `uv run python tools/check_acceptance_coverage.py` — every `AC-*` in
   `SPEC-0001` is required to appear in at least one milestone here. Run it after
   editing either document. This is a mapping/evidence-attachment check only;
@@ -89,6 +90,7 @@ Additionally, the owner must resolve before their milestones:
 | M3 | Solver adapter contract | M1 | Over- or under-designing the envelope |
 | M4 | Acid-base engine and oracle validation | M3 | PHREEQC install; the equivalence-region gap |
 | M5 | Observable state | M1, M4 | Observable layer catching chemistry it shouldn't |
+| M4-B | Native Scientific Core/WASM backend supersession | M4, M5 S2 | Native/legacy identity, deterministic differential validation, and no silent fallback |
 | M6 | First final-quality apparatus slice | M5 | Hitting the visual bar with PixiJS |
 | M7 | Interactive titration end to end | M6 | Integration; the first real product moment |
 | M8 | Branch, replay, persistence | M2, M7 | Parent immutability; IndexedDB quota |
