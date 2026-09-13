@@ -171,8 +171,8 @@ profile content hash before constructing the executable adapter.
   consistency guard.
 - [x] Run the complete verification chain, inspect the diff, commit, push, and
   record the hosted CI attestation: implementation commit
-  `f5cad4f2605ef42501fa03abc9d0988b31fe2925`, hosted CI
-  `34755478504` — success. Keep M5 S2 and M6 unauthorized.
+  `e02d176574be3fc7c321ff51d5c1831568bfb925`, hosted CI
+  `34757093908` — success. Keep M5 S2 and M6 unauthorized.
 
 ## Stop/Go Conditions
 
