@@ -14,7 +14,7 @@ import {
 import type { SolverAdapter } from "./adapter.js";
 import { StubSolverAdapter } from "./stub.js";
 import { parseSolverRequirements } from "./request.js";
-import { SolverRegistry, SolverResolver } from "./registry.js";
+import { checkModelCompatibility, SolverRegistry, SolverResolver } from "./registry.js";
 import { createAcidBaseAdapter } from "./acidbase/index.js";
 
 function makeDescriptor(
@@ -273,6 +273,23 @@ describe("exact solver registry", () => {
     expect(result).toMatchObject({ status: "incompatible" });
     if (result.status !== "incompatible") throw new Error("expected incompatible result");
     expect(result.reason).toContain("HNO3");
+  });
+
+  it.each([
+    ["species", { species: ["H+", "Al3+"] }, "species"],
+    ["solvent", { solvent: "ethanol" }, "solvent"],
+    ["phase", { phase: "gas" }, "phase"],
+  ] as const)("reports an incompatible %s requirement before genesis", (_label, override, reason) => {
+    const candidate = { ...requirements(), ...override } as Parameters<
+      typeof checkModelCompatibility
+    >[0];
+    const result = checkModelCompatibility(
+      candidate,
+      makeDescriptor(),
+    );
+
+    expect(result.compatible).toBe(false);
+    expect(result.reasons.join("; ")).toContain(reason);
   });
 
   it("rejects an adapter whose model or config identity is not exact", () => {

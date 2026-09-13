@@ -5,8 +5,8 @@
 > every disagreement remains visible until investigated.
 
 > **Status:** Implemented and locally verified on the current round baseline.
-> M4 remains S2 because AC-S3, AC-S7, and AC-S11…AC-S14 still require their
-> own evidence and owner acceptance.
+> M4 remains S2 because the complete matrix now has local evidence but still
+> requires final committed-baseline attestation and owner acceptance.
 
 ## Context
 

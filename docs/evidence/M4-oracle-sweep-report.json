@@ -36,6 +36,13 @@
       }
     ],
     "attributionStatus": "not-isolated",
+    "attributionDisposition": {
+      "code": "bounded-offset-no-equivalence-claim",
+      "causalAttribution": "not-isolated",
+      "decision": "retain-independent-models-and-report-bounded-disagreement",
+      "followUp": "controlled one-factor variants are required before any equivalence claim",
+      "parameterTuning": "prohibited"
+    },
     "classification": "systematic-positive-offset-candidate",
     "interpretation": "This is an observed cross-engine offset, not proof of a single cause; activity convention, database species representation, constants, and water conventions require separate investigation.",
     "notProven": "Tolerance pass does not establish model equivalence or explain the offset.",

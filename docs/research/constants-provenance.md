@@ -51,16 +51,17 @@ SolveRequest builders copy indicators only from that snapshot and never read a
 mutable catalog at replay time. The current v0 teaching contract names these
 candidate values:
 
-| Indicator | Candidate `pKa_in` | Candidate `Ka_in` | Source/status |
+| Indicator | Selected `pKa_in` | Frozen `Ka_in` fixture value | Source/status |
 |---|---:|---:|---|
-| Phenolphthalein | approximately `9.4` | derived only after source precision is pinned | `SPEC-0001` transition table; primary source still required before AC-S7 can be claimed |
-| Methyl orange | approximately `3.4` | derived only after source precision is pinned | `SPEC-0001` transition table; primary source still required before AC-S7 can be claimed |
+| Phenolphthalein | `9.40` | `3.98e-10` (two source-supported effective digits) | [Takayanagi & Motomizu, *Chemistry Letters* 30(1), 2001](https://academic.oup.com/chemlett/article-abstract/30/1/14/7403629); second-transition value used as the explicitly labelled v0 monoprotic proxy |
+| Methyl orange | `3.37 ± 0.01` | `4.27e-4` (two source-supported effective digits) | [spectrophotometric aqueous study, 1991](https://doi.org/10.1016/0143-7208(91)85014-Y); retained as a citable future scenario datum |
 
-No indicator candidate is evidence-complete yet. M4 may use an explicitly
-recorded provisional fixture for continuity tests, but S3 must remain blocked
-until each value used in accepted evidence has a citable source and source
-precision. An ad hoc request-local indicator that is absent from the frozen
-snapshot is not a replayable world input.
+The machine-readable records include source decimal places and propagated
+uncertainty because pKa is logarithmic: its reported precision cannot be copied
+as if it were ordinary Ka significant digits. Phenolphthalein is polyprotic, so
+the selected value is not a claim that the v0 monoprotic proxy is valid through
+the higher-pH transition. An ad hoc request-local indicator that is absent from
+the frozen snapshot is not a replayable world input.
 
 ## Precision and model boundary rules
 
@@ -98,10 +99,8 @@ run without the executable is not an oracle pass.
 The following are intentionally visible rather than silently promoted to
 accepted evidence:
 
-1. The exact primary sources for the indicator values and their usable source
-   precision must be added before M4 S3.
-2. The PHREEQC database entries and generated input conventions must be checked
+1. The PHREEQC database entries and generated input conventions must be checked
    against the TypeScript model in the cross-engine report.
-3. The neutral-acid and unit-water-activity approximations need the bounded
+2. The neutral-acid and unit-water-activity approximations need the bounded
    error statement already required by the SPEC; they must not be described as
    experimentally exact.

@@ -73,6 +73,13 @@ def test_cross_engine_report_is_complete_when_present() -> None:
     assert report["disagreementAnalysis"]["classification"] == "systematic-positive-offset-candidate"
     analysis = report["disagreementAnalysis"]
     assert analysis["attributionStatus"] == "not-isolated"
+    assert analysis["attributionDisposition"] == {
+        "code": "bounded-offset-no-equivalence-claim",
+        "causalAttribution": "not-isolated",
+        "decision": "retain-independent-models-and-report-bounded-disagreement",
+        "followUp": "controlled one-factor variants are required before any equivalence claim",
+        "parameterTuning": "prohibited",
+    }
     assert {axis["id"] for axis in analysis["attributionAxes"]} == {
         "equilibrium-constants",
         "activity-coefficients",
@@ -182,6 +189,8 @@ def test_compare_exposes_factor_axes_without_claiming_causality() -> None:
         "basis-and-total-definition",
     }
     assert analysis["attributionStatus"] == "not-isolated"
+    assert analysis["attributionDisposition"]["code"] == "bounded-offset-no-equivalence-claim"
+    assert analysis["attributionDisposition"]["causalAttribution"] == "not-isolated"
     assert analysis["notProven"]
     assert all(axis["status"] for axis in axes.values())
     assert all(axis["nextControl"] for axis in axes.values())

@@ -2,7 +2,11 @@ import { describe, expect, it } from "vitest";
 import { activity, reducedMolality } from "@chemrealm/schema";
 import { daviesActivities } from "./activity.js";
 import { DEFAULT_ACID_BASE_CONSTANTS } from "./model.js";
-import { solveReduced, type ReducedSolveSuccess } from "./solve.js";
+import {
+  evaluateOuterResidualAtHydrogen,
+  solveReduced,
+  type ReducedSolveSuccess,
+} from "./solve.js";
 import {
   chargeResidualFromSpecies,
   ionicStrengthFromSpecies,
@@ -190,6 +194,26 @@ describe("nested reduced acid-base solve", () => {
 
     expect(result).toMatchObject({ kind: "OUT_OF_DOMAIN" });
     expect("species" in result).toBe(false);
+  });
+
+  it.each([
+    ["strong acid", totals(0.1, 0), [1e-6, 1e-4, 1e-3, 1e-2, 0.05, 0.1, 0.15, 0.2]],
+    ["high legal strong acid", totals(0.49, 0), [1e-6, 0.05, 0.1, 0.2, 0.3, 0.4, 0.49]],
+    ["legal-side ionic-strength boundary", totals(0.499999999, 0), [0.1, 0.2, 0.3, 0.4, 0.49, 0.5]],
+  ] as const)("has a strictly increasing outer charge residual for %s", (_label, input, hydrogens) => {
+    const residuals = hydrogens.map((hydrogen) => {
+      const result = evaluateOuterResidualAtHydrogen(
+        { totals: input, constants: DEFAULT_ACID_BASE_CONSTANTS },
+        hydrogen,
+      );
+      expect(typeof result).toBe("number");
+      if (typeof result !== "number") throw new Error(`residual evaluation failed: ${result.kind}`);
+      return result;
+    });
+
+    for (let index = 1; index < residuals.length; index += 1) {
+      expect(residuals[index]!).toBeGreaterThan(residuals[index - 1]!);
+    }
   });
 
   it("does not emit a partial state when the numerical boundary cannot be evaluated", () => {

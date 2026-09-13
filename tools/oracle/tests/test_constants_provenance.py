@@ -89,3 +89,34 @@ def test_logarithmic_derivation_propagates_source_precision() -> None:
     assert record["propagatedPrecision"]["relativeUncertaintyUpperBound"] == 0.000116
     assert record["claimedSignificantDigits"] == 3
     assert record["canonicalSignificantDigits"] == 5
+
+
+def test_indicator_records_are_citable_and_preserve_logarithmic_precision() -> None:
+    records = load_provenance()["indicatorRecords"]
+    assert {record["indicatorId"] for record in records} == {
+        "phenolphthalein",
+        "methyl-orange",
+    }
+    for record in records:
+        assert record["key"].startswith("indicator.")
+        assert record["sourceLiteral"].strip()
+        assert record["citation"].startswith(("https://", "http://"))
+        assert record["sourceDecimalPlaces"] == 2
+        assert record["transform"] == "Ka_in = 10^(-pKa_in)"
+        assert record["sourceUncertainty"]["unit"] == "pKa"
+        assert record["propagatedPrecision"]["effectiveSignificantDigits"] == 2
+        assert record["claimedSignificantDigits"] == 2
+        assert record["claimedSignificantDigits"] <= record["canonicalSignificantDigits"]
+        assert "approximation" in record
+
+    phenolphthalein = next(
+        record for record in records if record["indicatorId"] == "phenolphthalein"
+    )
+    assert "academic.oup.com" in phenolphthalein["citation"]
+    assert phenolphthalein["sourceLiteral"] == "pKa_in=9.40"
+
+    methyl_orange = next(
+        record for record in records if record["indicatorId"] == "methyl-orange"
+    )
+    assert "10.1016/0143-7208(91)85014-Y" in methyl_orange["citation"]
+    assert "± 0.01" in methyl_orange["sourceLiteral"]

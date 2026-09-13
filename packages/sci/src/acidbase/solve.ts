@@ -218,6 +218,32 @@ function candidateAt(
   };
 }
 
+/**
+ * Expose the scientific outer residual for acceptance sweeps only.
+ *
+ * This is deliberately a reduced, diagnostic boundary rather than a second
+ * solver API: callers must provide the model-owned reduced analytical totals,
+ * and a failure is returned when the legal Davies fixed point cannot be
+ * evaluated. The production adapter remains the only public solve boundary.
+ */
+export function evaluateOuterResidualAtHydrogen(
+  input: ReducedSolveInput,
+  hydrogen: number,
+): number | ReducedSolveFailure {
+  try {
+    validateInput(input);
+    const candidate = solveInner(hydrogen, input);
+    if ("kind" in candidate) return candidate;
+    return candidate.reducedChargeResidual;
+  } catch (error) {
+    if (error instanceof DaviesDomainError) return failOutOfDomain(error.message);
+    if (error instanceof RangeError) {
+      return failNotConverged("INVALID_NUMERIC_ARGUMENT", error.message, 0);
+    }
+    throw error;
+  }
+}
+
 function ionicStrengthResidual(
   hydrogen: number,
   ionicStrength: ReducedIonicStrength,

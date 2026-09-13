@@ -72,8 +72,9 @@ export const WORLD_CREATED: SerializedWorldCreated = {
           indicatorId: "phenolphthalein",
           kaIn: { value: 3.98e-10, unit: "1" },
           provenance: {
-            source: "M4 provisional fixture",
-            reference: "indicator contract test vector",
+            source: "Takayanagi & Motomizu, Chemistry Letters 30(1), 2001",
+            reference: "phenolphthalein second transition, reported pKa=9.40; v0 monoprotic proxy",
+            uncertainty: "±0.005 pKa from half the last reported decimal place; approximation is not a claim about the higher transition",
             category: "pedagogicalApproximation",
           },
         },

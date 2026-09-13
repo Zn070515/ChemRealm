@@ -1,7 +1,9 @@
 # M4 Acid-Base Engine and Oracle Validation Design
 
 Status: Design v2 approved by the project owner on 2026-09-12 after
-self-review. Implementation is in progress; the M4 Chemical Identity Closure
+self-review. Implementation and the local scientific acceptance matrix are
+complete; M4 S3 still requires final committed-baseline CI attestation,
+bounded PHREEQC disposition, and owner acceptance. The M4 Chemical Identity Closure
 is recorded as the revision-13 candidate in `SPEC-0001` and `ADR-0011`. The
 M4 Scientific Domain & Constant Semantics Closure is recorded as the
 revision-14 candidate and `ADR-0012`; both remain pending owner review.
@@ -26,8 +28,9 @@ and snapshots while quantizing the explicit replay-identity projection.
 M0–M3 establish the Scientific Reality Core boundary, typed quantities,
 defensive DTO parsing, exact solver identity, and the synchronous World Runtime
 boundary. The repository now has a deterministic production adapter for the
-v0 slice; independent reference fixtures and PHREEQC oracle validation remain
-pending.
+v0 slice, independently derived REF fixtures, and a pinned PHREEQC comparison
+report. The remaining gate is interpretation and owner acceptance of that
+evidence, not an unimplemented solver path.
 
 The first scientific slice is aqueous monoprotic acid/strong-base chemistry at
 25 °C with Davies activity correction. The activity-equilibrium spike proves

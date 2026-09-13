@@ -16,6 +16,23 @@ That pattern is evidence of a systematic-offset candidate. It is not evidence
 that either implementation is the universal truth, and it is not enough to
 choose a solver, average the results, or widen the tolerance.
 
+## Disposition
+
+The report records the following bounded-evidence disposition:
+
+```text
+code: bounded-offset-no-equivalence-claim
+causalAttribution: not-isolated
+decision: retain-independent-models-and-report-bounded-disagreement
+parameterTuning: prohibited
+```
+
+M4 may use the verified executable/database and the signed, in-tolerance
+comparison as an independent-oracle gate. It does **not** treat PHREEQC as a
+replacement for the selected TypeScript model, average the two outputs, or
+tune constants to remove the offset. A causal scientific explanation requires
+the controlled one-factor variants listed below and remains follow-up work.
+
 ## Current observation
 
 The report records the signed difference for every `ORACLE-*` point and keeps
@@ -46,6 +63,7 @@ following visible:
 - classification as a systematic-offset candidate when all signs agree;
 - `attributionStatus: not-isolated` until a controlled experiment isolates a
   factor;
+- the explicit `bounded-offset-no-equivalence-claim` disposition;
 - the factor matrix and next control for each factor;
 - an explicit statement that tolerance pass does not establish equivalence.
 

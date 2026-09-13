@@ -575,10 +575,10 @@ requirements are unsatisfiable. M3 evidence is owner-verified at baseline
 ## M4 — Acid-base reference engine and oracle validation
 
 **Status:** **S2 — Implementation and bounded reference/oracle validation
-complete**; persisted schema v3 migration and cross-system compatibility
-remediation are complete, while the remaining AC-S3, AC-S7, and AC-S11…AC-S14
-evidence still requires owner review before S3. Presentation criteria AC-V10 and
-AC-V11 belong to M5 and are not M4 prerequisites.
+complete locally**; the M4 scientific matrix is exercised by reproducible
+fixtures, while owner review and final stage attestation remain before S3.
+Presentation criteria AC-V10 and AC-V11 belong to M5 and are not M4
+prerequisites.
 **Target stage:** S3
 **Addresses:** ADR-0003, ADR-0007; `SPEC-0001` AC-S1..AC-S11, AC-S12..AC-S16
 

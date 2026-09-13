@@ -48,6 +48,19 @@ describe("production acid-base SolverAdapter", () => {
     },
   );
 
+  it.each([0.15, 0.3])(
+    "returns a scientific state qualified outside the proposed accuracy envelope at %s mol/kg",
+    async (concentration) => {
+      const state = expectOk(await createAcidBaseAdapter().solve(
+        request([{ soluteId: "HCl", amount: mol(concentration), mode: "fully-dissociated" }]),
+      ));
+
+      expect(state.ionicStrengthMolal.value).toBeGreaterThan(0.12);
+      expect(state.validity.inDomain).toBe(true);
+      expect(state.validity.withinProposedAccuracyEnvelope).toBe(false);
+    },
+  );
+
   it.each(["HCl", "NaOH"] as const)(
     "classifies the exact 0.5 mol/kg %s boundary by the converged domain",
     async (soluteId) => {

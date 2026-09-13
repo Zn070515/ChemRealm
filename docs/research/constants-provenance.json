@@ -116,5 +116,55 @@
       "citation": "ADR-0007",
       "condition": "solver configuration identity"
     }
+  ],
+  "indicatorRecords": [
+    {
+      "key": "indicator.phenolphthalein.kaIn",
+      "indicatorId": "phenolphthalein",
+      "canonicalValue": 3.98e-10,
+      "canonicalSignificantDigits": 3,
+      "sourceLiteral": "pKa_in=9.40",
+      "sourceDecimalPlaces": 2,
+      "sourceUncertainty": {
+        "absolute": 0.005,
+        "unit": "pKa",
+        "basis": "half the last reported decimal place"
+      },
+      "transform": "Ka_in = 10^(-pKa_in)",
+      "propagatedPrecision": {
+        "relativeUncertaintyUpperBound": 0.0116,
+        "effectiveSignificantDigits": 2
+      },
+      "claimedSignificantDigits": 2,
+      "kind": "derived",
+      "derivation": "Second phenolphthalein transition represented as the v0 monoprotic indicator proxy; the canonical fixture value is frozen in ScenarioSnapshot.",
+      "citation": "https://academic.oup.com/chemlett/article-abstract/30/1/14/7403629",
+      "condition": "aqueous, 25 degC; second transition proxy",
+      "approximation": "Phenolphthalein is polyprotic; v0 uses a labelled monoprotic approximation and does not claim validity for the higher transition region."
+    },
+    {
+      "key": "indicator.methyl-orange.kaIn",
+      "indicatorId": "methyl-orange",
+      "canonicalValue": 0.000427,
+      "canonicalSignificantDigits": 3,
+      "sourceLiteral": "pKa_in=3.37 ± 0.01",
+      "sourceDecimalPlaces": 2,
+      "sourceUncertainty": {
+        "absolute": 0.01,
+        "unit": "pKa",
+        "basis": "reported source uncertainty"
+      },
+      "transform": "Ka_in = 10^(-pKa_in)",
+      "propagatedPrecision": {
+        "relativeUncertaintyUpperBound": 0.0231,
+        "effectiveSignificantDigits": 2
+      },
+      "claimedSignificantDigits": 2,
+      "kind": "derived",
+      "derivation": "Derived from the reported aqueous pKa for the methyl-orange transition; retained as a future scenario indicator datum, not a global solver constant.",
+      "citation": "https://doi.org/10.1016/0143-7208(91)85014-Y",
+      "condition": "aqueous acid solution, 25 degC",
+      "approximation": "The indicator colour model and transition selection remain a representation-layer concern; only the equilibrium input is recorded here."
+    }
   ]
 }

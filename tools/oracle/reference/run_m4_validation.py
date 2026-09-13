@@ -194,6 +194,17 @@ def attribution_axes() -> list[dict[str, str]]:
     ]
 
 
+def attribution_disposition() -> dict[str, str]:
+    """Record bounded oracle use without inventing a scientific cause."""
+    return {
+        "code": "bounded-offset-no-equivalence-claim",
+        "causalAttribution": "not-isolated",
+        "decision": "retain-independent-models-and-report-bounded-disagreement",
+        "followUp": "controlled one-factor variants are required before any equivalence claim",
+        "parameterTuning": "prohibited",
+    }
+
+
 def run_phreeqc() -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
     results: dict[str, dict[str, Any]] = {}
     with tempfile.TemporaryDirectory(prefix="chemrealm-m4-phreeqc-") as directory:
@@ -306,6 +317,7 @@ def compare(ts_rows: list[dict[str, Any]], phreeqc_rows: dict[str, dict[str, Any
         "interpretation": "This is an observed cross-engine offset, not proof of a single cause; activity convention, database species representation, constants, and water conventions require separate investigation.",
         "notProven": "Tolerance pass does not establish model equivalence or explain the offset.",
         "attributionStatus": "not-isolated",
+        "attributionDisposition": attribution_disposition(),
         "attributionAxes": attribution_axes(),
     }
     return {

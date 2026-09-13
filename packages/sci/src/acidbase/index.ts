@@ -36,6 +36,17 @@ import {
 import { solveReduced, type ReducedSolveSuccess } from "./solve.js";
 import type { ReducedSpeciesMolalities } from "./species.js";
 import { daviesActivities } from "./activity.js";
+export {
+  ACID_BASE_COMPONENT_CATALOG,
+  type AcidBaseComponentCatalogEntry,
+} from "./catalog.js";
+export {
+  ACID_BASE_MODEL_ID,
+  ACID_BASE_MODEL_VERSION,
+  ACID_BASE_MAX_TOTAL_SOLUTE_MOLALITY,
+  ACID_BASE_MIN_TOTAL_SOLUTE_MOLALITY,
+  DEFAULT_ACID_BASE_CONSTANTS,
+} from "./model.js";
 
 /** The proposed validation envelope is narrower than the Davies compute domain. */
 export const PROPOSED_ACCURACY_ENVELOPE_IONIC_STRENGTH = 0.12;
