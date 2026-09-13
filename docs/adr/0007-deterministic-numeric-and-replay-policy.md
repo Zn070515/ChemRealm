@@ -104,7 +104,7 @@ Three distinct levels, never conflated:
 | Level | Contents | Quantized? | Purpose |
 |---|---|---|---|
 | **Solver state** | full speciation, unquantized float64 | no | validated against conservation |
-| **Canonical state** | **independent** amounts (`n_i`, mol) and water mass (`m_w`, kg), plus world structure | yes | persisted; defines replay equality |
+| **Canonical runtime state** | **independent** amounts (`n_i`, mol) and water mass (`m_w`, kg), plus world structure | identity projection only | event log is persisted truth; snapshots are disposable exact-fold caches |
 | **Derived science** | molalities, activities, `γ`, `I`, `pH`, species | recomputed | never persisted as truth |
 
 **Species concentrations, activities, and ionic strength are derived and are
@@ -117,6 +117,17 @@ quantizes that delta **once**, applying the same value as an exact zero-sum
 update: `d = quantize(n_source * fraction); n_source -= d; n_target += d`.
 Water mass uses the same rule. Measured drift is 1.39e-15 over 100 transfers,
 indistinguishable from the unquantized float baseline of 1.25e-15.
+
+**Implementation clarification (M2 runtime remediation):** the two results of
+that paired update are deliberately not independently rounded after the
+subtraction/addition. Doing so is the rejected per-vessel strategy in another
+form and recreates conservation drift. The reducer therefore keeps the exact
+paired IEEE-754 results in its in-memory fold; charge/event ingress and the
+explicit replay-identity projection remain quantized boundaries. A snapshot is
+an acceleration cache of that fold, so its validator uses the same unit/shape
+checks and hash projection while preserving the paired arithmetic representation
+(`parseWorldStateForSnapshot`). The event log, not the snapshot cache, remains
+the source of truth.
 
 Quantization remains `Number(v.toPrecision(12))`. `toPrecision` is
 algorithmically specified for exact decimal conversion and is deterministic.
@@ -138,7 +149,7 @@ mode 11).
 |---|---|---|---|
 | Solver state (unquantized) | charge balance | ≤ 1e-14 relative | 1.39e-17 mol/kg |
 | Solver state (unquantized) | element / mass balance | ≤ 1e-15 relative | 0.00e+00 mol/kg |
-| Canonical state (quantized) | amount / mass conservation | ≤ 1e-13 relative over 100 transfers | 1.39e-15 |
+| Canonical replay projection (quantized) | amount / mass conservation | ≤ 1e-13 relative over 100 transfers | 1.39e-15 |
 | Canonical state | **design guard** | the "quantize each vessel independently" strategy **must fail** the above | 4.00e-12 |
 
 The threshold is chosen to sit two orders of magnitude above the correct strategy

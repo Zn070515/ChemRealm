@@ -5,7 +5,7 @@
 > every disagreement remains visible until investigated.
 
 > **Status:** Implemented and locally verified on the current round baseline.
-> M4 remains S2 because AC-S3, AC-S7, and AC-S10…AC-S16 still require their
+> M4 remains S2 because AC-S3, AC-S7, and AC-S11…AC-S14 still require their
 > own evidence and owner acceptance.
 
 ## Context

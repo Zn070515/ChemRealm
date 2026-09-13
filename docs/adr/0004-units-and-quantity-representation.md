@@ -123,7 +123,7 @@ system that blocks legitimate physics:
 | Quantity | Legitimate operations | Undefined operations |
 |---|---|---|
 | activity | `×`, `÷`, ratio (`Ka = a_H·a_A/a_HA`) | `+` |
-| activity coefficient | `×`, `÷`, `log10` (`γ_H·γ_A`) | `+` |
+| activity coefficient | `×`, `÷`; `log10` in the Scientific Reality Core (`γ_H·γ_A`) | `+` |
 | mole fraction | `+` (Σx = 1), ratio | `×` |
 | ionic strength | `+`, `× scalar`, compare within one basis | compare across bases |
 | pH-like | compare, **difference** (ΔpH is meaningful) | average, sum, scale |

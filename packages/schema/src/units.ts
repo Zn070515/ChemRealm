@@ -198,8 +198,8 @@ export function activity(value: number): Activity {
 /**
  * `γ`. STRICTLY positive, not merely non-negative.
  *
- * `γ = 0` is not a physical state, and both `log10ActivityCoefficient` and
- * `divideActivityCoefficient` refuse it — so admitting it here would let the
+ * `γ = 0` is not a physical state, and `divideActivityCoefficient` refuses it
+ * — so admitting it here would let the
  * constructor build a value that every operation defined on the type rejects.
  */
 export function activityCoefficient(value: number): ActivityCoefficient {
@@ -312,7 +312,7 @@ export function ratioMoleFraction(
   return numerator.value / denominator.value;
 }
 
-// --- activity coefficient: multiply, divide, log10 --------------------------
+// --- activity coefficient: multiply and divide -------------------------------
 
 /**
  * `γ_H · γ_A`. The ontology states this product "appears in every conditional
@@ -335,27 +335,6 @@ export function divideActivityCoefficient(
     throw new RangeError("divideActivityCoefficient: denominator is zero");
   }
   return activityCoefficient(numerator.value / denominator.value);
-}
-
-/**
- * `log10 γ`. Returns a plain `number`, matching `ratioActivity`: a logarithm is
- * a coordinate the solver's arithmetic runs on directly, not a physical
- * quantity with a unit of its own.
- *
- * DETERMINISM OBLIGATION. `ADR-0007` requires the replay path to use
- * `detLog10`, not the native `Math.log10` used here. That function is created at
- * M4 (`PLAN-0001` M4 step 2, `deterministic-math.ts`). Until then this is safe
- * because nothing on the replay path calls it — but **when M4 lands, this call
- * site must be routed through `detLog10`**, or a cross-engine replay can flip a
- * hash (`SPEC-0001` risk 22). Recorded here rather than left to be rediscovered.
- */
-export function log10ActivityCoefficient(g: ActivityCoefficient): number {
-  if (g.value === 0) {
-    throw new RangeError(
-      "log10ActivityCoefficient: log10 of zero is not defined",
-    );
-  }
-  return Math.log10(g.value);
 }
 
 // --- ionic strength: per basis, because comparison is defined only within one -

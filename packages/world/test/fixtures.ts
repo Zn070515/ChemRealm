@@ -97,3 +97,24 @@ export const WORLD_CREATED: SerializedWorldCreated = {
 };
 
 WORLD_CREATED.payload.contentHash = scenarioSnapshotHash(WORLD_CREATED.payload.scenarioSnapshot);
+
+/** A valid high-precision fixture used to exercise canonical-state boundaries. */
+export function highPrecisionWorldCreated(): SerializedWorldCreated {
+  const event = JSON.parse(JSON.stringify(WORLD_CREATED)) as SerializedWorldCreated;
+  const snapshot = event.payload.scenarioSnapshot;
+  const material = snapshot.materials[0]!;
+  const amountPerLitre = 0.4938271560504;
+  const waterMassPerLitre = 0.7999999999996;
+  const molarMass = material.molarMasses[0]!.molarMass.value;
+
+  snapshot.vessels[1]!.capacity = { value: 0.5, unit: "L" };
+  material.composition[0]!.amountConcentration = { value: amountPerLitre, unit: "mol/L" };
+  material.resolvedInventoryPerLitre.waterMass = { value: waterMassPerLitre, unit: "kg" };
+  material.resolvedInventoryPerLitre.soluteAmounts[0]!.amount = {
+    value: amountPerLitre,
+    unit: "mol",
+  };
+  material.density.value = waterMassPerLitre + amountPerLitre * molarMass;
+  event.payload.contentHash = scenarioSnapshotHash(snapshot);
+  return event;
+}

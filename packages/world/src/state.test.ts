@@ -4,6 +4,7 @@ import {
   createInitialState,
   migrateWorldCreated,
   parseWorldState,
+  parseWorldStateForSnapshot,
   scenarioSnapshotHash,
   serializeWorldState,
   stateHash,
@@ -11,6 +12,7 @@ import {
 } from "./state.js";
 import { createLog } from "./log.js";
 import { replay } from "./replay.js";
+import { quantize } from "./hash.js";
 
 const WORLD_CREATED: SerializedWorldCreated = {
   seq: 0,
@@ -126,6 +128,56 @@ describe("WorldState domain boundary", () => {
     const reparsed = parseWorldState(serialized);
 
     expect(serializeWorldState(reparsed)).toEqual(serialized);
+  });
+
+  it("normalizes persisted canonical independent quantities at the state boundary", () => {
+    const serialized = serializeWorldState(createInitialState(WORLD_CREATED));
+    const stateWithHighPrecisionContents = {
+      ...serialized,
+      canonical: {
+        byVessel: {
+          ...serialized.canonical.byVessel,
+          flask: {
+            waterMass: { value: 0.7999999999996, unit: "kg" as const },
+            liquidVolume: { value: 0.1234567890126, unit: "L" as const },
+            componentAmounts: [
+              { componentId: "HCl", amount: { value: 0.1234567890126, unit: "mol" as const } },
+            ],
+          },
+        },
+      },
+    };
+
+    const parsed = parseWorldState(stateWithHighPrecisionContents);
+    const contents = parsed.canonical.byVessel.flask;
+    expect(contents.waterMass).toBe(quantize(0.7999999999996));
+    expect(contents.liquidVolume).toBe(quantize(0.1234567890126));
+    expect(contents.componentAmounts[0]?.amount).toBe(quantize(0.1234567890126));
+  });
+
+  it("preserves exact paired arithmetic when parsing a snapshot checkpoint", () => {
+    const serialized = serializeWorldState(createInitialState(WORLD_CREATED));
+    const checkpoint = {
+      ...serialized,
+      canonical: {
+        byVessel: {
+          ...serialized.canonical.byVessel,
+          flask: {
+            waterMass: { value: 0.09404493832199984, unit: "kg" as const },
+            liquidVolume: { value: 0.0942, unit: "L" as const },
+            componentAmounts: [
+              { componentId: "HCl", amount: { value: 0.009420000000000024, unit: "mol" as const } },
+            ],
+          },
+        },
+      },
+    };
+
+    const parsed = parseWorldStateForSnapshot(checkpoint);
+    expect(parsed.canonical.byVessel.flask.waterMass).toBe(0.09404493832199984);
+    expect(parsed.canonical.byVessel.flask.componentAmounts[0]?.amount).toBe(
+      0.009420000000000024,
+    );
   });
 
   it("excludes the present sequence cursor from replay state identity", () => {

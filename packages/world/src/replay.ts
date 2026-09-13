@@ -6,7 +6,12 @@ import { canonicalizeDomainEvent } from "./command.js";
 import { parseLog, eventPrefixHash, type EventLog } from "./log.js";
 import { reduce, type ReduceOptions } from "./reduce.js";
 import { validateSnapshot, type WorldSnapshot } from "./snapshot.js";
-import { parseWorldState, replayHash, stateHash, type WorldState } from "./state.js";
+import {
+  parseWorldStateForSnapshot,
+  replayHash,
+  stateHash,
+  type WorldState,
+} from "./state.js";
 import { deepFreeze } from "./state.js";
 import type { BranchLog } from "./branch.js";
 import { scienceHash } from "./hash.js";
@@ -150,7 +155,7 @@ function snapshotStart(
     if (eventAtBoundary === undefined || eventAtBoundary.seq !== valid.sequence) continue;
     if (valid.genesisContentHash !== genesis.payload.contentHash) continue;
     if (valid.prefixHash !== prefixHashAt(source, valid.sequence)) continue;
-    return { state: parseWorldState(valid.state), sequence: valid.sequence };
+    return { state: parseWorldStateForSnapshot(valid.state), sequence: valid.sequence };
   }
   return { state: undefined, sequence: -1 };
 }

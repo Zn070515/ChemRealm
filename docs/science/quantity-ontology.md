@@ -215,7 +215,7 @@ algebra*:
 | volume `V` | `+`, `−`, `× scalar` | × volume |
 | molality / molarity | `× volume → amount` | + concentration (without a mixing model) |
 | **activity** | `×`, `÷`, `ratio` | `+` (activities do not add) |
-| **activity coefficient** | `×`, `÷`, `log10` | `+` |
+| **activity coefficient** | `×`, `÷`; `log10` in the Scientific Reality Core | `+` |
 | **mole fraction** | `+` (sums to 1), `ratio` | × mole fraction |
 | **ionic strength** | `+`, `× scalar`, compare **within one basis** | compare across `I_m`/`I_c` |
 | **pH-like** | compare, difference (a ΔpH is meaningful) | **average, sum, scale** |

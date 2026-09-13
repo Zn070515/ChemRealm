@@ -41,7 +41,6 @@ import {
   type TeachingHydrogenIonExponent,
   activityCoefficient,
   divideActivityCoefficient,
-  log10ActivityCoefficient,
   multiplyActivityCoefficient,
   reducedIonicStrength,
   sumIonicStrengthMolal,
@@ -224,10 +223,9 @@ export function activityCoefficientGuarantees(): void {
   const crossedWithActivity: ActivityCoefficient = activity(0.8);
   void crossedWithActivity;
 
-  // The defined operations: multiply, divide, log10. These must compile.
+  // The defined operations: multiply and divide. These must compile.
   void multiplyActivityCoefficient(g, g);
   void divideActivityCoefficient(g, g);
-  void log10ActivityCoefficient(g);
 }
 
 // ---------------------------------------------------------------------------

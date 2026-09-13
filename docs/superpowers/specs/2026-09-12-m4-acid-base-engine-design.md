@@ -14,7 +14,12 @@ participate in genesis resolution, authoring scenarios are shape version 3,
 resolved requirement temperatures are canonical Kelvin, and the Davies solver
 never evaluates activity outside its declared domain. Persisted world/event
 schema v3 is revision-17 candidate material: v2 temperature snapshots migrate
-to canonical Kelvin rather than being reinterpreted in place.
+to canonical Kelvin rather than being reinterpreted in place. Revision 18 is
+the M4/M5 acceptance-ownership candidate: M4 owns the scientific halves of
+model-pH naming and accuracy-envelope qualification, while M5 owns inspection
+copy and DOM presentation. Revision 19 records the World Runtime numeric
+clarification that Strategy A preserves paired transfer arithmetic in runtime
+and snapshots while quantizing the explicit replay-identity projection.
 
 ## Context
 
@@ -393,11 +398,16 @@ internals.
 | AC-S9 | Taught −lg c(H⁺) and model pH remain distinct types and both references pass | compile fixture plus REF-5/REF-6 |
 | AC-S10 | Deterministic log/exp functions meet the stated ulp bound in-domain and refuse outside | numeric vectors |
 | AC-S11 | Outer residual is strictly increasing over the expanded sweep and domain boundary | monotonicity test |
-| AC-S12 | No UI or documentation calls model pH “true” or “thermodynamic” pH | copy review and existing inspection contract |
-| AC-S13 | Results outside the proposed accuracy envelope carry withinProposedAccuracyEnvelope: false | validity-domain test |
+| AC-S12 | ScientificState and scientific documentation identify model pH as activity-based and model-dependent, never as “true” or “thermodynamic” pH; inspection presentation is AC-V10 in M5 | scientific contract/document review |
+| AC-S13 | Results outside the proposed accuracy envelope carry `withinProposedAccuracyEnvelope: false`; visible presentation is AC-V11 in M5 | validity-domain test |
 | AC-S14 | The v0 scenario maximum ionic strength is checked against the proposed envelope | boundary evidence |
 | AC-S15 | Missing scenario density is rejected rather than defaulted | schema/content negative test |
 | AC-S16 | Constant precision never exceeds the cited source precision | provenance review |
+
+The inspection copy/DOM halves formerly bundled into AC-S12 and AC-S13 are not
+M4 work. They are M5 representation acceptance criteria AC-V10 and AC-V11;
+M4 must provide the model identity and accuracy flag as scientific data, while
+M5 must display them honestly.
 
 ## Self-review findings and closure status
 

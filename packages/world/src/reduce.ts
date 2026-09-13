@@ -97,7 +97,7 @@ function addComponentAmounts(
     totals.set(entry.componentId, (totals.get(entry.componentId) ?? 0) + entry.amount * factor);
   }
   return [...totals]
-    .map(([componentId, amount]) => ({ componentId, amount: mol(amount) }))
+    .map(([componentId, amount]) => ({ componentId, amount: mol(quantize(amount)) }))
     .sort((a, b) => compareIds(a.componentId, b.componentId));
 }
 
@@ -121,8 +121,8 @@ function chargeMaterial(
   }));
   return replaceContents(state, {
     [vessel.id]: {
-      waterMass: kilogram(current.waterMass + inventory.waterMass * volume),
-      liquidVolume: litre(current.liquidVolume + volume),
+      waterMass: kilogram(quantize(current.waterMass + inventory.waterMass * volume)),
+      liquidVolume: litre(quantize(current.liquidVolume + volume)),
       componentAmounts: addComponentAmounts(current.componentAmounts, additions, volume),
     },
   });
@@ -152,12 +152,15 @@ function transfer(
   // Read the complete source snapshot before writing either vessel. This is
   // the invariant that prevents the target from receiving a second, already
   // decremented source value.
+  const isFullTransfer = volume === source.liquidVolume;
   const fraction = volume / source.liquidVolume;
-  const deltaWater = quantize(
-    arithmeticPath === "perturbed"
-      ? (source.waterMass / source.liquidVolume) * volume
-      : source.waterMass * fraction,
-  );
+  const deltaWater = isFullTransfer
+    ? source.waterMass
+    : quantize(
+        arithmeticPath === "perturbed"
+          ? (source.waterMass / source.liquidVolume) * volume
+          : source.waterMass * fraction,
+      );
   const sourceByComponent = new Map(
     source.componentAmounts.map((entry) => [entry.componentId, entry.amount] as const),
   );
@@ -170,24 +173,26 @@ function transfer(
   for (const componentId of componentIds) {
     const sourceAmount = sourceByComponent.get(componentId) ?? 0;
     const targetAmount = targetByComponent.get(componentId) ?? 0;
-    const delta = quantize(
-      arithmeticPath === "perturbed"
-        ? (sourceAmount / source.liquidVolume) * volume
-        : sourceAmount * fraction,
-    );
-    sourceComponents.push({ componentId, amount: mol(sourceAmount - delta) });
+    const delta = isFullTransfer
+      ? sourceAmount
+      : quantize(
+          arithmeticPath === "perturbed"
+            ? (sourceAmount / source.liquidVolume) * volume
+            : sourceAmount * fraction,
+        );
+    sourceComponents.push({ componentId, amount: mol(isFullTransfer ? 0 : sourceAmount - delta) });
     targetComponents.push({ componentId, amount: mol(targetAmount + delta) });
   }
 
   return replaceContents(state, {
     [sourceVessel.id]: {
       waterMass: kilogram(source.waterMass - deltaWater),
-      liquidVolume: litre(source.liquidVolume - volume),
+      liquidVolume: litre(quantize(source.liquidVolume - volume)),
       componentAmounts: sourceComponents.sort((a, b) => compareIds(a.componentId, b.componentId)),
     },
     [targetVessel.id]: {
       waterMass: kilogram(target.waterMass + deltaWater),
-      liquidVolume: litre(target.liquidVolume + volume),
+      liquidVolume: litre(quantize(target.liquidVolume + volume)),
       componentAmounts: targetComponents.sort((a, b) => compareIds(a.componentId, b.componentId)),
     },
   });

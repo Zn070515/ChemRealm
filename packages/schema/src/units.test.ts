@@ -46,7 +46,6 @@ import {
   comparePh,
   compareReducedIonicStrength,
   divideActivityCoefficient,
-  log10ActivityCoefficient,
   multiplyActivityCoefficient,
   ratioMoleFraction,
   reducedIonicStrength,
@@ -334,10 +333,6 @@ describe("every operation the ontology defines exists as a function", () => {
     // every operation defined on the type rejects.
     expect(() => activityCoefficient(0)).toThrow(RangeError);
     expect(() => activityCoefficient(-0.1)).toThrow(RangeError);
-  });
-
-  it("takes log10 of an activity coefficient", () => {
-    expect(log10ActivityCoefficient(activityCoefficient(0.1))).toBeCloseTo(-1, 12);
   });
 
   it("keeps a thermodynamic constant strictly positive and its own type", () => {

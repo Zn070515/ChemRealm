@@ -358,20 +358,25 @@ function parseApparatus(apparatus: Apparatus): RuntimeApparatus {
 
 function parseContents(
   contents: SchemaWorldState["canonical"]["byVessel"][string],
+  quantizeContents: boolean,
 ): RuntimeCanonicalContents {
+  const canonicalValue = (value: Parameters<typeof toCanonical>[0]): number => {
+    const canonical = toCanonical(value).value;
+    return quantizeContents ? quantize(canonical) : canonical;
+  };
   return {
-    waterMass: kilogram(toCanonical(contents.waterMass).value),
-    liquidVolume: litre(toCanonical(contents.liquidVolume).value),
+    waterMass: kilogram(canonicalValue(contents.waterMass)),
+    liquidVolume: litre(canonicalValue(contents.liquidVolume)),
     componentAmounts: contents.componentAmounts
       .map((entry) => ({
         componentId: entry.componentId,
-        amount: mol(toCanonical(entry.amount).value),
+        amount: mol(canonicalValue(entry.amount)),
       }))
       .sort((a, b) => compareIds(a.componentId, b.componentId)),
   };
 }
 
-function parseWorldStateUnchecked(dto: SchemaWorldState): WorldState {
+function parseWorldStateUnchecked(dto: SchemaWorldState, quantizeContents: boolean): WorldState {
   assertUnique(dto.vessels.map((vessel) => vessel.id), "vessel");
   assertUnique(dto.apparatus.map((apparatus) => apparatus.id), "apparatus");
   const vesselIds = new Set(dto.vessels.map((vessel) => vessel.id));
@@ -381,7 +386,7 @@ function parseWorldStateUnchecked(dto: SchemaWorldState): WorldState {
   }
   const byVessel: Record<string, RuntimeCanonicalContents> = {};
   for (const [vesselId, contents] of Object.entries(dto.canonical.byVessel)) {
-    byVessel[vesselId] = parseContents(contents);
+    byVessel[vesselId] = parseContents(contents, quantizeContents);
   }
   return deepFreeze({
     schemaVersion: dto.schemaVersion,
@@ -399,7 +404,23 @@ function parseWorldStateUnchecked(dto: SchemaWorldState): WorldState {
 
 /** Parse a serialized state, canonicalizing every operational quantity. */
 export function parseWorldState(input: unknown): WorldState {
-  return parseWorldStateUnchecked(SerializedWorldStateSchema.parse(input));
+  return parseWorldStateUnchecked(SerializedWorldStateSchema.parse(input), true);
+}
+
+/**
+ * Parse a snapshot checkpoint without rewriting paired transfer results.
+ *
+ * A transfer quantizes one shared delta and applies it to both vessels. The
+ * resulting subtraction/addition can therefore retain a few IEEE-754 guard
+ * digits even though its replay identity is quantized by `stateHash`. A
+ * snapshot is an acceleration cache of that exact fold result; independently
+ * rounding its contents on load would make replay-with-snapshot produce a
+ * different in-memory state from replay-from-log. Schema validation and hash
+ * validation still run at this boundary, but the arithmetic representation is
+ * preserved.
+ */
+export function parseWorldStateForSnapshot(input: unknown): WorldState {
+  return parseWorldStateUnchecked(SerializedWorldStateSchema.parse(input), false);
 }
 
 /** Build the typed empty world at the only legal genesis event boundary. */

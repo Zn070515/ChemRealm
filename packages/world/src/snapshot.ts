@@ -5,7 +5,7 @@ import { CURRENT_SCHEMA_VERSION, type SolverConfigDto } from "@chemrealm/schema"
 import { eventPrefixHash, type EventLog } from "./log.js";
 import {
   deepFreeze,
-  parseWorldState,
+  parseWorldStateForSnapshot,
   serializeWorldState,
   stateHash,
   type WorldState,
@@ -88,7 +88,7 @@ export function validateSnapshot(input: unknown): WorldSnapshot {
   ) {
     throw new TypeError("snapshot: incomplete cache");
   }
-  const state = parseWorldState(value.state);
+  const state = parseWorldStateForSnapshot(value.state);
   if (state.worldId !== value.worldId) throw new Error("snapshot: world identity mismatch");
   if (state.sequence !== value.sequence) throw new Error("snapshot: sequence mismatch");
   if (stateHash(state) !== value.stateHash) throw new Error("snapshot: state hash mismatch");

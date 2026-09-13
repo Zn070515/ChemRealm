@@ -1,17 +1,21 @@
 # SPEC-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** **Accepted through revision 12** — revisions 13–17 are M4
+- **Status:** **Accepted through revision 12** — revisions 13–19 are M4
   implementation candidates pending owner review.
 - **Accepted baseline:** commit `8310c685`, `SPEC-0001` revision 6
-- **Current revision:** **17 Candidate** — M4 chemical identity closure adds
+- **Current revision:** **19 Candidate** — M4 chemical identity closure adds
   scenario-frozen indicator inputs, the explicit water-activity parameter, and
   common acetate-family semantics; revision 14 adds the total-solute domain and
   equilibrium-constant failure semantics; revision 15 makes numerical failure
   diagnostics explicit; revision 16 closes the cross-system component,
   authoring-schema, temperature-normalization, and Davies-domain boundaries;
   revision 17 separates persisted v2→v3 migration from the authored Scenario
-  namespace and canonicalizes legacy persisted temperatures. Revisions 7–12 are
-  accepted amendments; revisions 13–17 remain pending owner review.
+  namespace and canonicalizes legacy persisted temperatures; revision 18 assigns
+  scientific halves of M4 criteria to M4 and inspection/display halves to M5;
+  revision 19 clarifies that Strategy A's paired runtime fold and snapshot
+  cache preserve exact arithmetic while only the replay-identity projection is
+  quantized. Revisions 7–12 are accepted amendments; revisions 13–19 remain
+  pending owner review.
   See "Amendments since acceptance" below.
 - **Acceptance scope:** the specification and its acceptance criteria. Deferred
   items listed under Open questions remain open and must be resolved before the
@@ -20,7 +24,7 @@
 - **Date:** 2026-09-12 (M4 pre-implementation contract closure)
 - **Owner:** Project owner
 - **Supersedes:** revisions 1–5 of this spec
-- **Coverage:** all 71 acceptance criteria below are both **claimed** by a
+- **Coverage:** all 73 acceptance criteria below are both **claimed** by a
   `PLAN-0001` milestone (`**Addresses:**`) and **evidenced** in it (a test or
   stop condition), machine-checked by `tools/check_acceptance_coverage.py`,
   which runs in CI from M0. The check distinguishes "mentioned somewhere" from
@@ -42,6 +46,8 @@
 | 15 | 2026-09-12 | M4 numerical diagnostic closure candidate: scientific wire schema v2 introduced `NOT_CONVERGED.code` and non-empty `reason`; residual is optional and appears only when a finite meaningful residual was computed. AC-S4 assigns solvent/phase/required-species compatibility to requirements resolution before genesis and keeps solve-stage checks in the adapter. | Pending owner review |
 | 16 | 2026-09-12 | M4 cross-system compatibility closure candidate: genesis derives actual scenario input components from the resolved snapshot before solver resolution; authoring scenarios use shape version 3 and no longer carry an ignored dissociation flag; resolved requirement temperatures are canonical Kelvin; Davies activity evaluation never leaves its declared `I_m ≤ 0.5 mol/kg` domain, including boundary classification. | Pending owner review |
 | 17 | 2026-09-13 | Persisted schema migration closure candidate: persisted World/Event schema advances from v2 to v3; v2 requirement temperatures are explicitly canonicalized to Kelvin with a rebuilt genesis `contentHash`; persisted and authored Scenario migration namespaces are separate, and no automatic rewrite deletes the removed `fullyDissociated` authoring field. | Pending owner review |
+| 18 | 2026-09-13 | M4/M5 acceptance ownership closure candidate: AC-S12 is the scientific model-pH naming/provenance contract; AC-S13 is the scientific accuracy-envelope flag; inspection copy/DOM and visible qualification are separate M5 criteria AC-V10 and AC-V11. | Pending owner review |
+| 19 | 2026-09-13 | World Runtime numeric-semantics clarification candidate: Strategy A quantizes each conserved transfer delta once and applies it as a paired zero-sum update; post-transfer runtime values and exact snapshot caches are not independently rounded, while the explicit replay-identity projection remains quantized. | Pending owner review |
 
 A revision bump is recorded here rather than only in the body because the header
 is what a reader checks before deciding whether the file they are reading is the
@@ -1201,7 +1207,7 @@ This is the fix for owner finding P1-2 and it is load-bearing (`ADR-0007` §3):
 | Level | Contents | Quantized | Persisted | Purpose |
 |---|---|---|---|---|
 | **Solver state** | full speciation, unquantized float64 | no | no | conservation validation |
-| **Canonical state** | `n_i` (mol), `m_w` (kg), **`V` (L)**, `scenarioSnapshot`, world structure | yes | yes | defines replay equality |
+| **Canonical runtime state** | `n_i` (mol), `m_w` (kg), **`V` (L)**, `scenarioSnapshot`, world structure | identity projection only | event log is truth; snapshots are disposable exact-fold caches | defines replay equality |
 | **Derived science** | molalities, activities, `γ`, `I_m`, model pH, species | no | no | recomputed on demand |
 
 Species, activities, and ionic strength are **derived and never quantized
@@ -1221,6 +1227,13 @@ Two hashes follow from the split:
 - **`scienceHash`** over the derived science — a verification artifact that
   detects a solver regression, since derived values are recomputed rather than
   replayed.
+
+The in-memory World Runtime applies Strategy A as a paired update: it quantizes
+the conserved transfer delta once and applies that same value to source and
+target. It does **not** independently round the two post-transfer values,
+because that is the rejected conservation-drifting strategy. The replay
+identity projection is the quantized canonical representation; snapshot caches
+preserve the exact paired fold result and cannot replace the event log as truth.
 
 ### Explicit design decision: observable state is NOT persisted
 
@@ -1751,8 +1764,8 @@ Binary and verifiable. Every criterion maps to an evidence method.
 | AC-S9 | `−lg c(H⁺)` (taught) and activity-based model pH are distinct types, both computed, neither assignable to the other | compile fixture + named reference cases REF-5/REF-6 |
 | AC-S10 | `detLog10` and `detExp10` meet their stated accuracy (≤1.5 ulp in domain) against arbitrary-precision references, and refuse outside their validated domain | `spikes/numeric-policy` promoted to a package test |
 | AC-S11 | The outer residual is strictly increasing in `m_H` across a sweep **including the domain boundary**, machine-checked | monotonicity sweep test |
-| AC-S12 | Model pH is never labelled or described as "the true/thermodynamic pH"; the inspection view states the IUPAC notional definition and names the activity model it depends on | copy review + DOM assertion on the inspection view |
-| AC-S13 | A result computed beyond the proposed validation envelope carries `withinProposedAccuracyEnvelope: false` and is displayed with that qualification | domain-matrix test at `I_m` = 0.15 and 0.30 mol/kg |
+| AC-S12 | The scientific result and scientific documentation identify model pH as an activity-based, model-dependent quantity and never call it "the true/thermodynamic pH"; inspection copy is covered separately by AC-V10 | ScientificState/provenance contract and scientific-document review |
+| AC-S13 | A result computed beyond the proposed validation envelope carries `withinProposedAccuracyEnvelope: false`; visible presentation of that flag is covered separately by AC-V11 | domain-matrix test at `I_m` = 0.15 and 0.30 mol/kg |
 | AC-S14 | The proposed validation envelope is asserted, not assumed: the v0 scenario sweep's maximum `I_m` (0.1002 mol/kg) is checked against the envelope limit at test time | boundary test derived from `spikes/activity-equilibrium` §K |
 
 ### Runtime
@@ -1794,6 +1807,8 @@ Binary and verifiable. Every criterion maps to an evidence method.
 | AC-V7 | No geometry coordinate, stroke, or offset carries a volume; all are `Millimetre` | type check + `docs/visual/apparatus-standard.md` review checklist |
 | AC-V8 | **Presentation convention (owner-decided 2026-09-11).** Default view shows `−lg c(H⁺)` labelled simply as pH; a `科学模型` affordance shows activity-based model pH with the convention caveat. Every displayed hydrogen-ion number is labelled with which quantity it is; no view mixes the two; the choice is a **policy object** swappable without touching `packages/sci` or the observable model. **"Labelled" means: the numeric readout carries a visible quantity label, and the two conventions never appear in one view unlabelled and unseparated** | DOM assertions for labelling and single-convention; a test that swaps the policy and asserts zero non-presentation code changes |
 | AC-V9 | **Indicator boundary.** The indicator protonation ratio is produced by `packages/sci`; `packages/render` receives a number and computes no `Ka`, activity, or activity coefficient. No equilibrium expression appears in the render path | dependency rule + review; the observable's input type carries a ratio, not a `Ka` |
+| AC-V10 | The inspection view never labels model pH as "the true/thermodynamic pH"; it names the IUPAC notional convention and the activity model used | M5 copy review + DOM assertion |
+| AC-V11 | When `withinProposedAccuracyEnvelope` is `false`, the inspection view visibly carries that qualification beside the affected result | M5 deterministic fixture + DOM assertion |
 
 ### ACE
 

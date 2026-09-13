@@ -6,7 +6,7 @@ async function document(relativePath) {
   return readFile(new URL(relativePath, root), "utf8");
 }
 
-const [spec, design, adr0011, adr0012, content, world, worldCreation, solve, activity, migrate, scenarioMigrate] = await Promise.all([
+const [spec, design, adr0011, adr0012, content, world, worldCreation, solve, activity, migrate, scenarioMigrate, plan, evidence, integrity, oraclePlan, enginePlan] = await Promise.all([
   document("docs/specs/SPEC-0001-world-foundation-acid-base-titration.md"),
   document("docs/superpowers/specs/2026-09-12-m4-acid-base-engine-design.md"),
   document("docs/adr/0011-scenario-scientific-input-freezing.md"),
@@ -18,6 +18,11 @@ const [spec, design, adr0011, adr0012, content, world, worldCreation, solve, act
   document("packages/sci/src/acidbase/activity.ts"),
   document("packages/schema/src/migrate.ts"),
   document("packages/schema/src/scenario-migrate.ts"),
+  document("docs/plans/PLAN-0001-world-foundation-acid-base-titration.md"),
+  document("docs/evidence/M4.md"),
+  document("docs/research/m4-evidence-integrity.md"),
+  document("docs/superpowers/plans/2026-09-13-m4-reference-oracle-validation.md"),
+  document("docs/superpowers/plans/2026-09-12-m4-acid-base-engine.md"),
 ]);
 
 const failures = [];
@@ -41,6 +46,9 @@ mustNot(spec, /Kw\s*=\s*a_H\s*·\s*a_OH\s*\/\s*a_w/i, "SPEC does not use the rej
 must(spec, /Persisted World\/Event `schemaVersion` is currently `3`/i, "SPEC identifies persisted schema version 3");
 must(spec, /forward migration is `1 → 2 → 3`/i, "SPEC identifies the complete persisted migration chain");
 mustNot(spec, /World and content `schemaVersion` is currently `2`/i, "SPEC does not merge authoring and persisted version namespaces");
+must(spec, /AC-S12\s*\|[^\n]*activity-based[^\n]*\|[^\n]*ScientificState/i, "M4 AC-S12 owns the scientific model-pH distinction");
+must(spec, /AC-V10[\s\S]{0,260}inspection view/i, "M5 owns the model-pH inspection presentation criterion");
+must(spec, /AC-V11[\s\S]{0,260}withinProposedAccuracyEnvelope/i, "M5 owns visible accuracy-envelope qualification");
 
 must(design, /Kw\s*=\s*a_H\s*·\s*a_OH/, "M4 design uses the accepted Kw convention");
 must(design, /total analytical solute molality/i, "M4 design records the analytical domain gate");
@@ -67,6 +75,11 @@ must(activity, /DaviesDomainError/, "Davies activity boundary has an explicit do
 must(migrate, /from:\s*2,[\s\S]{0,120}to:\s*3/, "persisted migrations include the v2-to-v3 step");
 must(migrate, /migrateWorld/, "persisted migration namespace has an explicit entry point");
 must(scenarioMigrate, /SCENARIO_MIGRATIONS/, "authoring migration namespace is explicit");
+must(plan, /\*\*Addresses:\*\*[\s\S]{0,160}AC-V10[\s\S]{0,40}AC-V11/, "M5 claims the deferred presentation criteria");
+must(evidence, /AC-V10[\s\S]{0,180}M5|M5[\s\S]{0,180}AC-V10/i, "M4 evidence points presentation criteria to M5");
+mustNot(integrity, /AC-S3、AC-S7、AC-S10…AC-S16/, "evidence-integrity note has no stale merged M4 status");
+mustNot(oraclePlan, /AC-S3, AC-S7, and AC-S10…AC-S16/, "oracle plan has no stale merged M4 status");
+mustNot(enginePlan, /AC-S3, AC-S7, and AC-S10…AC-S16/, "engine plan has no stale merged M4 status");
 
 if (failures.length > 0) {
   console.error("M4 contract consistency check failed:");

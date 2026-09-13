@@ -14,11 +14,12 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const SOURCE_ROOTS = [
+  join(ROOT, "packages", "schema", "src"),
   join(ROOT, "packages", "sci", "src"),
   join(ROOT, "packages", "world", "src"),
 ];
 const SOURCE_EXTENSIONS = new Set([".ts", ".tsx"]);
-const FORBIDDEN = /\bMath\.(?:log10|exp|pow)\s*\(/g;
+const FORBIDDEN = /\bMath\.(?:log10|log|exp|pow)\s*\(/g;
 
 function stripComments(source) {
   return source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/.*$/gm, "$1");
@@ -39,8 +40,13 @@ function filesUnder(directory) {
 }
 
 const failures = [];
-if (findForbiddenMathCalls("const forbidden = Math.log10(1) + Math.exp(0) + Math.pow(10, 2);").length !== 3) {
-  failures.push("self-test: the native Math.log10/Math.exp/Math.pow fixture was not detected");
+if (
+  findForbiddenMathCalls(
+    "function wrapped(x) { return Math.log(x) / Math.LN10; }\n" +
+      "const forbidden = Math.log10(1) + Math.exp(0) + Math.pow(10, 2);",
+  ).length !== 4
+) {
+  failures.push("self-test: native Math.log/Math.log10/Math.exp/Math.pow fixture was not detected");
 }
 
 for (const sourceRoot of SOURCE_ROOTS) {
@@ -60,5 +66,5 @@ if (failures.length > 0) {
 }
 
 console.log(`ok    deterministic scientific math boundary (${SOURCE_ROOTS.length} source roots)`);
-console.log("ok    native Math.log10/Math.exp/Math.pow substitution fixture is rejected");
+console.log("ok    native Math.log/Math.log10/Math.exp/Math.pow substitution fixture is rejected");
 console.log("\nRESULT: PASS");

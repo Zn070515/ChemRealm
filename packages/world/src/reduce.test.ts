@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { WORLD_CREATED } from "../test/fixtures.js";
+import { highPrecisionWorldCreated, WORLD_CREATED } from "../test/fixtures.js";
 import { quantize } from "./hash.js";
-import { createInitialState } from "./state.js";
+import {
+  createInitialState,
+  parseWorldStateForSnapshot,
+  serializeWorldState,
+} from "./state.js";
 import { reduce, WorldRuntimeError } from "./reduce.js";
 
 describe("World Runtime reducer", () => {
@@ -113,6 +117,58 @@ describe("World Runtime reducer", () => {
     expect(transferred.canonical.byVessel.flask.componentAmounts[0]?.amount).toBe(
       sourceComponentAmount - expectedComponentDelta,
     );
+  });
+
+  it("keeps a legal high-precision full transfer non-negative and exact", () => {
+    const genesis = createInitialState(highPrecisionWorldCreated());
+    const charged = reduce(genesis, {
+      seq: 1,
+      schemaVersion: 3,
+      type: "MaterialCharged",
+      payload: {
+        vesselId: "flask",
+        materialId: "hcl-0.1",
+        volume: { value: 250, unit: "mL" },
+      },
+    });
+    const serialized = serializeWorldState(charged);
+    const highPrecisionCharged = parseWorldStateForSnapshot({
+      ...serialized,
+      canonical: {
+        ...serialized.canonical,
+        byVessel: {
+          ...serialized.canonical.byVessel,
+          flask: {
+            waterMass: { value: 0.1999999999999, unit: "kg" as const },
+            liquidVolume: { value: 0.25, unit: "L" as const },
+            componentAmounts: [
+              { componentId: "HCl", amount: { value: 0.1234567890126, unit: "mol" as const } },
+            ],
+          },
+        },
+      },
+    });
+
+    const next = reduce(highPrecisionCharged, {
+      seq: 2,
+      schemaVersion: 3,
+      type: "TransferCommitted",
+      payload: {
+        fromVesselId: "flask",
+        toVesselId: "burette",
+        volume: { value: 250, unit: "mL" },
+        mechanism: "pipette",
+      },
+    });
+
+    const source = next.canonical.byVessel.flask;
+    const target = next.canonical.byVessel.burette;
+    expect(source.liquidVolume).toBe(0);
+    expect(source.waterMass).toBe(0);
+    expect(source.componentAmounts).toEqual([{ componentId: "HCl", amount: 0 }]);
+    expect(target.liquidVolume).toBe(highPrecisionCharged.canonical.byVessel.flask.liquidVolume);
+    expect(target.waterMass).toBe(highPrecisionCharged.canonical.byVessel.flask.waterMass);
+    expect(target.componentAmounts).toEqual(highPrecisionCharged.canonical.byVessel.flask.componentAmounts);
   });
 
   it("rejects an event that is not the next sequence boundary", () => {

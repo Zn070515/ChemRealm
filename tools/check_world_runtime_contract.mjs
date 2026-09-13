@@ -2,8 +2,8 @@
 /**
  * Static guard for M2's runtime red lines.
  *
- * This is intentionally narrow and executable: a future reducer cannot add a
- * second quantization path, browser-incompatible Node import, or unseeded
+ * This is intentionally narrow and executable: a future reducer cannot add an
+ * unapproved quantization path, browser-incompatible Node import, or unseeded
  * clock/randomness without making CI fail visibly.
  */
 
@@ -38,14 +38,16 @@ const sourceByName = Object.fromEntries(
   files.map((file) => [file.slice(SOURCE.length + 1).replaceAll("\\", "/"), readFileSync(file, "utf8")]),
 );
 const reducerSource = sourceByName["reduce.ts"] ?? "";
-const reducerQuantizers = reducerSource.match(/\bquantize\s*\(/g) ?? [];
 if (
-  reducerQuantizers.length !== 3 ||
   !reducerSource.includes("function canonicalVolume") ||
-  !reducerSource.includes("const deltaWater = quantize(") ||
-  !reducerSource.includes("const delta = quantize(")
+  !/function canonicalVolume[\s\S]*?return quantize\(/.test(reducerSource) ||
+  !/const deltaWater = isFullTransfer[\s\S]*?: quantize\(/.test(reducerSource) ||
+  !/const delta = isFullTransfer[\s\S]*?: quantize\(/.test(reducerSource) ||
+  !/waterMass:\s*kilogram\(quantize\(current\.waterMass \+ inventory\.waterMass \* volume\)\)/.test(reducerSource) ||
+  !/amount:\s*mol\(quantize\(amount\)\)/.test(reducerSource) ||
+  !/isFullTransfer \? 0 : sourceAmount - delta/.test(reducerSource)
 ) {
-  fail("reduce.ts: canonical volume and each conserved transfer delta must be quantized once");
+  fail("reduce.ts: canonical contents and transfer deltas must use the explicit quantization policy");
 }
 const commandQuantizers = sourceByName["command.ts"]?.match(/\bquantize\s*\(/g) ?? [];
 if (commandQuantizers.length !== 1 || !sourceByName["command.ts"]?.includes("function canonicalVolume")) {
@@ -72,6 +74,6 @@ if (failures.length > 0) {
 }
 
 console.log(`ok    World Runtime static contract (${files.length} production modules)`);
-console.log("ok    quantization is limited to command/reducer boundaries and explicit hash projections");
+console.log("ok    quantization uses approved command/reducer/state boundaries and explicit hash projections");
 console.log("ok    no Node-only, clock, or unseeded randomness dependency");
 console.log("\nRESULT: PASS");

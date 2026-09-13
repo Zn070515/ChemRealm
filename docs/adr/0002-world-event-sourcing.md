@@ -92,12 +92,19 @@ explicit model assumption, not an accident.
 
 ### Replay
 
-Replay is defined over the **quantized canonical state** (`ADR-0007` §§3–5), not
-raw doubles:
+Replay equality is defined over the **quantized replay-identity projection**
+(`ADR-0007` §§3–5), not raw doubles:
 
 > Replaying a serialized event log from the same genesis world, the same schema
 > version, and the same solver configuration produces the same `replayHash` at
 > every committed event boundary.
+
+The runtime fold retains the paired arithmetic result of a transfer: one
+quantized delta is applied to both vessels and neither post-transfer vessel is
+rounded independently. `replayHash` quantizes the explicit independent-state
+projection, while a snapshot cache preserves the exact fold representation so
+using a cache cannot change the returned state. This is the accepted Strategy A
+from `ADR-0007`, not a second conservation policy.
 
 **What the canonical state is** (revised 2026-09-11, rounds 2–3): the
 **independent** quantities only —

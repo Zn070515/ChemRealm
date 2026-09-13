@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { WORLD_CREATED } from "../test/fixtures.js";
+import { highPrecisionWorldCreated, WORLD_CREATED } from "../test/fixtures.js";
 import { reduce } from "./reduce.js";
 import { createInitialState } from "./state.js";
 import { emitCommand, validateCommand } from "./command.js";
@@ -100,5 +100,31 @@ describe("World Runtime command boundary", () => {
       accepted: false,
       reason: "INSUFFICIENT_VOLUME",
     });
+  });
+
+  it("accepts a high-precision full delivery that the reducer can apply", () => {
+    const genesis = createInitialState(highPrecisionWorldCreated());
+    const charged = reduce(genesis, {
+      seq: 1,
+      schemaVersion: 3,
+      type: "MaterialCharged",
+      payload: {
+        vesselId: "flask",
+        materialId: "hcl-0.1",
+        volume: { value: 250, unit: "mL" },
+      },
+    });
+
+    const result = emitCommand(charged, {
+      schemaVersion: 1,
+      type: "DeliverTitrant",
+      fromVesselId: "flask",
+      toVesselId: "burette",
+      volume: { value: 250, unit: "mL" },
+    });
+
+    expect(result.accepted).toBe(true);
+    if (!result.accepted) return;
+    expect(() => reduce(charged, result.event)).not.toThrow();
   });
 });

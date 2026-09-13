@@ -1,7 +1,7 @@
 # PLAN-0001 — World Foundation & Acid-Base Titration
 
 - **Status:** **M0–M3 S3 Verified / Accepted; M4 S2 in progress** — the original plan was approved
-  on 2026-09-11 at `SPEC-0001` revision 6; the current contract is revisions 13–17 candidates.
+  on 2026-09-11 at `SPEC-0001` revision 6; the current contract is revisions 13–19 candidates.
 - **Completed:** `M0 — Repository foundation` reached **S3 — Verified** on
   2026-09-11. Evidence: `docs/evidence/M0.md`, commits `1f3dfee`/`565a2e8`,
   CI run `34595967023` (13/13 gate steps on a clean `ubuntu-latest` checkout).
@@ -435,8 +435,9 @@ through composition code after a committed state exists.
 3. `canonicalJson`: sorted keys, specified shortest round-trip formatting,
    **normalize `-0` to `0`**, **reject `NaN`/`±Infinity`**.
 4. Reducer enforces `event.seq === state.sequence + 1`; strict sequential replay.
-5. **Two hashes** (`ADR-0007` §5): `replayHash` over canonical state,
-   `scienceHash` over derived science. Exclude wall-clock, cursor, presentation.
+5. **Two hashes** (`ADR-0007` §5): `replayHash` over the explicit replay-identity
+   projection, `scienceHash` over derived science. Exclude wall-clock, cursor,
+   presentation.
 6. `branch.ts` freezes the fork-point state; add a **runtime** dev assertion that
    the parent object graph is unchanged after a child mutation — an end-of-test
    hash comparison can miss a transient mutation.
@@ -575,10 +576,11 @@ requirements are unsatisfiable. M3 evidence is owner-verified at baseline
 
 **Status:** **S2 — Implementation and bounded reference/oracle validation
 complete**; persisted schema v3 migration and cross-system compatibility
-remediation are complete, while the remaining AC-S3, AC-S7, and AC-S10…AC-S16
-evidence still requires owner review before S3.
+remediation are complete, while the remaining AC-S3, AC-S7, and AC-S11…AC-S14
+evidence still requires owner review before S3. Presentation criteria AC-V10 and
+AC-V11 belong to M5 and are not M4 prerequisites.
 **Target stage:** S3
-**Addresses:** ADR-0003, ADR-0007; `SPEC-0001` AC-S1..AC-S16
+**Addresses:** ADR-0003, ADR-0007; `SPEC-0001` AC-S1..AC-S11, AC-S12..AC-S16
 
 The scientific heart of the slice. Also the milestone that closes the
 equivalence-region gap the spike could not.
@@ -711,8 +713,8 @@ starting; the concentration-only formulation they describe is superseded.**
 | Outer residual strictly increasing in `m_H` across a sweep including the domain boundary | AC-S11 |
 | Indicator ratio is activity-coupled, continuous across the transition, no threshold branch | AC-V2 precursor |
 | Above pH 12, the monoprotic indicator approximation reports reduced validity | `SPEC-0001` failure mode 10 |
-| Copy review + DOM assertion: model pH is never described as "the true/thermodynamic pH"; the inspection view names the activity model | AC-S12 |
-| Domain-matrix test at `I_m` = 0.15 and 0.30: the result carries `withinProposedAccuracyEnvelope: false` | AC-S13 |
+| ScientificState/provenance and scientific-document review identify model pH as activity-based and model-dependent, never as "the true/thermodynamic pH"; inspection copy is AC-V10 in M5 | AC-S12 |
+| Domain-matrix test at `I_m` = 0.15 and 0.30: the result carries `withinProposedAccuracyEnvelope: false`; visible qualification is AC-V11 in M5 | AC-S13 |
 | Boundary test: the v0 scenario sweep's max `I_m` (0.1002 mol/kg) is checked against the envelope limit; all Davies evaluations stay at or below the 0.5 computational boundary | AC-S14 |
 | Negative content test: a scenario without a declared density is rejected, not defaulted | AC-S15 |
 | Provenance review: no constant carries more significant figures than its source; the source's own precision is recorded | AC-S16 |
@@ -749,7 +751,7 @@ If PHREEQC cannot be installed and driven in CI:
 ## M5 — Observable state
 
 **Target stage:** S3
-**Addresses:** ADR-0006, ADR-0007; `SPEC-0001` AC-V2..AC-V4, AC-V6, AC-V8, AC-V9
+**Addresses:** ADR-0006, ADR-0007; `SPEC-0001` AC-V2..AC-V4, AC-V6, AC-V8, AC-V9, AC-V10, AC-V11
 
 `AC-V1` (`packages/render` has no import path to `packages/sci`) is **not**
 claimed here. It was inside the `AC-V1..AC-V4` range; the rule is created and
@@ -842,6 +844,8 @@ packages/render/src/state/scene.ts            ObservableModel → RenderState
 | Curve points derive from a state sequence, not from a stored array | No pre-authored curves |
 | Dependency-rule fixture: an equilibrium expression in `packages/render` fails the build | AC-V9 — the indicator ratio is a scientific output |
 | DOM assertions: the taught quantity may be labelled plainly "pH"; model pH always carries its activity-model label; no view mixes the two | AC-V8 |
+| Inspection copy/DOM assertion never calls model pH true/thermodynamic and names the IUPAC notional convention plus activity model | AC-V10 |
+| Deterministic fixture/DOM assertion visibly qualifies results whose `withinProposedAccuracyEnvelope` is false | AC-V11 |
 
 ### Stop condition
 
