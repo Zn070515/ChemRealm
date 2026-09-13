@@ -14,6 +14,7 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[3]
 VALIDATION_PATH = REPO_ROOT / "tools" / "oracle" / "reference" / "run_m4_validation.py"
 REPORT_PATH = REPO_ROOT / "docs" / "evidence" / "M4-oracle-sweep-report.json"
+EVIDENCE_PATH = REPO_ROOT / "docs" / "evidence" / "M4.md"
 
 
 def load_validation() -> Any:
@@ -45,6 +46,7 @@ def test_cross_engine_report_is_complete_when_present() -> None:
         "note": "ORACLE-9 is a representative post-equivalence point within the declared pH comparison envelope; canonical REF-9 remains the charge-conservation acceptance fixture.",
     }
     assert {point["id"] for point in report["points"]} == set(report["oracleFixtures"])
+    assert all(not point["id"].startswith("REF-") for point in report["points"])
     assert report["pass"] is True
     assert report["phreeqc"]["identityVerified"] is True
     assert report["phreeqc"]["version"] == "3.8.6-17100"
@@ -53,6 +55,46 @@ def test_cross_engine_report_is_complete_when_present() -> None:
     assert report["maxAbsolutePhDifference"] <= report["tolerancePh"]
     assert report["signedPhDifferenceSummary"]["allSameSign"] is True
     assert report["disagreementAnalysis"]["classification"] == "systematic-positive-offset-candidate"
+
+
+def test_evidence_matrix_keeps_canonical_and_oracle_claims_separate() -> None:
+    text = EVIDENCE_PATH.read_text(encoding="utf-8")
+    ac_s1 = next(line for line in text.splitlines() if line.startswith("| AC-S1 |"))
+    ac_s6 = next(line for line in text.splitlines() if line.startswith("| AC-S6 |"))
+    assert "Canonical SPEC-0001 REF-1…REF-10" in ac_s1
+    assert "not used as REF evidence" in ac_s1
+    assert "M4-oracle-sweep-report.json" in ac_s6
+    assert "ORACLE-* TS↔PHREEQC" in ac_s6
+    assert "REF-9 remains" not in ac_s6
+
+
+def test_compare_preserves_signed_differences_when_the_offset_is_mixed() -> None:
+    validation = load_validation()
+    ts_rows = [
+        {
+            "id": f"ORACLE-{index}",
+            "status": "OK",
+            "modelPh": 1.0,
+            "ionicStrengthMolal": 0.1,
+        }
+        for index in range(1, 11)
+    ]
+    oracle_rows = {
+        f"ORACLE-{index}": {
+            "status": "OK",
+            "modelPh": 0.99,
+            "ionicStrengthMolal": 0.1,
+        }
+        for index in range(1, 11)
+    }
+    oracle_rows["ORACLE-10"]["modelPh"] = 1.01
+
+    report = validation.compare(ts_rows, oracle_rows)
+
+    assert report["pass"] is True
+    assert report["signedPhDifferenceSummary"]["allSameSign"] is False
+    assert report["disagreementAnalysis"]["classification"] == "mixed-sign-or-insufficient-sample"
+    assert report["disagreementAnalysis"]["notProven"]
 
 
 def test_compare_rejects_a_missing_or_failed_engine_point() -> None:

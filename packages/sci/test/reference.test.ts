@@ -1,4 +1,5 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
   kelvin,
@@ -175,6 +176,38 @@ function speciesBySymbol(state: ScientificState): Readonly<Record<string, number
   );
 }
 
+function requestSignature(request: ReferenceFixture["request"]): unknown {
+  return {
+    waterMassKg: request.waterMassKg,
+    liquidVolumeL: request.liquidVolumeL,
+    temperatureK: request.temperatureK,
+    solutes: [...request.solutes]
+      .sort((left, right) => left.soluteId.localeCompare(right.soluteId))
+      .map((solute) => ({
+        soluteId: solute.soluteId,
+        amountMol: solute.amountMol,
+        mode: solute.mode,
+        ...(solute.ka === undefined ? {} : { ka: solute.ka }),
+      })),
+    indicators: [...request.indicators]
+      .sort((left, right) => left.indicatorId.localeCompare(right.indicatorId)),
+  };
+}
+
+function componentAmounts(request: ReferenceFixture["request"]): Readonly<Record<string, number>> {
+  return Object.fromEntries(
+    [...request.solutes]
+      .sort((left, right) => left.soluteId.localeCompare(right.soluteId))
+      .map((solute) => [solute.soluteId, solute.amountMol]),
+  );
+}
+
+function fixtureById(id: string): ReferenceRecord {
+  const fixture = fixtures.find((candidate) => candidate.id === id);
+  if (fixture === undefined) throw new Error(`missing canonical fixture ${id}`);
+  return fixture;
+}
+
 function expectNear(actual: number, expected: number, tolerance: number): void {
   expect(Math.abs(actual - expected)).toBeLessThanOrEqual(tolerance);
 }
@@ -329,6 +362,121 @@ describe("independent M4 reference fixtures", () => {
     );
     expect(manifest.adversarialFixtures).toContain("ADVERSARIAL-HOAC-DILUTE");
     expect(fixtures.every((fixture) => fixture.id.startsWith("REF-"))).toBe(true);
+    expect(manifest.oracleFixtures.every((id) => id.startsWith("ORACLE-"))).toBe(true);
+    expect(manifest.fixtures.filter((id) => manifest.oracleFixtures.includes(id))).toEqual([]);
+    const fixtureFiles = readdirSync(fileURLToPath(referenceUrl))
+      .filter((name) => name.endsWith(".json") && name !== "manifest.json")
+      .map((name) => name.slice(0, -5))
+      .sort();
+    expect(fixtureFiles).toEqual(
+      [...manifest.fixtures, ...manifest.oracleFixtures, ...manifest.adversarialFixtures].sort(),
+    );
+  });
+
+  it("binds canonical REF identifiers to the accepted SPEC semantics", () => {
+    const ref1 = fixtureById("REF-1");
+    const ref2 = fixtureById("REF-2");
+    expect(ref1.kind).toBe("single");
+    expect(ref2.kind).toBe("single");
+    expect(requestSignature((ref1 as ReferenceFixture).request)).toEqual({
+      waterMassKg: 1,
+      liquidVolumeL: 1,
+      temperatureK: 298.15,
+      solutes: [
+        { soluteId: "HOAc", amountMol: 0.1, mode: "monoprotic-equilibrium", ka: 1.7539e-5 },
+        { soluteId: "NaOAc", amountMol: 0.1, mode: "fully-dissociated" },
+      ],
+      indicators: [],
+    });
+    expect(requestSignature((ref2 as ReferenceFixture).request)).toEqual({
+      waterMassKg: 1,
+      liquidVolumeL: 1,
+      temperatureK: 298.15,
+      solutes: [
+        { soluteId: "HOAc", amountMol: 0.01, mode: "monoprotic-equilibrium", ka: 1.7539e-5 },
+        { soluteId: "NaOAc", amountMol: 0.01, mode: "fully-dissociated" },
+      ],
+      indicators: [],
+    });
+    expect((ref1 as ReferenceFixture).publishedAnchor?.modelPh).toBe(4.644);
+    expect((ref2 as ReferenceFixture).publishedAnchor?.modelPh).toBe(4.713);
+
+    const ref3 = fixtureById("REF-3") as AnalyticReferenceFixture;
+    expect(ref3.kind).toBe("analytic-acid-excess");
+    expect(ref3.cases.map((referenceCase) => [
+      referenceCase.caseId,
+      (referenceCase as AcidExcessCase).excessMolality,
+      componentAmounts(referenceCase.request),
+    ])).toEqual([
+      ["REF-3-f0.0", 0.1, { HCl: 0.1, NaOH: 0 }],
+      ["REF-3-f0.5", 0.05, { HCl: 0.1, NaOH: 0.05 }],
+      ["REF-3-f0.9", 0.01, { HCl: 0.1, NaOH: 0.09 }],
+    ]);
+
+    const ref4 = fixtureById("REF-4") as AnalyticReferenceFixture;
+    expect(ref4.kind).toBe("analytic-base-excess");
+    expect(ref4.cases.map((referenceCase) => [
+      referenceCase.caseId,
+      (referenceCase as BaseExcessCase).excessMolality,
+      componentAmounts(referenceCase.request),
+    ])).toEqual([
+      ["REF-4-f1.1", 0.01, { HCl: 0.1, NaOH: 0.11 }],
+      ["REF-4-f1.5", 0.05, { HCl: 0.1, NaOH: 0.15 }],
+    ]);
+
+    const ref5 = fixtureById("REF-5") as ReferenceFixture;
+    const ref6 = fixtureById("REF-6") as ReferenceFixture;
+    expect(requestSignature(ref5.request)).toEqual(requestSignature(ref6.request));
+    expect(componentAmounts(ref5.request)).toEqual({ HCl: 0.1 });
+    expect(ref5.publishedAnchor?.taughtHydrogenIonExponent).toBe(1);
+    expect(ref6.publishedAnchor?.modelPh).toBe(1.1064);
+
+    const ref7 = fixtureById("REF-7") as ReferenceFixture;
+    expect(componentAmounts(ref7.request)).toEqual({ HCl: 1e-8 });
+    expect(ref7.publishedAnchor?.modelPh).toBe(6.978);
+
+    const ref8 = fixtureById("REF-8") as AnalyticReferenceFixture;
+    expect(ref8.kind).toBe("analytic-half-equivalence");
+    expect(ref8.cases.map((referenceCase) => [
+      referenceCase.caseId,
+      (referenceCase as HalfEquivalenceCase).pKa,
+      componentAmounts(referenceCase.request),
+    ])).toEqual([
+      ["REF-8-half-equivalence", 4.756, { HOAc: 0.1, NaOH: 0.05 }],
+    ]);
+
+    const ref9 = fixtureById("REF-9") as ChargeConservationFixture;
+    expect(ref9.kind).toBe("charge-conservation-sweep");
+    expect(ref9.cases.map((referenceCase) => referenceCase.caseId)).toEqual([
+      "REF-9-strong-acid",
+      "REF-9-acid-half-neutralized",
+      "REF-9-acid-near-equivalence",
+      "REF-9-base-near-equivalence",
+      "REF-9-strong-base",
+      "REF-9-weak-acid",
+      "REF-9-buffer",
+      "REF-9-equivalence",
+      "REF-9-post-equivalence",
+      "REF-9-sodium-acetate",
+    ]);
+    expect(componentAmounts(ref9.cases.find((referenceCase) => referenceCase.caseId === "REF-9-post-equivalence")!.request)).toEqual({
+      HOAc: 0.1,
+      NaOH: 0.14,
+    });
+    expect(componentAmounts(ref9.cases.find((referenceCase) => referenceCase.caseId === "REF-9-strong-base")!.request)).toEqual({
+      NaOH: 0.15,
+    });
+
+    const ref10 = fixtureById("REF-10") as ScaleComparisonFixture;
+    expect(ref10.kind).toBe("molality-molarity-bound");
+    expect(ref10.cases.map((referenceCase) => referenceCase.inputMolarityMolPerL)).toEqual([
+      0.001,
+      0.01,
+      0.05,
+      0.1,
+      0.12,
+    ]);
+    expect(ref10.expectedMaxDifference).toBe(0.001);
   });
 
   it.each(fixtures)("matches $id without changing the checked-in expected values", async (fixture) => {
