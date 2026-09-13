@@ -61,7 +61,7 @@ export function findForbiddenQuantityUses(relativePath, source) {
     if (ts.isIdentifier(node) && FORBIDDEN_SCHEMA_SYMBOLS.has(node.text)) {
       found.push(node.text);
     }
-    if (ts.isStringLiteral(node)) {
+    if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) {
       if (FORBIDDEN_DIMENSION_LITERALS.has(node.text)) {
         found.push(`dimension:${node.text}`);
       }
@@ -88,6 +88,7 @@ const canonicalDimensionFixture = "import { canonicalQuantityOfDimension } from 
 const dimensionUnitLookupFixture = "import { unitsOfDimension } from '@chemrealm/schema';\nconst value = unitsOfDimension('molarity');";
 const genericParserFixture = "import { parseQuantity, toCanonical } from '@chemrealm/schema';\nconst value = toCanonical(parseQuantity({ value: 100, unit: 'mmol/L' }));";
 const directCanonicalizerFixture = "import { toCanonical } from '@chemrealm/schema';\nconst value = toCanonical({ value: 100, unit: 'mmol/L' });";
+const templateCanonicalizerFixture = "import { toCanonical, type UnitSymbol } from '@chemrealm/schema';\nconst value = toCanonical({ value: 100, unit: `mmol/L` as UnitSymbol });";
 for (const [name, fixture] of [
   ["direct import", directImportFixture],
   ["namespace access", namespaceFixture],
@@ -97,6 +98,7 @@ for (const [name, fixture] of [
   ["dimension unit lookup", dimensionUnitLookupFixture],
   ["generic quantity parser", genericParserFixture],
   ["direct canonicalizer", directCanonicalizerFixture],
+  ["template canonicalizer", templateCanonicalizerFixture],
 ]) {
   if (violationsForSource("acidbase/illegal-fixture.ts", fixture).length === 0) {
     failures.push(`self-test: ${name} molarity fixture was not rejected`);

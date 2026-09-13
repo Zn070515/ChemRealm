@@ -711,7 +711,7 @@ starting; the concentration-only formulation they describe is superseded.**
 | 1e-6 mol/kg acetic acid: exact solve matched; HH divergence (0.65 pH) reproduced | AC-S5 |
 | PHREEQC vs TS within ±0.02 pH **including the equivalence region**, in molality with aligned constants | AC-S6 |
 | Every solver constant, indicator input, and v0 material concentration/density/molar mass has a citable datum-level source | AC-S7 |
-| No molarity value reaches `packages/sci` internals outside `ScientificProjection` | AC-S8; AST-based `pnpm verify:scientific-quantities` rejects direct, aliased, namespace, dynamic-property, generic dimension/schema/parser construction, explicit molarity canonicalization, and `molarity`/`mol/L`/`mmol/L` literals |
+| No molarity value reaches `packages/sci` internals outside `ScientificProjection` | AC-S8; AST-based `pnpm verify:scientific-quantities` rejects direct, aliased, namespace, dynamic-property, generic dimension/schema/parser construction, explicit molarity canonicalization including no-substitution template literals, and `molarity`/`mol/L`/`mmol/L` literals |
 | `−lg c(H⁺)` and `pH` are distinct types; REF-5 and REF-6 both pass and differ by the expected amount | AC-S9 |
 | `detLog10`/`detExp10` ≤1.5 ulp in domain vs arbitrary-precision; **refuse outside domain** | AC-S10 |
 | Outer residual strictly increasing in `m_H` across a sweep including the domain boundary | AC-S11 |

@@ -99,6 +99,7 @@ must(quantityBoundaryGuard, /canonicalQuantityOfDimension/, "scientific quantity
 must(quantityBoundaryGuard, /unitsOfDimension/, "scientific quantity guard names the generic dimension unit lookup");
 must(quantityBoundaryGuard, /parseQuantity/, "scientific quantity guard names the generic quantity parser");
 must(quantityBoundaryGuard, /FORBIDDEN_DIMENSION_LITERALS/, "scientific quantity guard checks dimension literals");
+must(quantityBoundaryGuard, /isNoSubstitutionTemplateLiteral/, "scientific quantity guard checks template-literal dimension values");
 must(v0Inputs, /"schemaVersion": 2/, "v0 input manifest has the source-fidelity schema version");
 mustNot(v0Inputs, /expectedMaximum/, "v0 input manifest does not contain its own acceptance output");
 must(v0Inputs, /"sourceLiteral": "1 g\/cm³ \(25 °C\)"/, "NaOH source literal preserves reported precision");
