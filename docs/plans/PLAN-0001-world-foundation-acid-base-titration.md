@@ -573,10 +573,10 @@ requirements are unsatisfiable. M3 evidence is owner-verified at baseline
 
 ## M4 — Acid-base reference engine and oracle validation
 
-**Status:** **S2 — Implementation in progress**; persisted schema v3 migration and
-cross-system compatibility
-remediation is locally complete, but REF-1…REF-10 and PHREEQC evidence remain
-pending.
+**Status:** **S2 — Implementation and bounded reference/oracle validation
+complete**; persisted schema v3 migration and cross-system compatibility
+remediation are complete, while the remaining AC-S3, AC-S7, and AC-S10…AC-S16
+evidence still requires owner review before S3.
 **Target stage:** S3
 **Addresses:** ADR-0003, ADR-0007; `SPEC-0001` AC-S1..AC-S16
 
@@ -597,12 +597,13 @@ packages/sci/src/acidbase/activity.ts     Davies; sqrt permitted, log is NOT
 packages/sci/src/acidbase/species.ts      species inventory and mass balance
 packages/sci/src/acidbase/indicator.ts    ratio-based indicator model (empirical category)
 packages/sci/src/acidbase/index.ts        the adapter implementation boundary
-packages/sci/test/reference/*.json        REF-1..REF-10 as data, not as literals in test code
+packages/sci/test/reference/REF-*.json    canonical SPEC REF-1..REF-10 data
+packages/sci/test/reference/ORACLE-*.json PHREEQC sweep data; separate namespace
 pyproject.toml                            Python oracle tooling only; no runtime PHREEQC dependency
 tools/oracle/phreeqc/run_batch.py         generate .pqi, run PHREEQC CLI, parse output
 tools/oracle/phreeqc/cases/*.pqi.in
 tools/oracle/tests/test_reference.py      oracle vs published standards
-tools/oracle/tests/test_cross_check.py    oracle vs TS solver over a swept curve
+tools/oracle/tests/test_cross_check.py    ORACLE vs TS solver over a swept curve
 docs/research/constants-provenance.md     pin every constant to a citable source
 ```
 

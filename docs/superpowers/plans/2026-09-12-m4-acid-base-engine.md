@@ -494,16 +494,29 @@ Run the complete `packages/sci` Vitest suite, `pnpm typecheck`, `pnpm build`, an
 
 **Files:**
 
-- `packages/sci/test/reference/REF-1.json` through `REF-10.json` (new)
+- `packages/sci/test/reference/REF-1.json` through `REF-10.json` (canonical
+  SPEC-0001 acceptance fixtures; new)
+- `packages/sci/test/reference/ORACLE-*.json` (separately named PHREEQC sweep)
 - `packages/sci/src/acidbase/reference.test.ts` (new)
 - `packages/sci/src/reference-fixtures.ts` (test-only or carefully scoped fixture loader)
 - `docs/research/constants-provenance.md`
 
 **Fixture rules:**
 
-1. Each JSON fixture contains the input, basis, constants/source record ID, expected values, tolerance, and the derivation/source note. Expected values are entered from the pinned independent derivation/literature/oracle record, never emitted by the TS solver and copied back into JSON.
-2. Cover the accepted matrix: strong-acid excess, strong-base excess, weak-acid buffer, dilute weak acid, pre-equivalence, equivalence, post-equivalence, model-vs-taught hydrogen quantities, and indicator/projection behavior.
-3. REF-5 and REF-10 are projection cases where applicable; do not add molarity to the ScientificState just to make a fixture easier to assert.
+1. The manifest carries the shared basis and constants/source record ID; each
+   JSON fixture contains its input (or child inputs), expected values or an
+   independently checkable relation/invariant, tolerance, and a
+   derivation/source note. Expected values are entered from the pinned
+   independent derivation/literature/oracle record, never emitted by the TS
+   solver and copied back into JSON.
+2. Cover the accepted matrix exactly as defined by SPEC-0001: published buffer
+   anchors, strong-acid/base analytic identities, taught/model hydrogen
+   quantities, dilute strong acid, half-equivalence identity, charge
+   conservation, and the molality/molarity sensitivity bound.
+3. Keep the PHREEQC pre-/at-/post-equivalence sweep in the ORACLE namespace;
+   it must not reuse canonical REF identifiers. REF-5/REF-6 use
+   ScientificProjection where applicable; do not add molarity to
+   ScientificState just to make a fixture easier to assert.
 
 **Tests to add/run:**
 

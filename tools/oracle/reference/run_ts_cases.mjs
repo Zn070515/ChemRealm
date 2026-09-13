@@ -15,10 +15,12 @@ import {
 const fixturesDirectory = resolve(
   process.argv[2] ?? "packages/sci/test/reference",
 );
+const fixturePrefix = process.argv[3] ?? "ORACLE";
+const fixturePattern = new RegExp(`^${fixturePrefix}-\\d+\\.json$`);
 
 function loadFixtures() {
   return readdirSync(fixturesDirectory)
-    .filter((name) => /^REF-\d+\.json$/.test(name))
+    .filter((name) => fixturePattern.test(name))
     .sort((left, right) => {
       const leftNumber = Number(left.match(/\d+/)?.[0]);
       const rightNumber = Number(right.match(/\d+/)?.[0]);

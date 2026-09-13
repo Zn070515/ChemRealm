@@ -18,12 +18,14 @@ matrix is exercised.
 
 ## Goal
 
-- Hand-author REF-1…REF-10 from an independent derivation and validate them with
-  the production adapter without generating expected values from that adapter.
+- Hand-author canonical SPEC-0001 REF-1…REF-10 from an independent derivation
+  and validate them with the production adapter without generating expected
+  values from that adapter.
 - Execute the pinned PHREEQC CLI with verified source/database/executable
   identity and parse named selected output.
-- Compare TS and PHREEQC over pre-equivalence, equivalence, and post-equivalence
-  cases, reporting every point and every disagreement.
+- Compare the separately named ORACLE-1…ORACLE-10 TS/PHREEQC sweep over
+  pre-equivalence, equivalence, and post-equivalence cases, reporting every
+  point and every signed disagreement.
 
 ## Non-goals
 
@@ -62,20 +64,19 @@ matrix is exercised.
 
 | Criterion | Evidence |
 |---|---|
-| REF-1…REF-10 are independent and complete | checked-in fixtures, provenance/derivation, schema validation, tamper failure |
+| Canonical REF-1…REF-10 are independent and complete | checked-in fixtures, provenance/derivation, schema validation, tamper failure |
 | TS satisfies reference tolerances | Vitest reference suite and invariant report |
 | Pinned PHREEQC actually ran | verified toolchain metadata, CLI output, checksum/version report |
-| Every sweep point is compared | machine-readable cross-engine report; no missing rows |
+| Every ORACLE sweep point is compared | machine-readable cross-engine report; no missing rows or renamed canonical REF claims |
 | Equivalence region is included | explicit weak-acid/strong-base pre/at/post points |
 | Failures are truthful | domain/numerical failures retain tagged status; no averaging or hiding |
 
 ## Verification and handoff
 
 Run the existing full TypeScript/Python gates plus the PHREEQC-required command
-on a committed baseline. Commit `249c0cdd8357c9fdc90e7d5f83317711f5b5a914`
-recorded 10/10 compared points, a maximum absolute pH difference of
-`0.0193938057606573`, and verified the pinned PHREEQC source/executable/database
-identity; hosted CI run `34709078924` repeated the hard gate successfully. The
-complete handoff is in `docs/evidence/M4.md` and
-`docs/evidence/M4-reference-report.json`. M5 remains unauthorized until the
+on a committed baseline. The current local run records 10/10 ORACLE points, a
+maximum absolute pH difference of `0.0193938057606573`, signed differences, and
+verified pinned PHREEQC source/executable/database identity. The complete
+handoff is in `docs/evidence/M4.md` and
+`docs/evidence/M4-oracle-sweep-report.json`. M5 remains unauthorized until the
 owner accepts the completed M4 matrix.

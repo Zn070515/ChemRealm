@@ -364,9 +364,11 @@ intended reason. The test layers are:
 3. solver tests for strong acid/base excess, weak-acid buffer, dilute weak acid,
    equivalence region, low-water/high-ionic-strength boundaries, and refusal;
 4. adapter contract tests for all four result statuses and exact provenance;
-5. hand-authored REF-1 through REF-10 fixtures loaded from JSON. REF-5 and
-   REF-10 exercise ScientificProjection for molarity-dependent quantities; they
-   do not add those quantities to ScientificState;
+5. hand-authored canonical REF-1 through REF-10 fixtures loaded from JSON,
+   kept separate from the ORACLE-* PHREEQC sweep. REF-5 and REF-6 exercise
+   ScientificProjection for the distinct taught/model hydrogen quantities;
+   REF-10 measures molality/molarity sensitivity. None add molarity to
+   ScientificState;
 6. Python PHREEQC batch tests using aligned molality inputs and a locally pinned
    database; and
 7. a swept cross-engine comparison that includes pre-equivalence, equivalence,
@@ -409,8 +411,9 @@ document:
   per-datum source provenance, rather than to global solver identity;
 - bracket, deterministic-math, and internal-invariant failures have distinct
   public result behavior; and
-- REF-5/REF-10 are explicitly assigned to ScientificProjection rather than
-  being smuggled into ScientificState.
+- REF-5/REF-6 are explicitly assigned to ScientificProjection rather than
+  being smuggled into ScientificState. REF-10 is a scale-sensitivity property
+  suite, not a replacement for the canonical projection references.
 
 The owner accepted the recommended resolution: the existing
 `withinProposedAccuracyEnvelope` boolean is the sole accuracy-envelope

@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "model": {
     "id": "acidbase-monoprotic-davies",
     "version": "1.0.0"
@@ -23,5 +23,18 @@
     "REF-8",
     "REF-9",
     "REF-10"
-  ]
+  ],
+  "oracleFixtures": [
+    "ORACLE-1",
+    "ORACLE-2",
+    "ORACLE-3",
+    "ORACLE-4",
+    "ORACLE-5",
+    "ORACLE-6",
+    "ORACLE-7",
+    "ORACLE-8",
+    "ORACLE-9",
+    "ORACLE-10"
+  ],
+  "adversarialFixtures": ["ADVERSARIAL-HOAC-DILUTE"]
 }

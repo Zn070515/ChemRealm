@@ -1,9 +1,8 @@
 {
   "schemaVersion": 1,
-  "id": "REF-5",
-  "kind": "single",
-  "description": "0.1000 mol/L HCl, no base — taught hydrogen-ion exponent",
-  "derivation": "Independent high-precision Decimal solve of the accepted Davies equations; the taught quantity is independently fixed by c(H+) = n(H+)/V for a fully dissociated 0.1000 mol/L input.",
+  "id": "ORACLE-1",
+  "description": "0.1 mol/kg strong acid",
+  "derivation": "Independent high-precision Decimal solve of the accepted Davies equations; no TypeScript output was used.",
   "request": {
     "waterMassKg": 1,
     "liquidVolumeL": 1,
@@ -27,11 +26,6 @@
       "taughtHydrogenIonExponent": 0.9999999999992891
     },
     "indicatorRatios": {}
-  },
-  "publishedAnchor": {
-    "taughtHydrogenIonExponent": 1,
-    "tolerance": 0.0005,
-    "source": "definition of the fully dissociated 0.1000 mol/L input"
   },
   "tolerance": { "absolute": 1e-10, "chargeResidual": 1e-14 }
 }

@@ -2,18 +2,36 @@
   "allPointsCompared": true,
   "basis": "molality",
   "constants": "docs/research/constants-provenance.json",
+  "disagreementAnalysis": {
+    "classification": "systematic-positive-offset-candidate",
+    "interpretation": "This is an observed cross-engine offset, not proof of a single cause; activity convention, database species representation, constants, and water conventions require separate investigation.",
+    "notProven": "Tolerance pass does not establish model equivalence or explain the offset.",
+    "observed": "TS model pH minus PHREEQC model pH is positive at every compared point"
+  },
   "equivalenceSweep": {
-    "equivalence": "REF-8",
-    "note": "REF-9 is a representative post-equivalence point within the declared pH comparison envelope.",
-    "post": "REF-9",
+    "equivalence": "ORACLE-8",
+    "note": "ORACLE-9 is a representative post-equivalence point within the declared pH comparison envelope; canonical REF-9 remains the charge-conservation acceptance fixture.",
+    "post": "ORACLE-9",
     "postNaOHMolPerKg": 0.14,
-    "pre": "REF-7"
+    "pre": "ORACLE-7"
   },
   "maxAbsolutePhDifference": 0.0193938057606573,
   "model": {
     "id": "acidbase-monoprotic-davies",
     "version": "1.0.0"
   },
+  "oracleFixtures": [
+    "ORACLE-1",
+    "ORACLE-2",
+    "ORACLE-3",
+    "ORACLE-4",
+    "ORACLE-5",
+    "ORACLE-6",
+    "ORACLE-7",
+    "ORACLE-8",
+    "ORACLE-9",
+    "ORACLE-10"
+  ],
   "pass": true,
   "phreeqc": {
     "databaseSha256": "59373961d648dfbf68a40744060c1d64f57ecbec98f4f5fb89f3a1b4213ccd10",
@@ -26,123 +44,127 @@
   "points": [
     {
       "absolutePhDifference": 0.015702542432526556,
-      "id": "REF-1",
+      "id": "ORACLE-1",
       "phreeqcIonicStrengthMolal": 0.09808972733194,
       "phreeqcModelPh": 1.091316271903,
       "region": "control",
+      "signedPhDifference": 0.015702542432526556,
       "status": "PASS",
       "tsIonicStrengthMolal": 0.10000000000016407,
       "tsModelPh": 1.1070188143355266
     },
     {
       "absolutePhDifference": 0.015030998464471423,
-      "id": "REF-2",
+      "id": "ORACLE-2",
       "phreeqcIonicStrengthMolal": 0.1000000000002,
       "phreeqcModelPh": 12.8779501872,
       "region": "control",
+      "signedPhDifference": 0.015030998464471423,
       "status": "PASS",
       "tsIonicStrengthMolal": 0.10000000000016371,
       "tsModelPh": 12.892981185664471
     },
     {
       "absolutePhDifference": 0.0005579265078616835,
-      "id": "REF-3",
+      "id": "ORACLE-3",
       "phreeqcIonicStrengthMolal": 0.00136954530993,
       "phreeqcModelPh": 2.880436862836,
       "region": "control",
+      "signedPhDifference": 0.0005579265078616835,
       "status": "PASS",
       "tsIonicStrengthMolal": 0.0013707817905459286,
       "tsModelPh": 2.8809947893438617
     },
     {
       "absolutePhDifference": 0.012622782452821113,
-      "id": "REF-4",
+      "id": "ORACLE-4",
       "phreeqcIonicStrengthMolal": 0.1000000021133,
       "phreeqcModelPh": 8.758401934368,
       "region": "control",
+      "signedPhDifference": 0.012622782452821113,
       "status": "PASS",
       "tsIonicStrengthMolal": 0.10000000216767453,
       "tsModelPh": 8.771024716820822
     },
     {
       "absolutePhDifference": 5.3823136763497814e-05,
-      "id": "REF-5",
+      "id": "ORACLE-5",
       "phreeqcIonicStrengthMolal": 9.588562297465e-07,
       "phreeqcModelPh": 6.018744486552,
       "region": "control",
+      "signedPhDifference": 5.3823136763497814e-05,
       "status": "PASS",
       "tsIonicStrengthMolal": 9.587369032120542e-07,
       "tsModelPh": 6.018798309688764
     },
     {
       "absolutePhDifference": 0.005181055014291225,
-      "id": "REF-6",
+      "id": "ORACLE-6",
       "phreeqcIonicStrengthMolal": 0.05002528134366,
       "phreeqcModelPh": 4.665867660968,
       "region": "control",
+      "signedPhDifference": 0.005181055014291225,
       "status": "PASS",
       "tsIonicStrengthMolal": 0.050025962633770266,
       "tsModelPh": 4.671048715982291
     },
     {
       "absolutePhDifference": 0.0026633784637377644,
-      "id": "REF-7",
+      "id": "ORACLE-7",
       "phreeqcIonicStrengthMolal": 0.02506964700896,
       "phreeqcModelPh": 4.21210345175,
       "region": "pre-equivalence",
+      "signedPhDifference": 0.0026633784637377644,
       "status": "PASS",
       "tsIonicStrengthMolal": 0.025070954865959172,
       "tsModelPh": 4.214766830213738
     },
     {
       "absolutePhDifference": 0.012622782452821113,
-      "id": "REF-8",
+      "id": "ORACLE-8",
       "phreeqcIonicStrengthMolal": 0.1000000021133,
       "phreeqcModelPh": 8.758401934368,
       "region": "equivalence",
+      "signedPhDifference": 0.012622782452821113,
       "status": "PASS",
       "tsIonicStrengthMolal": 0.10000000216767453,
       "tsModelPh": 8.771024716820822
     },
     {
       "absolutePhDifference": 0.0193938057606573,
-      "id": "REF-9",
+      "id": "ORACLE-9",
       "phreeqcIonicStrengthMolal": 0.1400000000004,
       "phreeqcModelPh": 12.46545075804,
       "region": "post-equivalence",
+      "signedPhDifference": 0.0193938057606573,
       "status": "PASS",
       "tsIonicStrengthMolal": 0.14000000000042892,
       "tsModelPh": 12.484844563800657
     },
     {
       "absolutePhDifference": 0.011855784247998713,
-      "id": "REF-10",
+      "id": "ORACLE-10",
       "phreeqcIonicStrengthMolal": 0.04988746350623,
       "phreeqcModelPh": 2.073525910483,
       "region": "control",
+      "signedPhDifference": 0.011855784247998713,
       "status": "PASS",
       "tsIonicStrengthMolal": 0.05000000000148187,
       "tsModelPh": 2.085381694730999
     }
   ],
-  "references": [
-    "REF-1",
-    "REF-2",
-    "REF-3",
-    "REF-4",
-    "REF-5",
-    "REF-6",
-    "REF-7",
-    "REF-8",
-    "REF-9",
-    "REF-10"
-  ],
   "schemaVersion": 1,
+  "signedPhDifferenceSummary": {
+    "allSameSign": true,
+    "maximum": 0.0193938057606573,
+    "mean": 0.009568487893395039,
+    "minimum": 5.3823136763497814e-05
+  },
   "tolerancePh": 0.02,
   "validation": {
-    "sourceCommit": "249c0cdd8357c9fdc90e7d5f83317711f5b5a914",
-    "ciRun": "34709078924",
-    "ciHardGate": true,
-    "executionEnvironment": "local Windows run; CI independently repeats the pinned install and sweep"
+    "ciHardGate": false,
+    "ciRun": "local-run-not-hosted-ci",
+    "executionEnvironment": "local oracle run; CI repeats the pinned installation and sweep",
+    "sourceCommit": "uncommitted-working-tree"
   }
 }

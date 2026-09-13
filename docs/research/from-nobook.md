@@ -1,1387 +1,3220 @@
-# FROM NOBOOK
+# 从 NOBOOK 反推 ChemRealm：UI、药品系统、待选区、运行态 Inspector 与化学过程世界深度调研
 
-> **ChemRealm 对 NOBOOK 虚拟实验体系的抽象研究基线**  
-> Research date: 2026-09-11  
-> Status: **Non-normative research note**  
-> Purpose: 从 NOBOOK 十余年的产品、交互、仿真和教学实践中提炼可迁移的底层原则；**不是功能抄表，不是对 NOBOOK 内部实现的逆向断言，也不直接修改 ChemRealm 已 Accepted 的 SPEC / ADR / PLAN。**
-
----
-
-## 0. 为什么研究 NOBOOK
-
-ChemRealm 与 NOBOOK 的关系不应被理解为“做一个更科学的 NOBOOK”，也不应被理解为“把 NOBOOK 已有实验逐个复刻”。
-
-NOBOOK 最值得学习的部分，是它经过长期迭代后形成的三种能力：
-
-1. **让虚拟器材像一个实验世界，而不是一组动画按钮。**
-2. **让鼠标/触摸输入足够宽容，使学生表达实验意图，而不是考验像素级操作。**
-3. **用统一的视觉与交互语法承载大量器材、药品、装配关系和实验现象。**
-
-ChemRealm 已经在 Scientific Integrity、provenance、event sourcing、core boundary 上采取了比公开 NOBOOK 资料更严格的路线。研究 NOBOOK 的目的，是补上另一个同样决定产品成败的维度：
-
-> **Interaction maturity + visual world feel + apparatus semantics.**
-
-本文件因此只回答四个问题：
-
-- NOBOOK 公开证据能确认它真正做对了什么？
-- 哪些表面现象背后其实是同一个更小的抽象？
-- 哪些设计原则适合 ChemRealm，哪些不适合？
-- 这些原则应在什么阶段进入工程，而不是造成当前阶段的 feature creep？
+> **文档性质：** 产品研究 / 竞品考古 / 架构输入，不是 ChemRealm 规范本身
+> **研究日期：** 2026-09-13
+> **研究对象：** NOBOOK（NB）化学实验的教师端、学生端、开放平台、历史产品资料、政府采购技术规格、教学应用案例、版本演化与社区使用
+> **研究重点：** UI 信息架构、右侧待选区、药品/器材 Catalog、参数化材料实例、容器状态查看、实时反应信息、相态/拓扑/历史依赖、竞争与连续过程、数值存在阈值、现象表现、交互语义、内容规模与长期维护成本
+> **与 ChemRealm 的关系：** 本文一方面提炼“成熟虚拟化学世界已经证明有价值的产品能力”，另一方面把这些产品能力继续向科学运行时深挖：哪些行为仅靠药品名/方程式数据库无法正确实现，ChemRealm 必须怎样用 Scientific Reality、process network、Inspector 和数值语义承接。本文不建议复制 NOBOOK 的闭源实现、商业权限、UI 皮肤、素材或不可审计的科学逻辑。
 
 ---
 
-# 1. 证据方法：事实、推断、社区信号必须分层
+## 0. 为什么需要重做这份调研
 
-本文对证据使用四级标签。
+前几轮对 NOBOOK 的理解一度过于简单：把它概括成“一个器材/药品很多、可以拖拽的虚拟实验室”。这会严重低估它真正积累的产品能力。
 
-| 等级 | 含义 | 典型来源 | 能支持什么 |
-|---|---|---|---|
-| **A** | 一手/近一手 | NOBOOK 官方手册、开放平台、官方产品页、NOBOOK 早期公司专利、App Store 官方描述 | 产品存在某项能力、公开 API、交互规则、历史设计思想 |
-| **B** | 独立专业材料 | 教学论文、学校课例、第三方专利对比、政府采购技术参数 | 实际教学使用方式、外部观察到的行为、产品要求 |
-| **C** | 用户/社区信号 | App Store 评论、Bilibili、论坛 | 用户如何“玩”、痛点和边缘行为；**不能证明科学正确性** |
-| **D** | 视觉推断 | 截图、视频画面、UI 观察 | 美术/界面风格；**不能证明内部算法** |
+继续追踪官方手册、开放平台 API、政府采购技术规格、教学使用案例、版本日志和社区玩法之后，可以更准确地描述 NOBOOK：
 
-贯穿全文的规则：
+> **NOBOOK 已经形成了一个围绕 stateful laboratory objects 组织的中学化学实验环境：用户从高密度 Catalog 中实例化器材和药品，修改实例参数，操作世界中的对象，容器内部状态持续变化，系统把反应过程与定量数据投影回 UI，并用丰富的视觉/声音/操作反馈维持“实验室正在运行”的感知。**
 
-> **看到一个现象，不等于看到一个引擎；看到一个引擎名称，不等于知道它的科学模型。**
+它并不等价于 ChemRealm 想要的“可验证 Scientific Reality”。公开资料不足以证明 NOBOOK 内部拥有统一、严格、可审计的热力学/动力学求解体系。但它在 **内容密度、世界可操作性、状态可读性、反应过程可见性、长期内容工业** 上的积累必须认真对待。
 
-例如，公开资料能够确认 NOBOOK 曾宣称有“压强系统”，也能确认其资源中存在气密性水柱、倒吸等现象；但我们不能据此断言它内部使用何种状态方程、流阻模型或数值积分器。
+用户对当前 NOBOOK 的直接观察还补充了公开资料不容易完整呈现的两点：
 
-同理，教学案例确认错误操作能够导致“试管炸裂、液体倒吸”等虚拟后果，但公开证据不能证明每一次炸裂都由实时热应力计算产生，而不是场景规则、经验阈值或预设效果。
+1. 浓、稀盐酸在自由实验中的视觉表现并不相同；
+2. 选中画布中的容器后，可以查看内容物及质量、物质的量、浓度、温度、压强等运行态数据，界面侧部/下部还会实时更新正在发生的反应。
 
-这一点对 ChemRealm 极重要：**学习它选择模拟什么，以及如何组织交互；底层科学模型重新独立设计与验证。**
+这两条“直接观察”在本文中不会被冒充成官方文档结论；但官方 API、历史 UI 文档和明确标注 NOBOOK 的采购规格分别从不同方向证实了 **独立信息区 + T/V/n/c/m/P 数据追踪 + 反应方程式实时展示** 的产品体系，因此二者能够互相印证。
 
 ---
 
-# 2. 最核心的结论：NOBOOK 的长期价值是从“流程动画”走向“可运行世界”
+# 1. 调研方法与证据等级
 
-NOBOOK 早期媒体材料本身留下了一个很有价值的历史切片。2015 年的一篇报道把有“公式算法引擎”的虚拟实验与“沿唯一正确路径播放的互动流程”明确区分；报道同时指出，当时化学版仍比物理更接近流程展示，因为化学涉及温度、光照等复杂因素。[S01]
+## 1.1 来源类型
 
-之后的官方资料开始明确宣称化学拥有：
+本次不是只看 NOBOOK 官网宣传页，而是交叉使用以下来源：
 
-- 热力学引擎
-- 重力引擎
-- 拼装引擎 / 导管引擎
-- 粒子引擎
-- 化学平衡系统
-- 速率系统
-- 压强系统
+1. **NOBOOK 当前官网与当前化学资源页**：确认仍在公开运营的产品表面、资源组织与当前官方宣传口径；
+2. **NOBOOK 官方历史产品手册**：理解无机编辑器、器材库、器材属性、器材信息、场景信息、演示模式等具体 UI；
+3. **NOBOOK 开放平台 2.0 API**：确认当前产品内部至少把 Catalog、属性设置、信息区、编辑器/播放器、场景 JSON 持久化等作为独立组件；
+4. **政府采购 / 中标技术规格**：尤其是明确写出品牌 NOBOOK、制造商北京乐步教育科技有限公司的文件，用来确认器材/药品规模、数据追踪、取用量、温度/压强等具体能力；
+5. **教学应用研究 / 教师实践案例**：观察条件、温度、时间变化时 NOBOOK 实际如何更新反应方程式与物质消耗；
+6. **版本日志镜像 / 下载站历史记录**：观察长期维护中持续修补的化学反应、现象、声音、器材破损等边角问题；
+7. **App Store 与学生端更新记录**：理解移动端 UI 如何从高密度工具栏转向渐进式/隐藏式操作；
+8. **Bilibili 等社区实操**：只用于判断用户如何“玩”这个系统，不用于证明科学正确性；
+9. **项目所有者直接观察**：用于补足当前客户端中公开网页不容易抓到的运行态 UI 细节。
 
-并强调器材/药品可自由组合、流体现象、反应速率、溶解关系等。[S02][S03]
+## 1.2 可信度分级
 
-当前 NOBOOK Lab 的官方商店描述又进一步以“1000+ DIY 器材”“8 大自研引擎算法”“自由组合器材、即时观察现象”作为核心卖点。[S04]
+本文用以下等级区分“能确认”和“只能推断”：
 
-这条演化路线的真正意义不是“应该照着做八个引擎”，而是：
+| 等级 | 含义 | 典型来源 |
+|---|---|---|
+| **A** | 当前或近年的一手证据，可高置信确认产品能力 | 当前官方 API、当前官网、明确品牌/厂商的政府采购规格 |
+| **B** | 一手历史资料，可确认某阶段已存在该能力，但不能保证 2026 UI 完全不变 | 官方历史手册、官方历史宣传 |
+| **C** | 外部实操/教学研究，对真实使用行为很有价值，但不是产品内部架构说明 | 教学论文、教师案例、App Store 使用反馈 |
+| **D** | 第三方镜像/社区内容，适合发现线索与理解用户行为，不可单独用来证明核心科学机制 | 下载站版本日志、Bilibili、论坛 |
+| **Owner observation** | 当前实机/直接使用观察 | 用户本人的 NOBOOK 使用经验 |
 
-> **当一个虚拟实验产品的自由度提高后，实验不能再由 experiment script 决定世界发生什么；必须有更底层的 state + rule/model 来承担组合。**
+## 1.3 一条贯穿全文的纪律
 
-这与 ChemRealm 的核心方向高度一致：
+本文反复区分三件事：
+
+- **产品外部行为已经证明什么；**
+- **公开资料允许我们合理推断什么；**
+- **公开资料仍然无法证明什么。**
+
+例如：
+
+- 能确认 NOBOOK 会根据某些条件动态显示不同反应方程式；
+- 能确认它存在速率、平衡、压强等系统；
+- 但不能因此声称它内部所有反应都由统一热力学 solver 自动求得；
+- 能确认液体药品浓度可以修改；
+- 但不能因此声称所有浓度相关视觉都由连续物性函数计算；
+- 能确认世界场景可以序列化为 JSON；
+- 但不能因此把它等同于 ChemRealm 的 event sourcing / deterministic replay。
+
+---
+
+# 2. 最重要的总判断：NOBOOK 的护城河不是“279 种药”
+
+如果只问“有多少药品”，会错过 NOBOOK 最重要的东西。
+
+更准确的抽象是：
 
 ```text
-Authored workflow                      World model
------------------                    -----------------
-步骤 1                               State
-步骤 2                               + topology
-步骤 3                               + model selection
-if wrong -> error                    + process
-动画 A                               + observable mapping
-                                      ↓
-                                    consequence
+Resource Library
+      ↓
+Material / Apparatus Catalog
+      ↓
+Search / Taxonomy
+      ↓
+Catalog Entry
+      ↓ instantiate
+World Instance
+      ↓
+Property Configuration
+      ↓
+Interaction
+      ↓
+Container / World State
+      ↓
+Active Reaction / Process
+      ↓
+Observable Consequence
+      ↓
+Inspector / Data Tracking / Reaction Feed
+      ↓
+Save / Present / Continue Experiment
 ```
 
-**ChemRealm 应学习的是右边这个转变，不是 NOBOOK 的模块命名。**
+NOBOOK 的“丰富感”来自这些层的乘法，而不是单纯的 item count。
 
----
-
-# 3. NOBOOK 最有分量的架构证据：连接拓扑先于物理求解
-
-NOBOOK 原公司 2014 年申请的专利《具有动态响应的仿真实验系统》提供了目前最清楚的一手架构证据。[S05]
-
-专利描述的核心不是某个实验，而是一条通用运行链：
-
-```text
-用户摆放 / 连接器材
-        ↓
-实时检测器材连接状态
-        ↓
-构造有效连接 / 路径 / 拓扑
-        ↓
-计算物理参数与状态
-        ↓
-分配回器材
-        ↓
-器材显示对应现象
-```
-
-专利的电学实施例进一步明确了：
-
-- 器材有“可接点”；
-- 系统遍历连接点和路径；
-- 从连接关系形成图；
-- 根据图求解电压、电流、电阻；
-- 再把参数传回器材显示。
-
-连接候选当时使用碰撞检测发现，包括离散/连续碰撞、包围盒、四叉树或有限器材的遍历检测等。
-
-## 3.1 对 ChemRealm 的提炼
-
-这里真正值得吸收的是：
-
-> **Geometry discovers candidates; semantics decides topology; topology constrains the domain model.**
-
-不要把“碰撞”直接等价为“化学器材已经连接”。
-
-ChemRealm 更合理的抽象是：
-
-```text
-Pointer / drag geometry
-      ↓
-Candidate port discovery
-      ↓
-Semantic compatibility
-(type / orientation / occupancy / insertion / seal)
-      ↓
-World topology mutation
-      ↓
-Scientific / physical model
-      ↓
-Observable consequence
-```
-
-这一区分尤其重要，因为“看上去碰到了”和“形成了密闭连接”不是一回事。
-
-例如导管靠近胶塞孔：
-
-- Renderer 可以发现空间接近；
-- Interaction 层可以给出 ghost snap；
-- World Runtime 才确认 `TubeEndpoint -> StopperHole` 是否兼容、孔是否已占用、插入深度是否足够形成密封；
-- 后续 pressure/flow model 才把它视为气路。
-
-**这比“把吸附做漂亮”更重要。吸附只是 semantic topology 的 UI 投影。**
-
----
-
-# 4. 器材不是图片，而是“有语义部位的实验对象”
-
-NOBOOK 化学实验加试手册把基础操作写得非常清楚：[S06]
-
-- 选择器材；
-- 移动器材；
-- 旋转普通器材；
-- 单独旋转铁夹；
-- 拖拽“器材或某一部位”到另一器材的“对应区域”实现组合；
-- 从纸堆、试纸、砂纸等整体中“取用”单个；
-- 模拟操作又分为：点击整体、点击部位、拖拽整体、拖拽部位、倾倒按钮。
-
-这已经不是简单的 `sprite.onDrag`。
-
-它隐含着一个非常成熟的 apparatus model：
-
-```text
-Apparatus
-  ├─ whole-object affordances
-  ├─ semantic parts
-  ├─ operation regions
-  ├─ connectable regions
-  ├─ adjustable parts
-  └─ state-dependent affordances
-```
-
-## 4.1 对 ChemRealm 的提炼：Part / Port / Region / Capability
-
-未来器材资产至少应能表达四类不同语义：
-
-### Part
-
-器材的可独立操作部件。
-
-例：
-
-- 分液漏斗活塞
-- 铁夹
-- 胶头滴管胶帽
-- 瓶塞
-- 酒精灯灯帽
-
-### Port
-
-可建立拓扑关系的语义接口。
-
-例：
-
-- vessel mouth
-- stopper hole
-- tube endpoint
-- gas outlet
-- electrical terminal
-- clamp socket
-
-### Region
-
-空间交互区域，但未必形成连接。
-
-例：
-
-- heat target region
-- grasp region
-- liquid receiving region
-- clampable region
-- label-facing region
-
-### Capability
-
-对象在当前状态允许的动作。
-
-例：
-
-- `CanPour`
-- `CanClamp`
-- `CanHeat`
-- `CanOpenValve`
-- `CanInsertTube`
-- `CanMeasureVolume`
-
-这四者不能全部压成碰撞框。
-
----
-
-# 5. 最值得学习的 UI 原则：模拟“决策”，不要模拟无意义的手部困难
-
-NOBOOK 手册里的“倾倒”操作是一个非常好的产品设计样本。[S06]
-
-它没有要求用户真实模拟一个连续 6-DOF 的手腕动作、精确控制容器倾角和液体自由表面。
-
-流程是：
-
-1. 把盛液体容器拖到目标容器边缘；
-2. 系统识别“我要倒液体”的意图；
-3. 出现 contextual 倾倒控制；
-4. 用户拖动倾倒按钮调节体积。
-
-这实际上做了一个非常合理的信息分解：
-
-```text
-实验决策                         手部执行细节
---------                        ------------
-倒到哪个容器？      保留         手腕轨迹         简化
-倒多少？            保留         精确碰撞         简化
-是否沿玻璃棒？      可保留       真实肌肉控制     简化
-是否超过容量？      保留         液体 Navier-Stokes 不要求
-```
-
-这应该成为 ChemRealm 的交互原则：
-
-> **Preserve scientific/experimental decisions; compress low-value motor difficulty.**
-
-这不是“降低真实性”，而是在区分两种真实：
-
-- **chemical/operational truth**：用户做了什么实验决策；
-- **motor fidelity**：用户手指是不是精确落在 3 px 范围内。
-
-对高中化学学习，前者远比后者重要。
-
----
-
-# 6. Snapping 的真正抽象：Intent Assistance，而不是坐标吸附
-
-NOBOOK 早期电学文档明确写过：导线端拖到接线柱上方，松手后“自动吸附”。[S07]
-
-化学手册则使用更通用的语言：把器材或其部位拖到另一器材“对应区域”即可连接。[S06]
-
-外部研究/专利对 NOBOOK 的一个批评也很有启发：纯鼠标/触摸单通道虽然容易使用，但不能充分表达实验操作意图；更好的交互应结合轨迹、距离、上下文等信息推断 intent。[S08][S09]
-
-ChemRealm 不必因此引入语音、多模态或 AI。更可取的是一个轻量、确定性的 intent score。
-
-例如，对候选 snap port：
+可以把用户感知的化学自由度粗略写成：
 
 \[
-S = w_d D + w_\theta A + w_t T + w_o O + w_c C + w_v V
+F \approx C \times P \times K \times I \times S \times R \times O
 \]
 
 其中：
 
-- \(D\)：距离；
-- \(A\)：朝向误差；
-- \(T\)：port type compatibility；
-- \(O\)：occupancy；
-- \(C\)：碰撞/几何可达性；
-- \(V\)：pointer velocity / trajectory 是否朝向候选。
+- **C — Catalog Breadth：** 有多少可拿出的器材、材料、生活化对象与规格；
+- **P — Parameterization：** 浓度、量、温度、速率、器材参数等可否修改；
+- **K — Combinability：** 是否允许自由组合，而不是只能跑预设实验；
+- **I — Interaction Richness：** 倒、滴、取、摇、混、搅、热、接、封闭、通气等；
+- **S — State Legibility：** 用户能否查看容器/世界的内部状态；
+- **R — Reaction/Process Visibility：** 是否能看见正在发生什么反应、何时变化；
+- **O — Observable Richness：** 颜色、沉淀、气泡、烟雾、火焰、爆炸、声音、漏液等。
 
-这只是 ChemRealm 的**派生设计建议**，不是 NOBOOK 已公开的公式。
-
-## 6.1 必须有 hysteresis
-
-进入 snap 的阈值与离开 snap 的阈值不应相同：
-
-```text
-enter < 12 px-equivalent
-leave > 20 px-equivalent
-```
-
-否则边界附近会出现视觉抖动。
-
-## 6.2 Drag forgiving, commit strict
-
-拖动阶段可以宽容：
-
-- 扩大 hit target；
-- 预测意图；
-- 显示 ghost；
-- 自动对齐角度；
-- 提示可连接点。
-
-但松手产生的 World mutation 必须严格：
-
-```text
-Preview snap ≠ committed connection
-```
-
-World Runtime 需要重新验证 compatibility、occupancy、seal、orientation 等。
-
-这样既获得 NOBOOK 式顺手感，又不允许 Representation 层决定科学拓扑。
+这七个维度中的任何一个接近零，“自由实验室”的感知都会明显坍塌。
 
 ---
 
-# 7. 同一个世界，不同模式：NOBOOK 反复证明“模式应该是 policy，不是第二套实验”
+# 3. NOBOOK 实际上有多个 UI，而不是一个“右侧栏”
 
-NOBOOK 有多组非常清楚的模式分离证据。
+## 3.1 资源管理空间：先决定“进入哪个实验”
 
-## 7.1 编辑 vs 演示
+官方历史与当前资源页都显示，NOBOOK 首先有一个实验资源/内容空间：
 
-官方化学编辑器文档中，同一个精品实验既可进入“正常编辑模式”，也可进入“演示模式”。演示模式全屏、隐藏器材库和顶部编辑工具，防止授课时误改实验；编辑模式则允许二次修改。[S10]
+- 精品实验；
+- 我的实验；
+- 历史上还有回收站；
+- 当前按教材、章节、知识点组织；
+- 当前还区分探究实验、3D 资源、视频资源、互动课件、学案等；
+- 支持教学进度、使用最多、最新发布等排序。
 
-## 7.2 练习 vs 考试
+当前公开化学资源页显示的资源数量是数百量级，且不断变化，不能把某次爬取数字当永久常数。
 
-加试学生端同一实验提供练习模式和考试模式：[S06]
+**关键认识：**
 
-- 练习模式：每一步有提示；
-- 考试模式：自由操作、无引导、做错不即时提示，提交后再生成报告和评分。
+> “实验资源库”与“实验画布右侧的器材/药品 Catalog”是两个不同 Catalog。
 
-## 7.3 Open Platform：同一 scene data + 可配置 shell
+前者组织 **Scenario / Teaching Resource**，后者组织 **World Object Templates**。
 
-开放平台公开 `getData()` / `setData()`，实验场景可序列化为 JSON；同时 `config()` 可以独立控制顶栏、左右工具栏、器材库、设置菜单、信息区、保存按钮、player toolbar 等。[S11]
+## 3.2 编辑器：高密度 toolbox + 画布
 
-这三组证据共同说明一个很稳定的产品抽象：
+无机实验编辑器的典型结构包含：
+
+- 中央实验画布；
+- 右侧器材/药品库；
+- 搜索和多种分类；
+- 顶部保存、演示、设置等；
+- 场景缩放与视角；
+- 对象属性编辑；
+- 对象信息区；
+- 场景信息；
+- 底部/旁侧操作栏。
+
+这不是简单的“Canvas + Sidebar”。官方当前开放平台 API 将以下元素分别暴露成独立 UI 开关：
 
 ```text
-Scene / World
-      +
-Interaction / Presentation Policy
-      =
-Mode
+topToolbarVisible
+leftToolbarVisible
+rightToolbarVisible      # 器材库
+bottomToolbarVisible
+settingsMenuVisible      # 器材属性设置
+playerToolBarVisible
+infoVisible              # 器材信息区
 ```
 
-对 ChemRealm，这直接支持已有方向：
+这对 ChemRealm 有直接启示：**Catalog、Property Editor、Runtime Inspector 不应被设计成同一种东西。**
 
-- Sandbox
-- Guided World
-- Presentation View
-- Challenge View
-- Inspect View
+## 3.3 播放器 / 演示模式：不是编辑器换个皮肤
 
-**不要复制 NOBOOK 的模式名；保留“同一 World，不同 policy/projection”的思想。**
+官方手册长期区分“编辑”和“演示”。开放平台也明确区分 player 与 editor，并为 `infoVisible` 设计：
 
----
+- `hasEquipmentDrawer`：有器材库的编辑器布局；
+- `noEquipmentDrawer`：没有器材库的播放器布局。
 
-# 8. 场景序列化是成熟编辑器的基础能力，不是附加功能
+这说明 NOBOOK 已经在产品层承认：
 
-NOBOOK 开放平台可以：
+> **创作世界、操作世界、演示世界，需要不同的信息密度。**
 
-- 获取实验 scene JSON；
-- 恢复 scene JSON；
-- 保存场景数据 + 缩略图；
-- 清空；
-- 切换模块；
-- 暂停/恢复渲染；
-- 查询是否需要保存。[S11]
+## 3.4 学生移动端：正在主动弱化“巨型右栏”
 
-官方旧产品资料还强调实验过程可以保存，下次继续。[S12]
+近年学生 App 更新描述出现：
 
-这说明一个实验编辑器若要长期可用，必须把“世界”视为可序列化对象，而不是 DOM/Pixi display tree 的偶然状态。
+- 实验室侧边栏极简整合；
+- 隐藏式功能入口；
+- 器材操作引导；
+- 器材百科；
+- 更强调沉浸式实验。
 
-ChemRealm 已经走得更远：event-sourced World 比单纯 scene snapshot 更强，因为可以提供：
+这说明长期产品演化已经从“桌面教师工具箱”分叉出“学生渐进式操作界面”。
 
-- replay
-- undo/redo
-- branch
-- deterministic bug reproduction
-- counterfactual comparison
+因此 ChemRealm 不应该把“成熟 UI”理解成一套万能 sidebar。更合理的是：
 
-因此从 NOBOOK 学到的不是“实现 getData/setData”，而是确认：
-
-> **Scene persistence 是实验编辑器的一等语义；renderer tree 永远不能成为唯一状态。**
+```text
+Desktop Authoring / Teacher   → information dense
+Student Exploration          → progressive disclosure
+Presentation                 → world dominant
+Inspection                   → state dominant
+Mobile                       → contextual actions
+Organic / Electrochemistry   → domain-specific projection
+```
 
 ---
 
-# 9. 物理/化学现象应该从共享 substrate 组合，而不是按现象建模块
+# 4. 右侧待选区：真正成熟的是“检索系统”，不仅是“东西多”
 
-用户容易看到 NOBOOK 中的：
+## 4.1 官方明确存在四种并行检索路径
 
-- 倒吸
-- 喷泉
-- 气密性水柱
-- 压强差
-- 加热
-- 沸腾
-- 沉淀
-- 溶解
-- 试管炸裂
-- 电极上气泡转移
+历史官方手册详细描述了：
 
-然后得到一个危险结论：
+1. **搜索框**：模糊搜索、首字母等；
+2. **物质名称快捷搜索**：按金属、非金属、带电离子团等化学语义查找；
+3. **分类搜索**：反应容器、辅助器材、固体药品、液体药品、气体药品；
+4. **首字母索引**：按字母快速跳转。
 
-> “ChemRealm 也应该加一个倒吸系统、一个炸裂系统、一个喷泉系统……”
+当前公开编辑器仍保留反应容器 / 辅助器材 / 固体 / 液体 / 气体这些主分类。
 
-这正是本研究要避免的。
+这说明 NOBOOK 已经解决了一个只有在 Catalog 规模上去以后才会变严重的问题：
 
-NOBOOK 官方资源本身已经显示多个表面不同实验共享相同因果骨架：
+> **用户知道自己想“做什么化学”，但不一定知道 Catalog 里精确叫什么。**
 
-- 气密性实验：加热后气体逸出，冷却后内压低于外压，水进入导管形成液柱。[S13]
-- 测空气氧含量：O₂ 被消耗，容器内压强下降，水倒吸进入集气瓶。[S14]
-- 当前资源库把“NaOH + CO₂ 压强差”“气球变化”“喷泉实验”等放在同一长期产品体系里。[S15]
-- 原电池实验中，仅改变电极之间是否导线连接，就会改变气泡发生位置并使电流计响应。[S16]
+因此搜索不能只有 `name contains query`。
 
-这支持一个更小、更通用的 substrate。
+## 4.2 化学语义搜索很值得 ChemRealm 学
 
-## 9.1 建议的 World substrate（研究层抽象，不是当前实现任务）
+“按金属 / 非金属 / 带电离子团”寻找药品，本质上是在做：
 
-### A. Topology / Connectivity
+```text
+User intent: “我要含 Fe 的试剂”
+        ↓
+chemical-semantic index
+        ↓
+FeCl3 / FeSO4 / Fe(NO3)3 / ...
+```
 
-描述：
+未来 ChemRealm 更适合进一步扩展：
 
-- 哪些容器连通；
-- 哪些导管相连；
-- 哪些阀门开/关；
-- 哪些连接密封；
-- 电极/导线的拓扑；
-- apparatus attachments。
-
-### B. Inventory / Phase State
-
-描述：
-
-- 各容器中有哪些物质；
-- amount；
+- 中文名 / 英文名；
+- 化学式；
+- 常用简称；
+- 拼音 / 首字母；
+- element index；
+- ion/component index；
 - phase；
-- liquid volume；
-- gas inventory；
-- solid deposit。
+- acid/base/salt/oxidant/reductant 等高层标签；
+- curriculum/common-lab tags；
+- 最近使用；
+- 收藏；
+- scientific capability / validation status。
 
-### C. Energy / Thermal State
+## 4.3 高密度 Catalog 必须允许“快速拿”与“深度选”同时存在
 
-描述：
+用户不应该每次都从 300 项里搜索“盐酸”。成熟交互通常同时需要：
 
-- temperature；
-- heat input；
-- heat capacity；
-- phase-change demand；
-- 必要时的 apparatus thermal zones。
+- 常用预设；
+- 最近使用；
+- 教材常用；
+- 当前 Scenario 推荐；
+- 全部库；
+- 深度化学检索。
 
-### D. Pressure / Flow
+这也是 ChemRealm 后期需要区分 `MaterialFamily` 与 `StockPreset` 的原因。
 
-描述：
+---
 
-- connected gas volumes；
-- pressure；
-- conduit flow；
-- liquid columns；
-- venting / blocked path。
+# 5. 器材 Catalog 的长尾远比“烧杯、试管、滴定管”复杂
 
-第一代完全不需要 CFD；lumped volumes + one-dimensional conduits 已能生成大量高中现象。
+当前公开编辑器能直接看到大量规格化反应容器和特殊器材，例如：
 
-### E. Chemical Process
+- 多规格烧杯；
+- 多规格试管、具支试管；
+- 多规格容量瓶、量筒；
+- 酸/碱滴定管；
+- 圆底烧瓶、平底烧瓶、蒸馏烧瓶、三颈烧瓶；
+- 多种分液漏斗、滴液漏斗、恒压滴液漏斗；
+- 多种 U 型管；
+- 坩埚、蒸发皿、表面皿、点滴板、研钵；
+- 启普发生器；
+- 特定干燥/气体处理装置；
+- 废液缸、污物杯；
+- 消毒液、洁厕灵等生活化对象；
+- 组合器材。
 
-描述：
-
-- equilibrium；
-- kinetics；
-- solubility；
-- electrochemistry；
-- gas absorption/release。
-
-由 Model Dispatcher 选择实际科学模型。
-
-### F. Metastability / Transition Policy
-
-描述那些不能由“平衡状态一到就瞬间出现”的现象：
-
-- nucleation；
-- delayed boiling；
-- supersaturation；
-- precipitation induction；
-- metastable state。
-
-### G. Apparatus Integrity / Operating Envelope
-
-描述器材的工作限制：
-
-- pressure envelope；
-- thermal shock；
-- damage state；
-- impact / scratch 等经验修正。
-
-这层可以是有来源的经验模型，而不是伪装成有限元分析。
-
-### H. Observable State
-
-将上述真实状态映射为：
-
-- bubbles
-- turbidity
-- sediment
-- liquid level
-- flame
-- crack
-- gauge reading
-- color/transmission
-
-**Renderer 只消费 observable/render state，不决定现象是否发生。**
-
-## 9.2 关键点
-
-一个“倒吸”不应该属于 `SuckBackEngine`。
-
-它是：
+这说明“器材丰富度”本身也不是一层简单图标库，而是至少包含：
 
 ```text
-sealed topology
-+ gas inventory
-+ thermal change / gas consumption
-+ pressure difference
-+ liquid-connected conduit
-= backward liquid flow
+Apparatus Family
+      ↓
+Size / Specification
+      ↓
+Ports / Capacity / Geometry
+      ↓
+Supported Operations
+      ↓
+Assembly / Topology
+      ↓
+Runtime State
 ```
 
-一个“喷泉”也只是其中加入快速气体溶解/反应和更大的 pressure transient。
-
-一个“热玻璃遇冷液体破裂”则是 pressure/flow 事故链继续触发 thermal/integrity 模型。
-
-这才是“提炼”，而不是现象清单。
+对于 ChemRealm，这意味着“百种药品”不能脱离“百种器材/规格/连接语义”独立考虑。
 
 ---
 
-# 10. NOBOOK 对错误操作的真正启示：World consequence 与教学 judgement 分开
+# 6. 药品规模：数字会变，但“百量级内容密度”是确定事实
 
-独立教学案例明确记载：学生在 NOBOOK 中进行一氧化碳还原氧化铁时，错误操作或步骤混乱会即时出现提示或相应虚拟后果，例如试管炸裂、液体倒吸，学生再分析原因并重做。[S17]
+公开资料中的药品/器材数字并不一致：
 
-另一篇教学研究把 NOBOOK 用于“试误技能”；值得注意的是，其中部分试误是通过预先录制的视频帮助学生观察违规操作后果，而不是所有后果都一定来自动态引擎。[S18]
+| 时间/来源 | 器材 | 药品 | 备注 |
+|---|---:|---:|---|
+| 2018 官方展会资料 | 112 | 253 | 还列 150 个经典实验资源 |
+| 2019 学校采购 | 122 | 279 | 明确写 NOBOOK 化学实验室系统，3 年持续更新 |
+| 2025 明确品牌/厂商中标规格 | 约 150 | 约 150 | NOBOOK V3.0，不同采购包/学段口径 |
+| 官方历史宣传 | 合计“300 多种” | 未分开 | 营销口径 |
 
-因此真正应该提炼的是行为分类：
+因此不能得出“2026 NOBOOK 精确有 279 种化学药品”。
 
-## 10.1 Impossible action
+更重要的是：**“药品条目数”不等于“独立 chemical identity 数量”。**
 
-世界本身不允许。
-
-例：
-
-- 一个 port 已占用却试图插入第二根同类管；
-- 转移量超过当前存在的液体；
-- 当前对象没有该 capability。
-
-这类由 Command validation 拒绝，不发 WorldEvent。
-
-## 10.2 Physically possible but bad technique
-
-现实中做得到，只是会造成坏结果。
-
-这类**不能因为教学规范而被 UI 拦截**。
-
-应当：
+Catalog 很可能混合：
 
 ```text
-command accepted
-→ world state changes
-→ consequence occurs
-→ ACE / challenge evaluator interprets it
+ChemicalIdentity
+MaterialFamily
+Phase/Form
+Concentration / Stock Preset
+Teaching-facing Catalog Entry
 ```
-
-否则学生只学会“软件不让我这么点”，没有学到为什么不能这样做。
-
-## 10.3 Pedagogically suboptimal but physically harmless
-
-例如考试评分标准要求某个动作顺序，但世界本身没有灾难性后果。
-
-仍由 World 正常执行，Assessment/Evidence 层记录。
-
-### 核心原则
-
-> **Physics/chemistry decides consequence; pedagogy decides meaning.**
-
-这与 ChemRealm 四 Core 边界天然一致。
-
----
-
-# 11. NOBOOK 的“实验测评”给 ACE 的启示不是“照着步骤扣分”
-
-NOBOOK 加试系统能够记录实验操作点，练习模式逐步提示，考试模式不提示，提交后按步骤评分并统计错误。[S06][S19]
-
-这说明一个成熟实验平台会把**操作流**与**评价流**分开。
-
-但 ChemRealm 不应直接继承其以考试步骤为中心的模型。
-
-NOBOOK 的测评目标是：
-
-> “这一步是否按考纲规范完成？”
-
-ChemRealm ACE 的长期目标则更大：
-
-> “学生为什么这样做？他激活了什么模型？能否迁移？提示后依赖程度如何？”
-
-因此可继承的只有数据流原则：
-
-```text
-WorldEvent
-   ↓
-Evidence extraction
-   ↓
-Assessment / Learner model
-```
-
-而不是：
-
-```text
-World reducer 内置考试步骤
-```
-
-这也是 event-sourced World 的额外优势：同一条事件日志将来可以被 Sandbox、Guided、Challenge 以不同方式解释。
-
----
-
-# 12. NOBOOK 美术真正值得学的是“视觉语法”，不是某个器材画法
-
-从官方界面和当前产品截图可以观察到一条持续多年的风格演进：[S20][S21]
-
-- 深色/中性画布，降低背景噪声；
-- 器材保持稳定视角和一致缩放语言；
-- 玻璃器材不是照片级 PBR，而是强化轮廓、高光和容积识别；
-- 金属、玻璃、液体、火焰等材料有明确类别感；
-- 侧边器材库缩略图与画布主体保持一致视觉语言；
-- UI chrome 相对克制，把视觉注意力留给器材与现象；
-- 微观粒子、方程式、表计等信息层仍能压在玻璃/液体之上保持可读。
-
-这是一种 **semi-realistic educational 2.5D**，其目标不是“最像照片”，而是：
-
-\[
-\text{recognizability} + \text{state legibility} + \text{visual consistency}
-\]
-
-## 12.1 不追求 photorealism 的原因
-
-过度写实玻璃容易出现：
-
-- 环境反射过强；
-- 轮廓消失；
-- 液体与背景混淆；
-- 小尺寸器材不可辨认；
-- 现象（沉淀、气泡、液位）被材质效果吞掉。
-
-ChemRealm 应把“实验状态可读性”高于“材质炫技”。
-
-## 12.2 派生的 Apparatus Asset Contract
-
-NOBOOK 没有公开其内部资产 schema；下列是从其交互能力反推的 ChemRealm 设计建议：
-
-```yaml
-ApparatusAsset:
-  visual:
-    back_layer:
-    body:
-    front_glass:
-    highlights:
-    metal_parts:
-    shadow:
-    selection_mask:
-
-  geometry:
-    silhouette:
-    hit_shape:
-    interior_fluid_region:
-    volume_height_profile:   # V(h), h(V)
-    collision_shape:
-
-  interaction:
-    grab_regions:
-    pivots:
-    semantic_parts:
-    ports:
-    action_regions:
-
-  states:
-    open_closed:
-    valve_state:
-    heated_state:
-    damage_state:
-    assembly_variants:
-```
-
-核心原则：
-
-> **Asset ≠ PNG. Asset = visual + geometry + interaction semantics + state variants.**
-
-这很可能是实现 NOBOOK 式“顺手”和一致美术的必要条件之一。
-
----
-
-# 13. Contextual UI：复杂系统不等于把全部属性永远摊在右侧
-
-NOBOOK 官方手册有一组成熟的 progressive disclosure 设计：[S10]
-
-- 点击器材后出现选中框；
-- 属性面板显示在器材附近；
-- 点击画布其他位置隐藏；
-- 器材库可以整体隐藏；
-- 旋转控制只在相关 selection 上出现；
-- 编辑和演示模式隐藏不同 UI；
-- 设置、场景信息等按需展开。
-
-它实际解决的是：
-
-\[
-\text{World complexity} \gg \text{current-task information need}
-\]
-
-ChemRealm 更需要这一点，因为 Scientific Core 的信息密度远高于 NOBOOK。
-
-同一个烧杯可以有三层 disclosure：
-
-### Default
-
-- 选中
-- 移动
-- 旋转
-- 删除/撤销
-
-### Inspect
-
-- liquid volume
-- temperature
-- phase / visible contents
-- connected apparatus
-
-### Scientific
-
-- species
-- molality
-- activity
-- ionic strength
-- model
-- validity
-- provenance
-
-**科学信息丰富，不等于默认 UI 应像工程仿真软件。**
-
----
-
-# 14. “最佳视角 / 重置 / 清空 / 锁画布”是编辑器成熟度指标
-
-NOBOOK 手册长期保留“最佳视角”，当前截图还可以看到 Center canvas、Lock canvas、Magnifier 等画布级动作。[S10][S20]
-
-这些按钮本身很小，但背后的原则重要：
-
-> **任何自由画布都必须有 escape hatch。**
-
-用户一定会：
-
-- 缩放过度；
-- 把装置拖出可视区；
-- 在讲课时误移动画布；
-- 忘记当前 camera 状态。
-
-ChemRealm 未来应明确区分：
-
-```text
-Fit Scene       -> 改 camera
-Center Selection-> 改 camera
-Lock Canvas     -> 改 interaction policy
-Reset Camera    -> 改 camera
-Reset World     -> 改 World state / log cursor
-Clear World     -> 新的 destructive world action
-```
-
-特别是：
-
-> **Reset Camera ≠ Reset Experiment.**
-
-这是小功能背后的语义边界。
-
----
-
-# 15. 资源越多，真正的产品问题就从“有没有”转成“找不找得到”
-
-NOBOOK 化学手册里的器材库已有多种 retrieval path：[S10]
-
-- 模糊搜索；
-- 首字母搜索；
-- 按反应容器/辅助器材/固液气药品分类；
-- 按金属/非金属/带电离子团等物质名称快捷搜索；
-- 实验资源按教材、章节、知识点、资源类型筛选。
-
-当前 NOBOOK Lab 宣称 1000+ DIY 器材。[S04]
-
-这说明一个常被忽略的规律：
-
-> **Catalog size is an interaction cost.**
-
-ChemRealm 将来器材/试剂增长后，器材库不能只是“长列表”。但目前不应该提前实现复杂搜索；本研究只记录未来压力：
-
-- type/category search；
-- chemistry-aware aliases；
-- recent/favorites/local scenario set；
-- context-compatible filtering；
-- keyboard-first retrieval。
-
-真正成熟的方向可能是：当用户正在拿着一个胶塞时，器材库可以优先显示兼容导管，而不是永远显示 1000 个物体。
-
----
-
-# 16. 广泛自由组合带来的代价：Combinatorial explosion
-
-社区对 NOBOOK 的使用是非常有价值的压力测试信号，但不能被当成科学证据。
-
-Bilibili 与论坛中大量用户会故意：
-
-- “不管了先加钠”；
-- 自己生火；
-- 做咖啡；
-- 设计非教材装置；
-- 制取各种气体；
-- 追求爆炸或异常结果。[S22][S23]
-
-App Store 评论同样把“自由发挥”“课本没有的也可以做”作为优势；但也有用户明确指出科学边缘缺陷，例如某些胶体加盐后的行为不正确。[S24]
-
-这个信号不能被翻译成：
-
-> “ChemRealm 也要加入咖啡、加钠、爆炸玩法。”
-
-真正应该提炼的是：
-
-> **当一个世界允许组合，用户必然探索作者没设计过的组合。**
-
-于是测试策略必须从“经典实验通过”升级为：
-
-### Invariant tests
-
-- mass / charge / element conservation；
-- no negative amount；
-- topology validity；
-- unit consistency；
-- no exact value outside model domain。
-
-### Property / fuzz tests
-
-- 随机合法操作序列；
-- 随机 apparatus topology；
-- 极端但合法 quantities；
-- undo/replay/branch consistency。
-
-### Cross-domain torture tests
-
-用那些跨系统的操作链测试 World，而不是仅测试单一实验模板。
-
-### Reference-case tests
-
-对 science engine 与权威来源/独立 engine 交叉验证。
-
-NOBOOK 的成功说明“自由”具有极强吸引力；社区 bug 信号则说明自由是**巨大的验证债务**。
-
----
-
-# 17. 真实化学细节应该成为“抽象压力测试”，不是 roadmap 触发器
-
-倒吸、爆沸、玻璃热震、导管堵塞、回流、溢出等现象很适合检验架构，但不应因为被提到就立刻进入 backlog。
-
-正确用法是问：
-
-> **如果未来要正确表达这类现象，我们现在的抽象是否能够自然承载？**
 
 例如：
 
-## 倒吸
+- 浓盐酸 / 稀盐酸；
+- 浓硫酸 / 稀硫酸；
+- 无水硫酸铜 / 硫酸铜溶液 / 胆矾；
+- 固体 NaCl / NaCl 溶液；
 
-压力测试：Topology + Gas state + Thermal/Chemical process + Flow。
+用户看见的是不同可选条目，但底层科学身份和材料配方层级并不相同。
 
-若实现时必须写：
+**对 ChemRealm 的要求因此不是“也做 279 个 JSON”。**
 
-```ts
-if (experimentId === "oxygen-prep") suckBack()
+而是从一开始就分清：
+
+```text
+ChemicalIdentity
+    ≠ MaterialFamily
+    ≠ StockPreset
+    ≠ CatalogEntry
+    ≠ MaterialInstance
 ```
-
-说明 substrate 失败。
-
-## 爆沸
-
-压力测试：Thermodynamic phase condition 与 Kinetic/Metastability policy 是否分离。
-
-若实现时写：
-
-```ts
-if (T > boilingPoint) boiling = true
-```
-
-则无法表达 superheating 与 nucleation。
-
-## 玻璃炸裂
-
-压力测试：Apparatus integrity 是否能消费热/压强/冲击状态，而不是 renderer 播事故动画。
-
-但这并不意味着 ChemRealm v0 必须立即实现玻璃 fracture model。
-
-### 研究原则
-
-> **Phenomenon as architecture test, not feature demand.**
-
-这条规则适用于以后所有竞品研究。
 
 ---
 
-# 18. NOBOOK 的“重力、倾倒、震荡、混合、搅拌”说明操作系统与科学系统之间需要中间语义
+# 7. Catalog Entry ≠ World Instance：这是整个系统的关键边界
 
-2025 年政府采购中的 NOBOOK 化学虚拟实验技术参数明确要求：药品具有重力效果，并能呈现滚动、倾倒、震荡、混合、搅拌等现象；固体取用可以指定数值、液体可指定倾倒体积；同时要求热力学现象、压强随温度和气体量变化、温度/体积/物质的量/浓度/质量等数据追踪。[S25]
+在右侧待选区里，“盐酸”只是一个可被实例化的模板。
 
-该材料不能证明每个现象的实现算法，但它说明 NOBOOK 产品语义长期覆盖了：
-
-```text
-User operation
-     ↓
-Operational process
-     ↓
-State change
-     ↓
-Scientific consequence + visual consequence
-```
-
-这提示 ChemRealm 不应该让 raw pointer event 直接触发 chemical solve。
-
-中间需要领域动作：
+拖到画布以后，它变成世界中的一个具体对象/具体库存：
 
 ```text
-TiltVessel
-TransferLiquid
-ShakeVessel
-StirContents
-OpenValve
-InsertTube
-ClampApparatus
-ApplyHeat
+HydrochloricAcidFamily
+      ↓ select preset / parameterize
+MaterialInstance
+├─ concentration
+├─ amount / volume
+├─ temperature
+├─ container relation
+├─ current composition
+└─ current history/state
 ```
 
-这些并不一定都是永久 WorldEvent；最终事件粒度要服从 event-sourcing contract，但**领域语义必须存在**。
+从此以后它不能再只通过 `catalogId = HCl` 来解释世界状态。
+
+这条边界一旦做错，会产生大量架构污染：
+
+- 修改浓度变成“切换另一个药品 ID”；
+- 反应产物无法自然继续存在；
+- 同一药品在不同容器中的状态被混为一谈；
+- 视觉表现只能写 `if materialId`；
+- Inspector 无法解释“这一瓶现在是什么”；
+- replay / branch 难以保持语义。
+
+ChemRealm 的最终设计必须把“模板”和“实例”分开。
 
 ---
 
-# 19. NOBOOK 的观测层思维：现象不仅要“发生”，还要“可读”
+# 8. 浓度不是标签：NOBOOK 已经把它做成运行参数
 
-NOBOOK 公司早期为外部机构开发的 RGB 溶液浓度分析软件有一个很值得注意的细节：由于摄像头颜色受光照影响，软件先做校准再进行浓度分析。[S26]
+官方产品文档明确宣传：
 
-这不是 NOBOOK 化学实验核心引擎的证明，但它很好地体现一个科学可视化原则：
+> 液体药品浓度可以由用户设置，并可实时追踪反应数据。
 
-> **颜色不是天然等于浓度；观测值需要 measurement/observable model。**
+这至少证明浓度不是固定显示标签。
 
-ChemRealm 已经有更严格的方向：
+教学应用研究进一步报告：
+
+- 大部分溶液浓度可调；
+- 在某些实验里，浓度不足时反应不会发生；
+- 反应物的用量与剩余量会被系统计算。
+
+因此从外部行为看，浓度至少可能进入：
+
+```text
+reaction eligibility
+reaction extent / amount
+observable regime
+```
+
+而用户的当前实机观察又补充：浓、稀盐酸在自由实验里的动画/可见表现不同。
+
+## 8.1 这里最重要的不是猜 NOBOOK 内部怎么算
+
+公开资料不足以证明它使用：
+
+```text
+fumeIntensity = continuous physical function(c, T, humidity, ...)
+```
+
+也可能是：
+
+- threshold rule；
+- preset mapping；
+- material-state regime；
+- 经验效果表；
+- 多种机制混合。
+
+因此 ChemRealm 不应该“逆向猜内部代码”，而应该吸收外部产品要求：
+
+> **同一个 MaterialFamily 的参数变化应该有因果意义，并能影响 Scientific / Observable / Interaction state。**
+
+## 8.2 ChemRealm 需要的正确结构
+
+例如盐酸不应建模成：
+
+```text
+DrugId = concentrated_hcl
+DrugId = dilute_hcl
+```
+
+更合理的是：
+
+```text
+ChemicalIdentity / components
+      ↓
+MaterialFamily: hydrochloric-acid-aqueous
+      ↓
+StockPreset:
+  - dilute HCl
+  - 1 mol/L HCl
+  - concentrated HCl
+      ↓
+MaterialInstance:
+  concentration = ...
+  amount = ...
+  T = ...
+      ↓
+Scientific Reality
+      ↓
+Empirical / physical Observable Models
+      ↓
+fuming / appearance / behavior
+```
+
+预设是 UX 快捷方式，不应成为第二套科学真理。
+
+---
+
+# 9. 不同浓度/状态的“视觉不同”揭示了 Observable System 的重要性
+
+当前资源库公开可见：
+
+- 三种浓稀不同的硫酸铜溶液；
+- 盐酸、硫酸的物理性质；
+- 浓盐酸与浓氨水生成白烟；
+- 浓硫酸稀释；
+- 浓硫酸腐蚀；
+- 不同浓度相关实验。
+
+这说明浓度/材料状态不是只进入数值面板，还要进入视觉层。
+
+NOBOOK 长期维护的现象类型，从采购规格、教学资源与版本日志可以看到至少包括：
+
+- 颜色及深浅变化；
+- 沉淀；
+- 絮状沉淀/浑浊；
+- 溶解与扩散；
+- 气泡/产气；
+- 烟/雾/白烟；
+- 火焰；
+- 爆炸/剧烈反应；
+- 液体流动；
+- 器材破裂后的漏液；
+- 声音反馈。
+
+## 9.1 ChemRealm 不应该把所有现象强行第一性原理化
+
+对于很多高中可见现象，浏览器里做完整 CFD、气溶胶、成核、生长、光散射并不现实，也不必要。
+
+正确路线应是：
 
 ```text
 Scientific State
       ↓
 Observable Model
+   ├─ physical model where justified
+   └─ empirical model where appropriate
       ↓
-Visual State
+Visual Parameters
       ↓
 Renderer
 ```
 
-可以继续把 NOBOOK 的视觉经验吸收进来，但必须保持这一边界。
+经验 Observable 必须带：
 
-例如溶液颜色：
+- 适用域；
+- 来源；
+- 参数；
+- 版本；
+- 置信类别；
+- 失败/退化策略。
 
-- 有光谱/消光系数数据：可用 Beer–Lambert / spectral model；
-- 没有可靠数据：允许经验 visual model，但明确 provenance / confidence；
-- Renderer 不根据“Cu²⁺ = blue”硬编码 chemistry。
-
----
-
-# 20. NOBOOK 的主要弱点也正好说明 ChemRealm 不应该复制什么
-
-## 20.1 不复制 scientific black box
-
-NOBOOK 公开资料会使用“精确数据”“真实现象”“速率系统”“化学平衡系统”等表述，但公开材料没有给出足以审核的：
-
-- thermodynamic standard state；
-- activity model；
-- database version；
-- model applicability；
-- uncertainty；
-- residual/convergence；
-- kinetic model provenance。
-
-因此 NOBOOK 可以作为 interaction benchmark，不能作为 Scientific Core reference implementation。
-
-## 20.2 不复制 step-centric pedagogy
-
-实验测评的“按步骤给分”对中考实验考试很有效，但 ChemRealm ACE 的目标不是训练固定流程，而是 mastery + transfer + independence + calibration。
-
-## 20.3 不复制 cloud/account/privacy 模型
-
-NOBOOK 当前服务有账号、手机号、云资源、测评/班级数据等商业产品需求，其隐私政策也对应收集账号与使用相关数据。[S27]
-
-ChemRealm v0 的 local-first/no-account 是另一种产品约束，不应为了复制其“我的实验/班级管理”破坏隐私基线。
-
-## 20.4 不复制 proprietary assets / scene data / UI pixel design
-
-学习抽象，不复制：
-
-- 器材图片；
-- 动画；
-- scene JSON；
-- 私有代码；
-- UI 布局像素；
-- 品牌表达。
-
-## 20.5 不把所有“不真实”都归咎于 2D
-
-第三方专利批评 NOBOOK 单通道鼠标/触摸无法完整表达用户意图。[S08][S09]
-
-这不意味着 ChemRealm 应该立刻上 VR、语音或手势追踪。
-
-多数高中实验交互问题可以通过：
-
-- larger semantic hit region；
-- intent scoring；
-- contextual handles；
-- snap ports；
-- progressive disclosure；
-- keyboard/touch parity；
-
-更低成本地解决。
+这样可以做到“视觉丰富”而不退化成 `if FeCl3 then yellow`。
 
 ---
 
-# 21. 一份更精炼的 ChemRealm “FROM NOBOOK”设计原则
+# 10. 交互不是统一的 add(material, amount)
 
-以下原则不是 NOBOOK 的原话，而是本研究的最终提炼。
+NOBOOK 的实际交互根据物相和器材不同而变化。
 
-## P1 — World over Workflow
+官方学生端手册明确展示液体操作：把盛有液体的容器拖向另一个容器，会出现倾倒控制，并可以调节倾倒量。
 
-实验模板只是 World 的初始状态/教学投影；不能成为决定世界因果的唯一脚本。
+明确品牌/厂商的采购技术规格进一步写到：
 
-## P2 — Topology is Scientific State
+- 固体药品支持精确取用质量；
+- 液体支持控制倾倒体积；
+- 物体/药品支持滚动、倾倒、震荡、混合、搅拌等运动表现。
 
-器材连接、密封、阀门、导管、电极关系不是纯 UI；一旦 commit，它们是会改变科学行为的 World state。
+历史产品与资源又能看到：
 
-## P3 — Geometry proposes, semantics commits
+- 胶头滴管；
+- 定量量取；
+- 粉末/块状固体取用；
+- 加热；
+- 通气；
+- 装置连接；
+- 气密性；
+- 摇晃/混合；
+- 点燃；
+- 滴定等。
 
-碰撞/距离只发现候选；语义 port/region/capability 决定连接。
-
-## P4 — Preserve decisions, compress dexterity
-
-模拟“倒到哪里、倒多少、是否夹紧、是否开阀”，而不是模拟无教育价值的手指精确轨迹。
-
-## P5 — Forgiving preview, strict world mutation
-
-拖拽阶段帮助用户表达意图；commit 后严格遵守 World contract。
-
-## P6 — One World, many Policies
-
-Sandbox / Guided / Presentation / Challenge 不复制物理世界，只改变 affordance、提示、评价和 UI projection。
-
-## P7 — Consequence before Judgement
-
-物理上可能的坏操作应先让世界产生后果，再由 ACE/assessment 解释；不要用红叉代替自然因果。
-
-## P8 — Shared Substrate, not Phenomenon Engines
-
-现象应由 topology/inventory/energy/flow/process/integrity/observable 组合产生；避免 `SuckBackEngine`、`FountainEngine`、`TubeExplosionEngine` 式架构。
-
-## P9 — Visual legibility over photorealism
-
-美术优先确保器材识别、液位/气泡/沉淀/读数可读，再追求材质真实。
-
-## P10 — Asset carries semantics
-
-器材资产不是贴图；它应能关联 interaction geometry、parts、ports、volume profile、state variants。
-
-## P11 — Every free combination is a test obligation
-
-Sandbox 自由度越高，invariant/property/fuzz/reference testing 越重要。
-
-## P12 — Scientific model must remain inspectable
-
-NOBOOK 的交互成熟度值得学习；ChemRealm 必须额外做到 model/provenance/applicability/uncertainty 可追溯。
-
----
-
-# 22. 对 ChemRealm 当前阶段的影响：不要因为这份研究扩 M1 范围
-
-当前 ChemRealm 已完成 M0 S3，M1 — Schema and Units 已获授权。
-
-这份研究**不应导致立即重开 Accepted SPEC-0001 或把未来 apparatus/pressure/thermal 功能塞进 M1。**
-
-原因很简单：研究的价值是提前识别长期 architecture pressure，不是让第一 vertical slice 无限膨胀。
-
-## 22.1 M1 当前只需要做到
-
-继续按已批准计划完成：
-
-- units / quantity algebra；
-- current World / event / scientific contracts；
-- JSON Schema；
-- schema versioning/migration；
-- current vertical slice 必须的类型安全。
-
-若现有 contract 没有阻止未来扩展 `Part / Port / Region / Capability`，就不要为了 NOBOOK 主动加一整套未使用 schema。
-
-## 22.2 M2 的研究提醒
-
-Event Runtime 设计必须继续保持：
-
-- semantic event，不存 pointer noise；
-- renderer 不成为 topology truth；
-- future connection/assembly 可以自然成为 domain event；
-- replay 可重建 topology 与 canonical state。
-
-## 22.3 M6 / M7 才是 NOBOOK 研究真正进入规范的主要节点
-
-届时应该专门形成：
-
-- Apparatus Interaction ADR / spec；
-- visual asset contract；
-- hit/snap semantics；
-- contextual controls；
-- canvas navigation；
-- usability evidence。
-
-## 22.4 更后面的 Physical Reality track
-
-压力/导管/沸腾/热震等不是当前 titration slice 的前置依赖。
-
-它们应作为以后 stress cases，用来检验 substrate 是否足够通用；只有真正进入相应 slice 时才冻结模型。
-
----
-
-# 23. 建议未来专门建立两条验证轨，而不是无限加“实验”
-
-NOBOOK 的经验说明，ChemRealm 的长期验证不应该按实验数量衡量。
-
-## 23.1 Scientific Torture Track
-
-已经规划的：
-
-1. acid/base titration
-2. Al³⁺ / OH⁻ hydrolysis + precipitation + amphoterism
-3. Fe³⁺ / SCN⁻ complex/color
-
-继续验证 scientific model dispatcher。
-
-## 23.2 Experimental Reality Torture Track
-
-这不是功能 roadmap，而是未来验证 substrate 的代表性压力测试：
-
-1. precise/forgiving liquid transfer
-2. heat/cooling observable
-3. connected gas topology
-4. pressure-driven liquid motion
-5. coupled reaction-pressure state
-6. metastable phase transition
-7. apparatus operating-envelope consequence
-8. cross-domain accident chain
-
-通过代表性 torture case 证明抽象，而不是做完 100 个模板后才发现 100 个模板各自有一套 if/else。
-
----
-
-# 24. NOBOOK 给 ChemRealm 最重要的负面警告：自由世界会暴露“看起来对”的科学 bug
-
-App Store 用户曾直接反馈某些胶体行为与预期不一致；大量版本更新记录也长期以“修复虚拟实验已知问题”为主。[S24][S28]
-
-这不是对 NOBOOK 的苛责，而是自由组合模拟器的必然代价：
-
-\[
-N_{materials} \times N_{apparatus} \times N_{operations} \times N_{states}
-\]
-
-很快远超人工场景覆盖能力。
-
-这正是 ChemRealm 为什么必须坚持：
-
-- bounded model domain；
-- explicit `MODEL_OUT_OF_DOMAIN`；
-- conservation invariants；
-- independent reference cases；
-- replayable bug packages；
-- provenance；
-- no silent fallback；
-- property testing。
-
-NOBOOK 的开放世界证明了产品吸引力；它也证明**开放世界必须由验证工程托底。**
-
----
-
-# 25. 最终产品定位：不是“NOBOOK + 更准”，而是两种优势的合并
-
-最有价值的目标不是在 UI 上逐个超过 NOBOOK，也不是在 solver 上逐项炫技。
-
-ChemRealm 应形成如下组合：
+因此更合理的交互抽象是：
 
 ```text
-NOBOOK strongest lessons
-------------------------
-editor/world mindset
-apparatus semantics
-forgiving interaction
-mature visual grammar
-free exploration
-mode separation
-consequence-oriented experiment feel
-
-                +
-
-ChemRealm constitution
-----------------------
-one scientific truth
-model dispatcher
-provenance & applicability
-event-sourced replay/branch
-scientific / observable separation
-ACE learner-belief loop
-local-first privacy
-strict evidence gates
-
-                ↓
-
-High-trust explorable chemical world
+Solid   → pick / scoop / weigh / transfer
+Liquid  → pour / pipette / drop / measure / titrate
+Gas     → generate / collect / flow / vent
+Apparatus → connect / seal / heat / rotate / clamp / open / close
 ```
 
-一句话概括：
-
-> **从 NOBOOK 学“怎样让人觉得自己真的在做实验”，但由 ChemRealm 自己回答“这个世界为什么这样发生、这个答案在什么条件下可信”。**
+这对 ChemRealm 很重要：**“自由组合”不是允许把两个 ID 塞进同一个数组，而是对象之间存在丰富的操作语义和拓扑。**
 
 ---
 
-# 26. 仍未被公开资料回答的问题
+# 11. Property Editor、Entity Inspector、Scene Inspector 是三种东西
 
-以下内容目前**不能**从公开资料可靠确认，未来若要继续研究，应保持 open：
+这是此次调研中对 ChemRealm UI 最重要的发现之一。
 
-1. NOBOOK 化学当前各“引擎”的真实软件边界与通信方式；
-2. 速率系统是否使用通用 rate law、经验模板还是 reaction-specific rules；
-3. 化学平衡系统是否使用 concentration、activity 或其他教学近似；
-4. 压强系统的状态方程、flow 模型及数值时间步；
-5. 粒子引擎是 scientific state、visual particle system 还是两者混合；
-6. 试管炸裂等失败后果在多大程度上是动态涌现、经验规则或 authored scenario；
-7. 当前 NOBOOK Lab 的 snap/assembly 内部评分算法；
-8. 美术资产是否使用 3D master → 2D sprite pipeline，公开资料无法确认；
-9. current scene JSON schema；开放 API 只确认它可序列化，并未公开其内部契约；
-10. 各类化学数据来源、模型版本和参数 provenance。
+官方历史 UI 文档已经把它们拆开：
 
-在没有进一步一手证据前，**这些都不应写成 NOBOOK 的事实。**
+## 11.1 Property Editor：我要怎么配置这个对象
 
----
+“器材属性”用于编辑对象的基础属性和删除等配置操作。
 
-# 27. Source inventory
+它回答：
 
-以下链接用于后续复核。等级 A/B/C/D 表示本文件第 1 节定义的证据等级。
+> **这个对象应该被设置成什么？**
 
-### A — NOBOOK 官方 / 原公司一手资料
+## 11.2 Entity / Equipment Info：这个对象现在是什么状态
 
-- **[S01]** NOBOOK，《Nobook 虚拟实验室：一款工具的平台梦》  
-  https://www.nobook.com/view/302
-- **[S02]** NOBOOK，第 73 届教育装备展产品介绍：化学热力学、重力、拼装、粒子、平衡、速率、压强系统  
-  https://www.nobook.com/view/410
-- **[S03]** NOBOOK，“让教学更简单”：热力学、导管、粒子、速率、平衡、流体等  
-  https://www.nobook.com/view/396
-- **[S04]** NOBOOK Lab App Store：1000+ DIY 器材、8 大引擎算法、700+ 实验  
-  https://apps.apple.com/us/app/nobook-lab/id6742533495
-- **[S05]** 原 NOBOOK 公司专利 CN104064088A，《具有动态响应的仿真实验系统》  
-  https://patents.google.com/patent/CN104064088A/zh
-- **[S06]** NOBOOK 化学实验加试学生端使用手册（PDF）  
-  https://imgcdn.nobook.com/files/NOBOOK%E5%8C%96%E5%AD%A6%E5%AE%9E%E9%AA%8C%E5%8A%A0%E8%AF%95%E5%AD%A6%E7%94%9F%E7%AB%AF%20%E4%BD%BF%E7%94%A8%E6%89%8B%E5%86%8C.pdf
-- **[S07]** NOBOOK，电学元器件使用：导线自动吸附  
-  https://www.nobook.com/view/246
-- **[S10]** NOBOOK 化学实验界面及功能特性说明  
-  https://nobook-doc-cdn.nobook.com/chem/NB%E5%8C%96%E5%AD%A6%E5%AE%9E%E9%AA%8C%E7%95%8C%E9%9D%A2%E5%8F%8A%E7%9B%B8%E5%BA%94%E5%8A%9F%E8%83%BD%E7%89%B9%E6%80%A7%E8%AF%B4%E6%98%8E.html
-- **[S11]** NOBOOK Open Platform 2.0，物理/化学实验 API：config/getData/setData  
-  https://open.nobook.com/docs/2.0/tutorial-integration/experimental-integration/phy-or-chem-integration/
-- **[S12]** NOBOOK 物理家庭版：实验步骤实时保存、继续实验（作为平台设计历史证据）  
-  https://www.nobook.com/view/288
-- **[S13]** NOBOOK，“检查装置气密性”资源  
-  https://hx-dev.nobook.com/console/templates/resource/2128_a8a9fc52373e36aa014ab5d5ec76e810/
-- **[S14]** NOBOOK，“测定空气里氧气的含量”资源  
-  https://hx-dev.nobook.com/console/templates/resource/460_21aad64f4fe6aff318e62276e627546a/
-- **[S15]** NOBOOK 初中酸碱资源目录：压强差、气球、喷泉等  
-  https://hx-dev.nobook.com/console/junior/1-8-50
-- **[S16]** NOBOOK，“化学能转化为电能”资源  
-  https://hx-dev.nobook.com/console/templates/resource/2586_59db588f2d02fa8465039e36904c4d1e
-- **[S19]** NOBOOK 实验测评产品页  
-  https://www.nobook.com/web-exam
-- **[S20]** NOBOOK 当前官网  
-  https://www.nobook.com/index.html
-- **[S21]** NOBOOK 化学实验界面概览 / 功能说明  
-  https://nobook-doc-cdn.nobook.com/chem/NB%E5%8C%96%E5%AD%A6%E5%AE%9E%E9%AA%8C%E7%95%8C%E9%9D%A2%E6%A6%82%E8%A7%88.html
-- **[S26]** NOBOOK 原公司与中核研究院 RGB 溶液浓度分析合作案例  
-  https://www.nobook.com/view/161
-- **[S27]** NOBOOK 当前隐私政策  
-  https://www.nobook.com/legal/privacy/web/index.html
-- **[S28]** NOBOOK Lab 当前 App Store 版本历史  
-  https://apps.apple.com/us/app/nobook-lab/id6742533495
+“器材信息”在选中画布对象后显示对应信息。
 
-### B — 独立研究 / 教学案例 / 外部技术材料
+当前开放平台仍然有独立 `infoVisible`，并区分编辑器有器材库和播放器无器材库两种布局。
 
-- **[S08]** 专利 CN111968470B：以 NOBOOK 为例讨论单通道虚拟实验交互对用户意图表达的限制  
-  https://patents.google.com/patent/CN111968470B/en
-- **[S09]** 专利 CN111665941A：多模态语义融合虚拟实验，与 NOBOOK / 真实实验比较  
-  https://patents.google.com/patent/CN111665941A/zh
-- **[S17]** 《虚拟仿真实验在初中化学实验教学中的探索与实践》：错误操作后出现试管炸裂、液体倒吸等虚拟后果  
-  https://m.thepaper.cn/newsDetail_forward_12570066
-- **[S18]** 刘梦鑫等，《NOBOOK虚拟实验室在初中化学教学中的应用与探索》，教育进展 2021  
-  https://pdf.hanspub.org/ae20210600000_43750494.pdf
-- **[S25]** 2025 政府采购技术文件中 NOBOOK 化学软件技术参数：重力、滚动、倾倒、震荡、混合、搅拌、热力学/压强/数据追踪等  
-  https://www.ccgp-neimenggu.gov.cn/gpx-bid-file/ZF_JGBM_000001/152924/2025/7/22/402881e297e00f8c0198323fc6444d50/gpx-bidconfirm/402881ef984575740198a2e144ef0fd1.pdf?accessCode=184c4114e908393b3302731d01cd11cf
-- **补充** 童文昭、王后雄，《NOBOOK虚拟实验在线上实验教学中的应用——以“氯气的实验室制法”为例》  
-  https://hbzx.cbpt.cnki.net/portal/journal/portal/client/paper/ba44c62ff43a535c7383ca53b8eee287
-- **补充** 基于 NOBOOK 的乙醇制乙烯课例：温度、副反应、碎瓷片等  
-  https://jiqunzhihui.org.cn/m/view.php?aid=13076
-- **补充** CN112215178B：外部专利对包括 NOBOOK 在内的虚拟化学实验“实验记录”不足的批评  
-  https://patents.google.com/patent/CN112215178B/zh
+它回答：
 
-### C — 社区 / 用户信号
+> **这个对象现在是什么？**
 
-- **[S22]** Bilibili NOBOOK 搜索结果：大量自由实验、非教材玩法  
-  https://search.bilibili.com/all?keyword=nobook%E5%AE%9E%E9%AA%8C
-- **[S23]** Bilibili，“不管了先加钠”社区玩法样本  
-  https://www.bilibili.com/video/BV1AAN3euEB3/
-- **[S24]** 中国区 App Store 评分与评论：自由度评价以及实验边缘 bug 反馈  
-  https://apps.apple.com/cn/app/nb%E5%AE%9E%E9%AA%8C%E5%AE%A4/id1265400377?platform=ipad&see-all=reviews
-- **补充** Bilibili 社区文化观察文章  
-  https://www.bilibili.com/opus/1033267894795894800
+## 11.3 Scene Info：整个世界现在是什么状态
 
-### D — Visual observation
+官方 UI 还有独立“场景信息”。
 
-- NOBOOK 当前官网产品截图、App Store / 当前客户端截图；仅用于视觉语法观察，不作为内部技术实现证据。
+它回答：
+
+> **整个场景/环境是什么状态？**
+
+## 11.4 这三个 surface 在 ChemRealm 里不应再混掉
+
+未来建议：
+
+```text
+Catalog Drawer
+  “我能拿什么？”
+
+Property / Setup Panel
+  “我要怎么配置它？”
+
+Entity Inspector
+  “它现在是什么状态？”
+
+World / Environment Inspector
+  “整个世界现在是什么状态？”
+```
+
+强行塞进同一个右栏，只会导致后期信息密度失控。
 
 ---
 
-# 28. Final takeaway
+# 12. 容器状态查看：NOBOOK 已经建立了“state legibility”预期
 
-研究 NOBOOK 最容易犯的错，是列出：
+用户直接观察当前 NOBOOK 时指出：选择一个容器，可以看到内容物的：
 
-> “它有倒吸，所以我们加倒吸；它有爆炸，所以我们加爆炸；它有吸附，所以我们加吸附。”
+- 质量；
+- 物质的量；
+- 浓度；
+- 温度；
+- 压强；
+- 以及正在发生的反应。
 
-真正应留下的是更短的一组基础判断：
+公开资料能从多个方向交叉印证这一体系：
 
-1. **世界必须比实验模板更基础。**
-2. **器材必须比图片更有语义。**
-3. **拓扑必须比碰撞更有权威。**
-4. **交互应表达意图，而不是考验像素操作。**
-5. **坏操作的后果与教学评价必须分开。**
-6. **视觉真实首先是状态可读。**
-7. **自由组合的代价必须由验证工程承担。**
-8. **竞品证明“什么值得模拟”；ChemRealm 自己证明“怎样才科学地模拟”。**
+1. 官方 UI 文档：存在独立“器材信息”和“场景信息”；
+2. 当前开放平台：`infoVisible` 仍然是独立组件；
+3. 明确标注 NOBOOK / 北京乐步的近年采购技术规格：数据追踪包括反应方程式、温度、体积、物质的量、浓度、质量；并要求压强会随温度和气体量变化。
 
-如果 ChemRealm 最终能做到：
+因此虽然公开资料不能保证“2026 每一个版本、每个容器的 UI 字段排列都完全一样”，但可以确认：
 
-> NOBOOK 级别甚至更好的实验操作顺滑度与视觉世界感，  
-> 同时保持当前已经冻结的 Scientific Truth、provenance、event sourcing、ACE 与 local-first 纪律，
+> **NOBOOK 把化学运行态数据暴露给用户，而不是只让用户看动画。**
 
-那么它就不会只是“另一个虚拟实验室”。
+这就是 **State Legibility**。
 
-它会更接近我们真正想做的东西：
+## 12.1 这会成为 ChemRealm 必须超过 NOBOOK 的地方
 
-> **一个可以被操作、被解释、被验证、被回放、被分支，而且知道自己何时不可信的 Chemical World。**
+ChemRealm 最终的 Inspector 可以做渐进式深度：
+
+### 默认层：高中生可理解
+
+```text
+烧杯 A
+体积         48.2 mL
+温度         25.1 °C
+压强         101.3 kPa (if meaningful)
+
+内容物
+盐酸 / 氯化钠 / 水 ...
+
+正在发生
+主要酸碱过程 ...
+```
+
+### 深一层：定量状态
+
+```text
+mass
+amount
+concentration
+phase amounts
+pH
+conductivity / observable quantities
+```
+
+### 科学层：Scientific Reality
+
+```text
+conserved components
+equilibrium species
+activities
+ionic strength
+mass balance
+charge balance
+phase stability
+```
+
+### 审计层：模型与证据
+
+```text
+model id / version
+validity domain
+provenance
+assumptions
+residual / convergence
+approximation flags
+```
+
+这正好把 ChemRealm 的 **Correct / Visible / Thinkable** 连起来。
+
+---
+
+# 13. 实时反应区：NOBOOK 已经不只是“显示一条静态方程式”
+
+政府采购规格明确要求：
+
+- 反应数据实时可视化；
+- 包括化学反应方程式；
+- 方程式可移动、可放大显示。
+
+这至少说明 Reaction Equation 是 UI 中一个主动的信息对象，而不是固定实验说明里的静态文本。
+
+## 13.1 教学案例证明反应信息会随条件与时间变化
+
+一篇以 NOBOOK 为平台的高中化学教学案例记录了乙醇 + 浓硫酸体系：
+
+- 加入 10 mL 乙醇和 30 mL 浓硫酸；
+- 升温至约 140 ℃时，烧瓶附近显示乙醇分子间脱水生成乙醚的反应；
+- 升至约 170 ℃时，显示乙醇消去生成乙烯；
+- 继续反应一段时间，又显示新的副反应；
+- 研究者还报告 NOBOOK 会计算药品使用量与剩余量，且浓度不足时某些反应不会发生。
+
+这不能证明 NOBOOK 使用统一 kinetics solver，但能证明一个重要产品事实：
+
+> **Reaction Feed / Reaction State 可以依赖温度、浓度、时间/进程与当前物质状态而变化。**
+
+## 13.2 ChemRealm 不能直接把“当前反应方程式”当科学真理
+
+真实平衡体系里经常同时存在：
+
+```text
+acid-base equilibria
+water autoionization
+complexation
+hydrolysis
+precipitation
+redox
+mass transfer
+```
+
+“当前正在发生哪条高中方程式”本身是一种 representation。
+
+因此 ChemRealm 应当建立：
+
+```text
+Scientific Process State
+      ↓
+Reaction / Process Interpretation
+      ↓
+Pedagogical Reaction Feed
+```
+
+而不是：
+
+```text
+Reaction Equation UI
+      ↓
+决定世界怎么反应
+```
+
+---
+
+# 14. ChemRealm 可以把 NOBOOK 的 Reaction Feed 升级成“因果日志”
+
+事件溯源世界给 ChemRealm 一个 NOBOOK 未公开证明拥有的额外优势：**因果链可以被回放。**
+
+例如默认用户只看到：
+
+```text
+Ag⁺ + Cl⁻ → AgCl↓
+```
+
+展开以后：
+
+```text
+14:32:10  加入 0.50 mL AgNO3
+14:32:10  Ag component inventory 增加
+14:32:10  equilibrium/phase solve
+14:32:10  ionic product crosses precipitation condition
+14:32:10  AgCl(s) becomes stable
+14:32:10  precipitated amount = ...
+14:32:10  observable turbidity increases
+```
+
+再点科学解释：
+
+```text
+model
+Ksp/provenance
+activity convention
+validity
+residual
+```
+
+这种设计能把“实时方程式很直观”的优点，与 ChemRealm 的科学可审计性结合起来。
+
+---
+
+# 15. 反应产物要留在世界里，而不是“动画播完就没了”
+
+自由实验真正难的地方是 reaction chaining。
+
+如果：
+
+```text
+A + B → C
+```
+
+发生后，C 必须继续成为世界真实状态的一部分，之后可以：
+
+```text
+C + D → E
+```
+
+而不是第一段动画播完以后只留下“现象”。
+
+近年相关采购技术规格强调：反应产物应保留相应化学性质、可继续参与反应、过程可追溯。教学案例中也能看到前一步副产物继续影响后续实验。
+
+**ChemRealm 应将这一点写成成熟世界的硬要求：**
+
+> 只要处于受支持模型域内，生成物必须作为真实世界状态继续存在，并能成为后续 Scientific Reality 的输入。
+
+这也是为什么 `MaterialInstance`、`ContainerContents` 和 `SpeciesState` 必须分层。
+
+---
+
+# 16. 温度与压强不是装饰字段
+
+NOBOOK 的近年技术规格写到：
+
+- 能表现热力学相关现象；
+- 能量随化学反应发生变化；
+- 压强随温度和气体量发生相应变化；
+- 数据追踪包括温度等。
+
+公开当前官网又长期把“压强系统”作为化学三大系统之一。
+
+教学案例则显示反应路径/显示方程式会随温度变化。
+
+因此 T/P 在产品心智上不是：
+
+```text
+UI decoration: 25 °C, 101 kPa
+```
+
+而是：
+
+```text
+World / local state
+      ↓
+reaction / physical behavior
+      ↓
+observable + inspector
+```
+
+ChemRealm 以后进入气体、热化学、挥发、溶解、动力学时，必须明确区分：
+
+- environment T/P；
+- vessel-local T/P；
+- gas-space P；
+- model reference conditions；
+- user-set initial condition；
+- dynamically evolved condition。
+
+不能永远靠一个全局 `temperature = 25°C`。
+
+---
+
+# 17. “错误操作”与危险现象：NOBOOK 追求的是可见后果
+
+相关采购规格和长期资源可以看到：
+
+- 粉尘爆炸；
+- 可燃混合气点燃；
+- 强烈产气；
+- 某些不当操作的危险现象；
+- 器材破裂；
+- 液体漏出；
+- 爆炸/剧烈反应等。
+
+第三方版本日志镜像甚至记录过：
+
+- 某些条件下的爆炸效果；
+- 破裂试管缓慢漏液；
+- 危险操作提示；
+- 倾倒声音延迟修复。
+
+虽然这些具体 changelog 不是官方一手资料，但它们很好地说明长期维护面：**“世界后果”不仅是化学方程式，还包括器材状态、声音、流体和危险可见性。**
+
+这与 ChemRealm 已经形成的原则高度一致：
+
+> **Consequence before Judgement。**
+
+能安全模拟的情况下，不应该第一时间弹：
+
+```text
+❌ 操作错误
+```
+
+而应优先让世界产生合理后果，然后由 ACE / assessment / explanation 解释为什么。
+
+---
+
+# 18. 声音、破损、漏液看起来是“小东西”，其实决定实验是否“活着”
+
+在工具软件里，声音或漏液很容易被当成 polish。
+
+在虚拟实验里不是。
+
+用户对“这是一个世界”的判断来自很多低层反馈：
+
+- 液体是否像液体；
+- 瓶子倒下会怎样；
+- 试管破裂以后是否真的失去容纳能力；
+- 加热有没有持续状态；
+- 倾倒声音是否同步；
+- 爆炸后器材/内容物如何变化；
+- 气泡是否随速率变化；
+- 浑浊是否渐变。
+
+NOBOOK 长期版本维护恰恰暴露：这些细节需要多年迭代，而不是引擎一次解决。
+
+ChemRealm 的 `Visual quality is a product requirement` 应进一步扩大为：
+
+> **World feedback quality is a product requirement。**
+
+包括视觉、听觉、状态反馈、交互反馈、过程反馈。
+
+---
+
+# 19. 世界可以序列化：NOBOOK 已经有 scene document 概念
+
+当前开放平台 API 直接暴露：
+
+```text
+getData(): string
+setData(data: string): void
+```
+
+其中 `getData()` 返回整个实验场景的 JSON 字符串，官方示例直接写明可以持久化到数据库；`setData()` 可以重新加载。
+
+历史手册也有导入/导出实验文件。
+
+这证明 NOBOOK 至少拥有：
+
+> **Serializable Scene / Experiment Document。**
+
+但不能把它夸大成：
+
+> event sourcing / deterministic replay / branching。
+
+公开资料没有证明这些。
+
+ChemRealm 的优势应该建立在：
+
+```text
+NOBOOK-like editable/persistable world
++
+semantic events
++
+deterministic replay where feasible
++
+branch/fork
++
+time travel
++
+scientific model identity
+```
+
+---
+
+# 20. 一个统一 Chemical World 不等于一个统一 UI
+
+NOBOOK 当前开放平台把化学至少拆成：
+
+- 无机化学；
+- 有机化学；
+- 电化学。
+
+历史官方产品又有：
+
+- 3D 分子；
+- 晶体结构；
+- 演示动画等。
+
+官方手册甚至明确说，有机实验编辑器与无机编辑器的最大区别之一就是没有器材库。
+
+这个产品事实非常重要：
+
+> **化学不同 domain 需要不同 representation。**
+
+ChemRealm 的 “One World, many projections” 不应该被误解成：
+
+> “所有化学都强行放在烧杯拖拽 UI 里。”
+
+更合理的是：
+
+```text
+Shared scientific truth / world identity
+      ↓
+Inorganic bench projection
+Organic graph/mechanism projection
+Electrochemistry projection
+Molecular/crystal projection
+Quantitative chart projection
+Teacher presentation projection
+Student guided projection
+```
+
+---
+
+# 21. NOBOOK 的内容库与 Sandbox 是互相喂养的
+
+表面上：
+
+- 精品实验是“预制内容”；
+- DIY 是“自由实验”。
+
+实际上二者应该理解为同一个内容工业的两个表面。
+
+每新增/打磨一个经典实验：
+
+- 会逼出新的器材；
+- 会逼出新的材料；
+- 会逼出新的反应规则；
+- 会逼出新的可见现象；
+- 会暴露旧模型缺口；
+- 会提供可回归的真实教学场景。
+
+因此 ChemRealm 未来也不应该把：
+
+```text
+Scenario Library
+```
+
+与：
+
+```text
+Free Sandbox
+```
+
+做成两个互相独立的项目。
+
+Scenario 应成为 Scientific Reality + Material Catalog + World Runtime 的长期 acceptance corpus。
+
+---
+
+# 22. 社区行为揭示“丰富感”本身就是 affordance
+
+社区中长期存在：
+
+- “把所有液体药品加到一起”；
+- “制取八大气体”；
+- 制作复杂配合物；
+- “不管了，加钠”等玩法。
+
+这些内容不证明科学正确性，却强烈证明一个 UX 事实：
+
+> **当 Catalog 足够丰富、组合足够自由、后果足够可见时，用户会自然产生探索冲动。**
+
+这种冲动不是一句“支持自由实验”能够制造出来的。
+
+可以称之为：
+
+> **Affordance through abundance。**
+
+成熟 Chemical World 打开时必须给用户一种：
+
+> “我还能拿这个、那个、再试一个离谱组合”
+
+的感知。
+
+ChemRealm 如果科学内核再严谨，右边长期只有四个材料，用户仍然只会把它视为滴定 demo。
+
+---
+
+# 23. 商业权限也是 NOBOOK Catalog 的一部分，但 ChemRealm 不应该复制
+
+NOBOOK 当前价格页显示：
+
+- 免费版实验资源只开放一部分；
+- DIY 器材也只开放一部分；
+- 付费/学校版开放更多。
+
+社区也会讨论隐藏/VIP 药品。
+
+因此 NOBOOK 的某些 Catalog 状态包含：
+
+```text
+exists
+visible / hidden
+free / paid
+available / locked
+```
+
+ChemRealm 的 GOAL 明确禁止付费墙与会员，因此不能复制 entitlement 模型。
+
+但这个 UI 结构可以转化成更科学的 capability 状态：
+
+```text
+VERIFIED
+SUPPORTED_BUT_NOT_FULLY_VALIDATED
+APPROXIMATE
+EXPERIMENTAL
+MODEL_OUT_OF_DOMAIN
+NOT_YET_SUPPORTED
+```
+
+这会比“VIP 锁”更符合 ChemRealm 的身份。
+
+---
+
+# 24. 长期版本维护证明：底座好也不会让补药“轻松”
+
+这是对前几轮讨论最重要的修正。
+
+第三方历史版本日志镜像记录了大量极具体的长期调整，例如：
+
+- 增补 KOH 相关反应；
+- 调整 Na2CO3 + CuSO4；
+- 调整无水 CuSO4 溶解相关问题；
+- 优化 Na + H2O + 酚酞；
+- 调整 F2 颜色；
+- 调整高浓度 H2O2 / KMnO4 等剧烈现象；
+- 加强某些爆炸/危险反馈；
+- 修破裂试管漏液；
+- 修倒液声音延迟；
+- 加新反应原理与器材交互。
+
+这些记录是次级来源，不能拿每一条当官方规范；但它们揭示了一种极可信的维护模式：
+
+> **一个成熟的大型药品库，长期成本主要不是“新增名称”，而是 reaction coverage、property data、observable tuning、interaction edge cases、cross-combination regression。**
+
+所以“底座做好以后补药不折磨”必须改成：
+
+> **底座做好以后，可以避免为第 237 种药发明第 237 套软件架构；但第 237 种药仍然可能需要严肃的科学数据、物性、反应域、现象、交互、素材和组合验证工作。**
+
+这是两回事。
+
+---
+
+# 25. 内容规模越大，“组合爆炸”越不可逃避
+
+假设有：
+
+- 200 个 MaterialFamily；
+- 100 个 apparatus families；
+- 每种材料多个浓度/形态；
+- 多种温度/压力；
+- 混合、加热、通气、连接等操作；
+
+理论组合数会迅速不可穷举。
+
+因此成熟系统不能依赖：
+
+> “每两瓶药都手工写一个 happy-path 测试”。
+
+ChemRealm 需要机器可读的 coverage model：
+
+```text
+MaterialFamily
+      ↓
+required scientific capabilities
+      ↓
+model adapter coverage
+      ↓
+validity domains
+      ↓
+known observable models
+      ↓
+reference fixtures
+      ↓
+combination/property-based tests
+```
+
+Catalog 中也不能把“可选”误导成“所有参数下都已验证”。
+
+---
+
+# 26. “自由组合”应该产生验证义务
+
+成熟世界最危险的营销语言是：
+
+> “任何药品任意组合都能反应。”
+
+如果科学模型不能支撑，宁愿明确：
+
+```text
+MODEL_OUT_OF_DOMAIN
+```
+
+也不能为了“什么都能玩”而给一个看似合理的动画。
+
+ChemRealm 可以定义成熟 Catalog 状态：
+
+| 状态 | 含义 |
+|---|---|
+| VERIFIED | 该材料/参数域/相关模型有明确 reference validation |
+| SUPPORTED | 合同层支持，但特定组合可能没有独立 reference 覆盖 |
+| APPROXIMATE | 明确采用经验/教学近似，并展示范围 |
+| EXPERIMENTAL | 可以探索，但验证尚不充分 |
+| OUT_OF_DOMAIN | 当前模型明确不能可靠回答 |
+| UNSUPPORTED | 尚无对应能力 |
+
+这样“丰富度”和“科学可信度”就不必互相欺骗。
+
+---
+
+# 27. NOBOOK 的强项与公开资料无法证明的边界
+
+## 27.1 可以高置信确认
+
+- 有高密度器材/药品 Catalog；
+- 固/液/气等分类；
+- 多种搜索/索引；
+- 器材与药品可实例化进画布；
+- 对象有属性设置；
+- 对象有独立信息区；
+- 场景有独立信息；
+- 液体药品浓度可修改；
+- 固体/液体取用量可以控制；
+- 跟踪反应方程式、T、V、n、c、m 等运行态数据；
+- 压强与温度/气体量相关的系统行为；
+- 方程式会随实验条件/过程变化；
+- 存在速率、化学平衡、压强等产品系统；
+- 场景可序列化保存/恢复；
+- 编辑器与播放器有不同 UI；
+- 移动端在向渐进式/隐藏式工具演进；
+- 长期有百量级化学内容与持续更新。
+
+## 27.2 可以合理推断，但不要写成“已证明内部架构”
+
+- Material/Container 至少持有足以驱动运行态 UI 的状态；
+- 某些反应规则依赖浓度、温度、时间/进程；
+- 某些现象系统依赖材料状态；
+- 产物可以继续进入后续实验行为；
+- 运行时很可能由规则、数据表、若干系统和专项逻辑共同组成。
+
+## 27.3 公开资料不能证明
+
+- 所有反应由统一 thermodynamic solver 自动预测；
+- 所有动力学由统一 kinetic solver 计算；
+- 所有浓度相关视觉是连续物性函数；
+- 279 个药品等于 279 个独立化学实体；
+- 任意两种药品在任意参数下都科学正确；
+- 数据追踪字段全部来自统一守恒状态而非多个子系统；
+- NOBOOK 有 ChemRealm 同等级的 model provenance；
+- NOBOOK 有 deterministic replay、branch/fork、time travel；
+- NOBOOK 对模型适用域有用户可见、版本化的严格拒绝机制。
+
+这些恰恰是 ChemRealm 可以建立长期差异的地方。
+
+---
+
+# 28. NOBOOK 的真正产品结构：十二个 surface
+
+综合所有资料，可以把 NOBOOK 无机化学体验抽象成至少十二层：
+
+| Surface | 作用 | 用户问题 |
+|---|---|---|
+| Resource Catalog | 精品实验、教材资源 | “我要进入哪个实验？” |
+| Material/Apparatus Catalog | 器材药品待选区 | “我能拿什么？” |
+| Search/Taxonomy | 分类、字母、化学索引 | “我怎么找到它？” |
+| Spawn/Instance | 拖拽/点击进入画布 | “这一份现在属于我的世界了吗？” |
+| Property Editor | 浓度、器材属性等 | “我要怎么配置它？” |
+| Entity Inspector | 容器/器材运行态 | “它现在是什么状态？” |
+| Scene Inspector | 场景/环境信息 | “整个世界现在是什么状态？” |
+| Interaction Layer | 倒、滴、热、连、摇、混等 | “我能对它做什么？” |
+| Reaction Runtime | 当前反应与条件 | “现在发生了什么？” |
+| Observable Layer | 颜色、气泡、烟雾等 | “我看到了什么？” |
+| Quantitative/Data View | T/V/n/c/m/P 等 | “内部定量状态是什么？” |
+| Persistence/Presentation | 保存、加载、演示 | “如何复现/展示这个世界？” |
+
+**这十二层比“右边药品很多”更能描述 NOBOOK 的成熟度。**
+
+---
+
+# 29. 对 ChemRealm 数据模型的直接推论
+
+为了达到上述成熟度，又不复制黑箱逻辑，ChemRealm 至少需要区分：
+
+```text
+ChemicalIdentity
+      ↓
+MaterialFamily
+      ↓
+StockPreset
+      ↓
+CatalogEntry
+      ↓ instantiate
+MaterialInstance
+      ↓ held by
+ContainerInventory / Contents
+      ↓ interpreted by
+Scientific Reality
+      ↓
+Scientific Process State
+      ↓
+Observable State
+      ↓
+Visual State
+```
+
+## 29.1 ChemicalIdentity
+
+描述稳定的化学身份、components/species/structure 等，不等于试剂瓶。
+
+## 29.2 MaterialFamily
+
+例如 hydrochloric-acid-aqueous，定义：
+
+- composition model；
+- valid concentration/temperature ranges；
+- physical property sources；
+- supported scientific capabilities；
+- observable profiles。
+
+## 29.3 StockPreset
+
+为了高中教学和快速操作，例如：
+
+- 稀盐酸；
+- 1 mol/L HCl；
+- 浓盐酸；
+
+Preset 是快捷参数组，不是独立科学宇宙。
+
+## 29.4 CatalogEntry
+
+决定用户如何发现它：
+
+- 名称；
+- 化学式；
+- 别名；
+- 搜索标签；
+- 分类；
+- 图标；
+- 常用程度；
+- curriculum metadata；
+- capability/validation badge。
+
+## 29.5 MaterialInstance
+
+进入世界以后具有具体：
+
+- 数量；
+- 浓度/配方；
+- T/P；
+- 当前容器；
+- 当前历史；
+- 实际组成状态。
+
+## 29.6 ContainerInventory / Contents
+
+世界守恒和拓扑的实体，不应继续依赖“最初是哪瓶药”作为科学真理。
+
+---
+
+# 30. 对 ChemRealm UI 的直接推论
+
+## 30.1 Catalog Drawer
+
+应该回答“我能拿什么”，并支持：
+
+- text/formula/alias/pinyin；
+- solid/liquid/gas/apparatus；
+- elements/components/ions；
+- curriculum/common use；
+- recent/favorite；
+- scenario recommended；
+- validation/capability status。
+
+## 30.2 Spawn / Quick Preset
+
+拖出来时可直接用教学常用 preset，避免每次填参数。
+
+## 30.3 Property Editor
+
+用于改变**可配置初始/操作参数**，例如：
+
+- stock concentration；
+- initial volume；
+- apparatus size；
+- user-controlled setup values。
+
+参数一旦允许修改，必须有明确因果语义：
+
+> 要么真正改变 Scientific/Observable world；要么明确标记为 presentation-only。
+
+## 30.4 Runtime Inspector
+
+只读/解释当前实际状态，不等于 Property Editor。
+
+## 30.5 Reaction / Process Feed
+
+显示当前世界的重要化学过程，但它是 Scientific Reality 的 projection。
+
+## 30.6 World Inspector
+
+用于环境条件、全局时间、分支、世界级状态与诊断。
+
+---
+
+# 31. 内容生产必须升级成“工业流水线”
+
+如果目标是 NOBOOK 级 Catalog 密度，同时还要求 ChemRealm 的 provenance / validity / scientific validation，那么靠 agent 手改 JSON 会失控。
+
+未来应该建立内部 **Chemical Content Production Pipeline**，它是 supporting tooling，不是第五个 runtime core。
+
+理想流程：
+
+```text
+Author Chemical Identity
+      ↓
+Author Material Family
+      ↓
+Attach property data + provenance
+      ↓
+Define stock presets
+      ↓
+Attach scientific capability requirements
+      ↓
+Attach observable profiles
+      ↓
+Attach search/curriculum metadata
+      ↓
+Attach assets
+      ↓
+Generate reference fixtures
+      ↓
+Generate compatibility/combination tests
+      ↓
+Schema + provenance + domain validation
+      ↓
+Visual regression
+      ↓
+Catalog publish
+```
+
+## 31.1 未来应有 Material Authoring Studio
+
+当内容进入百量级以后，内部工具应该能让作者查看：
+
+```text
+Material family
+aliases
+formula/components
+phase
+concentration range
+stock presets
+density/property model
+observable model
+scientific adapters
+provenance
+validation status
+known unsupported combinations
+```
+
+并自动：
+
+- 校验 units；
+- 校验 provenance；
+- 校验 model coverage；
+- 生成 schema artifacts；
+- 生成基础 fixtures；
+- 提示 orphan references；
+- 跑 visual snapshots；
+- 跑 cross-combination smoke tests。
+
+---
+
+# 32. 成熟度指标不能再只看“有几个实验”
+
+建议 ChemRealm 以后同时跟踪：
+
+## Catalog 指标
+
+- `chemical_identity_count`
+- `material_family_count`
+- `stock_preset_count`
+- `catalog_entry_count`
+- `apparatus_family_count`
+- `apparatus_spec_count`
+
+## Scientific coverage
+
+- `validated_domain_count`
+- `verified_material_domain_pairs`
+- `supported_component_count`
+- `supported_phase_count`
+- `cross_model_fixture_count`
+
+## World affordance
+
+- `parameterizable_material_ratio`
+- `inspectable_container_ratio`
+- `continuing_product_coverage`
+- `supported_interaction_types`
+- `observable_profile_coverage`
+
+## Quality
+
+- `verified_catalog_ratio`
+- `known_unsupported_combinations`
+- `reference_case_count`
+- `visual_regression_coverage`
+- `provenance_completeness`
+
+这些数字比“我们也有 300 种药”有意义得多。
+
+---
+
+# 33. “丰富度”必须进入产品质量，而不能永远被当作后期填充
+
+原 ChemRealm GOAL 对科学底座、event sourcing、可视化质量、ACE 的要求非常强，但对下面这件事表达不足：
+
+> **成熟 Chemical World 必须让用户在第一次进入时就感到“这个世界有很多东西可以拿、可以改、可以组合、可以观察”。**
+
+这不是肤浅的 UI KPI。
+
+Catalog abundance 本身就是 world affordance。
+
+因此成熟阶段必须达到：
+
+- 高密度器材与材料；
+- 合理规格与常用 preset；
+- 强搜索与分类；
+- 参数化实例；
+- 自由组合；
+- 状态可检查；
+- 过程可见；
+- 产物继续存在；
+- 多种可观察反馈；
+- 科学能力状态透明。
+
+但早期仍然不应为了数字虚增大量 fake content。
+
+正确路线是：
+
+> **先建可扩展内容管线与可信能力域，再逐步把 Catalog 铺到成熟密度。**
+
+---
+
+# 34. 对 ChemRealm 与 NOBOOK 的重新定位
+
+## 34.1 NOBOOK 已经证明的强项
+
+| 维度 | NOBOOK |
+|---|---|
+| Catalog breadth | 极强，长期百量级 |
+| Apparatus breadth | 极强，多规格、特殊器材 |
+| Search/taxonomy | 成熟 |
+| Parameterization | 强，至少浓度/用量等 |
+| Interaction | 强 |
+| Runtime state visibility | 强 |
+| Reaction feed | 强 |
+| Observable richness | 强 |
+| Scenario library | 极强 |
+| Long-term content maintenance | 十年以上积累 |
+| Mobile/teacher UI differentiation | 已形成 |
+
+## 34.2 公开资料无法证明 NOBOOK 已经做到的东西
+
+| 维度 | 公开证据状态 |
+|---|---|
+| 可审计统一 Scientific Reality | 未证明 |
+| model validity / OOD 语义 | 未证明 |
+| provenance first-class | 未证明 |
+| independent solver validation | 未证明 |
+| deterministic replay | 未证明 |
+| branch/fork/time travel | 未证明 |
+| reaction feed 与科学状态严格分层 | 未证明 |
+| 用户可检查 residual/model/version | 未证明 |
+
+## 34.3 ChemRealm 的终局不能只是“科学更正确的 NOBOOK”
+
+真正目标应该是：
+
+> **NOBOOK 级的内容密度、交互、状态可读性与实验室丰富感**
+> **+ ChemRealm 的 Scientific Reality、模型适用域、provenance、可验证性、event replay、branch/counterfactual、ACE。**
+
+任何一边缺失都不是真正终局。
+
+---
+
+# 35. 对当前开发顺序的影响
+
+这份研究不意味着现在应该停止 M4，开始录 300 个药品。
+
+恰恰相反：当前 M4 的科学合同必须继续完成，因为后面几百种材料都会依赖这些基础约束。
+
+但它意味着 acid-base vertical slice 在科学闭环之后，不能长期停留在：
+
+```text
+solver input
+→ pH number
+→ graph
+```
+
+第一条真正“像成熟实验世界”的 vertical slice 应尽早验证：
+
+```text
+Catalog
+→ find reagent/apparatus
+→ spawn into world
+→ choose/edit meaningful parameter
+→ pour/transfer/interact
+→ world state changes
+→ inspect vessel state
+→ watch live process/reaction representation
+→ observe visual consequence
+→ graph / micro / symbolic projection
+→ undo/replay
+→ branch and compare
+```
+
+如果这条链不成立，ChemRealm 很容易发展成一个后端非常漂亮的化学计算器，而不是 Chemical World。
+
+---
+
+# 36. 更深一层：真正的世界状态绝不是“容器里有哪些药品”
+
+前面的 UI / Catalog / Inspector 调研解决了一个问题：成熟产品如何让用户感受到“这真的是一个实验室”。
+
+继续往下追，会出现更根本的问题：
+
+> **如果右侧 Inspector 真的要持续告诉用户“容器里现在有什么、正在发生什么”，那么 Scientific Reality 不能只保存材料名和匹配到的方程式。**
+
+至少下列状态会改变“下一秒能发生什么”：
+
+- 相态；
+- 真实 species / component distribution；
+- 溶剂与介质；
+- 温度、压强；
+- 是否密闭、有无 headspace；
+- 容器/导管/盐桥/电极拓扑；
+- 加料顺序与历史；
+- 搅拌、接触、混合、扩散条件；
+- 固体表面积与表面状态；
+- 催化剂/钝化状态；
+- 已生成中间体、副产物与残余物；
+- 当前每个过程的速率/通量；
+- 数值上是否已经低于有意义的存在阈值。
+
+因此，一个开放 Chemical World 的核心循环应该更接近：
+
+```text
+World State
+    ↓
+Which phases/interfaces/topologies exist?
+    ↓
+Which processes are scientifically accessible?
+    ↓
+Equilibrium + kinetics + transport + energy + electrochemistry ...
+    ↓
+State evolution
+    ↓
+New processes become accessible / inaccessible
+    ↓
+Observable + Inspector + Reaction/Process Feed
+```
+
+而不是：
+
+```text
+Material names
+    ↓
+search reaction database
+    ↓
+choose equation
+    ↓
+run it to completion
+```
+
+这一步是从“NOBOOK-class 产品完整度”走向 ChemRealm 自己 Scientific Reality 的真正分水岭。
+
+---
+
+# 37. 必须再次钉死：教学模式只能解释世界，不能修改世界
+
+这一点来自本轮用户纠正，应视为比“教学模式更简单”强得多的约束。
+
+ChemRealm 可以有：
+
+- Sandbox；
+- Guided Learning；
+- Challenge/Exam；
+- Teacher Presentation；
+- Counterfactual Compare；
+- Expert Inspection。
+
+但这些模式只能改变：
+
+- 信息显示深度；
+- 提示；
+- 问题；
+- 高亮；
+- 哪些量默认折叠；
+- 对课本近似的解释；
+- 允许用户操作的 UI policy。
+
+它们**不能改变 underlying chemistry**。
+
+例如酸性 KMnO4 / Fe2+ / Cl- 共存时，教学层可以解释：
+
+> “高中题常近似认为 Fe2+ 优先被氧化，因为在当前条件和题目精度下该通道占主导。”
+
+但绝不能在教学模式中实现成：
+
+```text
+while Fe2+ > 0:
+    disable chloride oxidation
+```
+
+然后到了 sandbox 又换另一套化学。
+
+正确关系是：
+
+```text
+same Scientific Reality
+        ↓
+Sandbox: show consequences directly
+Teaching: + explain textbook approximation
+Challenge: hide some state, ask learner to infer
+Expert: expose fluxes/models/validity
+```
+
+**There is no pedagogical chemistry engine. There is only the Chemical World.**
+
+---
+
+# 38. 相态决定可达性：Na2CO3(s) + CaCl2(s) 是极好的架构测试
+
+用户给出的例子非常重要：把碳酸钠固体和氯化钙固体一起倒进普通容器，在常温普通条件下，不能直接把它们当作水溶液中的 Ca2+ 与 CO3^2- 结算沉淀。
+
+幼稚实现会写：
+
+```text
+Na2CO3 present
+CaCl2 present
+→ lookup: CaCO3 precipitation
+→ white precipitate
+```
+
+正确的世界首先应该看到：
+
+```text
+solid phase A: Na2CO3(s)
+solid phase B: CaCl2(s)
+no bulk aqueous phase
+```
+
+此时“水相离子沉淀”通道并没有满足必要前提。
+
+倒水之后，才依次出现：
+
+```text
+water phase created
+→ salts dissolve at their supported rates/equilibria
+→ aqueous species appear
+→ speciation changes
+→ ion activity product may exceed precipitation condition
+→ CaCO3 solid becomes thermodynamically/kinetically accessible
+```
+
+这说明成熟 runtime 至少需要区分：
+
+- **chemical identity exists**；
+- **reactive species exists in the required phase**；
+- **interface/contact exists**；
+- **process is accessible**；
+- **process is thermodynamically favorable**；
+- **process is kinetically relevant**。
+
+不能把这些压缩成“方程式有没有”。
+
+同时也不能反向写死“两个固体永不反应”。高温固相反应、机械化学、界面扩散等又是另一套模型域。因此更准确的语义是：
+
+> **在当前模型、相态、条件与拓扑下，没有可达的已支持反应通道。**
+
+而不是“化学上绝不可能”。
+
+---
+
+# 39. NOBOOK 自己的资源已经暴露“加料顺序/历史”不可忽略
+
+NOBOOK 官方“碘仿反应”资源是一个非常强的例子：
+
+- 先向 I2-KI 中加入有机物，再加 NaOH，能获得预期反应；
+- 如果先加 NaOH，体系中的氧化性碘物种会进一步转化，现象可能明显变弱；
+- 乙酸乙酯在温度过高时会先碱性水解，生成乙醇，而乙醇又能进入后续碘仿反应。
+
+官方资源：
+https://hx.nobook.com/console/templates/resource/2904_ab21301197228dc6f8115a7079e4264d/
+
+这个例子同时证明三个世界原则：
+
+1. **最终“药品名字集合”相同，不代表当前科学状态相同。**
+2. **加料顺序会改变中间 species，从而改变后续 reaction network。**
+3. **上一步产物会自动成为下一步反应物。**
+
+因此 event sourcing 对 ChemRealm 的价值远不只是 undo/redo。
+
+在某些化学体系中：
+
+> **history is scientific state.**
+
+这也意味着“导入一个最终 composition snapshot”和“重放真实操作历史”有时可能对应不同的动力学/表面/拓扑状态；架构必须知道自己承诺的是哪一种语义。
+
+---
+
+# 40. Topology is Scientific State：盐桥、电路、密闭、导管都不是 UI 装饰
+
+NOBOOK 官方锌铜原电池资源明确要求盐桥和导线连接；取出盐桥后，电流计回零：
+https://hx.nobook.com/console/templates/resource/2498_f77ac90f0cd906aec7a5cfbf1b1a9e02
+
+物质几乎没有变，但可达过程改变了。
+
+因此：
+
+```text
+Zn + CuSO4 + ZnSO4 + Cu
+```
+
+不是完整 scientific state。
+
+还需要：
+
+```text
+electronic path
+ionic path
+which electrode touches which phase
+salt bridge present?
+switch open/closed?
+```
+
+同理，NOBOOK 的氨喷泉、空气中氧气含量测定、铁锈蚀压力变化等资源又证明：
+
+- open / sealed；
+- headspace；
+- 导管连接；
+- 止水夹；
+- 气体吸收/消耗；
+
+都会影响压力和后续宏观现象。
+
+官方资源：
+
+- 氨喷泉：https://hx.nobook.com/console/templates/resource/2971_c985f3bd60ab3d96b85bef2de32646c8
+- 空气中氧气含量：https://hx.nobook.com/console/templates/resource/460_21aad64f4fe6aff318e62276e627546a
+- 铁的锈蚀：https://hx.nobook.com/console/templates/resource/3539_5da01ea2-c1e3-4aee-adf7-0e821e4b1df7
+
+由此得到的架构结论是：
+
+> **Container state 必须包含 topology / boundary condition，而不仅是 contents。**
+
+---
+
+# 41. “主反应先发生”不是 Scientific Reality 的一般规则
+
+用户给出的第二个例子更深：酸性环境中同时存在 KMnO4、Fe2+、Cl-。
+
+高中解题常会把它压缩成“还原性强的先反应”。这种叙述可以作为一定条件和精度下的教学近似，但不能变成 Chemical World 的调度器。
+
+IUPAC 对 simultaneous / parallel reactions 的定义本身就包含“多个物质竞争共同反应物”的情况：
+https://goldbook.iupac.org/terms/view/S05680
+
+现代 kinetics engine 的通用结构也不是“排序后执行”。Cantera 的 Kinetics 层直接计算：
+
+- forward rates of progress；
+- reverse rates of progress；
+- net rates of progress；
+- 每个 species 的 creation / destruction / net production rates。
+
+文档：
+https://www.cantera.org/dev/python/kinetics.html
+
+因此更合理的数学语义是：
+
+```text
+r1(t) = MnO4-/Fe2+ channel
+r2(t) = MnO4-/Cl- channel
+r3(t) = chlorine-species/Fe2+ channel
+...
+```
+
+共同通过 stoichiometric matrix 改变 state：
+
+```text
+dn/dt = N · r
+```
+
+当 `r1 >> r2` 时，可以说“R1 主导”；不能因此令 `r2 = 0`，除非一个明确、经验证的 reduced model 就是这样近似的。
+
+这与教学模式的关系应该是：
+
+```text
+Scientific Reality: all supported non-negligible channels evolve
+Pedagogical projection: explain why one channel dominates / why textbook neglects another
+```
+
+而不是两套 chemistry。
+
+---
+
+# 42. 副产物会回头改变主网络：Cl2 / Fe2+ 只是一个代表
+
+继续用户例子：如果 Cl- 的副氧化产生了含氯氧化性 species，它们不应该被 renderer 直接当成“已经生成、就此结束”的气体。
+
+世界必须重新评估：
+
+- 它是否留在水相；
+- 是否发生水相 speciation；
+- 是否继续氧化 Fe2+；
+- 是否向 headspace 转移；
+- 是否逸出；
+- 是否与其他组分继续反应。
+
+因此 reaction graph 是动态重建的：
+
+```text
+state changes
+→ new species / phase appears
+→ accessibility graph changes
+→ new processes start
+→ those processes modify state again
+```
+
+IUPAC 的 composite mechanism 定义明确包含：
+
+- parallel/simultaneous；
+- opposing；
+- consecutive；
+- feedback。
+
+https://goldbook.iupac.org/terms/view/C01210
+
+所以 ChemRealm 的核心抽象应当是 **process network**，不是“一个主方程式 + 若干装饰副反应”。
+
+---
+
+# 43. 平衡与动力学必须分层：equilibrium is not history
+
+这是另一个极容易伪造“看起来科学”的地方。
+
+如果 equilibrium solver 算出最终：
+
+```text
+A = ...
+B = ...
+solid phase = ...
+```
+
+它并没有自动告诉我们：
+
+- 哪条反应先发生；
+- 过了多少毫秒；
+- 有没有 transient intermediate；
+- 沉淀何时 nucleate；
+- 气体何时开始冒泡；
+- 哪个路径贡献了多少 cumulative extent。
+
+PHREEQC 的成熟设计非常有参考价值：它允许 equilibrium assemblage 与 KINETICS 同时存在；kinetic rate 被按时间积分，而每个动力学增量又会重新做 equilibrium calculation。
+
+- KINETICS：https://water.usgs.gov/water-resources/software/PHREEQC/documentation/phreeqc3-html/phreeqc3-24.htm
+- Fe(II) oxidation example：https://water.usgs.gov/water-resources/software/PHREEQC/documentation/phreeqc3-html/phreeqc3-71.htm
+
+因此 ChemRealm 长期更合理的结构是：
+
+```text
+fast / constrained equilibrium layer
++
+explicit kinetic processes
++
+phase / transport / energy coupling
+```
+
+而不是“一个 solver 负责一切”。
+
+UI 上同样要区分：
+
+- equilibrium shift；
+- explicit kinetic reaction flux；
+- phase transfer；
+- transport flux；
+- pedagogical equation。
+
+不能把它们都叫“正在发生的反应”。
+
+---
+
+# 44. Physical chemistry quantities 必须真正耦合
+
+NOBOOK 自己已经通过大量实验给用户建立了这种期待：
+
+- 氨溶于水 → 压强下降 → 喷泉；
+- O2 被消耗 → 压强下降 → 水进入集气瓶；
+- 铁锈蚀耗氧 → 压强变化；
+- NaOH 潮解 → 吸水、逐渐溶解；
+- Ba(OH)2 + H2SO4 → species 数量变化 → 电导率先降后升；
+- 明矾 → Al(OH)3 胶体 → 吸附/絮凝/沉降。
+
+相关官方资源：
+
+- NaOH 潮解：https://hx.nobook.com/console/templates/resource/376_8c74c71d868bde02559727da2a0505de
+- 稀硫酸与 Ba(OH)2：https://hx.nobook.com/console/templates/resource/2970_a9a8409001161922f67ebb5c98f837b4
+- 明矾净水：https://hx.nobook.com/console/templates/resource/2697_5fc76c609304d71d3bbd58759f7b14b1
+
+ChemRealm 因此不能把 Inspector 的：
+
+```text
+mass
+amount
+volume
+concentration
+T
+P
+```
+
+当成六个互不相关的文本字段。
+
+它们必须来源于同一 scientific state，并在模型支持范围内互相反馈。
+
+这也是为什么 NOBOOK 的 Inspector 值得研究：**一旦产品敢把这些量同时摆给用户，它就隐含承诺这些量彼此不应该自相矛盾。**
+
+---
+
+# 45. 还需要系统发掘的 process families
+
+从 NOBOOK 的资源库和更一般的 scientific-runtime 需求继续向外推，可以整理出一套“世界完整度”问题族。它们不是要求第一版全部实现，而是防止架构只围绕水溶液方程式生长。
+
+## 45.1 Dissolution / precipitation / crystallization
+
+不能只有“固体存在/不存在”。需要考虑：
+
+- 溶解平衡；
+- 溶解速率；
+- 表面积；
+- supersaturation；
+- nucleation/induction；
+- crystal growth；
+- redissolution；
+- complexation 造成的沉淀再溶解。
+
+NOBOOK 的 Cl- 检验资源已经表现“Ag2CO3 先沉淀，酸加入后又消失/转化并放气”：
+https://hx.nobook.com/console/templates/resource/347_6f0f3e3db01a5ff28e0bb121f56f48a0/
+
+## 45.2 Colloid / suspension / adsorption / settling
+
+Al(OH)3 胶体不是普通“沉淀 amount”。至少产品层会涉及：
+
+- turbidity；
+- adsorption；
+- flocculation；
+- settling。
+
+## 45.3 Gas generation / dissolution / headspace / escape
+
+“生成多少气体”不能等价于“已经从容器逸出多少气体”。至少应区分：
+
+- dissolved species；
+- dissolved molecular gas；
+- bubble phase；
+- headspace gas；
+- vented/escaped amount。
+
+PHREEQC 的 GAS_PHASE 本身就把 fixed pressure / fixed volume multicomponent gas phase 与 aqueous phase equilibrium 分开：
+https://water.usgs.gov/water-resources/software/PHREEQC/documentation/phreeqc3-html/phreeqc3-17.htm
+
+## 45.4 Mixing / diffusion / local concentration
+
+“同一容器”不代表瞬间 perfect mixing。
+
+滴加高浓度试剂时，局部区域可能先形成：
+
+- local precipitation；
+- local complexation；
+- local redox；
+- local pH excursion。
+
+第一代可以明确采用 well-mixed assumption，但必须把它当作**模型假设**而不是世界真理。
+
+PHREEQC 甚至提供 transport/diffusion 模型：
+https://water.usgs.gov/water-resources/software/PHREEQC/documentation/phreeqc3-html/phreeqc3-56.htm
+
+## 45.5 Heat / temperature feedback
+
+反应放热或吸热会反过来改变：
+
+- rate constants；
+- equilibrium；
+- solubility；
+- gas pressure；
+- vapor pressure；
+- phase state。
+
+## 45.6 Surface state / particle morphology / passivation
+
+同样是 Fe 或 Al：
+
+- powder；
+- wire；
+- plate；
+- oxide-coated；
+- freshly polished；
+- passivated；
+
+可能表现完全不同。
+
+因此 `amount` 远远不够表达所有 solid MaterialInstance。
+
+## 45.7 Catalyst state
+
+催化剂不是简单 `rate *= 2`。成熟体系会遇到：
+
+- catalyst amount；
+- surface area；
+- poisoning；
+- deactivation；
+- temperature dependence。
+
+## 45.8 Electrochemistry
+
+“电势强弱表”不能替代：
+
+- circuit topology；
+- ionic path；
+- partial currents；
+- overpotential；
+- electrode area；
+- mass transport。
+
+## 45.9 Environmental reservoir
+
+开放容器中的空气不能永远是背景图。
+
+NOBOOK 的 NaOH 潮解、铁锈蚀已经在教学内容上体现：
+
+- H2O from air；
+- O2 from air；
+- pressure consequence。
+
+长期还可能需要：
+
+- humidity；
+- ambient O2/CO2；
+- ventilation；
+- evaporation。
+
+---
+
+# 46. Reaction Feed 应升级为 Process Feed / Causal Feed
+
+NOBOOK 已经证明“用户想知道正在发生什么”。ChemRealm 不应该丢掉这一产品优势，但要把科学语义做得更严格。
+
+建议内部不是：
+
+```text
+currentReaction = "Fe2+ + MnO4- ..."
+```
+
+而是：
+
+```text
+activeProcesses[]
+- process id
+- type: equilibrium / kinetic / phase-transfer / transport / thermal / electrochemical ...
+- rate / flux / state-change metric where meaningful
+- cumulative extent where uniquely defined
+- confidence / model
+- visibility classification
+```
+
+Representation Engine 再投影成：
+
+```text
+主要过程
+少量副过程
+正在建立平衡
+气体正在逸出
+沉淀正在形成
+温度正在上升
+```
+
+高级 Inspector 可以进一步显示：
+
+```text
+R1 net rate
+R2 net rate
+gas-transfer flux
+heat generation rate
+saturation index
+...
+```
+
+教学模式则可以在这个真实 Process Feed 上增加：
+
+> “为什么课本把 R2 忽略？”
+
+这完全符合“同一世界，多种 projection”。
+
+---
+
+# 47. 容器信息栏必须有“物质存在阈值”，但绝不能只有一个 magic epsilon
+
+用户提出了一个非常实际、而且必须尽早设计的问题：
+
+> 如果一个物质被反应消耗后，浮点数里还残留 `1e-30 mol`、`1e-20 mol` 一类数值，右侧信息栏会出现“物质永远不消失”。
+
+这是一个真实的 Scientific UX 问题。
+
+但是简单写：
+
+```text
+if n < 1e-16 mol:
+    delete species
+```
+
+仍然不够安全，因为“数值上当作零”“科学世界认定该 inventory 不存在”“普通 UI 不显示”“observable 看不见”其实是四五件不同的事。
+
+## 47.1 参考科学软件也明确区分不同 tolerance
+
+PHREEQC 的 `KNOBS` 明确区分：
+
+- `convergence_tolerance`：判断方程组是否收敛；
+- `tolerance`：优化求解器认为一个数等于零的尺度。
+
+其文档指出，后者在多数计算机/模拟中可处于约 `1e-12 ~ 1e-15` 的数量级，但这是**数值求解器语义**，并不是“ChemRealm 容器里低于多少 mol 就应该删除”。
+
+https://water.usgs.gov/water-resources/software/PHREEQC/documentation/phreeqc3-html/phreeqc3-25.htm
+
+PHREEQC 还明确提到 very small concentration 会引入 roundoff / scaling 问题；历史文档讨论过约 `1e-15 molal` 附近的数值尺度问题。这进一步说明不能随意把一个数字推广到所有量纲和世界尺度。
+
+Cantera ReactorNet 也有 relative / absolute integration tolerance，当前文档默认 scalar absolute tolerance 可到 `1e-15` 量级：
+https://www.cantera.org/dev/python/zerodim.html
+
+SUNDIALS/CVODE 的建议更直接：当某个状态量衰减到接近零时，纯相对误差控制会失去意义，absolute tolerance 应设置到“再小就属于 noise / 不感兴趣”的尺度；不同变量有不同 noise level 时，应使用 vector absolute tolerances。
+
+https://sundials.readthedocs.io/en/v6.1.1/cvode/Usage/
+
+这些成熟工具共同支持一个结论：
+
+> **不存在一个可以同时承担 solver、world、UI、observable 全部语义的 universal epsilon。**
+
+## 47.2 ChemRealm 至少需要五类阈值
+
+建议架构上区分：
+
+### A. Solver numerical tolerance
+
+求解器内部：
+
+- convergence；
+- integration error；
+- optimization “zero”；
+- Newton residual 等。
+
+这是 model/solver 的数值参数。
+
+### B. World semantic-zero / retention threshold
+
+回答：
+
+> 一个显式的 reagent inventory、phase amount、kinetic reactant amount 低到什么程度后，可以在 authoritative world state 中规范化成 0？
+
+这是用户提出“物质要真的消失”的核心层。
+
+### C. Process activity threshold
+
+回答：
+
+> 一个 flux/rate 小到什么程度后，Process Feed 不再把它标为 active？
+
+注意：这不一定意味着 Scientific Reality 不计算它。
+
+### D. Inspector display threshold
+
+回答：
+
+> 普通右侧信息栏什么时候不再显示一个 trace quantity？
+
+高级/科学 Inspector 可以选择显示更多 trace state。
+
+### E. Observable threshold
+
+回答：
+
+> 多小的变化用户在视觉/声音模型中已经无法观察？
+
+例如极微量气体生成 ≠ 一定应该产生肉眼可见气泡。
+
+## 47.3 “不存在”还要区分 derived species 和 conserved inventory
+
+这是特别重要的一层。
+
+在 equilibrium model 里，某些 species 的量可能永远是极小但非零的数学平衡结果。它们通常不应该成为“容器物质列表”里的独立 MaterialInstance。
+
+更合理的是：
+
+```text
+Container conserved/components
+    ↓ equilibrium solve
+Derived species distribution
+```
+
+普通 Inspector 可以只显示有意义的 components/materials/major species；Scientific Inspector 才显示 trace species。
+
+而一个显式加入的 reagent / explicit kinetic inventory 如果被消耗到 semantic-zero，则可以在完成守恒 reconcile 后 canonicalize 到 0，从普通 inventory 移除。
+
+这样既满足“物质不要永生”，又不会因为 UI 清理把 equilibrium chemistry 砍坏。
+
+## 47.4 阈值必须确定性、版本化、有 hysteresis
+
+如果：
+
+```text
+show if n > 1e-X
+hide if n < 1e-X
+```
+
+而数值在阈值附近来回跳，UI 会闪烁。
+
+因此 display/process activation 可能需要 hysteresis：
+
+```text
+hidden -> visible only if n > epsilon_on
+visible -> hidden only if n < epsilon_off
+where epsilon_on > epsilon_off
+```
+
+世界 semantic-zero 则应在稳定的 canonicalization boundary 上执行，并参与 replay/hash 规范。
+
+## 47.5 阈值不能破坏守恒
+
+任何 pruning/canonicalization 必须验证：
+
+- elemental balance；
+- charge/accounting policy；
+- phase totals；
+- deterministic replay；
+- migration compatibility。
+
+如果把 `1e-16 mol` 直接删除会导致多个小项长期累积成可观误差，那么策略就是错的。
+
+可能需要：
+
+- 把残余折回 conserved component ledger；
+- 只删除 derived cache，不删除 conserved total；
+- 对不同 quantity 使用不同尺度；
+- 采用 absolute + relative criterion；
+- 对 repeated pruning 做累计误差审计。
+
+## 47.6 现在不应该写死 `10^-16 mol`
+
+用户明确说这个数字只是随口举例，这是正确态度。
+
+最终阈值应该通过：
+
+- 模型数值精度；
+- double/long-double/WASM 数值行为；
+- 典型容器量级；
+- 最小实验可见量级；
+- reference solver sensitivity；
+- replay determinism；
+- conservation error budget；
+
+共同定标。
+
+因此 GOAL 只规定：
+
+> **必须存在显式的 numerical-existence policy，不能让 numerical ghost 永生；具体阈值由后续 spec + evidence 定。**
+
+---
+
+# 48. Inspector 与 Process Runtime 应该互相校验
+
+如果用户点开容器右侧信息栏看到：
+
+```text
+Fe2+     0.0000...
+Fe3+     ...
+Cl-      ...
+Cl2      ...
+T        ...
+P        ...
+```
+
+而下面 Process Feed 写：
+
+```text
+Fe2+ oxidation complete
+```
+
+这两者不能互相打脸。
+
+因此 Runtime Inspector 不能只是 UI query；它应该成为 Scientific Reality 的一个**公开审计面**。
+
+建议每个可检查量都能追到：
+
+```text
+world authoritative state
+or
+scientific derived state
+or
+observable derived state
+```
+
+而不是“这个数字是 UI 自己算的”。
+
+可以进一步建立 invariants：
+
+- Process Feed 说 consumed → inventory 应随之变化；
+- phase disappears → Inspector 不应仍显示其 bulk phase；
+- gas escapes → headspace/escaped ledger 应一致；
+- semantic-zero → normal inspector 不再出现；
+- trace derived species → expert view 可出现，normal view 可隐藏；
+- reaction heat → temperature trace 必须有一致来源。
+
+这会让 Inspector 本身变成非常强的自动测试入口。
+
+---
+
+# 49. World Completeness Matrix：以后不再靠“想到一个特殊例子补一个 if”
+
+前面所有问题可以抽象成一张完整度矩阵：
+
+| 世界维度 | 幼稚实现 | ChemRealm 成熟语义 |
+|---|---|---|
+| Composition | 看药品名 | components + species + inventories |
+| Phase | 固体也按离子反应 | explicit phases + phase accessibility |
+| Topology | 同容器自动反应 | contact/interface/connections/boundaries |
+| History | 最终成分相同即同状态 | event-derived chemical/surface state |
+| Order | 加料顺序无意义 | temporal accessibility/network change |
+| Competition | 强弱排序 if/else | simultaneous supported fluxes |
+| Consecutive chemistry | 产物是终点 | network regenerates dynamically |
+| Equilibrium | 终态冒充过程 | equilibrium distinct from kinetic history |
+| Temperature | 用户设定数字 | energy-coupled state variable |
+| Pressure | 读数装饰 | gas/headspace/topology coupled state |
+| Gas | 生成即逸出 | dissolved/bubble/headspace/escaped |
+| Precipitate | Q>Ksp 瞬间完成 | stability + possible kinetics/nucleation |
+| Colloid | 全都叫固体 | colloid/suspension/adsorption/settling |
+| Surface | Fe 就是 Fe | area/coating/passivation/history |
+| Catalyst | 固定倍速 | pathway + catalyst state where modeled |
+| Mixing | 瞬间均匀 | declared mixing/transport model |
+| Electrochemistry | 电势排序 | circuit + ionic path + currents + transport |
+| Environment | 空气是背景 | open-system reservoirs/fluxes |
+| Observable | substance→effect | scientific state → observable model |
+| Numerical presence | >0 永远存在 | explicit semantic-zero/display policy |
+| Inspector | 静态原料信息 | live audit projection of world state |
+| Teaching | 简化世界 | same world + pedagogical explanation |
+
+这张矩阵应该长期成为 architecture / scenario / model review 的检查表。
+
+---
+
+# 50. 对 NOBOOK 的重新评价：它最深的价值是逼我们看见“运行态实验 UI”
+
+继续调研以后，NOBOOK 最值得 ChemRealm 学的并不是某一个 reaction rule，而是它已经让用户形成了一组非常高的产品预期：
+
+> 拖进来的东西会活；容器内部有状态；量会变；温度和压强会变；反应信息会更新；产物会留下；装置连接会影响结果；浓度/取用量不是纯标签；错误操作会有后果；用户可以一直继续玩。
+
+公开资料仍然不能证明 NOBOOK 的底层对所有这些场景都有统一、严格、可审计的 scientific solver。
+
+因此 ChemRealm 的策略不是复制它的未知实现，而是：
+
+1. **接受这些 UX expectation 已经被成熟产品验证；**
+2. **把它们重新建立在更严格、可验证的 Scientific Reality 上；**
+3. **对目前无法定量正确模拟的部分明确 OOD / qualitative / empirical confidence，而不是假装万能。**
+
+---
+
+# 51. 结合当前本机开发工具：这套目标并非只能停留在架构幻想
+
+用户提供的《开发工具清单(8).txt》显示，当前 Windows 工作站已经具备非常完整的多语言、科学验证、原生性能与浏览器测试工具链。
+
+这里不建议把具体版本写进项目宪法；版本会变化。真正有价值的是**能力映射**。
+
+## 51.1 TypeScript / Node / browser stack
+
+适合：
+
+- schema / contract；
+- World Runtime；
+- Catalog / Inspector / Process Feed；
+- deterministic serialization；
+- browser UI；
+- web-worker / WASM integration；
+- unit/integration tests。
+
+当前已经有 Node、pnpm、TypeScript、bun 等，不需要为了“科学”把整个产品换栈。
+
+## 51.2 Python
+
+适合：
+
+- scientific oracle/reference harness；
+- PHREEQC/Cantera 等 external solver adapters 的离线验证；
+- 数据清洗与 provenance；
+- parameter fitting；
+- tolerance sweep；
+- Monte Carlo / sensitivity analysis；
+- regression fixture 生成。
+
+多 Python 版本 + uv 允许给不同科学依赖隔离环境，而不是污染全局。
+
+## 51.3 Rust / C / C++ / WASM
+
+当前已有 Rust、MSVC、GCC、Clang、CMake、Ninja。
+
+这意味着如果未来 profiling 证明：
+
+- reaction-network integration；
+- sparse linear algebra；
+- heavy speciation；
+- geometry/particle computation；
+
+在 TS/WebAssembly 边界上成为瓶颈，可以把**经过验证的 kernel**下沉 Rust/C++。
+
+但原则应当是：
+
+> **profile first, native later.**
+
+不能因为工具齐全就提前重写。
+
+## 51.4 CUDA / RTX 4090
+
+GPU 可以用于：
+
+- massive parameter sweeps；
+- offline fitting；
+- large batch validation；
+- future parallel scientific workloads if truly suitable。
+
+但单个交互式小容器的 stiff ODE/DAE 并不天然适合 GPU。CUDA 不是“科学更强”的象征。
+
+## 51.5 Docker / WSL2
+
+非常适合固定：
+
+- external solver version；
+- scientific database version；
+- compiler/runtime；
+- validation environment。
+
+这能延续 M4 已经建立的“solver/database identity”思想。
+
+## 51.6 SQLite / PostgreSQL
+
+ChemRealm 仍然是 local-first。
+
+- IndexedDB/SQLite 类工具适合本地 catalog、authoring data、fixtures、diagnostic packages；
+- PostgreSQL 已安装，不代表项目现在需要服务器数据库。
+
+## 51.7 Chrome / agent-browser / FFmpeg
+
+可以形成非常强的 UI evidence pipeline：
+
+```text
+spawn world
+→ manipulate apparatus
+→ inspect container
+→ capture state
+→ compare visual baseline
+→ record interaction video
+```
+
+NOBOOK 的优势大量来自“世界活着”的感知，所以 visual/interaction regression 必须像 scientific regression 一样认真。
+
+## 51.8 CodeQL / clang-tidy / multiple compilers / actionlint
+
+Process Runtime 后期一旦引入 native/WASM、复杂 state machine 和大量 serialization，静态分析与多编译器测试价值会显著增加。
+
+## 51.9 工具链最终原则
+
+最合理的长期分工不是“选一个最强语言”，而是：
+
+```text
+TS/Web → product/world/UI contracts
+Python → scientific validation/oracles/data
+Rust/C++ → only proven hot kernels/adapters
+Docker/WSL → reproducibility
+Chrome/agent-browser/FFmpeg → interaction evidence
+CodeQL/compilers → engineering verification
+```
+
+这已经足够支持当前 GOAL，不需要为了未来可能存在的复杂 process runtime 先搭过度分布式基础设施。
+
+---
+
+# 52. 修订后的 GOAL 应长期锁定的原则
+
+基于 NOBOOK 调研、用户实际观察，以及本轮 process-runtime 深挖，以下原则已适合进入项目宪法：
+
+1. **One scientific truth layer.** 教学模式只能解释/投影，不能改变 underlying chemistry。
+2. **Material abundance is a product requirement.** 成熟产品必须 materially abundant。
+3. **CatalogEntry is not WorldState.** 模板、预设、实例、内容物、科学状态分层。
+4. **Parameterization must have causal meaning.** 可编辑浓度/量/T/P 不能是假按钮。
+5. **World evolves from processes, not equation lookup.** 方程式不是 state mutation authority。
+6. **Phase/topology/history determine accessibility.** “药品都在”不代表反应路径存在。
+7. **Competing processes are simultaneous by default.** 不能一般性用强弱顺序 if/else。
+8. **Products continue in the world.** 产物/中间体会重新参与网络。
+9. **Equilibrium is not history.** 没有 kinetics 就不能编造时间路径。
+10. **Physical quantities are causally coupled.** m/n/V/c/T/P/phase/headspace 不是独立读数。
+11. **State must be inspectable.** Inspector 是 world 的审计投影。
+12. **Process must be visible but not become truth.** Reaction Feed 应来自 process state。
+13. **Numerical existence needs explicit semantics.** 不能让 ghost substances 永生，也不能用 UI epsilon 破坏科学状态。
+14. **Thresholds are layered.** solver/world/process/display/observable 阈值分离。
+15. **Consequence before judgement.** 物理/化学后果先于教学评分。
+16. **Free combination creates validation obligation.** 能拖在一起不等于已经科学支持。
+17. **World feedback quality is product quality.** 气泡、烟雾、沉淀、破损、声音等不能永远留在 polish backlog。
+18. **Content production is engineering.** 百量级 Catalog 必须有 authoring/provenance/regression pipeline。
+19. **One World does not mean one UI.** 教师、学生、演示、移动、无机、有机、电化学允许不同 projection。
+20. **Tooling follows evidence.** Python/native/GPU 都是实现与验证工具，不是 scientific authority。
+
+---
+
+# 53. 来源索引与证据说明
+
+以下来源分成 NOBOOK 产品证据与 Scientific Runtime 参考。NOBOOK 来源用于回答“成熟产品做了什么/用户期待什么”；科学软件/IUPAC 来源用于回答“ChemRealm 若想做得更真实，底层应遵循什么”。两类证据不能混为一谈。
+
+## A. NOBOOK 当前官方与开放平台
+
+### A1. 当前官网
+
+https://www.nobook.com/index.html
+
+支持：当前化学仍宣传速率、化学平衡、压强等系统。营销用语不能自动等同学术 solver。
+
+### A2. 当前化学资源库
+
+https://hx.nobook.com/
+
+支持：教材/章节/知识点/资源类型、精品实验和长期内容密度。
+
+### A3. 当前公开化学编辑器
+
+https://hx.nobook.com/chemical/new?moduleId=9
+
+支持：右侧 Catalog、分类、器材长尾。
+
+### A4. 开放平台实验 API
+
+https://open.nobook.com/docs/2.0/tutorial-integration/experimental-integration/phy-or-chem-integration/
+
+支持：编辑器/播放器、`getData`/`setData` JSON scene、右侧器材库等。
+
+### A5. UI 组件
+
+https://open.nobook.com/docs/2.0/tutorial-integration/experimental-integration/phy-or-chem-integration/CustomUI
+
+支持：`rightToolbarVisible`、`settingsMenuVisible`、`infoVisible`、底栏等独立 surface；有/无器材库时 info layout 不同。
+
+## B. NOBOOK 历史官方与规模
+
+### B1. 化学产品介绍
+
+https://nobook-doc-cdn.nobook.com/chem/NB%E5%8C%96%E5%AD%A6%E5%AE%9E%E9%AA%8C%E4%BA%A7%E5%93%81%E7%AE%80%E4%BB%8B.html
+
+支持：历史器材/药品规模、液体浓度设置、实时反应数据等。
+
+### B2. 化学实验界面与功能
+
+https://nobook-doc-cdn.nobook.com/chem/NB%E5%8C%96%E5%AD%A6%E5%AE%9E%E9%AA%8C%E7%95%8C%E9%9D%A2%E5%8F%8A%E7%9B%B8%E5%BA%94%E5%8A%9F%E8%83%BD%E7%89%B9%E6%80%A7%E8%AF%B4%E6%98%8E.html
+
+支持：编辑/演示、Catalog 检索、器材属性、器材信息、场景信息。
+
+### B3. 历史规模宣传
+
+https://www.nobook.com/view/410
+
+支持：历史 112 器材、253 药品、150 经典实验等口径。
+
+## C. NOBOOK 采购规格与应用证据
+
+### C1. 2025 明确 NOBOOK / 北京乐步的采购技术规格
+
+政府采购公开文件。
+
+支持：百量级器材/药品、固液气/元素离子检索、精确取用、热力学/压强、方程式/T/V/n/c/m 数据追踪等。
+
+### C2. 2019 学校采购公开镜像
+
+https://www.bidcenter.com.cn/newscontent-73037429-4.html
+
+支持：历史 122 器材、279 药品等口径，说明数字随版本/套餐变化。
+
+### C3. 乙醇消去教学应用
+
+https://jiqunzhihui.org.cn/m/view.php?aid=13076
+
+支持：条件/温度/时间变化时反应展示变化，用量与剩余量等应用记录。
+
+## D. NOBOOK “世界状态依赖”代表资源
+
+### D1. 碘仿反应——顺序/温度/连续反应
+
+https://hx.nobook.com/console/templates/resource/2904_ab21301197228dc6f8115a7079e4264d/
+
+### D2. 锌铜原电池——salt bridge/topology
+
+https://hx.nobook.com/console/templates/resource/2498_f77ac90f0cd906aec7a5cfbf1b1a9e02
+
+### D3. 氨喷泉——气液吸收/压强
+
+https://hx.nobook.com/console/templates/resource/2971_c985f3bd60ab3d96b85bef2de32646c8
+
+### D4. 空气中氧气含量——耗气/压强/进水
+
+https://hx.nobook.com/console/templates/resource/460_21aad64f4fe6aff318e62276e627546a
+
+### D5. 铁锈蚀——环境反应/长期压力变化
+
+https://hx.nobook.com/console/templates/resource/3539_5da01ea2-c1e3-4aee-adf7-0e821e4b1df7
+
+### D6. Cl- 检验——沉淀/酸溶/放气/干扰
+
+https://hx.nobook.com/console/templates/resource/347_6f0f3e3db01a5ff28e0bb121f56f48a0/
+
+### D7. NaOH 潮解——环境水分/溶解/放热
+
+https://hx.nobook.com/console/templates/resource/376_8c74c71d868bde02559727da2a0505de
+
+### D8. Ba(OH)2 + H2SO4——电导率实时 observable
+
+https://hx.nobook.com/console/templates/resource/2970_a9a8409001161922f67ebb5c98f837b4
+
+### D9. 明矾净水——胶体/吸附/沉降
+
+https://hx.nobook.com/console/templates/resource/2697_5fc76c609304d71d3bbd58759f7b14b1
+
+## E. Scientific Runtime 参考
+
+### E1. IUPAC simultaneous reactions
+
+https://goldbook.iupac.org/terms/view/S05680
+
+支持：多个竞争过程可以同时消耗共同 reactant。
+
+### E2. IUPAC composite mechanism
+
+https://goldbook.iupac.org/terms/view/C01210
+
+支持：parallel / opposing / consecutive / feedback 等机制类别。
+
+### E3. Cantera kinetics
+
+https://www.cantera.org/dev/python/kinetics.html
+
+支持：rates of progress、species creation/destruction/net production 等 reaction-network 语义。
+
+### E4. PHREEQC KINETICS
+
+https://water.usgs.gov/water-resources/software/PHREEQC/documentation/phreeqc3-html/phreeqc3-24.htm
+
+支持：显式 kinetic rate、Runge-Kutta / stiff solver、integration tolerance。
+
+### E5. PHREEQC gas phase
+
+https://water.usgs.gov/water-resources/software/PHREEQC/documentation/phreeqc3-html/phreeqc3-17.htm
+
+支持：multicomponent gas phase 与 aqueous/solid/surface 等平衡。
+
+### E6. PHREEQC transport
+
+https://water.usgs.gov/water-resources/software/PHREEQC/documentation/phreeqc3-html/phreeqc3-56.htm
+
+支持：transport/diffusion 与 chemistry 联合建模思路。
+
+### E7. PHREEQC numerical KNOBS
+
+https://water.usgs.gov/water-resources/software/PHREEQC/documentation/phreeqc3-html/phreeqc3-25.htm
+
+支持：convergence tolerance 与 numerical zero tolerance 是不同语义；小数值会带来 scaling/roundoff 问题。
+
+### E8. Cantera ReactorNet absolute/relative tolerance
+
+https://www.cantera.org/dev/python/zerodim.html
+
+支持：ODE integration 使用独立相对/绝对容差。
+
+### E9. SUNDIALS/CVODE tolerance guidance
+
+https://sundials.readthedocs.io/en/v6.1.1/cvode/Usage/
+
+支持：接近零的状态需要 absolute tolerance，且不同变量可以有不同 noise floor。
+
+## F. 本机实现能力来源
+
+用户提供：`开发工具清单(8).txt`（2026-09-08 修订）。
+
+当前能力包括现代 TypeScript/Node、多个 Python、Rust、MSVC/GCC/Clang、CUDA、CMake/Ninja、Docker/WSL2、SQLite/PostgreSQL、Chrome、agent-browser、FFmpeg、CodeQL 等。
+
+本文只把它们映射为可行的 implementation/validation roles；具体版本不属于 ChemRealm 的长期产品宪法。
+
+---
+
+# 54. 最终结论
+
+几轮 NOBOOK 调研之后，问题已经从“它有多少药品”逐层深化：
+
+```text
+药品很多
+↓
+Catalog 很成熟
+↓
+拖出来的是 stateful instance
+↓
+容器状态能 inspect
+↓
+过程/反应实时反馈
+↓
+相态、拓扑、温度、压强、历史决定过程能否发生
+↓
+多个过程会同时竞争、连续、反馈
+↓
+数值世界还必须定义什么叫“已经不存在”
+```
+
+因此 ChemRealm 的终局不能只是：
+
+> “做一个更科学的虚拟实验 UI。”
+
+更准确的是：
+
+> **构建一个高密度、可操作、可检查的 Chemical World；这个世界由相态、拓扑、历史与条件决定可达过程，由热力学/动力学/输运/能量等模型共同推进，并把真实状态以渐进式 Inspector、Process Feed 和 Observable 投影给用户。教学只解释这个世界，不改写它。**
+
+NOBOOK 已经证明：
+
+- 丰富 Catalog 很重要；
+- world objects 必须“活”；
+- state legibility 很重要；
+- 用户想看到实时数据与正在发生的过程；
+- 长期产品需要庞大的内容工业。
+
+ChemRealm 必须进一步解决 NOBOOK 公开资料没有证明解决的部分：
+
+- 可审计 Scientific Reality；
+- phase/topology/history-aware process accessibility；
+- simultaneous competing processes；
+- equilibrium/kinetics/transport 分层；
+- explicit model validity；
+- provenance；
+- deterministic replay/branch；
+- numerical existence semantics；
+- independent scientific validation。
+
+真正值得追求的不是“右侧比 NOBOOK 多几个按钮”。
+
+而是：
+
+> **用户可以像在成熟虚拟实验室里一样自由地拿、倒、加热、连接、混合、观察；与此同时，每个可见结果都尽可能来自一个可说明、可验证、可追溯、不会被教学模式偷偷改写的科学世界。**
+
+---
+
+# 55. 2026-09-13 外部证据更新：从产品印象到可执行设计
+
+本节是在完成全文重读后，针对公开网页、官方 API、课程标准和虚拟实验教育研究做的补充核对。它仍然是研究附录，不是新的 API、SPEC 或 ADR。
+
+## 55.1 NOBOOK 官方资料现在能直接证明什么
+
+当前 NOBOOK 官网仍把化学产品公开描述为包含速率、化学平衡和压强三个系统，并同时展示教师课堂、学生自主学习、学校使用和跨学科产品入口。这些页面证明了 NOBOOK 的产品定位和营销表面；“26000+ 所学校”等数字属于厂商自述，不应被当作独立市场审计数据。
+
+NOBOOK 开放平台 2.0 的 API 文档提供了比宣传页更有价值的证据。它明确把以下能力作为可配置的独立接口：
+
+```text
+iframe / SDK integration
+        ↓
+config
+├─ topToolbarVisible
+├─ leftToolbarVisible
+├─ rightToolbarVisible
+├─ bottomToolbarVisible
+├─ settingsMenuVisible
+├─ saveButtonVisible
+├─ playerToolBarVisible
+└─ infoVisible
+
+getData() / setData()
+        ↓
+serialized scene JSON
+
+switchModule()
+├─ inorganic chemistry
+├─ organic chemistry
+└─ electrochemistry
+```
+
+它还提供场景截图、保存状态通知、播放/停止和场景清空等接口。由此可以高置信确认：
+
+1. 编辑器、播放器、器材库、设置、信息区不是一个不可分割的 UI；
+2. 场景数据是一个可被外部系统保存和重新注入的对象；
+3. 无机、有机、电化学至少在产品入口层存在不同模块；
+4. 截图和嵌入集成已经被当作产品能力，而不是开发者临时调试工具。
+
+但这仍然不能证明：
+
+- 场景 JSON 就是 event log；
+- `getData()` 能重建每一个中间状态；
+- 所有方程式、数据字段和视觉现象来自同一个守恒科学状态；
+- 内部存在统一、公开、可审计的热力学/动力学求解器。
+
+因此，本文前面关于“surface 分离”和“scene document”的判断得到加强；关于 NOBOOK 内部 Scientific Reality 的谨慎边界必须保留。
+
+## 55.2 对 ChemRealm UI 的新结论：surface 分离不是审美偏好，而是外部可观察的成熟模式
+
+NOBOOK API 的 `rightToolbarVisible`、`settingsMenuVisible`、`infoVisible` 和 `playerToolBarVisible` 被单独配置，说明成熟虚拟实验产品并不是把所有功能都堆在一个侧栏里。尤其是信息区还分别区分“有器材库的编辑器”和“无器材库的播放器”布局。
+
+这给 ChemRealm 一个比“做一个漂亮 sidebar”更严格的设计约束：
+
+```text
+Catalog / Resource discovery
+    “我能拿什么？进入哪个实验？”
+
+Setup / Property editing
+    “我准备怎样配置这个对象？”
+
+World interaction
+    “我现在对这个对象做什么？”
+
+Entity / World inspection
+    “它现在是什么状态？”
+
+Process / Data projection
+    “这个状态怎样变化？证据是什么？”
+
+Presentation / Persistence
+    “怎样讲给别人看？怎样保存并继续？”
+```
+
+这些 surface 可以在同一页面组合，但不能因为共享一块屏幕就共享同一个状态责任。特别是：
+
+- Property Editor 读写的是允许用户设置的参数；
+- Inspector 读的是当前实例和世界状态；
+- Process Feed 读的是科学过程投影；
+- Catalog 读的是可实例化模板和能力信息；
+- Presentation 读的是可复现的世界，而不是重新执行一段动画脚本。
+
+这也解释了为什么“右侧待选区很丰富”只是入口，而不是 NOBOOK 类产品的全部护城河。
+
+## 55.3 课程标准补充：ChemRealm 的 Correct / Visible / Thinkable 与高中化学核心素养存在直接对应
+
+教育部发布的《JY/T 0655—2025》继续把高中化学活动目标与五个核心素养方向联系起来：
+
+```text
+宏观辨识与微观探析
+变化观念与平衡思想
+证据推理与模型认知
+科学探究与创新意识
+科学态度与社会责任
+```
+
+其中，变化观念与平衡思想强调动态分析、条件、限度和速率；证据推理与模型认知强调基于证据提出、检验和修正模型；科学探究强调从问题和假设出发设计方案并进行实验探究。
+
+这不是把课程标准当作 UI 功能清单，而是给 ChemRealm 的产品目标提供了一个外部锚点：
+
+| ChemRealm 目标 | 课程能力映射 | 产品含义 |
+|---|---|---|
+| Correct | 变化观念、模型认知 | 结果要来自声明清楚的科学模型 |
+| Visible | 宏观/微观结合、证据推理 | 现象、状态、数据和模型之间可追踪 |
+| Thinkable | 科学探究、创新意识 | 用户能提出假设、改变条件、观察后果、修正解释 |
+
+因此，NOBOOK 式的可操作世界和 ChemRealm 的可审计科学世界并不是两个互相竞争的方向。前者提供探究的操作空间，后者保证探究结果不被脚本和教学答案偷偷替换。
+
+## 55.4 教育研究的约束：交互本身不会自动产生学习
+
+虚拟化学实验的系统综述显示，虚拟实验相对于被动的讲授、文本或视频媒介，通常具有积极的学习效果；但与真实动手实验相比，结果更接近“相当或混合”，不能据此声称虚拟实验普遍替代实体实验。研究还指出，已有工作多数集中于中学阶段，但对科学过程技能、长期迁移和统一评估的证据仍不足。
+
+针对中学教师使用虚拟化学实验的案例研究表明，虚拟实验可以缓解真实课堂中设备、时间和现象可见性方面的限制，但有效的课堂使用仍然依赖明确的引导探究，而不是把软件交给学生后让他们漫无目的地点击。
+
+PhET 的公开研究方法提供了更具体的工程启示：每个模拟会经过以学习目标为起点的设计迭代，并通过学生 think-aloud 访谈研究界面、表示和交互；其公开设计原则包括鼓励探究、允许交互、让不可见对象可见、使用多重表示、提供隐性引导和即时因果反馈。PhET 也明确区分模拟对概念理解的优势与实体实验对设备操作技能的不可替代部分。
+
+对 ChemRealm 的直接结论是：
+
+```text
+漂亮资产
+  ≠ 可玩
+
+可玩
+  ≠ 可探究
+
+可探究
+  ≠ 已学会
+```
+
+一个 release-quality 的教学场景至少应能让用户经历：
+
+```text
+预测
+  → 操作
+  → 观察宏观后果
+  → 检查定量/微观状态
+  → 解释差异
+  → 改变条件
+  → 比较或迁移
+```
+
+ACE 可以在这个链条上提供支持和判断，但不能通过把结果预先写死来制造“正确学习”。
+
+## 55.5 “NOBOOK-like”应拆成四个可验收的产品结果
+
+把 NOBOOK 作为强学习对象时，不能只问“画得像不像”。更可执行的拆分是：
+
+### A. Affordance density
+
+用户能否快速发现可用的材料、器材、规格、预设和操作。指标不应只统计数量，还应包括：
+
+- 意图到首次成功实例化的时间；
+- 中文名、化学式、别名、元素/离子语义检索成功率；
+- 常用预设、最近使用和深度搜索之间的切换成本；
+- 能力状态是否可理解，而不是把未验证组合伪装成可用。
+
+### B. Causal legibility
+
+用户改变浓度、量、温度、拓扑或操作方式后，能否看见与之对应的世界后果。这里的验收不是“有动画”，而是：
+
+```text
+parameter change
+    → scientific/world state change
+    → observable change
+    → inspector/process explanation
+```
+
+如果中间链条断裂，视觉就只是装饰。
+
+### C. State legibility
+
+用户能否回答“这个容器现在是什么”，并在需要时从默认层进入定量、科学、审计层。状态栏、Inspector、Process Feed 和图表必须来自相容的 projection，而不是各自重新猜一次。
+
+### D. Recoverability
+
+用户能否安全地试错、撤销、回放、分支、比较和继续实验。虚拟实验的价值之一就是允许反复操作，但只有当错误后果是可解释、可恢复、可重现时，这种自由才会转化成探究价值。
+
+这四项比“器材数量”“动画数量”更接近产品成熟度。
+
+## 55.6 对 Agent 美术生产的具体加严：交付物必须同时通过三层验收
+
+公开资料不能证明 NOBOOK 的内部素材流水线，因此 ChemRealm 不应声称自己复刻了它的生产方法。但 NOBOOK 的 surface 结构和成熟虚拟实验研究共同说明：素材不能脱离交互、教学目标和运行态单独验收。
+
+未来 Agent 生成一件器材或材料资产时，最低应拆成三层：
+
+### 第一层：视觉完整度
+
+- master 资产比例、透视、材质、光照和轮廓统一；
+- 状态变体能表达空/满、倾斜、破损、连接、加热或其他适用状态；
+- 缩略图、画布图和 Inspector 图使用同一视觉母版派生；
+- 不出现 prototype label、随机颜色或与 ChemRealm 视觉标准冲突的局部风格。
+
+### 第二层：交互语义完整度
+
+- parts、ports、grabbable region、snap region、fluid region 和 collision geometry 明确；
+- 可进行的操作由 capability 声明，而不是由图片名称推断；
+- 可访问名称、键盘/触控替代路径和最小交互目标存在；
+- interaction geometry 与 visual geometry 可以不同，但必须有可追踪关系。
+
+### 第三层：世界因果完整度
+
+- 倒入、连接、加热、封闭、破裂等状态变化能映射到 World/Observable contract；
+- 液体、气泡、沉淀、烟雾、颜色和声音等效果有明确来源；
+- 资产不会自己决定化学反应或伪造科学状态；
+- deterministic fixture 中的状态、截图和交互结果可复现。
+
+因此 Agent 的任务提示不应只是：
+
+> “画一只好看的滴定管。”
+
+而应更接近：
+
+> “生成一套符合 apparatus standard 的滴定管资产包，包含几何母版、可见状态、液体区域、活塞/尖端部件、抓取与连接端口、操作能力、访问名称、来源/许可记录、确定性预览和运行态 fixture；所有视觉状态必须由允许的 observable state 驱动。”
+
+这里的“资产包”才是可规模化的生产单位。单张 PNG 只能是其中一个派生结果。
+
+## 55.7 内容规模的正确增长顺序
+
+重新核对 NOBOOK 的当前官方产品表面、开放 API 和教育研究后，我认为 ChemRealm 不应采用以下顺序：
+
+```text
+先生成几百张图
+→ 再想它们怎样搜索、实例化和交互
+→ 最后补科学与教学
+```
+
+更可靠的顺序是：
+
+```text
+1. 定义一个小而真实的 material/apparatus ontology
+2. 建立 Catalog / search / instance / inspector 的最短链
+3. 建立一套可复用的 asset package 和 visual fixture
+4. 用少量器材贯通 transfer / process / observable / replay
+5. 让每个新增内容进入 provenance、capability、reference、visual QA 流水线
+6. 再按课程价值和组合覆盖扩大 Catalog
+```
+
+早期少不构成问题，早期没有“内容生产能力”和“状态可读性”才构成问题。成熟度的关键不是尽快达到某个药品数字，而是新增第 N 个对象时不再发明第 N 套页面、交互和科学例外。
+
+## 55.8 更新后的证据边界表
+
+| 命题 | 当前证据状态 | ChemRealm 可采取的行动 |
+|---|---|---|
+| NOBOOK 有独立的编辑器/播放器/信息区/器材库 surface | 官方开放平台 API 直接证明 | 采用多 projection，不做万能侧栏 |
+| NOBOOK 支持场景 JSON 保存与恢复 | 官方 `getData` / `setData` 直接证明 | ChemRealm 继续坚持 event log、hash 和 replay，但不把二者混为一谈 |
+| NOBOOK 化学有多模块入口 | 官方 API 的 module ID 直接证明 | 允许无机、有机、电化学使用不同 representation |
+| 虚拟实验能改善被动媒介下的学习表现 | 系统综述支持，但研究异质性较大 | 设计为主动探究工具，不宣称自动教学 |
+| 引导探究和教师编排重要 | 中学案例研究和 PhET 教学资料支持 | ACE/活动设计提供逐步支持和反思，不只发操作任务 |
+| NOBOOK 内部有统一可审计科学引擎 | 公开资料不能证明 | 不复制其未知内部逻辑；ChemRealm 自己做 model/provenance/validation |
+| 单个漂亮 PNG 足以支撑大 Catalog | 没有证据，且与运行态产品要求冲突 | 把资产包、语义 manifest、fixture 和 QA 作为生产单位 |
+
+## 55.9 对现有文档体系的解释
+
+这一轮外部证据不会把 `GOAL.md` 改写成 NOBOOK 功能清单，也不会把本研究文档中的 manifest 草案直接升级为 TypeScript API。正确的文档层次仍然是：
+
+```text
+GOAL.md
+    项目宪法：最终要成为怎样的 Chemical World
+
+from-nobook.md
+    研究：外部产品证明了什么、推断了什么、不能证明什么
+
+SPEC / ADR / PLAN
+    当前阶段真正冻结的接口、决策、计划和验收证据
+
+agent-visual-asset-production.md
+    资产生产方法；在正式 representation contract 冻结前保持指导性
+```
+
+研究文档中的“应该”是设计推论，不是当前代码已经支持的承诺。尤其是 process runtime、semantic-zero、物相/拓扑、百量级 Catalog 和资产 manifest，都必须在各自阶段通过 SPEC、ADR、实现和证据逐项落地。
+
+---
+
+# 56. 新增来源索引
+
+本节来源用于本次外部证据更新。NOBOOK 官方资料用于确认产品外部能力；教育研究用于确认虚拟实验的学习边界；课程标准用于确认 ChemRealm 的教学目标锚点。它们不能互相替代。
+
+## G. NOBOOK 官方当前资料
+
+### G1. 当前官网
+
+https://www.nobook.com/index.html
+
+支持：当前产品的化学系统宣传、教师/学生/学校场景、产品入口和厂商自述的覆盖规模。覆盖规模应标为 vendor claim。
+
+### G2. 开放平台实验 API
+
+https://open.nobook.com/docs/2.0/tutorial-integration/experimental-integration/phy-or-chem-integration/
+
+支持：iframe/SDK 集成、独立配置项、`getData`、`setData`、`switchModule`、播放/停止、保存通知、截图等。
+
+### G3. 开放平台 UI 组件与样式配置
+
+https://open.nobook.com/docs/2.0/tutorial-integration/experimental-integration/phy-or-chem-integration/CustomUI/
+
+支持：顶部/左右/底部工具栏、器材属性设置、播放器工具条、编辑器/播放器信息区等独立 surface。
+
+## H. 课程与虚拟实验教育研究
+
+### H1. JY/T 0655—2025
+
+https://www.moe.gov.cn/srcsite/A06/s3732/202507/W020250701322477393561.pdf
+
+支持：高中化学活动目标和“宏观辨识与微观探析、变化观念与平衡思想、证据推理与模型认知、科学探究与创新意识、科学态度与社会责任”五个核心素养方向。
+
+### H2. Virtual chemical laboratories: A systematic literature review of research, technologies and instructional design
+
+https://www.sciencedirect.com/science/article/pii/S2666557321000240
+
+支持：虚拟化学实验相对于被动媒介的学习潜力、与动手实验比较时的混合结果，以及技术和教学设计必须同时考察的结论。
+
+### H3. Enhancing the Student Experiment Experience: Visible Scientific Inquiry through a Virtual Chemistry Laboratory
+
+https://eric.ed.gov/?id=EJ1039288
+
+支持：中学教师使用虚拟化学实验开展显性引导探究的案例，以及虚拟实验对实验探究组织的帮助与限制。
+
+### H4. An exploratory study of blending the virtual world and the laboratory experience in secondary chemistry classrooms
+
+https://www.sciencedirect.com/science/article/abs/pii/S0360131518300563
+
+支持：虚拟环境与真实实验结合、微观现象解释、实时反馈和教师连接在中学化学课堂中的产品启示。
+
+### H5. PhET Research and Development
+
+https://phet.colorado.edu/en/research
+
+支持：以学习目标为起点的设计迭代、学生 think-aloud 访谈、模拟器设计和使用研究，以及模拟与实体实验能力的边界。
+
+### H6. PhET Simulation Goals and Design Principles
+
+https://phet.colorado.edu/publications/tech-award-2011-resources/PhET_TechAwards_Application.pdf
+
+支持：动态反馈、让不可见对象可见、多重表示、交互、隐性引导、直观界面和开放探究等设计原则。
+
+### H7. Teaching with PhET
+
+https://phet.colorado.edu/en/teaching-resources/activities-design
+
+支持：主动学习、活动设计、适度支架、教师编排和 productive struggle 的教学边界。
+
+---
+
+# 57. 研究更新后的最终判断
+
+重新深读本文件并补充外部证据后，原来的结论应当进一步精确成一句话：
+
+> **ChemRealm 要学习 NOBOOK 已经被用户和教学场景验证的“世界感”，但不能把 NOBOOK 的功能表面误认为科学证明；要学习它如何组织 surface、对象、目录、信息密度和过程反馈，同时用自己的 Scientific Reality、provenance、validity、replay 和证据体系重新实现这些体验。**
+
+对美术生产，最重要的变化是：
+
+> **Agent 交付的不是图，而是可进入 Chemical World 的视觉—几何—交互—状态—证据资产包。**
+
+对产品路线，最重要的变化是：
+
+> **先打通“发现 → 实例化 → 配置 → 操作 → 后果 → 检查 → 解释 → 回放”的闭环，再扩充内容规模；先建立资产和内容工业，再追求百量级 Catalog。**
+
+对教学，最重要的变化是：
+
+> **自由探索必须和引导探究、反思、比较和迁移结合；一个学生点过所有按钮，不等于他形成了可迁移的化学模型。**

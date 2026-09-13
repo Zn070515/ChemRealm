@@ -1,34 +1,24 @@
 {
   "schemaVersion": 1,
   "id": "REF-8",
-  "description": "0.1 mol/kg weak acid at equivalence",
-  "derivation": "Independent high-precision Decimal solve of the accepted Davies equations; no TypeScript output was used.",
-  "request": {
-    "waterMassKg": 1,
-    "liquidVolumeL": 1,
-    "temperatureK": 298.15,
-    "solutes": [
-      { "soluteId": "HOAc", "amountMol": 0.1, "mode": "monoprotic-equilibrium", "ka": 1.7539e-5 },
-      { "soluteId": "NaOH", "amountMol": 0.1, "mode": "fully-dissociated" }
-    ],
-    "indicators": []
-  },
-  "expected": {
-    "modelPh": 8.77102471682797,
-    "ionicStrengthMolal": 0.10000000216767464,
-    "speciesMolality": {
-      "H+": 2.167674647149939e-9,
-      "OH-": 7.551679187068085e-6,
-      "HOAc": 7.549511512420935e-6,
-      "OAc-": 0.09999245048848758,
-      "Na+": 0.1,
-      "Cl-": 0
-    },
-    "projection": {
-      "hydrogenIonMolarity": 2.167674647149939e-9,
-      "taughtHydrogenIonExponent": 8.664005901815807
-    },
-    "indicatorRatios": {}
-  },
-  "tolerance": { "absolute": 1e-10, "chargeResidual": 1e-14 }
+  "kind": "analytic-half-equivalence",
+  "description": "Half-equivalence at 0.05 / 0.1 mol/kg — activity-corrected identity",
+  "derivation": "Independent activity identity pH = pKa + log10(gamma_A) for equal analytical acid and conjugate-base amounts.",
+  "cases": [
+    {
+      "caseId": "REF-8-half-equivalence",
+      "pKa": 4.756,
+      "request": {
+        "waterMassKg": 1,
+        "liquidVolumeL": 1,
+        "temperatureK": 298.15,
+        "solutes": [
+          { "soluteId": "HOAc", "amountMol": 0.1, "mode": "monoprotic-equilibrium", "ka": 1.7539e-5 },
+          { "soluteId": "NaOH", "amountMol": 0.05, "mode": "fully-dissociated" }
+        ],
+        "indicators": []
+      }
+    }
+  ],
+  "tolerance": { "relation": 0.005, "chargeResidual": 1e-14 }
 }

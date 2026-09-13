@@ -1,34 +1,51 @@
 {
   "schemaVersion": 1,
   "id": "REF-9",
-  "description": "0.1 mol/kg weak acid with 0.14 mol/kg strong base, post-equivalence",
-  "derivation": "Independent high-precision Decimal solve of the accepted Davies equations; no TypeScript output was used.",
-  "request": {
-    "waterMassKg": 1,
-    "liquidVolumeL": 1,
-    "temperatureK": 298.15,
-    "solutes": [
-      { "soluteId": "HOAc", "amountMol": 0.1, "mode": "monoprotic-equilibrium", "ka": 1.7539e-5 },
-      { "soluteId": "NaOH", "amountMol": 0.14, "mode": "fully-dissociated" }
-    ],
-    "indicators": []
-  },
-  "expected": {
-    "modelPh": 12.484844563800657,
-    "ionicStrengthMolal": 0.14000000000042891,
-    "speciesMolality": {
-      "H+": 4.289146489743577e-13,
-      "OH-": 0.04000000142582368,
-      "HOAc": 1.425394763242577e-9,
-      "OAc-": 0.09999999857460524,
-      "Na+": 0.14,
-      "Cl-": 0
+  "kind": "charge-conservation-sweep",
+  "description": "Charge conservation across strong, weak, equivalence, and hydrolysis regimes",
+  "derivation": "Independent charge-balance invariant evaluated over a checked-in sweep; no expected state values are regenerated from the TypeScript solver.",
+  "cases": [
+    {
+      "caseId": "REF-9-strong-acid",
+      "request": { "waterMassKg": 1, "liquidVolumeL": 1, "temperatureK": 298.15, "solutes": [{ "soluteId": "HCl", "amountMol": 0.1, "mode": "fully-dissociated" }], "indicators": [] }
     },
-    "projection": {
-      "hydrogenIonMolarity": 4.289146489743577e-13,
-      "taughtHydrogenIonExponent": 12.367629120792669
+    {
+      "caseId": "REF-9-acid-half-neutralized",
+      "request": { "waterMassKg": 1, "liquidVolumeL": 1, "temperatureK": 298.15, "solutes": [{ "soluteId": "HCl", "amountMol": 0.1, "mode": "fully-dissociated" }, { "soluteId": "NaOH", "amountMol": 0.05, "mode": "fully-dissociated" }], "indicators": [] }
     },
-    "indicatorRatios": {}
-  },
-  "tolerance": { "absolute": 1e-10, "chargeResidual": 1e-14 }
+    {
+      "caseId": "REF-9-acid-near-equivalence",
+      "request": { "waterMassKg": 1, "liquidVolumeL": 1, "temperatureK": 298.15, "solutes": [{ "soluteId": "HCl", "amountMol": 0.1, "mode": "fully-dissociated" }, { "soluteId": "NaOH", "amountMol": 0.09, "mode": "fully-dissociated" }], "indicators": [] }
+    },
+    {
+      "caseId": "REF-9-base-near-equivalence",
+      "request": { "waterMassKg": 1, "liquidVolumeL": 1, "temperatureK": 298.15, "solutes": [{ "soluteId": "HCl", "amountMol": 0.1, "mode": "fully-dissociated" }, { "soluteId": "NaOH", "amountMol": 0.11, "mode": "fully-dissociated" }], "indicators": [] }
+    },
+    {
+      "caseId": "REF-9-strong-base",
+      "request": { "waterMassKg": 1, "liquidVolumeL": 1, "temperatureK": 298.15, "solutes": [{ "soluteId": "NaOH", "amountMol": 0.15, "mode": "fully-dissociated" }], "indicators": [] }
+    },
+    {
+      "caseId": "REF-9-weak-acid",
+      "request": { "waterMassKg": 1, "liquidVolumeL": 1, "temperatureK": 298.15, "solutes": [{ "soluteId": "HOAc", "amountMol": 0.1, "mode": "monoprotic-equilibrium", "ka": 1.7539e-5 }], "indicators": [] }
+    },
+    {
+      "caseId": "REF-9-buffer",
+      "request": { "waterMassKg": 1, "liquidVolumeL": 1, "temperatureK": 298.15, "solutes": [{ "soluteId": "HOAc", "amountMol": 0.1, "mode": "monoprotic-equilibrium", "ka": 1.7539e-5 }, { "soluteId": "NaOH", "amountMol": 0.05, "mode": "fully-dissociated" }], "indicators": [] }
+    },
+    {
+      "caseId": "REF-9-equivalence",
+      "request": { "waterMassKg": 1, "liquidVolumeL": 1, "temperatureK": 298.15, "solutes": [{ "soluteId": "HOAc", "amountMol": 0.1, "mode": "monoprotic-equilibrium", "ka": 1.7539e-5 }, { "soluteId": "NaOH", "amountMol": 0.1, "mode": "fully-dissociated" }], "indicators": [] }
+    },
+    {
+      "caseId": "REF-9-post-equivalence",
+      "request": { "waterMassKg": 1, "liquidVolumeL": 1, "temperatureK": 298.15, "solutes": [{ "soluteId": "HOAc", "amountMol": 0.1, "mode": "monoprotic-equilibrium", "ka": 1.7539e-5 }, { "soluteId": "NaOH", "amountMol": 0.14, "mode": "fully-dissociated" }], "indicators": [] }
+    },
+    {
+      "caseId": "REF-9-sodium-acetate",
+      "request": { "waterMassKg": 1, "liquidVolumeL": 1, "temperatureK": 298.15, "solutes": [{ "soluteId": "NaOAc", "amountMol": 0.1, "mode": "fully-dissociated" }], "indicators": [] }
+    }
+  ],
+  "expectedMaxResidual": 1e-14,
+  "tolerance": { "chargeResidual": 1e-14 }
 }

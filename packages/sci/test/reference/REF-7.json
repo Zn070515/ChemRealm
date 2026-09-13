@@ -1,34 +1,37 @@
 {
   "schemaVersion": 1,
   "id": "REF-7",
-  "description": "0.1 mol/kg weak acid with 0.025 mol/kg strong base, pre-equivalence",
-  "derivation": "Independent high-precision Decimal solve of the accepted Davies equations; no TypeScript output was used.",
+  "kind": "single",
+  "description": "1e-8 mol/kg HCl — full water autoionization balance",
+  "derivation": "Independent high-precision Decimal solve of the accepted Davies equations, including water autoionization.",
   "request": {
     "waterMassKg": 1,
     "liquidVolumeL": 1,
     "temperatureK": 298.15,
-    "solutes": [
-      { "soluteId": "HOAc", "amountMol": 0.1, "mode": "monoprotic-equilibrium", "ka": 1.7539e-5 },
-      { "soluteId": "NaOH", "amountMol": 0.025, "mode": "fully-dissociated" }
-    ],
+    "solutes": [{ "soluteId": "HCl", "amountMol": 1e-8, "mode": "fully-dissociated" }],
     "indicators": []
   },
   "expected": {
-    "modelPh": 4.214766830213736,
-    "ionicStrengthMolal": 0.025070954865959085,
+    "modelPh": 6.978302551346763,
+    "ionicStrengthMolal": 1.0516287287653058e-7,
     "speciesMolality": {
-      "H+": 7.095486595908631e-5,
-      "OH-": 1.9077253223659557e-10,
-      "HOAc": 0.07492904532481344,
-      "OAc-": 0.025070954675186555,
-      "Na+": 0.025,
-      "Cl-": 0
+      "H+": 1.0516287287653058e-7,
+      "OH-": 9.516287287653058e-8,
+      "HOAc": 0,
+      "OAc-": 0,
+      "Na+": 0,
+      "Cl-": 1e-8
     },
     "projection": {
-      "hydrogenIonMolarity": 7.095486595908631e-5,
-      "taughtHydrogenIonExponent": 4.149017816038545
+      "hydrogenIonMolarity": 1.0516287287653058e-7,
+      "taughtHydrogenIonExponent": 6.978137558193461
     },
     "indicatorRatios": {}
   },
-  "tolerance": { "absolute": 1e-10, "chargeResidual": 1e-14 }
+  "publishedAnchor": {
+    "modelPh": 6.978,
+    "tolerance": 0.02,
+    "source": "SPEC-0001 dilute strong-acid reference"
+  },
+  "tolerance": { "absolute": 1e-8, "chargeResidual": 1e-14 }
 }

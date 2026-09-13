@@ -1,4 +1,4 @@
-"""Run the independent REF matrix and the pinned PHREEQC cross-engine sweep."""
+"""Run the pinned PHREEQC oracle sweep and report its disagreement explicitly."""
 
 from __future__ import annotations
 
@@ -6,6 +6,7 @@ import argparse
 import importlib.util
 import json
 import math
+import os
 import subprocess
 import sys
 import tempfile
@@ -17,6 +18,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 REFERENCE_DIR = REPO_ROOT / "packages" / "sci" / "test" / "reference"
 TS_RUNNER = REPO_ROOT / "tools" / "oracle" / "reference" / "run_ts_cases.mjs"
 PHREEQC_RUNNER = REPO_ROOT / "tools" / "oracle" / "phreeqc" / "run_batch.py"
+MANIFEST_PATH = REFERENCE_DIR / "manifest.json"
 
 
 def load_module(path: Path, name: str) -> Any:
@@ -38,6 +40,15 @@ def load_fixture(name: str) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise ValueError(f"fixture is not an object: {name}")
     return value
+
+
+def fixture_ids(field: str) -> list[str]:
+    with MANIFEST_PATH.open(encoding="utf-8") as handle:
+        manifest = json.load(handle)
+    values = manifest.get(field)
+    if not isinstance(values, list) or not all(isinstance(value, str) for value in values):
+        raise RuntimeError(f"reference manifest field {field!r} must be a string list")
+    return values
 
 
 def totals(fixture: dict[str, Any]) -> dict[str, float]:
@@ -115,7 +126,7 @@ def phreeqc_input(fixture: dict[str, Any], selected_output_name: str) -> str:
 
 def run_ts() -> list[dict[str, Any]]:
     completed = subprocess.run(
-        ["node", str(TS_RUNNER), str(REFERENCE_DIR)],
+        ["node", str(TS_RUNNER), str(REFERENCE_DIR), "ORACLE"],
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,
@@ -145,8 +156,8 @@ def run_phreeqc() -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
     results: dict[str, dict[str, Any]] = {}
     with tempfile.TemporaryDirectory(prefix="chemrealm-m4-phreeqc-") as directory:
         root = Path(directory)
-        for index in range(1, 11):
-            fixture = load_fixture(f"REF-{index}.json")
+        for fixture_id in fixture_ids("oracleFixtures"):
+            fixture = load_fixture(f"{fixture_id}.json")
             input_path = root / f"{fixture['id']}.pqi"
             output_path = root / f"{fixture['id']}.pqo"
             selected_path = root / f"{fixture['id']}.sel"
@@ -181,8 +192,9 @@ def run_phreeqc() -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
 
 
 def compare(ts_rows: list[dict[str, Any]], phreeqc_rows: dict[str, dict[str, Any]]) -> dict[str, Any]:
-    if [row.get("id") for row in ts_rows] != [f"REF-{index}" for index in range(1, 11)]:
-        raise RuntimeError("TypeScript runner did not return every reference in order")
+    oracle_ids = fixture_ids("oracleFixtures")
+    if [row.get("id") for row in ts_rows] != oracle_ids:
+        raise RuntimeError("TypeScript runner did not return every oracle fixture in order")
     points: list[dict[str, Any]] = []
     for ts in ts_rows:
         case_id = ts["id"]
@@ -227,32 +239,58 @@ def compare(ts_rows: list[dict[str, Any]], phreeqc_rows: dict[str, dict[str, Any
                 "tsIonicStrengthMolal": ts_ionic_strength,
                 "phreeqcIonicStrengthMolal": oracle_ionic_strength,
                 "region": {
-                    "REF-7": "pre-equivalence",
-                    "REF-8": "equivalence",
-                    "REF-9": "post-equivalence",
+                    "ORACLE-7": "pre-equivalence",
+                    "ORACLE-8": "equivalence",
+                    "ORACLE-9": "post-equivalence",
                 }.get(case_id, "control"),
             }
         )
-    max_difference = max((point.get("absolutePhDifference", 0.0) for point in points), default=0.0)
+        points[-1]["signedPhDifference"] = ts_model_ph - oracle_model_ph
+    differences = [point["signedPhDifference"] for point in points if "signedPhDifference" in point]
+    max_difference = max((abs(value) for value in differences), default=0.0)
+    signed_summary = {
+        "minimum": min(differences, default=0.0),
+        "maximum": max(differences, default=0.0),
+        "mean": sum(differences) / len(differences) if differences else 0.0,
+        "allSameSign": bool(differences) and all(value > 0 for value in differences),
+    }
+    disagreement_analysis = {
+        "classification": "systematic-positive-offset-candidate"
+        if signed_summary["allSameSign"]
+        else "mixed-sign-or-insufficient-sample",
+        "observed": "TS model pH minus PHREEQC model pH is positive at every compared point"
+        if signed_summary["allSameSign"]
+        else "signed differences do not have one strict sign at every compared point",
+        "interpretation": "This is an observed cross-engine offset, not proof of a single cause; activity convention, database species representation, constants, and water conventions require separate investigation.",
+        "notProven": "Tolerance pass does not establish model equivalence or explain the offset.",
+    }
     return {
         "schemaVersion": 1,
         "model": {"id": "acidbase-monoprotic-davies", "version": "1.0.0"},
         "basis": "molality",
         "constants": "docs/research/constants-provenance.json",
-        "references": [f"REF-{index}" for index in range(1, 11)],
+        "oracleFixtures": oracle_ids,
         "equivalenceSweep": {
-            "pre": "REF-7",
-            "equivalence": "REF-8",
-            "post": "REF-9",
+            "pre": "ORACLE-7",
+            "equivalence": "ORACLE-8",
+            "post": "ORACLE-9",
             "postNaOHMolPerKg": 0.14,
-            "note": "REF-9 is a representative post-equivalence point within the declared pH comparison envelope.",
+            "note": "ORACLE-9 is a representative post-equivalence point within the declared pH comparison envelope; canonical REF-9 remains the charge-conservation acceptance fixture.",
         },
         "points": points,
         "pointCount": len(points),
-        "allPointsCompared": len(points) == 10,
+        "allPointsCompared": len(points) == len(oracle_ids),
         "maxAbsolutePhDifference": max_difference,
+        "signedPhDifferenceSummary": signed_summary,
+        "disagreementAnalysis": disagreement_analysis,
         "tolerancePh": 0.02,
-        "pass": len(points) == 10 and all(point["status"] == "PASS" for point in points),
+        "pass": len(points) == len(oracle_ids) and all(point["status"] == "PASS" for point in points),
+        "validation": {
+            "sourceCommit": os.environ.get("CHEMREALM_VALIDATION_COMMIT", "uncommitted-working-tree"),
+            "ciRun": os.environ.get("CHEMREALM_VALIDATION_CI", "not-recorded"),
+            "ciHardGate": os.environ.get("CHEMREALM_VALIDATION_CI_HARD_GATE") == "1",
+            "executionEnvironment": "local oracle run; CI repeats the pinned installation and sweep",
+        },
     }
 
 
@@ -260,6 +298,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path)
     args = parser.parse_args()
+    oracle_ids = fixture_ids("oracleFixtures")
     ts_rows = run_ts()
     phreeqc_rows, toolchain = run_phreeqc()
     report = compare(ts_rows, phreeqc_rows)

@@ -1,31 +1,52 @@
 {
   "schemaVersion": 1,
   "id": "REF-3",
-  "description": "0.1 mol/kg weak acid",
-  "derivation": "Independent high-precision Decimal solve of the accepted Davies equations; no TypeScript output was used.",
-  "request": {
-    "waterMassKg": 1,
-    "liquidVolumeL": 1,
-    "temperatureK": 298.15,
-    "solutes": [{ "soluteId": "HOAc", "amountMol": 0.1, "mode": "monoprotic-equilibrium", "ka": 1.7539e-5 }],
-    "indicators": []
-  },
-  "expected": {
-    "modelPh": 2.8809947893438297,
-    "ionicStrengthMolal": 0.0013707817905459158,
-    "speciesMolality": {
-      "H+": 0.0013707817905459158,
-      "OH-": 7.924245197563365e-12,
-      "HOAc": 0.09862921821737833,
-      "OAc-": 0.0013707817826216705,
-      "Na+": 0,
-      "Cl-": 0
+  "kind": "analytic-acid-excess",
+  "description": "Strong acid/base acid-excess activity relation at f = 0.0, 0.5, and 0.9",
+  "derivation": "Independent analytic charge-balance relation from the declared strong-acid/strong-base totals; this criterion checks activity coupling and is not treated as an independent model validation.",
+  "cases": [
+    {
+      "caseId": "REF-3-f0.0",
+      "excessMolality": 0.1,
+      "request": {
+        "waterMassKg": 1,
+        "liquidVolumeL": 1,
+        "temperatureK": 298.15,
+        "solutes": [
+          { "soluteId": "HCl", "amountMol": 0.1, "mode": "fully-dissociated" },
+          { "soluteId": "NaOH", "amountMol": 0, "mode": "fully-dissociated" }
+        ],
+        "indicators": []
+      }
     },
-    "projection": {
-      "hydrogenIonMolarity": 0.0013707817905459158,
-      "taughtHydrogenIonExponent": 2.863031673368195
+    {
+      "caseId": "REF-3-f0.5",
+      "excessMolality": 0.05,
+      "request": {
+        "waterMassKg": 1,
+        "liquidVolumeL": 1,
+        "temperatureK": 298.15,
+        "solutes": [
+          { "soluteId": "HCl", "amountMol": 0.1, "mode": "fully-dissociated" },
+          { "soluteId": "NaOH", "amountMol": 0.05, "mode": "fully-dissociated" }
+        ],
+        "indicators": []
+      }
     },
-    "indicatorRatios": {}
-  },
-  "tolerance": { "absolute": 1e-10, "chargeResidual": 1e-14 }
+    {
+      "caseId": "REF-3-f0.9",
+      "excessMolality": 0.01,
+      "request": {
+        "waterMassKg": 1,
+        "liquidVolumeL": 1,
+        "temperatureK": 298.15,
+        "solutes": [
+          { "soluteId": "HCl", "amountMol": 0.1, "mode": "fully-dissociated" },
+          { "soluteId": "NaOH", "amountMol": 0.09, "mode": "fully-dissociated" }
+        ],
+        "indicators": []
+      }
+    }
+  ],
+  "tolerance": { "relation": 1e-9, "chargeResidual": 1e-14 }
 }

@@ -12,7 +12,7 @@ import json
 from dataclasses import dataclass
 from decimal import Decimal, getcontext
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 
 getcontext().prec = 80
@@ -218,40 +218,88 @@ def as_json(result: ReferenceResult) -> dict[str, Any]:
     }
 
 
-def built_in_cases() -> Iterable[dict[str, Any]]:
-    def case(case_id: str, description: str, solutes: list[dict[str, Any]], *, volume: float = 1.0, indicators: list[dict[str, Any]] | None = None) -> dict[str, Any]:
-        return {
-            "id": case_id,
-            "description": description,
-            "request": {
-                "waterMassKg": 1.0,
-                "liquidVolumeL": volume,
-                "temperatureK": 298.15,
-                "solutes": solutes,
-                "indicators": indicators or [],
-            },
-        }
+REFERENCE_DIR = Path(__file__).resolve().parents[3] / "packages" / "sci" / "test" / "reference"
 
-    yield case("REF-1", "0.1 mol/kg strong acid", [{"soluteId": "HCl", "amountMol": 0.1, "mode": "fully-dissociated"}])
-    yield case("REF-2", "0.1 mol/kg strong base", [{"soluteId": "NaOH", "amountMol": 0.1, "mode": "fully-dissociated"}])
-    yield case("REF-3", "0.1 mol/kg weak acid", [{"soluteId": "HOAc", "amountMol": 0.1, "mode": "monoprotic-equilibrium", "ka": KA_HOAC}])
-    yield case("REF-4", "0.1 mol/kg sodium acetate", [{"soluteId": "NaOAc", "amountMol": 0.1, "mode": "fully-dissociated"}])
-    yield case("REF-5", "dilute weak acid", [{"soluteId": "HOAc", "amountMol": 1e-6, "mode": "monoprotic-equilibrium", "ka": KA_HOAC}])
-    yield case("REF-6", "weak-acid buffer before equivalence", [{"soluteId": "HOAc", "amountMol": 0.1, "mode": "monoprotic-equilibrium", "ka": KA_HOAC}, {"soluteId": "NaOH", "amountMol": 0.05, "mode": "fully-dissociated"}])
-    yield case("REF-7", "pre-equivalence titration point", [{"soluteId": "HOAc", "amountMol": 0.1, "mode": "monoprotic-equilibrium", "ka": KA_HOAC}, {"soluteId": "NaOH", "amountMol": 0.025, "mode": "fully-dissociated"}])
-    yield case("REF-8", "equivalence titration point", [{"soluteId": "HOAc", "amountMol": 0.1, "mode": "monoprotic-equilibrium", "ka": KA_HOAC}, {"soluteId": "NaOH", "amountMol": 0.1, "mode": "fully-dissociated"}])
-    yield case("REF-9", "post-equivalence titration point", [{"soluteId": "HOAc", "amountMol": 0.1, "mode": "monoprotic-equilibrium", "ka": KA_HOAC}, {"soluteId": "NaOH", "amountMol": 0.15, "mode": "fully-dissociated"}])
-    yield case("REF-10", "volume-dependent projection and indicator", [{"soluteId": "HCl", "amountMol": 0.05, "mode": "fully-dissociated"}, {"soluteId": "NaOH", "amountMol": 0.04, "mode": "fully-dissociated"}], volume=0.25, indicators=[{"indicatorId": "phenolphthalein", "kaIn": 1e-9}])
+
+def canonical_fixture_ids() -> list[str]:
+    with (REFERENCE_DIR / "manifest.json").open(encoding="utf-8") as handle:
+        manifest = json.load(handle)
+    values = manifest["fixtures"]
+    if not isinstance(values, list) or not all(isinstance(value, str) for value in values):
+        raise ValueError("reference manifest fixtures must be a string list")
+    return values
+
+
+def load_fixture(fixture_id: str) -> dict[str, Any]:
+    with (REFERENCE_DIR / f"{fixture_id}.json").open(encoding="utf-8") as handle:
+        value = json.load(handle)
+    if not isinstance(value, dict):
+        raise ValueError(f"fixture is not an object: {fixture_id}")
+    return value
+
+
+def child_case(reference_case: dict[str, Any]) -> dict[str, Any]:
+    return {"id": reference_case["caseId"], "request": reference_case["request"]}
+
+
+def derive_fixture(fixture: dict[str, Any]) -> Any:
+    kind = fixture.get("kind")
+    if kind == "single":
+        return solve_case(fixture)
+    if kind in {"analytic-acid-excess", "analytic-base-excess", "analytic-half-equivalence"}:
+        return [
+            (reference_case["caseId"], solve_case(child_case(reference_case)))
+            for reference_case in fixture["cases"]
+        ]
+    if kind == "charge-conservation-sweep":
+        results = [
+            (reference_case["caseId"], solve_case(child_case(reference_case)))
+            for reference_case in fixture["cases"]
+        ]
+        return {"cases": results, "maximumChargeResidual": max(
+            (abs(result.charge_residual) for _, result in results), default=ZERO
+        )}
+    if kind == "molality-molarity-bound":
+        comparisons = []
+        for reference_case in fixture["cases"]:
+            true_result = solve_case({"id": reference_case["caseId"], "request": reference_case["trueRequest"]})
+            wrong_result = solve_case({"id": reference_case["caseId"], "request": reference_case["molarityAsMolalityRequest"]})
+            comparisons.append((reference_case["caseId"], true_result, wrong_result))
+        return {
+            "cases": comparisons,
+            "maximumModelPhDifference": max(
+                (abs(true_result.model_ph - wrong_result.model_ph)
+                 for _, true_result, wrong_result in comparisons),
+                default=ZERO,
+            ),
+        }
+    raise ValueError(f"unsupported reference fixture kind: {kind}")
+
+
+def serialise_derived(value: Any) -> Any:
+    if isinstance(value, ReferenceResult):
+        return as_json(value)
+    if isinstance(value, Decimal):
+        return float(value)
+    if isinstance(value, list):
+        return [serialise_derived(item) for item in value]
+    if isinstance(value, tuple):
+        return [serialise_derived(item) for item in value]
+    if isinstance(value, dict):
+        return {key: serialise_derived(item) for key, item in value.items()}
+    return value
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--case", choices=[case["id"] for case in built_in_cases()])
+    parser.add_argument("--case", choices=canonical_fixture_ids())
     args = parser.parse_args()
-    cases = list(built_in_cases())
-    if args.case:
-        cases = [case for case in cases if case["id"] == args.case]
-    print(json.dumps({case["id"]: as_json(solve_case(case)) for case in cases}, indent=2, sort_keys=True))
+    fixture_ids = [args.case] if args.case else canonical_fixture_ids()
+    print(json.dumps(
+        {fixture_id: serialise_derived(derive_fixture(load_fixture(fixture_id))) for fixture_id in fixture_ids},
+        indent=2,
+        sort_keys=True,
+    ))
     return 0
 
 

@@ -103,7 +103,8 @@ therefore a numerical failure, not an assertion about chemistry.
   diagnostic code/reason, and no bracket-specific *status* is used to disguise
   a numerical failure as a domain refusal;
 - the M4 acceptance packet records this candidate decision separately from the
-  still-pending REF-1…REF-10 and PHREEQC evidence.
+  remaining full acceptance-matrix evidence; canonical REF-1…REF-10 and the
+  separately named ORACLE PHREEQC sweep are already exercised locally.
 
 ## Open questions
 

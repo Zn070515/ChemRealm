@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "ORACLE-3",
+  "description": "0.1 mol/kg weak acid",
+  "derivation": "Independent high-precision Decimal solve of the accepted Davies equations; no TypeScript output was used.",
+  "request": {
+    "waterMassKg": 1,
+    "liquidVolumeL": 1,
+    "temperatureK": 298.15,
+    "solutes": [{ "soluteId": "HOAc", "amountMol": 0.1, "mode": "monoprotic-equilibrium", "ka": 1.7539e-5 }],
+    "indicators": []
+  },
+  "expected": {
+    "modelPh": 2.8809947893438297,
+    "ionicStrengthMolal": 0.0013707817905459158,
+    "speciesMolality": {
+      "H+": 0.0013707817905459158,
+      "OH-": 7.924245197563365e-12,
+      "HOAc": 0.09862921821737833,
+      "OAc-": 0.0013707817826216705,
+      "Na+": 0,
+      "Cl-": 0
+    },
+    "projection": {
+      "hydrogenIonMolarity": 0.0013707817905459158,
+      "taughtHydrogenIonExponent": 2.863031673368195
+    },
+    "indicatorRatios": {}
+  },
+  "tolerance": { "absolute": 1e-10, "chargeResidual": 1e-14 }
+}

@@ -1,34 +1,37 @@
 {
   "schemaVersion": 1,
   "id": "REF-6",
-  "description": "0.1 mol/kg weak-acid buffer before equivalence",
-  "derivation": "Independent high-precision Decimal solve of the accepted Davies equations; no TypeScript output was used.",
+  "kind": "single",
+  "description": "0.1000 mol/L HCl, no base — activity-based model pH",
+  "derivation": "Independent high-precision Decimal solve of the accepted Davies equations; this is the same request as REF-5 but asserts the distinct activity-based model pH.",
   "request": {
     "waterMassKg": 1,
     "liquidVolumeL": 1,
     "temperatureK": 298.15,
-    "solutes": [
-      { "soluteId": "HOAc", "amountMol": 0.1, "mode": "monoprotic-equilibrium", "ka": 1.7539e-5 },
-      { "soluteId": "NaOH", "amountMol": 0.05, "mode": "fully-dissociated" }
-    ],
+    "solutes": [{ "soluteId": "HCl", "amountMol": 0.1, "mode": "fully-dissociated" }],
     "indicators": []
   },
   "expected": {
-    "modelPh": 4.671048715982287,
-    "ionicStrengthMolal": 0.050025962633770175,
+    "modelPh": 1.1070188143355295,
+    "ionicStrengthMolal": 0.1000000000001637,
     "speciesMolality": {
-      "H+": 2.5962633770174917e-5,
-      "OH-": 5.707503403979124e-10,
-      "HOAc": 0.049974037936980166,
-      "OAc-": 0.05002596206301983,
-      "Na+": 0.05,
-      "Cl-": 0
+      "H+": 0.1000000000001637,
+      "OH-": 1.6369583466236321e-13,
+      "HOAc": 0,
+      "OAc-": 0,
+      "Na+": 0,
+      "Cl-": 0.1
     },
     "projection": {
-      "hydrogenIonMolarity": 2.5962633770174917e-5,
-      "taughtHydrogenIonExponent": 4.585651252787161
+      "hydrogenIonMolarity": 0.1000000000001637,
+      "taughtHydrogenIonExponent": 0.9999999999992891
     },
     "indicatorRatios": {}
+  },
+  "publishedAnchor": {
+    "modelPh": 1.1064,
+    "tolerance": 0.02,
+    "source": "SPEC-0001 activity-based model pH anchor"
   },
   "tolerance": { "absolute": 1e-10, "chargeResidual": 1e-14 }
 }

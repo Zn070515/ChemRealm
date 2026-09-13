@@ -1,34 +1,41 @@
 {
   "schemaVersion": 1,
   "id": "REF-10",
-  "description": "volume-dependent projection and phenolphthalein indicator",
-  "derivation": "Independent high-precision Decimal solve of the accepted Davies equations; no TypeScript output was used.",
-  "request": {
-    "waterMassKg": 1,
-    "liquidVolumeL": 0.25,
-    "temperatureK": 298.15,
-    "solutes": [
-      { "soluteId": "HCl", "amountMol": 0.05, "mode": "fully-dissociated" },
-      { "soluteId": "NaOH", "amountMol": 0.04, "mode": "fully-dissociated" }
-    ],
-    "indicators": [{ "indicatorId": "phenolphthalein", "kaIn": 1e-9 }]
-  },
-  "expected": {
-    "modelPh": 2.0853816947310126,
-    "ionicStrengthMolal": 0.05000000000148171,
-    "speciesMolality": {
-      "H+": 0.01000000000148171,
-      "OH-": 1.4817106059280447e-12,
-      "HOAc": 0,
-      "OAc-": 0,
-      "Na+": 0.04,
-      "Cl-": 0.05
+  "kind": "molality-molarity-bound",
+  "description": "Molality versus molarity model-pH sensitivity over the proposed validation envelope",
+  "derivation": "Independent Decimal measurement of the deliberate scale substitution described by spike F5; the production thermodynamic request remains molality-based.",
+  "cases": [
+    {
+      "caseId": "REF-10-c0.001",
+      "inputMolarityMolPerL": 0.001,
+      "trueRequest": { "waterMassKg": 1.0019635391, "liquidVolumeL": 1, "temperatureK": 298.15, "solutes": [{ "soluteId": "HCl", "amountMol": 0.001, "mode": "fully-dissociated" }], "indicators": [] },
+      "molarityAsMolalityRequest": { "waterMassKg": 1, "liquidVolumeL": 1, "temperatureK": 298.15, "solutes": [{ "soluteId": "HCl", "amountMol": 0.001, "mode": "fully-dissociated" }], "indicators": [] }
     },
-    "projection": {
-      "hydrogenIonMolarity": 0.04000000000592684,
-      "taughtHydrogenIonExponent": 1.3979400086076876
+    {
+      "caseId": "REF-10-c0.01",
+      "inputMolarityMolPerL": 0.01,
+      "trueRequest": { "waterMassKg": 1.001635391, "liquidVolumeL": 1, "temperatureK": 298.15, "solutes": [{ "soluteId": "HCl", "amountMol": 0.01, "mode": "fully-dissociated" }], "indicators": [] },
+      "molarityAsMolalityRequest": { "waterMassKg": 1, "liquidVolumeL": 1, "temperatureK": 298.15, "solutes": [{ "soluteId": "HCl", "amountMol": 0.01, "mode": "fully-dissociated" }], "indicators": [] }
     },
-    "indicatorRatios": { "phenolphthalein": 1.4817106059280447e-7 }
-  },
-  "tolerance": { "absolute": 1e-10, "chargeResidual": 1e-14 }
+    {
+      "caseId": "REF-10-c0.05",
+      "inputMolarityMolPerL": 0.05,
+      "trueRequest": { "waterMassKg": 1.000176955, "liquidVolumeL": 1, "temperatureK": 298.15, "solutes": [{ "soluteId": "HCl", "amountMol": 0.05, "mode": "fully-dissociated" }], "indicators": [] },
+      "molarityAsMolalityRequest": { "waterMassKg": 1, "liquidVolumeL": 1, "temperatureK": 298.15, "solutes": [{ "soluteId": "HCl", "amountMol": 0.05, "mode": "fully-dissociated" }], "indicators": [] }
+    },
+    {
+      "caseId": "REF-10-c0.1",
+      "inputMolarityMolPerL": 0.1,
+      "trueRequest": { "waterMassKg": 0.99835391, "liquidVolumeL": 1, "temperatureK": 298.15, "solutes": [{ "soluteId": "HCl", "amountMol": 0.1, "mode": "fully-dissociated" }], "indicators": [] },
+      "molarityAsMolalityRequest": { "waterMassKg": 1, "liquidVolumeL": 1, "temperatureK": 298.15, "solutes": [{ "soluteId": "HCl", "amountMol": 0.1, "mode": "fully-dissociated" }], "indicators": [] }
+    },
+    {
+      "caseId": "REF-10-c0.12",
+      "inputMolarityMolPerL": 0.12,
+      "trueRequest": { "waterMassKg": 0.997624692, "liquidVolumeL": 1, "temperatureK": 298.15, "solutes": [{ "soluteId": "HCl", "amountMol": 0.12, "mode": "fully-dissociated" }], "indicators": [] },
+      "molarityAsMolalityRequest": { "waterMassKg": 1, "liquidVolumeL": 1, "temperatureK": 298.15, "solutes": [{ "soluteId": "HCl", "amountMol": 0.12, "mode": "fully-dissociated" }], "indicators": [] }
+    }
+  ],
+  "expectedMaxDifference": 0.001,
+  "tolerance": { "modelPhDifference": 1e-12 }
 }
