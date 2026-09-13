@@ -71,6 +71,15 @@ def test_cross_engine_report_is_complete_when_present() -> None:
     assert report["maxAbsolutePhDifference"] <= report["tolerancePh"]
     assert report["signedPhDifferenceSummary"]["allSameSign"] is True
     assert report["disagreementAnalysis"]["classification"] == "systematic-positive-offset-candidate"
+    analysis = report["disagreementAnalysis"]
+    assert analysis["attributionStatus"] == "not-isolated"
+    assert {axis["id"] for axis in analysis["attributionAxes"]} == {
+        "equilibrium-constants",
+        "activity-coefficients",
+        "species-representation",
+        "water-activity",
+        "basis-and-total-definition",
+    }
 
 
 def test_evidence_matrix_keeps_canonical_and_oracle_claims_separate() -> None:

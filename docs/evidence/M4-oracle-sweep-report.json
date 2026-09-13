@@ -3,6 +3,39 @@
   "basis": "molality",
   "constants": "docs/research/constants-provenance.json",
   "disagreementAnalysis": {
+    "attributionAxes": [
+      {
+        "id": "equilibrium-constants",
+        "nextControl": "Run a paired case with the same serialized Kw, Ka, and water-activity convention on both sides, then compare signed pH change.",
+        "observation": "TS pins Kw and Ka from the constants record; the PHREEQC input pins the acetate log_k but also uses the database water chemistry.",
+        "status": "partially-aligned"
+      },
+      {
+        "id": "activity-coefficients",
+        "nextControl": "Run a documented activity-off or matched-activity variant and record the delta without changing totals or constants.",
+        "observation": "TS uses the pinned Davies A/b expression; PHREEQC applies the activity convention supplied by its selected database/toolchain.",
+        "status": "not-aligned"
+      },
+      {
+        "id": "species-representation",
+        "nextControl": "Run an alternate PHREEQC input with an explicitly matched species basis and compare species totals as well as pH.",
+        "observation": "TS uses the model-owned HOAc/OAc- acid family; the PHREEQC input uses HAcetate/Acetate- master species.",
+        "status": "not-identical"
+      },
+      {
+        "id": "water-activity",
+        "nextControl": "Hold all solute totals fixed while varying only the water-activity convention in a controlled pair, and report the resulting signed shift.",
+        "observation": "TS records the explicit v0 unit-water-activity convention; PHREEQC receives water 1 and may apply its own water/activity treatment.",
+        "status": "not-isolated"
+      },
+      {
+        "id": "basis-and-total-definition",
+        "nextControl": "Keep a mass-balance assertion on every future variant so a convention experiment cannot silently change the analytical input.",
+        "observation": "Both runners construct the comparison from mol/kg water totals; HOAc and NaOAc are combined into one acetate analytical family.",
+        "status": "aligned"
+      }
+    ],
+    "attributionStatus": "not-isolated",
     "classification": "systematic-positive-offset-candidate",
     "interpretation": "This is an observed cross-engine offset, not proof of a single cause; activity convention, database species representation, constants, and water conventions require separate investigation.",
     "notProven": "Tolerance pass does not establish model equivalence or explain the offset.",
@@ -163,8 +196,8 @@
   "tolerancePh": 0.02,
   "validation": {
     "ciHardGate": false,
-    "ciRun": "local-run-not-hosted-ci",
+    "ciRun": "local-commit-73a0444",
     "executionEnvironment": "local oracle run; CI repeats the pinned installation and sweep",
-    "sourceCommit": "b3ab71d3019ea3830903c97b51ceb657870a8d36"
+    "sourceCommit": "73a04448dc0c503bf0d920e785ff0c29d7557edf"
   }
 }
