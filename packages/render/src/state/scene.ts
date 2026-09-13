@@ -1,5 +1,6 @@
 import { type IndicatorColour } from "../observable/color.js";
-import { type ObservableModel } from "../observable/index.js";
+import { formatBuretteScaleReading } from "../observable/format.js";
+import { type ObservableModel, type ObservableReadouts } from "../observable/index.js";
 
 export type RenderNodeKind = "group" | "shape" | "text";
 
@@ -15,6 +16,26 @@ export interface RenderState {
   readonly nodes: readonly RenderNode[];
 }
 
+type HydrogenIonReadoutKey = "taughtPh" | "modelPh";
+
+export interface HydrogenIonPresentationPolicy {
+  readonly id: "taught" | "scientific-model";
+  readonly readoutId: "taught-ph-readout" | "model-ph-readout";
+  readonly readoutKey: HydrogenIonReadoutKey;
+}
+
+export const TAUGHT_HYDROGEN_ION_POLICY: HydrogenIonPresentationPolicy = Object.freeze({
+  id: "taught",
+  readoutId: "taught-ph-readout",
+  readoutKey: "taughtPh",
+});
+
+export const SCIENTIFIC_MODEL_HYDROGEN_ION_POLICY: HydrogenIonPresentationPolicy = Object.freeze({
+  id: "scientific-model",
+  readoutId: "model-ph-readout",
+  readoutKey: "modelPh",
+});
+
 function frozenData(data: Record<string, unknown>): Readonly<Record<string, unknown>> {
   return Object.freeze(data);
 }
@@ -28,8 +49,23 @@ function indicatorShape(id: string, color: IndicatorColour, zIndex: number): Ren
   });
 }
 
+function hydrogenIonReadout(
+  readouts: ObservableReadouts,
+  policy: HydrogenIonPresentationPolicy,
+): RenderNode {
+  return Object.freeze({
+    id: policy.readoutId,
+    kind: "text" as const,
+    zIndex: 20,
+    data: frozenData({ text: readouts[policy.readoutKey] }),
+  });
+}
+
 /** Convert observable data to generic scene nodes; no chemistry is inspected. */
-export function toRenderState(model: ObservableModel): RenderState {
+export function toRenderState(
+  model: ObservableModel,
+  policy: HydrogenIonPresentationPolicy = TAUGHT_HYDROGEN_ION_POLICY,
+): RenderState {
   const nodes: RenderNode[] = [
     Object.freeze({
       id: "observable-root",
@@ -43,27 +79,18 @@ export function toRenderState(model: ObservableModel): RenderState {
       zIndex: 10,
       data: frozenData({ height: model.liquidLevel.height }),
     }),
-    Object.freeze({
-      id: "taught-ph-readout",
-      kind: "text",
-      zIndex: 20,
-      data: frozenData({ text: model.readouts.taughtPh }),
-    }),
-    Object.freeze({
-      id: "model-ph-readout",
-      kind: "text",
-      zIndex: 20,
-      data: frozenData({ text: model.readouts.modelPh }),
-    }),
+    hydrogenIonReadout(model.readouts, policy),
   ];
 
-  if (model.buretteReading !== undefined) {
+  if (model.burette !== undefined) {
     nodes.push(
       Object.freeze({
         id: "burette-reading",
         kind: "text",
         zIndex: 20,
-        data: frozenData({ text: `${model.buretteReading.toFixed(2)} L` }),
+        data: frozenData({
+          text: formatBuretteScaleReading(model.burette.currentScaleReading),
+        }),
       }),
     );
   }

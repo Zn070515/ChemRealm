@@ -5,7 +5,9 @@ import { deriveLiquidLevel, type VolumeProfile } from "./level.js";
 describe("liquid level observable", () => {
   const conicalProfile: VolumeProfile = {
     maxVolume: litre(1),
+    roundTripTolerance: litre(1e-12),
     heightAtVolume: (volume) => millimetre(10 + 40 * Math.sqrt(volume)),
+    volumeAtHeight: (height) => litre(((height - 10) / 40) ** 2),
   };
 
   it("uses the declared h(V) profile instead of scaling a volume axis", () => {
@@ -18,14 +20,29 @@ describe("liquid level observable", () => {
     const calls: number[] = [];
     const profile: VolumeProfile = {
       maxVolume: litre(1),
+      roundTripTolerance: litre(1e-12),
       heightAtVolume: (volume) => {
         calls.push(volume);
         return millimetre(42);
+      },
+      volumeAtHeight: (height) => {
+        expect(height).toBe(42);
+        return litre(0.4);
       },
     };
 
     deriveLiquidLevel(litre(0.4), profile);
     expect(calls).toEqual([0.4]);
+  });
+
+  it("rejects a profile whose inverse is outside the declared tolerance", () => {
+    expect(() =>
+      deriveLiquidLevel(litre(0.4), {
+        ...conicalProfile,
+        roundTripTolerance: litre(1e-15),
+        volumeAtHeight: () => litre(0.4001),
+      }),
+    ).toThrow(RangeError);
   });
 
   it.each([

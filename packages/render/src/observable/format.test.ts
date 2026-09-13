@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { litre, ph, taughtHydrogenIonExponent } from "@chemrealm/schema";
 import {
-  formatBuretteReading,
+  formatBuretteScaleReading,
   formatModelPh,
   formatTaughtPh,
 } from "./format.js";
@@ -18,7 +18,7 @@ describe("observable readout formatting", () => {
     expect(formatted).not.toContain("thermodynamic");
   });
 
-  it("formats burette volume to the instrument's two-decimal display", () => {
-    expect(formatBuretteReading(litre(0.025))).toBe("0.03 L");
+  it("formats the graduated burette scale in millilitres to 0.01 mL", () => {
+    expect(formatBuretteScaleReading(litre(0.025))).toBe("25.00 mL");
   });
 });

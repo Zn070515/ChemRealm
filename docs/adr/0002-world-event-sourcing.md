@@ -71,7 +71,9 @@ Two designed-out candidates are worth recording because they are the obvious
 first guesses:
 
 - **`BuretteReadingChanged` — rejected as a domain event.** The reading is
-  *derived*: `reading = initialVolume − Σ delivered volume`. Storing it as an
+  *derived*: `currentScaleReading = initialScaleReading + Σ delivered volume`;
+  contained volume is `initialContainedVolume − Σ delivered volume`. Storing either
+  reading as an
   event would create a second source of truth for the same quantity, which is
   exactly how replays diverge. The burette's liquid level is vessel state;
   the reading is a projection of it.

@@ -13,8 +13,8 @@
  * Two designed-out candidates are worth keeping visible, because both are the
  * obvious first guess:
  *
- *   `BuretteReadingChanged` — REJECTED. The reading is derived:
- *   `reading = initialVolume − Σ delivered`. Storing it would be a second
+ *   `BuretteReadingChanged` — REJECTED. The scale reading is derived:
+ *   `currentScaleReading = initialScaleReading + Σ delivered`. Storing it would be a second
  *   source of truth for one quantity, which is the most reliable way to make a
  *   replay diverge.
  *

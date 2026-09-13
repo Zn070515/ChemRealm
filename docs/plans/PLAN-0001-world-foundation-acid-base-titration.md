@@ -1,8 +1,9 @@
 # PLAN-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** **M0–M4 S3 Verified / Accepted; M5 authorized** — the original plan was approved
-  on 2026-09-11 at `SPEC-0001` revision 6; the current contract is revisions 13–20 accepted
-  on 2026-09-13.
+- **Status:** **M0–M4 S3 Verified / Accepted; M5 S2 remediation in progress** — the original plan was approved
+  on 2026-09-11 at `SPEC-0001` revision 6; revisions 13–20 were accepted
+  on 2026-09-13 and revision 21 is a candidate amendment for the current M5
+  contract remediation.
 - **Completed:** `M0 — Repository foundation` reached **S3 — Verified** on
   2026-09-11. Evidence: `docs/evidence/M0.md`, commits `1f3dfee`/`565a2e8`,
   CI run `34595967023` (13/13 gate steps on a clean `ubuntu-latest` checkout).
@@ -695,7 +696,7 @@ starting; the concentration-only formulation they describe is superseded.**
    `I_m`/`Î`, **activity-based model pH**, **indicator protonation ratios**,
    validity, provenance. It does **not** emit molarity or `−lg c(H⁺)`.
    Those come from **`ScientificProjection`**, which takes `ScientificState`
-   plus plain physical data (`waterMass`, `liquidVolume`) and lives in
+   plus the canonical solution volume (`liquidVolume`) and lives in
    `packages/sci` without importing `packages/world`.
    Getting this wrong here forces every downstream layer to guess.
 9b. **Indicator equilibrium is scientific.** Solve it in `packages/sci`
@@ -760,9 +761,10 @@ If PHREEQC cannot be installed and driven in CI:
 ## M5 — Observable state
 
 **Target stage:** S3
-**Current stage:** S2 implementation locally verified; M5 S3 evidence remains
-open. The governing scope is
-`docs/superpowers/specs/2026-09-13-m5-observable-state.md`.
+**Current stage:** S2 implementation locally verified; contract remediation is
+complete locally, while M5 S3 evidence remains open. The governing scope is
+`docs/superpowers/specs/2026-09-13-m5-contract-remediation.md`, subordinate to
+`SPEC-0001` revision 21 Candidate and not an override of it.
 **Addresses:** ADR-0006, ADR-0007; `SPEC-0001` AC-V2..AC-V4, AC-V6, AC-V8, AC-V9, AC-V10, AC-V11
 
 `AC-V1` (`packages/render` has no import path to `packages/sci`) is **not**
@@ -782,7 +784,7 @@ packages/render/src/observable/index.ts       ScientificState → ObservableMode
 packages/render/src/observable/level.ts       volume + volume profile → liquid level
 packages/render/src/observable/color.ts       indicator ratio → colour (empirical)
 packages/render/src/observable/tokens.ts      named empirical presentation tokens
-packages/render/src/observable/burette.ts     derived reading
+packages/render/src/observable/burette.ts     scale/contained/delivered state
 packages/render/src/observable/curve.ts       state sequence → pH–volume points
 packages/render/src/observable/species.ts     composition projection (micro view)
 packages/render/src/observable/symbolic.ts    equilibrium expressions with substitutions
@@ -807,11 +809,14 @@ packages/render/src/state/scene.ts            ObservableModel → RenderState
    code to copy into render. Colour mixing between declared empirical acid-form
    and base-form endpoints has no threshold branch and imports no `Ka`,
    activity, or activity coefficient.
-3. `burette.ts` derives `reading = initialVolume − Σ delivered`. Add the
-   invariant test that it always equals that expression (failure mode 14).
+3. `burette.ts` derives three separate values from committed deliveries:
+   `currentScaleReading = initialScaleReading + Σ delivered`,
+   `deliveredVolume = Σ delivered`, and
+   `containedVolume = initialContainedVolume − Σ delivered`. The scale reading
+   is not the remaining liquid volume, and is displayed in `mL` at `0.01 mL`.
 4. `curve.ts` takes the **state sequence**, not one state.
 5. `format.ts` enforces 2 decimal places for pH from the ±0.02 tolerance, and
-   2 dp for burette volume from the instrument resolution. **This is where the
+    2 dp for the burette's `mL` scale reading from the instrument resolution. **This is where the
    `GOAL.md` §5.2 fake-precision rule is enforced**, so it needs a test.
 5a. **Presentation convention (AC-V8).** Owner-decided 2026-09-11: the default
    view shows the taught quantity `−lg c(H⁺)` and **calls it pH**, because that
@@ -841,10 +846,14 @@ packages/render/src/state/scene.ts            ObservableModel → RenderState
    | 3 | One convention per view; never mixed, never unseparated |
    | 4 | The taught quantity may be called "pH" — it is what the syllabus means |
    | 5 | **The two are never derived from each other**: `−lg c(H⁺)` comes from a genuine `c(H⁺)`, not from `−log₁₀ m(H⁺)` (defect P1-1) |
-6. `symbolic.ts` emits the equilibrium expressions **actually used**, with the
-   neglected terms named. It may also emit the Henderson–Hasselbalch form
-   **flagged `label: "shortcut"`** alongside the exact solve (SPEC open question 4).
-7. Colour values come from a token module, not literals.
+6. `symbolic.ts` presents schema-owned scientific expressions carrying model,
+   version, and source-state identity. It may present the Henderson–Hasselbalch
+   form **flagged `label: "shortcut"`** alongside the exact solve, but cannot
+   author an untraceable exact expression.
+7. Colour values come from a declarative indicator-identity palette catalogue,
+   not chemistry-specific branches or unlabelled literals.
+8. `toRenderState` receives a replaceable hydrogen-ion presentation policy and
+   emits exactly one convention-specific pH readout per view.
 
 ### Tests and evidence
 
@@ -852,9 +861,9 @@ packages/render/src/state/scene.ts            ObservableModel → RenderState
 |---|---|
 | Colour varies continuously with the ratio; no discontinuity at any threshold | AC-V2 |
 | Grep/lint fixture: no chemical colour literal in `packages/render` | AC-V3 |
-| Liquid level matches a hand-computed fixture for a known profile | AC-V4 |
-| `reading == initial − Σ delivered` under randomized transfer sequences | Failure mode 14 |
-| pH formatted to exactly 2 dp; `formatPh(4.7447123) === "4.74"` | AC-V6 |
+| Liquid level calls `h(V)` and its `V(h)` inverse round-trips within the declared tolerance | AC-V4 |
+| `currentScaleReading == initialScaleReading + Σ delivered`, while `containedVolume` remains separate | Burette semantics / failure mode 14 |
+| pH is formatted to exactly 2 dp and a scale reading such as 0.025 L is `25.00 mL` | AC-V6 |
 | Observable output is a pure function: same input → deep-equal output, no DOM, no PixiJS | Testability of the whole layer |
 | Curve points derive from a state sequence, not from a stored array | No pre-authored curves |
 | Dependency-rule fixture: an equilibrium expression in `packages/render` fails the build | AC-V9 — the indicator ratio is a scientific output |

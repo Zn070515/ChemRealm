@@ -63,13 +63,13 @@ Renderer               packages/render/pixi
 | Liquid level in a vessel | ObservableModel | Derived by calling the vessel's declared `h(V)`; never by scaling a volume into a geometry axis |
 | Liquid fill geometry | Renderer | Consumes level from RenderState |
 | Indicator **protonation ratio** | **Scientific Core** | Equilibrium — `Ka_in`, `γ`, `a_H`. Not the renderer's business. |
-| Indicator **colour** | ObservableModel | Empirical perceptual mapping: ratio → colour |
+| Indicator **colour** | ObservableModel | Empirical perceptual mapping: `(indicatorId, ratio)` → colour via a declared palette |
 | Model pH value | Scientific Core | `−log₁₀ a(H⁺)` |
 | `c(H⁺)` / `−lg c(H⁺)` | **ScientificProjection** | Needs scientific state **and** world volume |
 | Readout text and precision | Renderer | Formatting only; precision rule from `ADR-0004` §5 |
 | pH-volume curve points | ScientificProjection (values) + ObservableModel (geometry) | Values from the state sequence; the renderer draws |
 | Curve axes, gridlines, labels | Renderer | Pure presentation |
-| Burette reading | ObservableModel | Derived: `initial − Σ delivered` |
+| Burette state | ObservableModel | Derived: scale reading `initialScaleReading + Σ delivered`; contained volume is tracked separately |
 | Species composition table | ObservableModel | **Re-presents** scientific values; computes no chemistry |
 | Bubbles, precipitate, flames | **Scientific Core** decides presence; Renderer animates | Deferred past M5 |
 
@@ -78,6 +78,26 @@ list it, format it, map it to a geometry or a colour, scale it for display. It
 may not *compute new chemistry*. If answering a display question requires
 `Ka`, `Ksp`, an activity, or a reaction direction, the answer comes from the
 Scientific Core.
+
+### M5 contract remediation — representation identity and readout policy
+
+**Revised 2026-09-13 (SPEC-0001 revision 21 Candidate).** M5 does not weaken
+the canonical representation criteria. A vessel profile publishes both
+`h(V)` and `V(h)` and the observable layer verifies their declared round-trip
+tolerance. Burette state keeps `containedVolume`, `deliveredVolume`, and the
+graduated `currentScaleReading` separate; the latter is displayed on the
+instrument's `mL` scale at `0.01 mL` precision.
+
+Indicator colour is selected from a declarative empirical palette keyed by
+`indicatorId`; it never infers chemistry from a colour token. A
+`HydrogenIonPresentationPolicy` chooses exactly one hydrogen-ion convention
+for a view. The default taught view may call `−lg c(H⁺)` “pH”; the scientific
+model view names its activity convention. No scene is assembled with both
+readouts and then expected to hide one later.
+
+Scientific expressions are schema-owned records carrying model and source-state
+identity. Render may present and freeze them, but it cannot author an arbitrary
+string as an exact scientific expression.
 
 ### The indicator boundary — corrected
 
@@ -153,8 +173,9 @@ Three properties make the colour half compliant:
   layer testable in Node with no browser, which is what makes it verifiable at
   all (`AGENTS.md` §8).
 - Observable-model tests assert *derived* properties, not pixel values: e.g.
-  "at 0.1 M HCl the model reports colour category `colourless`", "at the
-  phenolphthalein transition the computed ratio crosses 1 at pH ≈ pKa_in".
+  endpoint/continuity properties for both named indicator palettes. The
+  phenolphthalein transition ratio itself is supplied by the Scientific Core;
+  render never computes or infers it.
 
 ### Assets and the visual bar
 

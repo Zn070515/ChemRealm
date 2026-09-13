@@ -2,7 +2,9 @@ import { type Litre, type Millimetre } from "@chemrealm/schema";
 
 export interface VolumeProfile {
   readonly maxVolume: Litre;
+  readonly roundTripTolerance: Litre;
   readonly heightAtVolume: (volume: Litre) => Millimetre;
+  readonly volumeAtHeight: (height: Millimetre) => Litre;
 }
 
 export interface LiquidLevel {
@@ -24,6 +26,10 @@ export function deriveLiquidLevel(
 ): LiquidLevel {
   const volumeValue = finiteNonNegative(volume, "liquid volume");
   const maxVolume = finiteNonNegative(profile.maxVolume, "profile capacity");
+  const roundTripTolerance = finiteNonNegative(
+    profile.roundTripTolerance,
+    "profile round-trip tolerance",
+  );
   if (volumeValue > maxVolume) {
     throw new RangeError("liquid volume exceeds profile capacity");
   }
@@ -31,6 +37,13 @@ export function deriveLiquidLevel(
   const height = profile.heightAtVolume(volume);
   if (!Number.isFinite(height)) {
     throw new RangeError("volume profile returned a non-finite height");
+  }
+  const inverseVolume = finiteNonNegative(
+    profile.volumeAtHeight(height),
+    "volume profile inverse",
+  );
+  if (Math.abs(inverseVolume - volumeValue) > roundTripTolerance) {
+    throw new RangeError("volume profile inverse exceeds round-trip tolerance");
   }
   return Object.freeze({ volume, height });
 }

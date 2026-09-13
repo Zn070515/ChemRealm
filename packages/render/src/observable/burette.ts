@@ -1,8 +1,17 @@
 import { litre, type Litre } from "@chemrealm/schema";
 
 export interface BuretteInput {
-  readonly initialVolume: Litre;
+  /** Graduated scale reading before any delivery. */
+  readonly initialScaleReading: Litre;
+  /** Physical liquid amount in the burette before any delivery. */
+  readonly initialContainedVolume: Litre;
   readonly deliveredVolumes: readonly Litre[];
+}
+
+export interface BuretteState {
+  readonly currentScaleReading: Litre;
+  readonly deliveredVolume: Litre;
+  readonly containedVolume: Litre;
 }
 
 function finiteNonNegative(value: number, name: string): number {
@@ -12,16 +21,30 @@ function finiteNonNegative(value: number, name: string): number {
   return value;
 }
 
-/** Derive the reading from committed deliveries, never from pointer motion. */
-export function deriveBuretteReading(input: BuretteInput): Litre {
-  const initial = finiteNonNegative(input.initialVolume, "initial burette volume");
+/**
+ * Derive the graduated reading and physical volumes from committed deliveries.
+ * A burette's scale increases as liquid is delivered; remaining liquid is a
+ * separate value and must never be used as the scale reading.
+ */
+export function deriveBuretteState(input: BuretteInput): BuretteState {
+  const initialScaleReading = finiteNonNegative(
+    input.initialScaleReading,
+    "initial burette scale reading",
+  );
+  const initialContainedVolume = finiteNonNegative(
+    input.initialContainedVolume,
+    "initial burette contained volume",
+  );
   let delivered = 0;
   for (const volume of input.deliveredVolumes) {
     delivered += finiteNonNegative(volume, "delivered burette volume");
   }
-  const remaining = initial - delivered;
-  if (remaining < 0) {
+  if (delivered > initialContainedVolume) {
     throw new RangeError("burette deliveries overdraw the initial volume");
   }
-  return litre(remaining);
+  return Object.freeze({
+    currentScaleReading: litre(initialScaleReading + delivered),
+    deliveredVolume: litre(delivered),
+    containedVolume: litre(initialContainedVolume - delivered),
+  });
 }

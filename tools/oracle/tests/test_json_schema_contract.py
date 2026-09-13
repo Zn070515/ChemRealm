@@ -71,6 +71,7 @@ EXPECTED_ARTIFACTS = [
     "command",
     "scenario",
     "scientific-state",
+    "scientific-expression",
     "solve-result",
     "export-bundle",
 ]

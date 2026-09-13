@@ -83,6 +83,26 @@ import {
  */
 export const SCIENTIFIC_SCHEMA_VERSION = 3;
 
+/** Standalone schema version for model-generated symbolic expressions. */
+export const SCIENTIFIC_EXPRESSION_SCHEMA_VERSION = 1;
+
+/**
+ * A symbolic expression is a scientific output, not free-form render copy.
+ * Its model and source-state identity travel with it so a presentation layer
+ * cannot label arbitrary text as an exact expression for the current state.
+ */
+export const ScientificExpressionSchema = z.strictObject({
+  schemaVersion: z.literal(SCIENTIFIC_EXPRESSION_SCHEMA_VERSION),
+  id: z.string().min(1),
+  label: z.enum(["exact", "shortcut"]),
+  expression: z.string().min(1),
+  omittedTerms: z.array(z.string()),
+  modelId: z.string().min(1),
+  modelVersion: z.string().min(1),
+  sourceStateHash: z.string().min(1),
+});
+export type ScientificExpression = z.infer<typeof ScientificExpressionSchema>;
+
 // ---------------------------------------------------------------------------
 // Provenance
 // ---------------------------------------------------------------------------

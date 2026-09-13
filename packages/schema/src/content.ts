@@ -179,7 +179,7 @@ export const ScenarioSchema = z.strictObject({
       kind: z.string().min(1),
       /**
        * DELIBERATELY OPEN — one of the few. An apparatus kind's state is
-       * authored per kind ("a burette carries `initialVolume`"), and closing it
+       * authored per kind ("a burette carries initial scale/container data"), and closing it
        * here would mean this file enumerating every apparatus the project will
        * ever have. The per-kind shape belongs to the apparatus asset contract
        * at M6. Named here rather than left to look like an oversight: the

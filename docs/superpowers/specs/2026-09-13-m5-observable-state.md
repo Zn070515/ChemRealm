@@ -27,8 +27,10 @@ M5 will provide a pure `@chemrealm/render` package that:
    observable data;
 2. maps an indicator's scientific `protonationRatio` to a continuous empirical
    colour value without recomputing equilibrium;
-3. derives liquid level only by calling a declared vessel volume profile;
-4. derives burette reading from initial volume and committed deliveries;
+3. derives liquid level only by calling a declared vessel volume profile and
+   checking its inverse;
+4. derives separate burette scale-reading, delivered-volume, and
+   contained-volume values from committed deliveries;
 5. re-presents species, pH conventions, accuracy qualification, and supplied
    symbolic expressions without inventing chemistry;
 6. builds pH–volume points from a supplied sequence of states/projections; and
@@ -49,10 +51,12 @@ M5 will provide a pure `@chemrealm/render` package that:
 
 M5 has no shipped screen. It defines the data that later screens may render:
 
-- a learner receives a continuous indicator transition rather than a hidden
+- a learner receives a continuous, indicator-specific transition rather than a hidden
   threshold jump;
-- liquid level follows the apparatus-declared `h(V)` profile;
-- a burette readout reflects the committed delivery history;
+- liquid level follows the apparatus-declared `h(V)` profile whose `V(h)` inverse
+  passes its stated tolerance;
+- a burette readout is a graduated scale reading in `mL`, separate from the
+  amount remaining in the burette;
 - the default taught hydrogen-ion exponent may be labelled `pH`, while model pH
   always carries its activity-model label;
 - a result outside the proposed accuracy envelope carries a visible-ready
@@ -88,16 +92,21 @@ M5 data or hashes.
 Observable may re-present a scientific value, format it, map it to a display
 geometry, or map the supplied indicator ratio to empirical colour. It may not
 read `Ka`, activity, activity coefficient, reaction direction, or model
-parameters to derive a new value.
+parameters to derive a new value. Scientific expressions are accepted only as
+schema-owned records carrying model and source-state identity.
 
-The colour mapping is an explicit continuous interpolation between named
-empirical endpoint tokens. The input is the Scientific Core's non-negative
-`protonationRatio`; the observable layer converts it to a bounded interpolation
-fraction only. The mapping is empirical and not a chemistry result.
+The colour mapping is an explicit continuous interpolation between the named
+empirical endpoint tokens for the declared indicator identity. The input is the
+Scientific Core's non-negative `protonationRatio`; the observable layer
+converts it to a bounded interpolation fraction only. The mapping is empirical
+and not a chemistry result. An unknown indicator has no safe palette and is
+rejected.
 
 `ScientificState.modelPh` remains activity-based and model-dependent.
 `TeachingHydrogenIonExponent` comes from the ScientificProjection. The
-observable layer never derives one from the other.
+observable layer never derives one from the other. A scientific expression must
+also carry the same model id/version as the frame's ScientificState; render may
+present it, but cannot make an expression from an arbitrary string.
 
 ## World/event design
 
@@ -112,11 +121,11 @@ The package owns these pure transformations:
 | Module | Responsibility |
 |---|---|
 | `observable/color.ts` | ratio → continuous empirical colour |
-| `observable/level.ts` | volume → declared profile height |
-| `observable/burette.ts` | initial volume − committed delivery sum |
+| `observable/level.ts` | volume → declared profile height plus inverse check |
+| `observable/burette.ts` | scale reading, delivered volume, and contained volume from committed deliveries |
 | `observable/curve.ts` | ordered state/projection frames → curve points |
 | `observable/species.ts` | ScientificState species → inspection rows |
-| `observable/symbolic.ts` | supplied scientific expressions → display lines |
+| `observable/symbolic.ts` | schema-owned scientific expressions → frozen display lines |
 | `observable/format.ts` | labels and display precision only |
 | `observable/tokens.ts` | named empirical presentation tokens |
 | `observable/index.ts` | compose an immutable ObservableModel |
@@ -144,17 +153,23 @@ The new package exports:
 export const OBSERVABLE_MODEL_VERSION = 1;
 
 export interface ScientificProjectionReadout {
+  readonly sourceStateHash: string;
   readonly taughtHydrogenIonExponent: TeachingHydrogenIonExponent;
 }
 
-export interface ObservableInput {
+export interface ScientificFrame {
+  readonly sourceStateHash: string;
   readonly scientificState: ScientificState;
   readonly projection: ScientificProjectionReadout;
+}
+
+export interface ObservableInput {
+  readonly frame: ScientificFrame;
   readonly liquidVolume: Litre;
   readonly volumeProfile: VolumeProfile;
   readonly burette?: BuretteInput;
   readonly curveFrames?: readonly CurveFrame[];
-  readonly symbolicLines?: readonly SymbolicLine[];
+  readonly symbolicLines?: readonly ScientificExpression[];
 }
 
 export function buildObservableModel(input: ObservableInput): ObservableModel;
@@ -174,8 +189,9 @@ never mutated.
   inspection rows;
 - a curve with no frames returns an empty curve, while a frame with a missing
   required value is rejected by the TypeScript/runtime boundary;
-- symbolic lines are treated as supplied text and are not silently rewritten;
-  empty identifiers or expressions are rejected; and
+- symbolic lines are schema-owned scientific expressions and are not silently
+  rewritten; empty identifiers, expressions, or frame/model identity are
+  rejected; and
 - Observable never substitutes a fallback chemistry value after a scientific
   failure. The caller must decide how to present a failed result.
 
@@ -185,10 +201,10 @@ never mutated.
   projection contract;
 - colour tests check endpoints, boundedness, continuity, no threshold branch,
   and immutability;
-- level tests use a non-cylindrical hand-computed profile and reject invalid
-  volume/profile outputs;
-- burette tests check the exact `initial − Σ delivered` invariant, full draw,
-  and overdraw rejection;
+- level tests use a non-cylindrical hand-computed profile, verify `V(h)`/`h(V)`
+  round-trip, and reject invalid/tolerance-breaking profiles;
+- burette tests check the scale-reading and contained-volume invariants, full
+  draw, overdraw rejection, and `mL` display precision;
 - curve tests check ordered frame identity and no chemistry recomputation;
 - species/symbolic/format tests check re-presentation and labels;
 - composition tests check deterministic deep equality, frozen output, and no
@@ -201,12 +217,12 @@ never mutated.
 
 | Criterion | Binary requirement | Evidence |
 |---|---|---|
-| AC-V2 | Colour output is continuous and has no threshold branch | `packages/render/src/observable/color.test.ts` |
+| AC-V2 | Colour output is continuous within the declared indicator-specific palette and has no threshold branch | `packages/render/src/observable/color.test.ts` |
 | AC-V3 | No chemical colour decision/literal is embedded in render transforms | token/module review and render guard |
-| AC-V4 | Liquid height is obtained from the declared `h(V)` profile | `level.test.ts` |
-| AC-V6 | pH and burette readouts obey their display precision | `format.test.ts` |
-| AC-V8 | Taught and model quantities have distinct, explicit labels | `format.test.ts` and later M5 DOM evidence |
-| AC-V9 | Render receives only `protonationRatio`; no equilibrium expression or `Ka` appears in render | dependency/type/source checks |
+| AC-V4 | Liquid height is obtained from the declared `h(V)` profile and its `V(h)` inverse agrees within tolerance | `level.test.ts`; full asset evidence remains open |
+| AC-V6 | pH is at most two decimals and a burette scale reading is displayed in `mL` at `0.01 mL` | `format.test.ts`; DOM evidence remains open |
+| AC-V8 | A replaceable presentation policy emits one hydrogen-ion convention per view | `state/scene.test.ts`; DOM evidence remains open |
+| AC-V9 | Render receives only scientific outputs/expressions and performs no equilibrium computation | dependency/type/source checks |
 | M5-PURE | Same input produces the same frozen model without DOM/Pixi or mutation | `observable.test.ts` |
 | M5-CURVE | Curve points preserve the supplied state sequence and values | `curve.test.ts` |
 

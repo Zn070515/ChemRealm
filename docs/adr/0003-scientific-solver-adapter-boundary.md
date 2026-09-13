@@ -256,7 +256,7 @@ It does **not** contain `c(H⁺)`, `−lg c(H⁺)`, or any molarity — those re
 world's solution volume, which the scientific core does not have.
 
 `c(H⁺)` and `−lg c(H⁺)` are produced by **`ScientificProjection`**, which takes
-`ScientificState` plus plain physical data (`waterMass`, `liquidVolume`) and is
+`ScientificState` plus the canonical solution volume (`liquidVolume`) and is
 tested independently of both the world runtime and the renderer.
 
 Molality is the core's *numerical base*; it is not a limit on what the core may

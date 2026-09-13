@@ -527,6 +527,11 @@ export function gramsToKilograms(g: Gram): Kilogram {
   return kilogram(g / 1000);
 }
 
+/** Convert canonical litres to the millilitre scale used by instrument readouts. */
+export function litresToMillilitres(value: Litre): number {
+  return nonNegative(value, "volume") * 1000;
+}
+
 export function gramsPerMolToKilogramsPerMol(g: GramsPerMol): KilogramsPerMol {
   return kilogramsPerMol(g / 1000);
 }

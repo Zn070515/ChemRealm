@@ -3,8 +3,14 @@
 - **Status:** **Accepted through revision 20** — M4 S3 owner acceptance recorded
   on 2026-09-13 against the committed implementation baseline and CI attestation.
 - **Accepted baseline:** commit `8310c685`, `SPEC-0001` revision 6
-- **Current revision:** **20 Accepted** — M4 chemical identity closure adds
-  scenario-frozen indicator inputs, the explicit water-activity parameter, and
+- **Current revision:** **21 Candidate** — M5 contract remediation removes the
+  unused `ScientificProjection` water-mass input; restores AC-V4's complete
+  `V(h)`/`h(V)` inverse contract; distinguishes burette contained volume,
+  delivered volume, and graduated scale reading (displayed in `mL` at `0.01
+  mL`); makes empirical indicator palettes identity-specific; and makes the
+  one-pH-convention presentation policy executable. Revision 20 accepted the
+  M4 chemical identity closure, which added scenario-frozen indicator inputs,
+  the explicit water-activity parameter, and
   common acetate-family semantics; revision 14 adds the total-solute domain and
   equilibrium-constant failure semantics; revision 15 makes numerical failure
   diagnostics explicit; revision 16 closes the cross-system component,
@@ -53,6 +59,8 @@
 | 18 | 2026-09-13 | M4/M5 acceptance ownership closure: AC-S12 is the scientific model-pH naming/provenance contract; AC-S13 is the scientific accuracy-envelope flag; inspection copy/DOM and visible qualification are separate M5 criteria AC-V10 and AC-V11. | Owner, 2026-09-13 |
 | 19 | 2026-09-13 | World Runtime numeric-semantics clarification: Strategy A quantizes each conserved transfer delta once and applies it as a paired zero-sum update; post-transfer runtime values and exact snapshot caches are not independently rounded, while the explicit replay-identity projection remains quantized. Snapshots carry a separate exact serialized-state checksum so semantic replay equality cannot mask cache corruption. | Owner, 2026-09-13 |
 | 20 | 2026-09-13 | M4 semantic-evidence closure: v0 provenance records distinguish source observations, derived values, and model approximations without inventing precision or pressure; the input manifest is separate from a digest-bound envelope reference; AC-S14 executes the complete family sweep through `Scenario → WorldCreated → WorldState → SolveRequest → SolverAdapter`; and an AST guard confines molarity construction to `ScientificProjection`. | Owner, 2026-09-13 |
+
+| 21 | 2026-09-13 | M5 contract remediation: `ScientificProjection` accepts only the solution volume needed for its conversion; AC-V4 retains both declared `V(h)` and `h(V)` with a stated round-trip tolerance; burette state separates contained/delivered volume from graduated scale reading and displays the latter in `mL` at `0.01 mL`; empirical indicator palettes are keyed by indicator identity; one hydrogen-ion convention is selected by a replaceable presentation policy; and scientific expressions carry schema-owned model/source identity. | Candidate — owner review pending |
 
 A revision bump is recorded here rather than only in the body because the header
 is what a reader checks before deciding whether the file they are reading is the
@@ -481,7 +489,8 @@ the world's solution volume — which is why `ScientificProjection` exists as a
 named layer rather than being called "the presentation layer".
 
 `ScientificProjection` lives in `packages/sci` and takes **plain data**
-(`waterMass`, `liquidVolume`), so it does not import `packages/world`
+(`liquidVolume`) needed to convert the Scientific Core's H⁺ amount to a
+molarity-based teaching quantity, so it does not import `packages/world`
 (`ADR-0001` forbids `sci → world`).
 
 There is no code path that derives `−lg c(H⁺)` from a molality. That is a
@@ -989,7 +998,9 @@ form, because nothing before M4 needs it and inventing it here would be
 guessing. For v0 the mapping is one-for-one, so no bridge exists yet.
 
 `Apparatus { id, kind, position, state }` — a burette's `state` carries
-`initialVolume: Litre`; its reading is **derived**, not stored.
+`initialScaleReading: Litre` and `initialContainedVolume: Litre`; its graduated
+scale reading, delivered volume, and contained volume are **derived**, not
+stored.
 
 `Attachment { childId, parentId, portId }`
 
@@ -1335,10 +1346,12 @@ and checking the reconstructed `worldId` and lineage.
 animation ticks, live slider position during a drag. `AGENTS.md` §11 and
 `CLAUDE.md` §9.
 
-**`BuretteReadingChanged` — rejected.** The reading is derived:
-`reading = initialVolume − Σ delivered`. A separate event would be a second
-source of truth for one quantity, which is the most reliable way to make replay
-diverge.
+**`BuretteReadingChanged` — rejected.** The reading is derived from the
+graduated scale's initial reading and committed deliveries:
+`currentScaleReading = initialScaleReading + Σ delivered`. Contained volume is
+derived separately as `initialContainedVolume − Σ delivered`. A separate event
+would be a second source of truth for one quantity, which is the most reliable
+way to make replay diverge.
 
 **`TransferStarted` — deferred, not rejected.** With instantaneous equilibrium a
 transfer has no duration in world time, so the event would carry no semantic
@@ -1417,11 +1430,11 @@ dependency rule.
 | **Activity-based model pH value** | **Scientific Core** |
 | **`c(H⁺)` and `−lg c(H⁺)`** | **ScientificProjection** — needs scientific state + world volume |
 | Readout text, 2 dp formatting | Renderer |
-| Burette reading | Observable model (derived: `initial − Σ delivered`) |
+| Burette state and reading | Observable model (derived: scale reading `initialScaleReading + Σ delivered`; contained volume is separate) |
 | Curve points | ScientificProjection supplies values; Observable model gives geometry |
 | Axes, gridlines, labels, tooltips | Renderer |
 | Species composition (micro view) | Observable model — **re-presents** scientific values |
-| Equilibrium expressions (symbolic view) | Observable model — **re-presents** solver output; computes nothing |
+| Equilibrium expressions (symbolic view) | Scientific Core supplies schema-owned, identity-bearing records; Observable model **re-presents** them and computes nothing |
 | Bubbles / precipitate / flame | **Not in v0**; presence will be Scientific Core when added |
 
 **The observable layer's rule:** it may re-present a scientific value — list,
@@ -1710,7 +1723,7 @@ Enumerated with the detection that makes each one non-silent.
 | 11 | Quantization tie flips a hash across engines | Documented residual risk (`ADR-0007` §3); surfaces as a loud hash mismatch, not a silent wrong answer |
 | 12 | A snapshot is treated as truth | Replay with snapshots deleted (AC-R5) |
 | 13 | Solver version drift silently applied to an old world | Replay refuses mismatched solver; re-solve is separately labelled (AC-R6) |
-| 14 | Burette reading drifts from vessel state | Reading is derived; test asserts `reading == initial − Σ delivered` |
+| 14 | Burette reading drifts from delivery history or is confused with remaining liquid | Reading is derived as `initialScaleReading + Σ delivered`; contained volume is separately derived as `initialContainedVolume − Σ delivered` |
 | 15 | Volume unit confusion (mL/L, factor 1000) | Branded types (`ADR-0004`) make it a compile error; round-trip property test |
 | 16 | Activity applied **post-hoc** rather than inside the equilibrium — the defect this review found | The coupled solve is the only path; REF-3/REF-4 verify the coupling; a post-hoc implementation cannot reproduce both excess regimes |
 | 17 | Molarity/molality or the two ionic-strength bases silently mixed | Distinct opaque types (AC-U2); static check (AC-S8) |

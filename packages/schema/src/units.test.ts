@@ -29,6 +29,7 @@ import {
   kilogramsPerMol,
   molPerLitre,
   mol,
+  litresToMillilitres,
   moleFraction,
   multiplyActivity,
   ph,
@@ -236,6 +237,12 @@ describe("molarity <-> molality — the conversion that needs a density", () => 
     expect(molarityOf(mol(0.05), litre(0.5))).toBeCloseTo(0.1, 12);
     expect(amountFromMolarity(molPerLitre(0.1), litre(0.5))).toBeCloseTo(0.05, 12);
     expect(() => molarityOf(mol(1), litre(0))).toThrow(RangeError);
+  });
+});
+
+describe("volume display conversion", () => {
+  it("converts canonical litres to millilitres at the display boundary", () => {
+    expect(litresToMillilitres(litre(0.025))).toBe(25);
   });
 });
 

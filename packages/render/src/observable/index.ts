@@ -1,33 +1,44 @@
 import {
   type Litre,
+  type ScientificExpression,
   type ScientificState,
   type TeachingHydrogenIonExponent,
 } from "@chemrealm/schema";
 import {
-  deriveBuretteReading,
+  deriveBuretteState,
   type BuretteInput,
+  type BuretteState,
 } from "./burette.js";
 import { mapIndicatorRatioToColor, type IndicatorColour } from "./color.js";
 import { buildCurve, type CurveFrame, type CurvePoint } from "./curve.js";
 import { formatModelPh, formatTaughtPh } from "./format.js";
 import { deriveLiquidLevel, type LiquidLevel, type VolumeProfile } from "./level.js";
 import { speciesRows, type SpeciesRow } from "./species.js";
-import { presentSymbolicLines, type SymbolicLine } from "./symbolic.js";
+import {
+  presentSymbolicLines,
+  type PresentedScientificExpression,
+} from "./symbolic.js";
 
 export const OBSERVABLE_MODEL_VERSION = 1;
 
 export interface ScientificProjectionReadout {
+  readonly sourceStateHash: string;
   readonly taughtHydrogenIonExponent: TeachingHydrogenIonExponent;
 }
 
-export interface ObservableInput {
+export interface ScientificFrame {
+  readonly sourceStateHash: string;
   readonly scientificState: ScientificState;
   readonly projection: ScientificProjectionReadout;
+}
+
+export interface ObservableInput {
+  readonly frame: ScientificFrame;
   readonly liquidVolume: Litre;
   readonly volumeProfile: VolumeProfile;
   readonly burette?: BuretteInput;
   readonly curveFrames?: readonly CurveFrame[];
-  readonly symbolicLines?: readonly SymbolicLine[];
+  readonly symbolicLines?: readonly ScientificExpression[];
 }
 
 export interface ObservableIndicator {
@@ -47,10 +58,11 @@ export interface ObservableModel {
   readonly version: typeof OBSERVABLE_MODEL_VERSION;
   readonly indicators: readonly ObservableIndicator[];
   readonly liquidLevel: LiquidLevel;
-  readonly buretteReading: Litre | undefined;
+  readonly sourceStateHash: string;
+  readonly burette: BuretteState | undefined;
   readonly curve: readonly CurvePoint[];
   readonly species: readonly SpeciesRow[];
-  readonly symbolicLines: readonly SymbolicLine[];
+  readonly symbolicLines: readonly PresentedScientificExpression[];
   readonly readouts: ObservableReadouts;
 }
 
@@ -59,8 +71,16 @@ export interface ObservableModel {
  * inputs. No solver, world event, or display clock is consulted here.
  */
 export function buildObservableModel(input: ObservableInput): ObservableModel {
+  if (input.frame.sourceStateHash.trim().length === 0) {
+    throw new RangeError("scientific frame source state hash cannot be empty");
+  }
+  if (input.frame.projection.sourceStateHash !== input.frame.sourceStateHash) {
+    throw new RangeError("scientific state and projection source identities differ");
+  }
+
+  const scientificState = input.frame.scientificState;
   const indicatorIds = new Set<string>();
-  const indicators = input.scientificState.indicators.map((indicator) => {
+  const indicators = scientificState.indicators.map((indicator) => {
     if (indicator.indicatorId.trim().length === 0 || indicatorIds.has(indicator.indicatorId)) {
       throw new RangeError(`duplicate or empty indicator id: ${indicator.indicatorId}`);
     }
@@ -68,30 +88,38 @@ export function buildObservableModel(input: ObservableInput): ObservableModel {
     return Object.freeze({
       indicatorId: indicator.indicatorId,
       protonationRatio: indicator.protonationRatio,
-      color: mapIndicatorRatioToColor(indicator.protonationRatio),
+      color: mapIndicatorRatioToColor(indicator.indicatorId, indicator.protonationRatio),
     });
   });
 
   const readouts = Object.freeze({
-    taughtPh: formatTaughtPh(input.projection.taughtHydrogenIonExponent),
+    taughtPh: formatTaughtPh(input.frame.projection.taughtHydrogenIonExponent),
     modelPh: formatModelPh(
-      input.scientificState.modelPh,
-      input.scientificState.provenance.activityModel,
+      scientificState.modelPh,
+      scientificState.provenance.activityModel,
     ),
-    activityModel: input.scientificState.provenance.activityModel,
+    activityModel: scientificState.provenance.activityModel,
     withinProposedAccuracyEnvelope:
-      input.scientificState.validity.withinProposedAccuracyEnvelope,
+      scientificState.validity.withinProposedAccuracyEnvelope,
   });
 
   return Object.freeze({
     version: OBSERVABLE_MODEL_VERSION,
+    sourceStateHash: input.frame.sourceStateHash,
     indicators: Object.freeze(indicators),
     liquidLevel: deriveLiquidLevel(input.liquidVolume, input.volumeProfile),
-    buretteReading:
-      input.burette === undefined ? undefined : deriveBuretteReading(input.burette),
+    burette:
+      input.burette === undefined ? undefined : deriveBuretteState(input.burette),
     curve: buildCurve(input.curveFrames ?? []),
-    species: speciesRows(input.scientificState),
-    symbolicLines: presentSymbolicLines(input.symbolicLines ?? []),
+    species: speciesRows(scientificState),
+    symbolicLines: presentSymbolicLines(
+      input.symbolicLines ?? [],
+      {
+        sourceStateHash: input.frame.sourceStateHash,
+        modelId: scientificState.provenance.modelId,
+        modelVersion: scientificState.provenance.modelVersion,
+      },
+    ),
     readouts,
   });
 }

@@ -1,4 +1,5 @@
 import {
+  litresToMillilitres,
   type Litre,
   type Ph,
   type TeachingHydrogenIonExponent,
@@ -22,6 +23,10 @@ export function formatModelPh(value: Ph, activityModel: string): string {
   return `model pH (${activityModel}) ${finite(value.value, "model pH").toFixed(2)}`;
 }
 
-export function formatBuretteReading(value: Litre): string {
-  return `${finite(value, "burette reading").toFixed(2)} L`;
+export function formatBuretteScaleReading(value: Litre): string {
+  const millilitres = finite(
+    litresToMillilitres(value),
+    "burette scale reading",
+  );
+  return `${millilitres.toFixed(2)} mL`;
 }

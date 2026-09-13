@@ -1,29 +1,34 @@
 import { describe, expect, it } from "vitest";
 import { litre } from "@chemrealm/schema";
-import { deriveBuretteReading } from "./burette.js";
+import { deriveBuretteState } from "./burette.js";
 
 describe("burette observable", () => {
-  it("derives reading as initial volume minus committed deliveries", () => {
-    const reading = deriveBuretteReading({
-      initialVolume: litre(0.05),
+  it("separates scale reading, delivered volume, and contained volume", () => {
+    const state = deriveBuretteState({
+      initialScaleReading: litre(0),
+      initialContainedVolume: litre(0.05),
       deliveredVolumes: [litre(0.01), litre(0.015), litre(0.005)],
     });
-    expect(reading).toBeCloseTo(0.02, 15);
+    expect(state.currentScaleReading).toBeCloseTo(0.03, 15);
+    expect(state.deliveredVolume).toBeCloseTo(0.03, 15);
+    expect(state.containedVolume).toBeCloseTo(0.02, 15);
   });
 
   it("allows a full draw and returns semantic zero", () => {
     expect(
-      deriveBuretteReading({
-        initialVolume: litre(0.05),
+      deriveBuretteState({
+        initialScaleReading: litre(0),
+        initialContainedVolume: litre(0.05),
         deliveredVolumes: [litre(0.02), litre(0.03)],
       }),
-    ).toBe(0);
+    ).toMatchObject({ currentScaleReading: 0.05, containedVolume: 0 });
   });
 
   it("rejects a delivery sequence that overdraws the burette", () => {
     expect(() =>
-      deriveBuretteReading({
-        initialVolume: litre(0.05),
+      deriveBuretteState({
+        initialScaleReading: litre(0),
+        initialContainedVolume: litre(0.05),
         deliveredVolumes: [litre(0.04), litre(0.02)],
       }),
     ).toThrow(RangeError);

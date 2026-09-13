@@ -1,5 +1,11 @@
 # M5 Observable State Implementation Plan
 
+> **Superseded for current contract work.** The initial implementation recorded
+> here is historical. Its burette, level, symbolic-expression, and pH-scene
+> steps were remediated by
+> `docs/superpowers/plans/2026-09-13-m5-contract-remediation.md`, which is the
+> current execution plan and is subordinate to `SPEC-0001` revision 21.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Implement the pure M5 Observable layer and remove the unused
@@ -101,14 +107,14 @@ Expected: projection tests and both TypeScript checks pass.
 Define the wished-for signatures in tests:
 
 ```ts
-mapIndicatorRatioToColor(ratio: number): IndicatorColor
+mapIndicatorRatioToColor(indicatorId: string, ratio: number): IndicatorColor
 deriveLiquidLevel(volume: Litre, profile: VolumeProfile): LiquidLevel
-deriveBuretteReading(input: BuretteInput): Litre
+deriveBuretteState(input: BuretteInput): BuretteState
 buildCurve(frames: readonly CurveFrame[]): readonly CurvePoint[]
 formatTaughtPh(value: TeachingHydrogenIonExponent): string
 formatModelPh(value: Ph, activityModel: string): string
 speciesRows(state: ScientificState): readonly SpeciesRow[]
-presentSymbolicLines(lines: readonly SymbolicLine[]): readonly SymbolicLine[]
+presentSymbolicLines(lines: readonly ScientificExpression[], identity: ScientificExpressionIdentity): readonly PresentedScientificExpression[]
 buildObservableModel(input: ObservableInput): ObservableModel
 toRenderState(model: ObservableModel): RenderState
 ```

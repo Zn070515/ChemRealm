@@ -229,7 +229,7 @@ export const ApparatusSchema = z.strictObject({
   id: ApparatusIdSchema,
   kind: z.string().min(1),
   position: PositionSchema,
-  /** A burette carries `initialVolume`; its READING is derived, never stored. */
+  /** A burette carries authored initial scale/container data; readings are derived, never stored. */
   state: z.record(z.string(), z.unknown()),
 });
 export type Apparatus = z.infer<typeof ApparatusSchema>;
