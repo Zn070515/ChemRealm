@@ -164,8 +164,10 @@ revision 23 specification/evidence documents.
   runtime adapter inside Observable.
 - [x] Update canonical revision, ADR/spec/plan/evidence wording, and the M5
   consistency guard.
-- [ ] Run the complete verification chain, inspect the diff, commit, push, and
-  record the hosted CI attestation. Keep M5 S2 and M6 unauthorized.
+- [x] Run the complete verification chain, inspect the diff, commit, push, and
+  record the hosted CI attestation: implementation commit
+  `f5cad4f2605ef42501fa03abc9d0988b31fe2925`, hosted CI
+  `34755478504` — success. Keep M5 S2 and M6 unauthorized.
 
 ## Stop/Go Conditions
 
