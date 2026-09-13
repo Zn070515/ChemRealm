@@ -1,12 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { presentSymbolicLines } from "./symbolic.js";
-import { type ScientificExpression } from "@chemrealm/schema";
+import {
+  SCIENTIFIC_EXPRESSION_SCHEMA_VERSION,
+  type ScientificExpression,
+} from "@chemrealm/schema";
 
 describe("symbolic observable", () => {
   it("presents supplied scientific expressions without rewriting them", () => {
     const source: ScientificExpression[] = [
       {
-        schemaVersion: 3,
+        schemaVersion: SCIENTIFIC_EXPRESSION_SCHEMA_VERSION,
         id: "exact",
         equationId: "charge-balance",
         label: "exact",
@@ -21,7 +24,7 @@ describe("symbolic observable", () => {
         sourceStateHash: "state-hash",
       },
       {
-        schemaVersion: 3,
+        schemaVersion: SCIENTIFIC_EXPRESSION_SCHEMA_VERSION,
         id: "shortcut",
         equationId: "acid-family-equilibrium",
         label: "shortcut",
@@ -53,7 +56,7 @@ describe("symbolic observable", () => {
       presentSymbolicLines(
         [
           {
-            schemaVersion: 3,
+            schemaVersion: SCIENTIFIC_EXPRESSION_SCHEMA_VERSION,
             id: "exact",
             equationId: "charge-balance",
             label: "exact",
@@ -82,7 +85,7 @@ describe("symbolic observable", () => {
       presentSymbolicLines(
         [
           {
-            schemaVersion: 3,
+            schemaVersion: SCIENTIFIC_EXPRESSION_SCHEMA_VERSION,
             id: "exact",
             equationId: "charge-balance",
             label: "exact",

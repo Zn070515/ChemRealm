@@ -27,6 +27,13 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
+      # The native backend is a candidate implementation, but its compilation
+      # contract must be exercised on every clean checkout before it can ever
+      # supersede the accepted TypeScript backend.
+      - run: pnpm native:fmt
+      - run: pnpm native:test
+      - run: pnpm native:clippy
+      - run: pnpm native:check-wasm
       - run: pnpm typecheck
       - run: pnpm typecheck:tests
       - run: pnpm build

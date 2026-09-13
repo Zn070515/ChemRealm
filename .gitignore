@@ -19,6 +19,7 @@ venv/
 .uv/
 *.egg-info/
 tools/oracle/phreeqc/.cache/
+native/sci-core/target/
 
 # Test / coverage
 coverage/

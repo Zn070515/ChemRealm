@@ -173,6 +173,11 @@ function sha256(input: string): string {
   return Array.from(hash, (word) => word.toString(16).padStart(8, "0")).join("");
 }
 
+/** SHA-256 of exact UTF-8 text, for strict bridge identities. */
+export function hashUtf8(input: string): string {
+  return sha256(input);
+}
+
 /** SHA-256 of canonical JSON bytes, returned as lowercase hexadecimal. */
 export function hashCanonical(value: unknown): string {
   return sha256(canonicalJson(value));

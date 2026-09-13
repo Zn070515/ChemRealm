@@ -84,11 +84,14 @@ import {
 export const SCIENTIFIC_SCHEMA_VERSION = 3;
 
 /** Standalone schema version for model-generated symbolic expressions. */
-export const SCIENTIFIC_EXPRESSION_SCHEMA_VERSION = 3;
+export const SCIENTIFIC_EXPRESSION_SCHEMA_VERSION = 4;
 
 export const ScientificExpressionEquationIdSchema = z.enum([
   "charge-balance",
   "water-autoprotolysis",
+  "ionic-strength-fixed-point",
+  "davies-activity-coefficient",
+  "activity-definition",
   "acid-family-equilibrium",
   "acid-family-balance",
 ]);

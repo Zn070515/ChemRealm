@@ -6,9 +6,10 @@ import {
 } from "@chemrealm/schema";
 
 import type { ScientificFrame } from "./frame.js";
+import { detLog10 } from "./deterministic-math.js";
 
 /** Version of the Scientific Core's expression producer contract. */
-export const SCIENTIFIC_EXPRESSION_PRODUCER_VERSION = "2.0.0";
+export const SCIENTIFIC_EXPRESSION_PRODUCER_VERSION = "3.0.0";
 
 function finite(value: number, name: string): number {
   if (!Number.isFinite(value)) throw new RangeError(`${name} must be finite`);
@@ -19,7 +20,11 @@ function format(value: number): string {
   return Number(finite(value, "expression substitution").toPrecision(8)).toString();
 }
 
-function speciesValue(frame: ScientificFrame, symbol: string, field: "molality" | "activity" | "activityCoefficient"): number {
+function speciesValue(
+  frame: ScientificFrame,
+  symbol: string,
+  field: "reducedMolality" | "molality" | "activity" | "activityCoefficient",
+): number {
   const species = frame.scientificState.species.find((entry) => entry.symbol === symbol);
   if (species === undefined) throw new RangeError(`scientific expression requires species ${symbol}`);
   const value = species[field];
@@ -93,11 +98,21 @@ export function createScientificExpressions(
   const haActivity = speciesValue(frame, "HOAc", "activity");
   const oacActivity = speciesValue(frame, "OAc-", "activity");
   const ha = speciesValue(frame, "HOAc", "molality");
+  const ionicStrength = frame.scientificState.ionicStrengthMolal.value;
+  const daviesA = frame.scientificState.provenance.parameters.Davies_A;
+  const daviesB = frame.scientificState.provenance.parameters.Davies_b;
   const acidFamilyTotal = ha + oac;
   const kw = frame.scientificState.provenance.parameters.Kw;
   const ka = frame.scientificState.provenance.parameters.Ka_HOAc;
-  if (kw === undefined || ka === undefined) {
-    throw new RangeError("scientific expression requires Kw and Ka_HOAc provenance");
+  if (
+    kw === undefined ||
+    ka === undefined ||
+    daviesA === undefined ||
+    daviesB === undefined
+  ) {
+    throw new RangeError(
+      "scientific expression requires Kw, Ka_HOAc, Davies_A, and Davies_b provenance",
+    );
   }
 
   const chargeSubstitutions = [
@@ -128,6 +143,42 @@ export function createScientificExpressions(
         substitution("Kw", kw, "1"),
       ],
       ["non-unit water activity is not modeled in the v0 unit-water-activity convention"],
+    ),
+    makeExpression(
+      frame,
+      "ionic-strength-fixed-point",
+      "I(species) - I = 0",
+      `${substituted("I(species)", ionicStrength, "mol/kg")} - ${substituted("I", ionicStrength, "mol/kg")} = 0`,
+      [
+        substitution("I(species)", ionicStrength, "mol/kg"),
+        substitution("I", ionicStrength, "mol/kg"),
+      ],
+      [],
+    ),
+    makeExpression(
+      frame,
+      "davies-activity-coefficient",
+      "log10(γ_i) = -A(√I/(1+√I) - bI)",
+      `${substituted("log10(γ(H+))", detLog10(speciesValue(frame, "H+", "activityCoefficient")), "1")} = -${substituted("A", daviesA, "1")} · (√${substituted("I", ionicStrength, "mol/kg")} / (1 + √${substituted("I", ionicStrength, "mol/kg")}) - ${substituted("b", daviesB, "1")} · ${substituted("I", ionicStrength, "mol/kg")})`,
+      [
+        substitution("A", daviesA, "1"),
+        substitution("b", daviesB, "1"),
+        substitution("I", ionicStrength, "mol/kg"),
+        substitution("γ(H+)", speciesValue(frame, "H+", "activityCoefficient"), "1"),
+      ],
+      [],
+    ),
+    makeExpression(
+      frame,
+      "activity-definition",
+      "a_i = γ_i · m̂_i",
+      `${substituted("a(H+)", hActivity, "1")} = ${substituted("γ(H+)", speciesValue(frame, "H+", "activityCoefficient"), "1")} · ${substituted("m̂(H+)", speciesValue(frame, "H+", "reducedMolality"), "1")}`,
+      [
+        substitution("a(H+)", hActivity, "1"),
+        substitution("γ(H+)", speciesValue(frame, "H+", "activityCoefficient"), "1"),
+        substitution("m̂(H+)", speciesValue(frame, "H+", "reducedMolality"), "1"),
+      ],
+      [],
     ),
   ];
 

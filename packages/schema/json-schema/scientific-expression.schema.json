@@ -6,6 +6,9 @@
       "enum": [
         "charge-balance",
         "water-autoprotolysis",
+        "ionic-strength-fixed-point",
+        "davies-activity-coefficient",
+        "activity-definition",
         "acid-family-equilibrium",
         "acid-family-balance"
       ],
@@ -53,7 +56,7 @@
       "type": "string"
     },
     "schemaVersion": {
-      "const": 3,
+      "const": 4,
       "type": "number"
     },
     "sourceStateHash": {

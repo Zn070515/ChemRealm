@@ -9,3 +9,4 @@ export * from "./acidbase/index.js";
 export * from "./projection.js";
 export * from "./frame.js";
 export * from "./expressions.js";
+export * from "./native-backend.js";

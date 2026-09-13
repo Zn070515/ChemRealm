@@ -1,6 +1,6 @@
 # PLAN-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** **M0–M4 S3 Verified / Accepted; M5 S2 production composition locally verified; native backend supersession S1 specified** — the original plan was approved
+- **Status:** **M0–M4 S3 Verified / Accepted; M5 S2 production composition locally verified; native backend supersession S2 implementation in progress** — the original plan was approved
   on 2026-09-11 at `SPEC-0001` revision 6; revisions 13–20 were accepted
   on 2026-09-13 and revisions 25–26 are candidate amendments for the current
   M5/native-backend closure.
