@@ -2,7 +2,7 @@
 
 - **Status:** **M0–M4 S3 Verified / Accepted; M5 S2 remediation in progress** — the original plan was approved
   on 2026-09-11 at `SPEC-0001` revision 6; revisions 13–20 were accepted
-  on 2026-09-13 and revision 23 is a candidate amendment for the current M5
+  on 2026-09-13 and revision 24 is a candidate amendment for the current M5
   replay/provenance closure.
 - **Completed:** `M0 — Repository foundation` reached **S3 — Verified** on
   2026-09-11. Evidence: `docs/evidence/M0.md`, commits `1f3dfee`/`565a2e8`,
@@ -764,7 +764,7 @@ If PHREEQC cannot be installed and driven in CI:
 **Current stage:** S2 implementation locally verified; replay/profile/frame
 closure is being verified locally, while M5 S3 evidence remains open. The
 governing scope is `docs/superpowers/specs/2026-09-13-m5-contract-remediation.md`,
-subordinate to `SPEC-0001` revision 23 Candidate and not an override of it.
+subordinate to `SPEC-0001` revision 24 Candidate and not an override of it.
 **Addresses:** ADR-0006, ADR-0007; `SPEC-0001` AC-V2..AC-V4, AC-V6, AC-V8, AC-V9, AC-V10, AC-V11
 
 `AC-V1` (`packages/render` has no import path to `packages/sci`) is **not**

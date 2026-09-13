@@ -26,6 +26,7 @@ import {
   molPerLitre,
   thermodynamicConstant,
   toCanonical,
+  volumeProfileHash as schemaVolumeProfileHash,
   type Apparatus,
   type DataProvenanceDto,
   type DomainEvent,
@@ -52,11 +53,8 @@ export function scenarioSnapshotHash(snapshot: SerializedScenarioSnapshot): stri
   return `sha256:${hashCanonical(snapshot)}`;
 }
 
-/** Content-address the profile payload without allowing self-reference. */
-export function volumeProfileHash(profile: SerializedVolumeProfileSnapshot): string {
-  const { profileHash: _profileHash, ...payload } = profile;
-  return "sha256:" + hashCanonical(payload);
-}
+/** Backward-compatible World Runtime export backed by the schema helper. */
+export const volumeProfileHash = schemaVolumeProfileHash;
 
 export type RuntimeDataProvenance = DataProvenanceDto;
 

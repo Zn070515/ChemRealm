@@ -1,6 +1,5 @@
 import type { SerializedWorldCreated } from "../src/state.js";
 import { scenarioSnapshotHash, volumeProfileHash } from "../src/state.js";
-import { hashCanonical } from "../src/hash.js";
 
 function volumeProfile(
   profileId: string,
@@ -34,7 +33,8 @@ function volumeProfile(
       category: "evaluated" as const,
     },
   };
-  return { ...payload, profileHash: `sha256:${hashCanonical(payload)}` };
+  const snapshot = { ...payload, profileHash: "" };
+  return { ...snapshot, profileHash: volumeProfileHash(snapshot) };
 }
 
 export const WORLD_CREATED: SerializedWorldCreated = {

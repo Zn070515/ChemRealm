@@ -2,7 +2,7 @@
 
 **Status:** S1 specified; owner-approved remediation direction, 2026-09-13
 
-**Canonical amendment:** `SPEC-0001` revision 23 Candidate. This document
+**Canonical amendment:** `SPEC-0001` revision 24 Candidate. This document
 does not override `SPEC-0001`; it describes the implementation needed to bring
 the M5 slice back into alignment with that amendment.
 
@@ -20,7 +20,10 @@ genesis truth and binds the frame to the physical volume/profile identity used
 by Observable. Revision 23 closes the last executable-geometry seam: Observable
 consumes the replay-frozen `VolumeProfileSnapshot` and reconstructs its runtime
 adapter internally. A caller cannot provide functions that merely self-report
-the frame's profile hash.
+the frame's profile hash. Revision 24 closes the remaining content-address
+seam: the shared schema parser recomputes the hash over the hash-excluded
+payload before any executable adapter is constructed, so a matching frame
+label alone is never sufficient.
 
 ## Goal
 
@@ -79,7 +82,8 @@ chooses one hydrogen-ion readout at scene construction time.
 The persisted `VolumeProfileSnapshot` is the replayable geometry contract. It
 contains canonical knots, ranges, tolerance, provenance, and a hash of the
 hash-excluded payload; `geometryRef` is not consulted to reconstruct an old
-world.
+world. The shared schema parser recomputes and verifies that hash before
+runtime geometry is restored.
 
 ## Scientific design
 
@@ -177,6 +181,8 @@ never guessed from `geometryRef`.
 - A frame with an empty source identity is rejected.
 - A projection/frame pair is created by one source-identified factory; render
   rejects a frame whose projection identity differs from its frame identity.
+- A structurally valid profile whose payload no longer matches its declared
+  `profileHash` is rejected before executable geometry is created.
 
 ## Test plan
 
@@ -192,6 +198,8 @@ never guessed from `geometryRef`.
 - Add default taught-policy and scientific-model-policy scene tests proving
   exactly one pH convention is emitted.
 - Add frame and symbolic source-identity tests.
+- Add shared schema and Observable negative tests for a tampered profile payload
+  retaining the old `profileHash`.
 - Run all repository checks and preserve M5 as S2.
 
 ## Acceptance criteria

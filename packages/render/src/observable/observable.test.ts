@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   litre,
   taughtHydrogenIonExponent,
+  volumeProfileHash,
   type VolumeProfileSnapshot,
 } from "@chemrealm/schema";
 import { buildObservableModel, type ObservableInput } from "./index.js";
@@ -25,6 +26,7 @@ const volumeProfileSnapshot: VolumeProfileSnapshot = {
     category: "evaluated",
   },
 };
+volumeProfileSnapshot.profileHash = volumeProfileHash(volumeProfileSnapshot);
 
 function input(): ObservableInput {
   return {
@@ -32,7 +34,10 @@ function input(): ObservableInput {
       sourceStateHash: "state-hash",
       sequence: 0,
       scientificState: scientificState(),
-      physical: { liquidVolume: litre(0.5), volumeProfileHash: "sha256:profile" },
+      physical: {
+        liquidVolume: litre(0.5),
+        volumeProfileHash: volumeProfileSnapshot.profileHash,
+      },
       projection: {
         sourceStateHash: "state-hash",
         taughtHydrogenIonExponent: taughtHydrogenIonExponent(2),
@@ -87,28 +92,45 @@ describe("observable model", () => {
 
   it("uses the frame-owned volume for the liquid level", () => {
     const source = input();
+    const customSnapshot: VolumeProfileSnapshot = {
+      ...source.volumeProfileSnapshot,
+      profileHash: "",
+      maxHeight: { value: 100, unit: "mm" },
+      knots: [
+        { volume: { value: 0, unit: "L" }, height: { value: 0, unit: "mm" } },
+        { volume: { value: 1, unit: "L" }, height: { value: 100, unit: "mm" } },
+      ],
+    };
+    customSnapshot.profileHash = volumeProfileHash(customSnapshot);
     const model = buildObservableModel({
       ...source,
       frame: {
         ...source.frame,
         physical: {
           ...source.frame.physical,
-          volumeProfileHash: "sha256:custom-profile",
+          volumeProfileHash: customSnapshot.profileHash,
         },
       },
+      volumeProfileSnapshot: customSnapshot,
+    });
+
+    expect(model.liquidLevel.volume).toBe(0.5);
+    expect(model.liquidLevel.height).toBe(50);
+  });
+
+  it("rejects a structurally valid profile whose payload no longer matches its hash", () => {
+    const source = input();
+    expect(() => buildObservableModel({
+      ...source,
       volumeProfileSnapshot: {
         ...source.volumeProfileSnapshot,
-        profileHash: "sha256:custom-profile",
         maxHeight: { value: 100, unit: "mm" },
         knots: [
           { volume: { value: 0, unit: "L" }, height: { value: 0, unit: "mm" } },
           { volume: { value: 1, unit: "L" }, height: { value: 100, unit: "mm" } },
         ],
       },
-    });
-
-    expect(model.liquidLevel.volume).toBe(0.5);
-    expect(model.liquidLevel.height).toBe(50);
+    })).toThrow(/volume profile hash mismatch/);
   });
 
   it("rejects a volume profile from a different replay-frozen frame", () => {

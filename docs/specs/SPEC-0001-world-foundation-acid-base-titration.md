@@ -3,7 +3,7 @@
 - **Status:** **Accepted through revision 20** — M4 S3 owner acceptance recorded
   on 2026-09-13 against the committed implementation baseline and CI attestation.
 - **Accepted baseline:** commit `8310c685`, `SPEC-0001` revision 6
-- **Current revision:** **23 Candidate** — M5 replay/provenance closure freezes
+- **Current revision:** **24 Candidate** — M5 replay/provenance closure freezes
   a serializable, content-addressed `V(h)`/`h(V)` volume profile in every
   persisted genesis vessel; binds `ScientificFrame` to its event sequence,
   liquid volume, and volume-profile hash; removes the duplicate Observable
@@ -33,7 +33,9 @@
   quantized. Revision 20 separates v0 scientific inputs from the independently
   frozen envelope result, records source-faithful datum precision/conditions,
   uses the production scenario-to-world-to-solver route for the complete AC-S14
-  sweep, and makes AC-S8's quantity boundary AST-enforced. Revisions 7–20 are
+  sweep, and makes AC-S8's quantity boundary AST-enforced. Revision 24 makes
+  profile content-address verification a shared schema boundary rather than a
+  frame-label comparison. Revisions 7–20 are
   accepted amendments; revisions 13–20 were accepted by the owner on
   2026-09-13.
   See "Amendments since acceptance" below.
@@ -74,6 +76,7 @@
 | 22 | 2026-09-13 | M5 replay/provenance closure: every authored and persisted vessel carries a serializable piecewise-linear `VolumeProfile`; persisted World/Event schema advances to v4 with an explicit v3→v4 migration that requires an explicit profile resolver for legacy geometry-only records; `ScientificFrame` binds sequence, liquid volume, and profile hash; Observable consumes that single frame-owned volume; the hydrogen-ion policy is a discriminated union; curve points carry source sequence/model identity; and ScientificExpression v2 records the Scientific Core producer. `sourceStateHash` is explicitly the quantized World Runtime replay-equivalence identity, not an exact floating-point checksum. | Candidate — owner review pending |
 
 | 23 | 2026-09-13 | M5 executable-profile boundary closure: Observable receives only the replay-frozen serializable `VolumeProfileSnapshot` whose hash matches `ScientificFrame.physical.volumeProfileHash`; it reconstructs the runtime interpolation adapter internally and no longer accepts caller-supplied `heightAtVolume`/`volumeAtHeight` functions. This prevents a self-reported profile hash from authorizing executable geometry that was not derived from genesis truth. | Candidate — owner review pending |
+| 24 | 2026-09-13 | M5 profile content-address closure: the canonical schema owns the shared canonical JSON/SHA-256 helper; `VolumeProfileSnapshot` parsing recomputes and verifies `profileHash` over the hash-excluded payload before render or world code constructs an executable profile adapter. World and composition callers use the same helper, and tampered-but-structurally-valid profile payloads are rejected. | Candidate — owner review pending |
 
 A revision bump is recorded here rather than only in the body because the header
 is what a reader checks before deciding whether the file they are reading is the

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   litre,
   taughtHydrogenIonExponent,
+  volumeProfileHash,
   type VolumeProfileSnapshot,
 } from "@chemrealm/schema";
 import { buildObservableModel, type ObservableInput } from "../observable/index.js";
@@ -31,6 +32,7 @@ const volumeProfileSnapshot: VolumeProfileSnapshot = {
     category: "evaluated",
   },
 };
+volumeProfileSnapshot.profileHash = volumeProfileHash(volumeProfileSnapshot);
 
 function model() {
   const input: ObservableInput = {
@@ -38,7 +40,10 @@ function model() {
       sourceStateHash: "state-hash",
       sequence: 0,
       scientificState: scientificState(),
-      physical: { liquidVolume: litre(0.5), volumeProfileHash: "sha256:profile" },
+      physical: {
+        liquidVolume: litre(0.5),
+        volumeProfileHash: volumeProfileSnapshot.profileHash,
+      },
       projection: {
         sourceStateHash: "state-hash",
         taughtHydrogenIonExponent: taughtHydrogenIonExponent(2),

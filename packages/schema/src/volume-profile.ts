@@ -7,6 +7,7 @@
 
 import { z } from "zod";
 
+import { hashCanonical } from "./canonical-hash.js";
 import { DataProvenanceSchema } from "./scientific.js";
 import { canonicalQuantityOfDimension, quantityOfDimension } from "./quantity.js";
 
@@ -93,3 +94,26 @@ export const VolumeProfileSnapshotSchema = z
     }
   });
 export type VolumeProfileSnapshot = z.infer<typeof VolumeProfileSnapshotSchema>;
+
+/** Content-address the profile payload without allowing self-reference. */
+export function volumeProfileHash(profile: VolumeProfileSnapshot): string {
+  const { profileHash: _profileHash, ...payload } = profile;
+  return `sha256:${hashCanonical(payload)}`;
+}
+
+/**
+ * Validate both the serialized profile shape and its content address before a
+ * caller can derive executable V(h)/h(V) functions from it.
+ */
+export function parseVolumeProfileSnapshot(
+  input: unknown,
+): VolumeProfileSnapshot {
+  const profile = VolumeProfileSnapshotSchema.parse(input);
+  const expectedHash = volumeProfileHash(profile);
+  if (profile.profileHash !== expectedHash) {
+    throw new Error(
+      `volume profile hash mismatch: expected ${expectedHash}, received ${profile.profileHash}`,
+    );
+  }
+  return profile;
+}

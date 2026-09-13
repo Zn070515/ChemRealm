@@ -21,6 +21,7 @@ import {
   litre,
   mol,
   toCanonical,
+  volumeProfileHash,
   type Scenario,
   type ScenarioSnapshot,
   type VolumeProfileDefinition,
@@ -37,7 +38,6 @@ import {
   appendEvent,
   createLog,
   emitCommand,
-  hashCanonical,
   reduce,
   scenarioSnapshotHash,
   type SerializedWorldCreated,
@@ -165,10 +165,8 @@ function resolveVolumeProfile(
     knots,
     provenance: profile.provenance,
   };
-  return {
-    ...profilePayload,
-    profileHash: "sha256:" + hashCanonical(profilePayload),
-  };
+  const snapshot = { ...profilePayload, profileHash: "" };
+  return { ...snapshot, profileHash: volumeProfileHash(snapshot) };
 }
 
 function resolveMaterial(material: Scenario["materials"][number]): ScenarioSnapshot["materials"][number] {

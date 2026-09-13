@@ -1,81 +1,19 @@
 /**
  * Deterministic hashing primitives for the World Runtime (`ADR-0007`).
  *
- * `canonicalJson` is deliberately stricter than `JSON.stringify`: dropping
- * an undefined value or turning a non-finite number into `null` would make a
- * malformed state hash as if it were valid state. Object keys are sorted, array
- * order is preserved, and `-0` has the single JSON representation `0`.
+ * Canonical JSON and SHA-256 are shared with schema so content-addressed
+ * records have one implementation across persistence, world, and render
+ * boundaries. World-specific replay identity additionally owns quantization.
  */
 
-export type CanonicalJsonValue =
-  | null
-  | boolean
-  | string
-  | number
-  | readonly CanonicalJsonValue[]
-  | { readonly [key: string]: CanonicalJsonValue };
+import {
+  canonicalJson,
+  hashCanonical,
+  type CanonicalJsonValue,
+} from "@chemrealm/schema";
 
-function isObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
-}
-
-function canonicalize(value: unknown, seen: WeakSet<object>): string {
-  if (value === null) return "null";
-
-  switch (typeof value) {
-    case "boolean":
-      return value ? "true" : "false";
-    case "string":
-      return JSON.stringify(value);
-    case "number": {
-      if (!Number.isFinite(value)) {
-        throw new RangeError(`canonicalJson: non-finite number ${value}`);
-      }
-      return Object.is(value, -0) ? "0" : JSON.stringify(value);
-    }
-    case "undefined":
-      throw new TypeError("canonicalJson: undefined is not representable");
-    case "bigint":
-      throw new TypeError("canonicalJson: bigint is not representable");
-    case "function":
-    case "symbol":
-      throw new TypeError(`canonicalJson: ${typeof value} is not representable`);
-  }
-
-  if (!isObject(value)) {
-    throw new TypeError("canonicalJson: unsupported value");
-  }
-  if (seen.has(value)) {
-    throw new TypeError("canonicalJson: cyclic object");
-  }
-  seen.add(value);
-
-  try {
-    if (Array.isArray(value)) {
-      return `[${value.map((item) => canonicalize(item, seen)).join(",")}]`;
-    }
-
-    const prototype = Object.getPrototypeOf(value);
-    if (prototype !== Object.prototype && prototype !== null) {
-      throw new TypeError("canonicalJson: only plain objects are representable");
-    }
-    if (Object.getOwnPropertySymbols(value).length > 0) {
-      throw new TypeError("canonicalJson: symbol keys are not representable");
-    }
-
-    const entries = Object.keys(value)
-      .sort()
-      .map((key) => `${JSON.stringify(key)}:${canonicalize(value[key], seen)}`);
-    return `{${entries.join(",")}}`;
-  } finally {
-    seen.delete(value);
-  }
-}
-
-/** Return canonical JSON bytes as a string. */
-export function canonicalJson(value: unknown): string {
-  return canonicalize(value, new WeakSet<object>());
-}
+export { canonicalJson, hashCanonical };
+export type { CanonicalJsonValue };
 
 /** Quantize one canonical numeric value, as required by `ADR-0007` §3. */
 export function quantize(value: number): number {
@@ -93,118 +31,15 @@ export function quantizeTree(value: unknown): unknown {
     return value;
   }
   if (Array.isArray(value)) return value.map((item) => quantizeTree(item));
-  if (isObject(value)) {
+  if (typeof value === "object") {
+    if (value === null) return value;
     const result: Record<string, unknown> = {};
-    for (const key of Object.keys(value)) result[key] = quantizeTree(value[key]);
+    for (const key of Object.keys(value)) {
+      result[key] = quantizeTree((value as Record<string, unknown>)[key]);
+    }
     return result;
   }
   throw new TypeError("quantizeTree: value is not JSON-compatible");
-}
-
-// Kept synchronous so state identity can be computed in reducers and replay,
-// and dependency-free so the World Runtime remains usable in a browser.
-const SHA256_K = new Uint32Array([
-  0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1,
-  0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
-  0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, 0xe49b69c1, 0xefbe4786,
-  0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
-  0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147,
-  0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13,
-  0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, 0xa2bfe8a1, 0xa81a664b,
-  0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
-  0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a,
-  0x5b9cca4f, 0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
-  0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
-]);
-
-const SHA256_INITIAL = new Uint32Array([
-  0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
-  0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19,
-]);
-
-function rightRotate(value: number, bits: number): number {
-  return (value >>> bits) | (value << (32 - bits));
-}
-
-function sha256(input: string): string {
-  const bytes = new TextEncoder().encode(input);
-  const bitLength = bytes.length * 8;
-  const paddedLength = Math.ceil((bytes.length + 9) / 64) * 64;
-  const padded = new Uint8Array(paddedLength);
-  padded.set(bytes);
-  padded[bytes.length] = 0x80;
-  // canonicalJson strings in this runtime are far below 2^32 bytes, but write
-  // both halves of the SHA-256 length field rather than relying on that fact.
-  const high = Math.floor(bitLength / 0x100000000);
-  const low = bitLength >>> 0;
-  const lengthOffset = paddedLength - 8;
-  padded[lengthOffset] = (high >>> 24) & 0xff;
-  padded[lengthOffset + 1] = (high >>> 16) & 0xff;
-  padded[lengthOffset + 2] = (high >>> 8) & 0xff;
-  padded[lengthOffset + 3] = high & 0xff;
-  padded[lengthOffset + 4] = (low >>> 24) & 0xff;
-  padded[lengthOffset + 5] = (low >>> 16) & 0xff;
-  padded[lengthOffset + 6] = (low >>> 8) & 0xff;
-  padded[lengthOffset + 7] = low & 0xff;
-
-  const hash = new Uint32Array(SHA256_INITIAL);
-  const words = new Uint32Array(64);
-  for (let offset = 0; offset < padded.length; offset += 64) {
-    for (let index = 0; index < 16; index += 1) {
-      const position = offset + index * 4;
-      words[index] =
-        (padded[position]! << 24) |
-        (padded[position + 1]! << 16) |
-        (padded[position + 2]! << 8) |
-        padded[position + 3]!;
-    }
-    for (let index = 16; index < 64; index += 1) {
-      const w15 = words[index - 15]!;
-      const w2 = words[index - 2]!;
-      const smallSigma0 = rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3);
-      const smallSigma1 = rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10);
-      words[index] = (words[index - 16]! + smallSigma0 + words[index - 7]! + smallSigma1) >>> 0;
-    }
-
-    let a = hash[0]!;
-    let b = hash[1]!;
-    let c = hash[2]!;
-    let d = hash[3]!;
-    let e = hash[4]!;
-    let f = hash[5]!;
-    let g = hash[6]!;
-    let h = hash[7]!;
-    for (let index = 0; index < 64; index += 1) {
-      const bigSigma1 = rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25);
-      const choose = (e & f) ^ (~e & g);
-      const temp1 = (h + bigSigma1 + choose + SHA256_K[index]! + words[index]!) >>> 0;
-      const bigSigma0 = rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22);
-      const majority = (a & b) ^ (a & c) ^ (b & c);
-      const temp2 = (bigSigma0 + majority) >>> 0;
-      h = g;
-      g = f;
-      f = e;
-      e = (d + temp1) >>> 0;
-      d = c;
-      c = b;
-      b = a;
-      a = (temp1 + temp2) >>> 0;
-    }
-    hash[0] = (hash[0]! + a) >>> 0;
-    hash[1] = (hash[1]! + b) >>> 0;
-    hash[2] = (hash[2]! + c) >>> 0;
-    hash[3] = (hash[3]! + d) >>> 0;
-    hash[4] = (hash[4]! + e) >>> 0;
-    hash[5] = (hash[5]! + f) >>> 0;
-    hash[6] = (hash[6]! + g) >>> 0;
-    hash[7] = (hash[7]! + h) >>> 0;
-  }
-  return Array.from(hash, (word) => word.toString(16).padStart(8, "0")).join("");
-}
-
-/** SHA-256 of canonical JSON bytes, returned as lowercase hexadecimal. */
-export function hashCanonical(value: unknown): string {
-  return sha256(canonicalJson(value));
 }
 
 /** Hash a derived-science projection without making it part of world truth. */

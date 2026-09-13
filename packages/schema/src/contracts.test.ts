@@ -12,6 +12,7 @@ import { migrateScenario } from "./scenario-migrate.js";
 import { SCENARIO_MIGRATIONS } from "./scenario-migrate.js";
 import { migrateWorld, WORLD_MIGRATIONS } from "./migrate.js";
 import { QuantitySchema } from "./quantity.js";
+import { parseVolumeProfileSnapshot, volumeProfileHash } from "./volume-profile.js";
 import {
   ScientificStateSchema,
   ModelDescriptorSchema,
@@ -48,6 +49,33 @@ const fixtureVolumeProfile = {
   ],
   provenance: { source: "fixture", reference: "volume profile", category: "evaluated" as const },
 };
+
+describe("content-addressed volume profile snapshots", () => {
+  it("accepts a payload whose profile hash is computed from the payload", () => {
+    const snapshot = { ...fixtureVolumeProfile, profileHash: "" };
+    snapshot.profileHash = volumeProfileHash(snapshot);
+
+    expect(parseVolumeProfileSnapshot(snapshot)).toEqual(snapshot);
+  });
+
+  it("rejects a structurally valid payload whose content no longer matches its hash", () => {
+    const snapshot = { ...fixtureVolumeProfile, profileHash: "" };
+    snapshot.profileHash = volumeProfileHash(snapshot);
+    const tampered = {
+      ...snapshot,
+      maxHeight: { ...snapshot.maxHeight, value: 101 },
+      knots: snapshot.knots.map((knot, index) =>
+        index === snapshot.knots.length - 1
+          ? { ...knot, height: { ...knot.height, value: 101 } }
+          : knot,
+      ),
+    };
+
+    expect(() => parseVolumeProfileSnapshot(tampered)).toThrow(
+      /volume profile hash mismatch/,
+    );
+  });
+});
 
 describe("AC-R15 — contents live in exactly one place", () => {
   it("gives Vessel no contents field", () => {

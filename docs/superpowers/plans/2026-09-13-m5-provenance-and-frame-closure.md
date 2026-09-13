@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript 5.9, Zod 4, Vitest, pnpm workspaces, JSON Schema generation.
 
-**Spec:** SPEC-0001 revision 23 Candidate, ADR-0013, and the M5 remediation spec.
+**Spec:** SPEC-0001 revision 24 Candidate, ADR-0013, and the M5 remediation spec.
 
 ## Global Constraints
 
@@ -146,15 +146,17 @@
 ### Task 8: Close the executable geometry seam at the Observable boundary
 
 **Objective:** Ensure all Observable liquid-level geometry is derived from the
-replay-frozen profile snapshot rather than from caller-supplied functions.
+replay-frozen profile snapshot rather than from caller-supplied functions or a
+payload that only self-reports a matching hash.
 
 **Files:** `packages/render/src/observable/index.ts`, Observable/scene tests,
 render/world test TypeScript configurations, the M5 contract guard, and the
-revision 23 specification/evidence documents.
+revision 24 specification/evidence documents.
 
 **Interfaces:** `ObservableInput` accepts `volumeProfileSnapshot` only;
 `buildObservableModel` validates the frame/profile hash and calls
-`volumeProfileFromSnapshot` internally.
+`volumeProfileFromSnapshot` internally. The shared schema parser recomputes the
+profile content hash before constructing the executable adapter.
 
 - [x] Add a compile-time negative fixture proving an executable `volumeProfile`
   cannot satisfy `ObservableInput`.
@@ -162,6 +164,9 @@ revision 23 specification/evidence documents.
   sources so the negative boundary is actually checked.
 - [x] Replace render callers with the frozen snapshot input and reconstruct the
   runtime adapter inside Observable.
+- [x] Recompute and verify the profile content hash before reconstructing the
+  executable adapter; retain the frame/profile identity check as a separate
+  binding validation.
 - [x] Update canonical revision, ADR/spec/plan/evidence wording, and the M5
   consistency guard.
 - [x] Run the complete verification chain, inspect the diff, commit, push, and

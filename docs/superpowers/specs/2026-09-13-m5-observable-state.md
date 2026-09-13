@@ -91,8 +91,9 @@ The replayable physical inputs are established before Observable is called:
 the World Runtime persists a serializable `VolumeProfileSnapshot` in each
 genesis vessel, and the Scientific Core frame carries the committed
 `liquidVolume` plus that profile's hash. Observable receives only the
-serializable `VolumeProfileSnapshot`, verifies its hash against the frame, and
-reconstructs the executable interpolation adapter internally. It must not
+serializable `VolumeProfileSnapshot`, recomputes and verifies its content hash,
+then verifies that hash against the frame before reconstructing the executable
+interpolation adapter internally. It must not
 receive caller-supplied profile functions, a second liquid-volume value, or
 resolve `geometryRef` from mutable content.
 
@@ -247,7 +248,7 @@ it does not claim their browser evidence yet.
 ## Rollout/migration
 
 This M5 closure includes the persisted vessel-profile contract introduced by
-`SPEC-0001` revision 23: World/Event schema v4 is the current persisted
+`SPEC-0001` revision 24: World/Event schema v4 is the current persisted
 version, with an explicit v3→v4 migration that requires a reviewable profile
 resolver for legacy geometry-only records. The observable model itself is not
 persisted. Future RenderState changes require an explicit

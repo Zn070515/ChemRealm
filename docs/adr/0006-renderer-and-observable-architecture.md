@@ -106,7 +106,9 @@ frame also owns the committed liquid volume and the hash of the replay-frozen
 `VolumeProfileSnapshot`; render/Observable receives only the matching serialized
 snapshot and reconstructs the executable interpolation adapter internally. It
 never accepts caller-supplied profile functions or resolves `geometryRef` from
-mutable content.
+mutable content. The schema-owned parser recomputes the profile content hash
+before restoring the executable adapter; matching the frame's hash string alone
+is not sufficient.
 
 ### The indicator boundary — corrected
 

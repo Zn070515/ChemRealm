@@ -30,6 +30,7 @@ export * from "./events.js";
 export * from "./commands.js";
 export * from "./content.js";
 export * from "./volume-profile.js";
+export * from "./canonical-hash.js";
 export * from "./export.js";
 export * from "./migrate.js";
 export * from "./scenario-migrate.js";

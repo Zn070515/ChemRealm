@@ -35,7 +35,10 @@ carry identity-shaped strings while its payload came from a different state.
    profile hash; it accepts no duplicate volume input. Observable receives the
    matching serializable `VolumeProfileSnapshot` and reconstructs its runtime
    adapter internally, so a caller cannot replace frozen geometry with a
-   function-valued object that merely claims the same hash.
+   function-valued object that merely claims the same hash. The schema-owned
+   parser recomputes the hash over the hash-excluded payload before restoring
+   executable geometry, so a matching hash label cannot authorize changed
+   knots, ranges, or provenance.
 5. `sourceStateHash` means the quantized World Runtime replay-equivalence
    identity. Exact snapshot-cache integrity remains the separate
    `exactStateHash`; neither name is reused for the other purpose.
@@ -51,6 +54,8 @@ carry identity-shaped strings while its payload came from a different state.
   resolver before they can be loaded into schema v4.
 - A frame cannot be combined with a second volume or a differently hashed
   profile without a boundary error.
+- A structurally valid profile cannot be used until its content reproduces its
+  declared profile hash.
 - Function-valued geometry remains an internal runtime adapter convenience
   reconstructed from serializable data; it is not an Observable input seam.
 - Full browser composition and final apparatus visual review remain M5/M6

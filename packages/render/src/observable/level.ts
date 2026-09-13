@@ -1,7 +1,7 @@
 import {
-  VolumeProfileSnapshotSchema,
   litre,
   millimetre,
+  parseVolumeProfileSnapshot,
   type Litre,
   type Millimetre,
   type VolumeProfileSnapshot,
@@ -57,7 +57,7 @@ function interpolate(
 export function volumeProfileFromSnapshot(
   input: VolumeProfileSnapshot,
 ): VolumeProfile {
-  const snapshot = VolumeProfileSnapshotSchema.parse(input);
+  const snapshot = parseVolumeProfileSnapshot(input);
   const points = snapshot.knots.map((knot) => ({
     volume: knot.volume.value,
     height: knot.height.value,

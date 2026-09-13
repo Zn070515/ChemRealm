@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   litre,
   millimetre,
+  volumeProfileHash,
   type VolumeProfileSnapshot,
 } from "@chemrealm/schema";
 import {
@@ -22,7 +23,7 @@ describe("liquid level observable", () => {
     volumeAtHeight: (height) => litre(((height - 10) / 40) ** 2),
   };
 
-  const snapshot: VolumeProfileSnapshot = {
+const snapshot: VolumeProfileSnapshot = {
     profileId: "conical-snapshot",
     profileVersion: "1.0.0",
     profileHash: "sha256:test",
@@ -39,8 +40,9 @@ describe("liquid level observable", () => {
       source: "fixture",
       reference: "volume profile fixture",
       category: "evaluated",
-    },
-  };
+  },
+};
+snapshot.profileHash = volumeProfileHash(snapshot);
 
   it("restores a bidirectional runtime profile from serialized snapshot data", () => {
     const profile = volumeProfileFromSnapshot(snapshot);
