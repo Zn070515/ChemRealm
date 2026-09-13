@@ -1,0 +1,250 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "bridgeSchemaVersion": {
+      "const": 1,
+      "type": "number"
+    },
+    "context": {
+      "additionalProperties": false,
+      "properties": {
+        "sourceStateHash": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "sourceStateHash"
+      ],
+      "type": "object"
+    },
+    "request": {
+      "additionalProperties": false,
+      "properties": {
+        "indicators": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "indicatorId": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "kaIn": {
+                "additionalProperties": false,
+                "properties": {
+                  "unit": {
+                    "enum": [
+                      "1"
+                    ],
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "value",
+                  "unit"
+                ],
+                "type": "object"
+              }
+            },
+            "required": [
+              "indicatorId",
+              "kaIn"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "liquidVolume": {
+          "additionalProperties": false,
+          "properties": {
+            "unit": {
+              "enum": [
+                "L",
+                "mL",
+                "uL"
+              ],
+              "type": "string"
+            },
+            "value": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "value",
+            "unit"
+          ],
+          "type": "object"
+        },
+        "schemaVersion": {
+          "const": 3,
+          "type": "number"
+        },
+        "solutes": {
+          "items": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "amount": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "unit": {
+                        "enum": [
+                          "mol",
+                          "mmol"
+                        ],
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "value",
+                      "unit"
+                    ],
+                    "type": "object"
+                  },
+                  "mode": {
+                    "const": "fully-dissociated",
+                    "type": "string"
+                  },
+                  "soluteId": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "soluteId",
+                  "amount",
+                  "mode"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "amount": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "unit": {
+                        "enum": [
+                          "mol",
+                          "mmol"
+                        ],
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "value",
+                      "unit"
+                    ],
+                    "type": "object"
+                  },
+                  "ka": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "unit": {
+                        "enum": [
+                          "1"
+                        ],
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "value",
+                      "unit"
+                    ],
+                    "type": "object"
+                  },
+                  "mode": {
+                    "const": "monoprotic-equilibrium",
+                    "type": "string"
+                  },
+                  "soluteId": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "soluteId",
+                  "amount",
+                  "mode",
+                  "ka"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "type": "array"
+        },
+        "temperature": {
+          "additionalProperties": false,
+          "properties": {
+            "unit": {
+              "enum": [
+                "K",
+                "degC"
+              ],
+              "type": "string"
+            },
+            "value": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "value",
+            "unit"
+          ],
+          "type": "object"
+        },
+        "waterMass": {
+          "additionalProperties": false,
+          "properties": {
+            "unit": {
+              "enum": [
+                "kg",
+                "g",
+                "mg"
+              ],
+              "type": "string"
+            },
+            "value": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "value",
+            "unit"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "schemaVersion",
+        "waterMass",
+        "liquidVolume",
+        "solutes",
+        "temperature",
+        "indicators"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "bridgeSchemaVersion",
+    "request",
+    "context"
+  ],
+  "type": "object"
+}

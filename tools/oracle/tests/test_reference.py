@@ -14,6 +14,11 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parents[3]
 REFERENCE_DIR = REPO_ROOT / "packages" / "sci" / "test" / "reference"
 DERIVATION_PATH = REPO_ROOT / "tools" / "oracle" / "reference" / "derive_acid_base.py"
+VERSION_MANIFEST_PATH = REPO_ROOT / "contracts" / "version-manifest.json"
+
+
+def load_version_manifest() -> dict[str, Any]:
+    return json.loads(VERSION_MANIFEST_PATH.read_text(encoding="utf-8"))
 
 
 def load_derivation() -> Any:
@@ -58,15 +63,17 @@ def component_signature(request: dict[str, Any]) -> dict[str, tuple[object, obje
 
 def test_reference_fixture_manifest_is_complete_and_independent() -> None:
     manifest = load_fixture("manifest.json")
-    assert manifest["schemaVersion"] == 2
+    versions = load_version_manifest()
+    assert manifest["schemaVersion"] == versions["oracle"]["referenceManifest"]
     assert manifest["derivation"]["notGeneratedBy"] == "packages/sci"
     assert manifest["derivation"]["basis"] == "molality"
     assert manifest["fixtures"] == [f"REF-{index}" for index in range(1, 11)]
     assert manifest["oracleFixtures"] == [f"ORACLE-{index}" for index in range(1, 11)]
     assert "ADVERSARIAL-HOAC-DILUTE" in manifest["adversarialFixtures"]
+    fixture_schema_version = versions["oracle"]["referenceFixture"]
     for fixture_id in manifest["fixtures"]:
         fixture = load_fixture(f"{fixture_id}.json")
-        assert fixture["schemaVersion"] == 1
+        assert fixture["schemaVersion"] == fixture_schema_version
         assert fixture["id"] == fixture_id
         assert fixture["derivation"]
         assert fixture["kind"] in {

@@ -9,11 +9,7 @@ use serde::{de::Error as _, Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
 
-pub const SCIENTIFIC_SCHEMA_VERSION: u32 = 3;
-pub const SCIENTIFIC_EXPRESSION_SCHEMA_VERSION: u32 = 4;
-pub const MODEL_ID: &str = "acidbase-monoprotic-davies";
-pub const MODEL_VERSION: &str = "2.0.0";
-pub const EXPRESSION_PRODUCER_VERSION: &str = "3.0.0";
+include!(concat!(env!("OUT_DIR"), "/version_constants.rs"));
 
 const KW: f64 = 1.0e-14;
 const KA_HOAC: f64 = 1.7539e-5;
@@ -103,12 +99,27 @@ struct RawRequest {
     indicators: Vec<RawIndicator>,
 }
 
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct RawExecutionContext {
+    source_state_hash: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct RawBridgeEnvelope {
+    bridge_schema_version: u32,
+    request: RawRequest,
+    context: RawExecutionContext,
+}
+
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct BackendPayload {
-    schema_version: u32,
+    bridge_schema_version: u32,
     backend: BackendIdentity,
     request_hash: String,
+    source_state_hash: String,
     result: NativeResult,
     expressions: Vec<ScientificExpressionDto>,
 }
@@ -1278,7 +1289,10 @@ fn build_state(
         "neutralAcidActivityCoefficient".to_string(),
         NEUTRAL_ACID_GAMMA,
     );
-    parameters.insert("numericPolicyVersion".to_string(), 1.0);
+    parameters.insert(
+        "numericPolicyVersion".to_string(),
+        NUMERIC_POLICY_VERSION as f64,
+    );
     parameters.insert("numericPrecisionSignificantDigits".to_string(), 12.0);
     parameters.insert("standardMolality".to_string(), STANDARD_MOLALITY);
     parameters.insert("waterActivity".to_string(), WATER_ACTIVITY);
@@ -1350,6 +1364,7 @@ fn build_expressions(
     let h_gamma = value("H+", "gamma");
     let h_reduced = value("H+", "reduced");
     let ionic_strength = state.ionic_strength_molal.value;
+    let reduced_ionic_strength = state.ionic_strength_reduced.value;
     let acid_family_total = ha + oac;
 
     let make = |equation_id: &str,
@@ -1430,20 +1445,20 @@ fn build_expressions(
         ),
         make(
             "davies-activity-coefficient",
-            "log10(γ_i) = -A(√I/(1+√I) - bI)".to_string(),
+            "log10(γ_i) = -A(√Î/(1+√Î) - bÎ)".to_string(),
             format!(
                 "{} = -{} · (√{} / (1 + √{}) - {} · {})",
                 substituted("log10(γ(H+))", det_log10(h_gamma), "1"),
                 substituted("A", DAVIES_A, "1"),
-                substituted("I", ionic_strength, "mol/kg"),
-                substituted("I", ionic_strength, "mol/kg"),
+                substituted("Î", reduced_ionic_strength, "1"),
+                substituted("Î", reduced_ionic_strength, "1"),
                 substituted("b", DAVIES_B, "1"),
-                substituted("I", ionic_strength, "mol/kg")
+                substituted("Î", reduced_ionic_strength, "1")
             ),
             vec![
                 substitution("A", DAVIES_A, "1"),
                 substitution("b", DAVIES_B, "1"),
-                substitution("I", ionic_strength, "mol/kg"),
+                substitution("Î", reduced_ionic_strength, "1"),
                 substitution("γ(H+)", h_gamma, "1"),
             ],
             vec![],
@@ -1504,15 +1519,20 @@ fn build_expressions(
     expressions
 }
 
-fn solve_payload(request: RawRequest, request_hash: String) -> BackendPayload {
+fn solve_payload(
+    request: RawRequest,
+    request_hash: String,
+    source_state_hash: String,
+) -> BackendPayload {
     match validate_request(&request) {
         Err(result) => BackendPayload {
-            schema_version: SCIENTIFIC_SCHEMA_VERSION,
+            bridge_schema_version: NATIVE_BRIDGE_SCHEMA_VERSION,
             backend: BackendIdentity {
                 id: MODEL_ID,
                 version: MODEL_VERSION,
             },
             request_hash,
+            source_state_hash,
             result: *result,
             expressions: vec![],
         },
@@ -1520,12 +1540,13 @@ fn solve_payload(request: RawRequest, request_hash: String) -> BackendPayload {
             .and_then(|totals| solve_reduced(totals).map(|solved| (totals, solved)))
         {
             Err(SolveFailure::OutOfDomain(reason)) => BackendPayload {
-                schema_version: SCIENTIFIC_SCHEMA_VERSION,
+                bridge_schema_version: NATIVE_BRIDGE_SCHEMA_VERSION,
                 backend: BackendIdentity {
                     id: MODEL_ID,
                     version: MODEL_VERSION,
                 },
                 request_hash,
+                source_state_hash,
                 result: out_of_domain(reason),
                 expressions: vec![],
             },
@@ -1535,36 +1556,39 @@ fn solve_payload(request: RawRequest, request_hash: String) -> BackendPayload {
                 residual,
                 iterations,
             }) => BackendPayload {
-                schema_version: SCIENTIFIC_SCHEMA_VERSION,
+                bridge_schema_version: NATIVE_BRIDGE_SCHEMA_VERSION,
                 backend: BackendIdentity {
                     id: MODEL_ID,
                     version: MODEL_VERSION,
                 },
                 request_hash,
+                source_state_hash,
                 result: not_converged(code, reason, iterations, residual),
                 expressions: vec![],
             },
             Ok((_totals, solved)) => match build_state(&validated, solved) {
                 Ok(state) => BackendPayload {
-                    schema_version: SCIENTIFIC_SCHEMA_VERSION,
+                    bridge_schema_version: NATIVE_BRIDGE_SCHEMA_VERSION,
                     backend: BackendIdentity {
                         id: MODEL_ID,
                         version: MODEL_VERSION,
                     },
                     request_hash: request_hash.clone(),
-                    expressions: build_expressions(&state, request_hash),
+                    source_state_hash: source_state_hash.clone(),
+                    expressions: build_expressions(&state, source_state_hash),
                     result: NativeResult::Ok {
                         schema_version: SCIENTIFIC_SCHEMA_VERSION,
                         state,
                     },
                 },
                 Err(SolveFailure::OutOfDomain(reason)) => BackendPayload {
-                    schema_version: SCIENTIFIC_SCHEMA_VERSION,
+                    bridge_schema_version: NATIVE_BRIDGE_SCHEMA_VERSION,
                     backend: BackendIdentity {
                         id: MODEL_ID,
                         version: MODEL_VERSION,
                     },
                     request_hash,
+                    source_state_hash,
                     result: out_of_domain(reason),
                     expressions: vec![],
                 },
@@ -1574,12 +1598,13 @@ fn solve_payload(request: RawRequest, request_hash: String) -> BackendPayload {
                     residual,
                     iterations,
                 }) => BackendPayload {
-                    schema_version: SCIENTIFIC_SCHEMA_VERSION,
+                    bridge_schema_version: NATIVE_BRIDGE_SCHEMA_VERSION,
                     backend: BackendIdentity {
                         id: MODEL_ID,
                         version: MODEL_VERSION,
                     },
                     request_hash,
+                    source_state_hash,
                     result: not_converged(code, reason, iterations, residual),
                     expressions: vec![],
                 },
@@ -1591,10 +1616,23 @@ fn solve_payload(request: RawRequest, request_hash: String) -> BackendPayload {
 /// Solve a canonical JSON request with the native scientific core.
 pub fn solve_canonical_json(input: &str) -> Result<String, String> {
     let request_hash = request_hash(input);
-    let request: RawRequest = serde_json::from_str(input)
+    let envelope: RawBridgeEnvelope = serde_json::from_str(input)
         .map_err(|error| format!("native scientific request is invalid JSON/wire data: {error}"))?;
-    serde_json::to_string(&solve_payload(request, request_hash))
-        .map_err(|error| format!("native scientific payload serialization failed: {error}"))
+    if envelope.bridge_schema_version != NATIVE_BRIDGE_SCHEMA_VERSION {
+        return Err(format!(
+            "native bridge schema version {} is unsupported; expected {}",
+            envelope.bridge_schema_version, NATIVE_BRIDGE_SCHEMA_VERSION
+        ));
+    }
+    if envelope.context.source_state_hash.trim().is_empty() {
+        return Err("native scientific sourceStateHash must not be empty".to_string());
+    }
+    serde_json::to_string(&solve_payload(
+        envelope.request,
+        request_hash,
+        envelope.context.source_state_hash,
+    ))
+    .map_err(|error| format!("native scientific payload serialization failed: {error}"))
 }
 
 /// Browser entry point. The JSON string bridge keeps the WASM ABI independent

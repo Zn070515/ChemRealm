@@ -51,6 +51,17 @@ def _manifest_path(repo_root: Path) -> Path:
     return repo_root / "tools" / "oracle" / "phreeqc" / "manifest.json"
 
 
+def load_version_manifest(repo_root: Path) -> dict:
+    path = repo_root / "contracts" / "version-manifest.json"
+    if not path.is_file():
+        raise PhreeqcToolchainError(f"missing central version manifest: {path}")
+    with path.open(encoding="utf-8") as handle:
+        value = json.load(handle)
+    if not isinstance(value, dict):
+        raise PhreeqcToolchainError(f"central version manifest is not an object: {path}")
+    return value
+
+
 def load_manifest(repo_root: Path) -> dict:
     path = _manifest_path(repo_root)
     if not path.is_file():
@@ -116,6 +127,7 @@ def validate_ci_toolchain_metadata(
     executable_sha256: str,
     database_sha256: str,
     manifest: Mapping[str, object],
+    expected_version: str,
 ) -> None:
     def metadata_string(key: str) -> str:
         value = metadata.get(key)
@@ -127,7 +139,6 @@ def validate_ci_toolchain_metadata(
         return value
 
     expected_tool = manifest.get("tool")
-    expected_version = manifest.get("version")
     expected_source_sha256 = manifest.get("sourceSha256")
     tool = metadata_string("tool")
     version = metadata_string("version")
@@ -178,9 +189,10 @@ def resolve_toolchain(
 ) -> PhreeqcToolchain:
     env = os.environ if environment is None else environment
     manifest = load_manifest(repo_root)
-    version = manifest.get("version")
+    version_manifest = load_version_manifest(repo_root)
+    version = version_manifest.get("oracle", {}).get("phreeqc")
     if not isinstance(version, str) or not version.strip():
-        raise PhreeqcToolchainError("PHREEQC manifest has no version")
+        raise PhreeqcToolchainError("central version manifest has no PHREEQC version")
 
     cache = _default_cache(repo_root, version)
     executable_name = manifest.get("executable", {}).get("binaryName", "phreeqc")
@@ -231,6 +243,7 @@ def resolve_toolchain(
         executable_sha256=executable_sha256,
         database_sha256=database_sha256,
         manifest=manifest,
+        expected_version=version,
     )
     return PhreeqcToolchain(
         executable=executable,

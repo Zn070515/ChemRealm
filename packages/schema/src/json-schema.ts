@@ -21,6 +21,8 @@ import { ExportBundleSchema } from "./export.js";
 import { QuantitySchema } from "./quantity.js";
 import {
   ScientificExpressionSchema,
+  NativeBackendPayloadSchema,
+  NativeSolveEnvelopeSchema,
   ScientificStateSchema,
   SolveResultSchema,
 } from "./scientific.js";
@@ -41,6 +43,8 @@ export const JSON_SCHEMA_SOURCES = {
   "scientific-state": ScientificStateSchema,
   "scientific-expression": ScientificExpressionSchema,
   "solve-result": SolveResultSchema,
+  "native-solve-envelope": NativeSolveEnvelopeSchema,
+  "native-backend-payload": NativeBackendPayloadSchema,
   "export-bundle": ExportBundleSchema,
 } as const;
 

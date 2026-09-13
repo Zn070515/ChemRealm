@@ -9,12 +9,19 @@ import {
   type SolveRequest,
   type ModelDescriptor,
   type SolveResult,
+  TEST_SOLVER_VERSION,
+  VERSION_MANIFEST,
 } from "@chemrealm/schema";
 
 import type { SolverAdapter } from "./adapter.js";
 import { StubSolverAdapter } from "./stub.js";
 import { parseSolverRequirements } from "./request.js";
-import { checkModelCompatibility, SolverRegistry, SolverResolver } from "./registry.js";
+import {
+  checkModelCompatibility,
+  SolverRegistry,
+  SolverResolver,
+  type SolverSelectionPolicy,
+} from "./registry.js";
 import { createAcidBaseAdapter } from "./acidbase/index.js";
 
 function makeDescriptor(
@@ -22,7 +29,7 @@ function makeDescriptor(
 ): ModelDescriptor {
   return {
     id: "test-solver",
-    version: "1.0.0",
+    version: TEST_SOLVER_VERSION,
     description: "contract-test solver",
     validity: {
       temperature: { min: kelvin(273.15), max: kelvin(373.15) },
@@ -68,7 +75,7 @@ function validState(provenance: Partial<ScientificState["provenance"]> = {}): Sc
     validity: { inDomain: true, withinProposedAccuracyEnvelope: true },
     provenance: {
       modelId: "test-solver",
-      modelVersion: "1.0.0",
+      modelVersion: TEST_SOLVER_VERSION,
       activityModel: "contract-test",
       category: "calculated",
       parameters: { Kw: 1e-14 },
@@ -76,6 +83,11 @@ function validState(provenance: Partial<ScientificState["provenance"]> = {}): Sc
     },
   };
 }
+
+const testSelection: SolverSelectionPolicy = {
+  id: "test-solver",
+  version: TEST_SOLVER_VERSION,
+};
 
 describe("exact solver registry", () => {
   it("resolves the acid-base model for its equilibrium species requirements", () => {
@@ -88,6 +100,11 @@ describe("exact solver registry", () => {
         phase: "aqueous",
         activityCorrected: true,
       }),
+      {},
+      {
+        id: VERSION_MANIFEST.scientific.acidBase.id,
+        version: VERSION_MANIFEST.scientific.acidBase.legacyVersion,
+      },
     );
 
     expect(result.status).toBe("compatible");
@@ -113,16 +130,16 @@ describe("exact solver registry", () => {
     const registry = new SolverRegistry();
     registry.register(adapter);
 
-    const found = registry.lookup("test-solver", "1.0.0");
+    const found = registry.lookup("test-solver", TEST_SOLVER_VERSION);
     expect(found.status).toBe("found");
     if (found.status !== "found") throw new Error("expected registered adapter");
     expect(found.adapter).not.toBe(adapter);
     expect(found.adapter.id).toBe("test-solver");
-    expect(found.adapter.version).toBe("1.0.0");
-    const unavailable = registry.lookup("test-solver", "1.1.0");
+    expect(found.adapter.version).toBe(TEST_SOLVER_VERSION);
+    const unavailable = registry.lookup("test-solver", `${TEST_SOLVER_VERSION.slice(0, 4)}1.0`);
     expect(unavailable.status).toBe("unavailable");
     if (unavailable.status !== "unavailable") throw new Error("wrong result");
-    expect(unavailable.reason).toContain("1.1.0");
+    expect(unavailable.reason).toContain(`${TEST_SOLVER_VERSION.slice(0, 4)}1.0`);
   });
 
   it("rejects duplicate exact registrations", () => {
@@ -150,15 +167,16 @@ describe("exact solver registry", () => {
     });
     const registry = new SolverRegistry([adapter]);
 
-    (mutableDescriptor as unknown as { version: string }).version = "2.0.0";
+    (mutableDescriptor as unknown as { version: string }).version =
+      VERSION_MANIFEST.scientific.acidBase.nativeVersion;
     (mutableDescriptor.validity.species as unknown as string[]).push("Al3+");
     (mutableDescriptor.validity.ionicStrengthMolalMax as unknown as { value: number }).value = 9;
     mutableParameters.Kw = 9e-14;
 
-    const lookup = registry.lookup("test-solver", "1.0.0");
+    const lookup = registry.lookup("test-solver", TEST_SOLVER_VERSION);
     expect(lookup.status).toBe("found");
     if (lookup.status !== "found") throw new Error("expected registered adapter");
-    expect(lookup.adapter.model.version).toBe("1.0.0");
+    expect(lookup.adapter.model.version).toBe(TEST_SOLVER_VERSION);
     expect(lookup.adapter.model.validity.species).toEqual(["H+", "OH-"]);
     expect(lookup.adapter.model.validity.ionicStrengthMolalMax.value).toBe(0.5);
     expect(lookup.adapter.solverConfig.parameters).toEqual({ Kw: 1e-14 });
@@ -247,7 +265,7 @@ describe("exact solver registry", () => {
     });
     const registry = new SolverRegistry([adapter]);
 
-    const result = registry.resolve(requirements());
+    const result = registry.resolve(requirements(), {}, testSelection);
 
     expect(result.status).toBe("compatible");
     if (result.status !== "compatible") throw new Error("wrong result");
@@ -255,7 +273,7 @@ describe("exact solver registry", () => {
     expect(result.model).toBe(result.adapter.model);
     expect(result.solverConfig).toEqual({
       id: "test-solver",
-      version: "1.0.0",
+      version: TEST_SOLVER_VERSION,
       parameters: { Kw: 1e-14 },
     });
   });
@@ -266,9 +284,11 @@ describe("exact solver registry", () => {
       parameters: { Kw: 1e-14 },
       outcome: notConverged(),
     });
-    const result = new SolverRegistry([adapter]).resolve(requirements(), {
-      requiredComponents: ["HNO3"],
-    });
+    const result = new SolverRegistry([adapter]).resolve(
+      requirements(),
+      { requiredComponents: ["HNO3"] },
+      testSelection,
+    );
 
     expect(result).toMatchObject({ status: "incompatible" });
     if (result.status !== "incompatible") throw new Error("expected incompatible result");
@@ -296,11 +316,11 @@ describe("exact solver registry", () => {
     const descriptor = makeDescriptor();
     const invalid = {
       id: "test-solver",
-      version: "1.0.0",
-      model: { ...descriptor, version: "2.0.0" },
+      version: TEST_SOLVER_VERSION,
+      model: { ...descriptor, version: VERSION_MANIFEST.scientific.acidBase.nativeVersion },
       solverConfig: {
         id: "test-solver",
-        version: "1.0.0",
+        version: TEST_SOLVER_VERSION,
         parameters: {},
       },
       solve: async () => notConverged(),
@@ -321,6 +341,8 @@ describe("exact solver registry", () => {
         temperature: { value: 200, unit: "K" },
         species: ["H+", "Al3+"],
       }),
+      {},
+      testSelection,
     );
 
     expect(result.status).toBe("incompatible");
@@ -329,7 +351,11 @@ describe("exact solver registry", () => {
   });
 
   it("reports unavailable when no adapter is registered", () => {
-    const result = new SolverResolver(new SolverRegistry()).resolve(requirements());
+    const result = new SolverResolver(new SolverRegistry()).resolve(
+      requirements(),
+      {},
+      testSelection,
+    );
 
     expect(result.status).toBe("unavailable");
     if (result.status !== "unavailable") throw new Error("wrong result");
@@ -343,10 +369,61 @@ describe("exact solver registry", () => {
     });
     const registry = new SolverRegistry([adapter]);
 
-    const result = registry.resolve(requirements({ activityCorrected: true }));
+    const result = registry.resolve(
+      requirements({ activityCorrected: true }),
+      {},
+      testSelection,
+    );
 
     expect(result.status).toBe("incompatible");
     if (result.status !== "incompatible") throw new Error("wrong result");
     expect(result.reason).toContain("activity correction");
+  });
+
+  it("uses the explicit solver identity instead of registry insertion order", () => {
+    const first = new StubSolverAdapter({
+      descriptor: makeDescriptor(),
+      parameters: { Kw: 1e-14 },
+      outcome: notConverged(),
+    });
+    const secondDescriptor: ModelDescriptor = {
+      ...makeDescriptor(),
+      id: "test-solver-alt",
+      version: VERSION_MANIFEST.scientific.acidBase.nativeVersion,
+    };
+    const second = new StubSolverAdapter({
+      descriptor: secondDescriptor,
+      parameters: { Kw: 1e-14 },
+      outcome: notConverged(),
+    });
+    const policy: SolverSelectionPolicy = { id: second.id, version: second.version };
+    const forward = new SolverRegistry([first, second]).resolve(requirements(), {}, policy);
+    const reversed = new SolverRegistry([second, first]).resolve(requirements(), {}, policy);
+
+    expect(forward.status).toBe("compatible");
+    expect(reversed.status).toBe("compatible");
+    if (forward.status !== "compatible" || reversed.status !== "compatible") {
+      throw new Error("expected explicit selection to resolve");
+    }
+    expect(forward.adapter.id).toBe("test-solver-alt");
+    expect(reversed.adapter.id).toBe("test-solver-alt");
+  });
+
+  it("does not fall back when the explicitly selected solver is unavailable", () => {
+    const adapter = new StubSolverAdapter({
+      descriptor: makeDescriptor(),
+      parameters: { Kw: 1e-14 },
+      outcome: notConverged(),
+    });
+    const result = new SolverRegistry([adapter]).resolve(
+      requirements(),
+      {},
+      {
+        id: "missing-solver",
+        version: VERSION_MANIFEST.scientific.acidBase.nativeVersion,
+      },
+    );
+
+    expect(result.status).toBe("unavailable");
   });
 });

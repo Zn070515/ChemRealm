@@ -1,4 +1,5 @@
 import { readFile } from "node:fs/promises";
+import { readVersionManifest } from "./version-manifest.mjs";
 
 const root = new URL("../", import.meta.url);
 
@@ -28,6 +29,11 @@ const [spec, design, adr0011, adr0012, content, world, worldCreation, solve, act
   document("apps/web/src/m4-acceptance.test.ts"),
 ]);
 const quantityBoundaryGuard = await document("tools/check_scientific_quantity_boundary.mjs");
+const versionManifest = await readVersionManifest();
+const persistedMigrationPath = Array.from(
+  { length: versionManifest.schema.world },
+  (_, index) => index + 1,
+).join(" → ");
 
 const failures = [];
 function must(text, pattern, message) {
@@ -47,14 +53,48 @@ must(spec, /authoring `Scenario` shape has no dissociation-mode field/i, "SPEC k
 mustNot(spec, /to be pinned at M4/i, "SPEC does not leave the implemented fixed constants unpinned");
 mustNot(spec, /All of the above enter the genesis event's `solverConfig`/i, "SPEC does not put scenario indicators in global solverConfig");
 mustNot(spec, /Kw\s*=\s*a_H\s*·\s*a_OH\s*\/\s*a_w/i, "SPEC does not use the rejected Kw/water-activity equation");
-must(spec, /Persisted World\/Event `schemaVersion` is currently `4`/i, "SPEC identifies persisted schema version 4");
-must(spec, /forward migration is `1 → 2 → 3 → 4`/i, "SPEC identifies the complete persisted migration chain");
+must(
+  spec,
+  new RegExp(
+    "Persisted World/Event `schemaVersion` is currently `" +
+      versionManifest.schema.world +
+      "`",
+    "i",
+  ),
+  "SPEC identifies the current persisted schema version",
+);
+must(
+  spec,
+  new RegExp(
+    "forward migration is `" + persistedMigrationPath + "`",
+    "i",
+  ),
+  "SPEC identifies the complete persisted migration chain",
+);
 mustNot(spec, /World and content `schemaVersion` is currently `2`/i, "SPEC does not merge authoring and persisted version namespaces");
 must(spec, /AC-S12\s*\|[^\n]*activity-based[^\n]*\|[^\n]*ScientificState/i, "M4 AC-S12 owns the scientific model-pH distinction");
 must(spec, /AC-V10[\s\S]{0,260}inspection view/i, "M5 owns the model-pH inspection presentation criterion");
 must(spec, /AC-V11[\s\S]{0,260}withinProposedAccuracyEnvelope/i, "M5 owns visible accuracy-envelope qualification");
-must(spec, /\*\*Status:\*\* \*\*Accepted through revision 20\*\*/i, "SPEC records the accepted rev20 semantic-evidence amendment");
-must(spec, /\| 20 \|[\s\S]{0,500}Owner, 2026-09-13/i, "SPEC amendment history records owner acceptance of rev20");
+must(
+  spec,
+  new RegExp(
+    "\\*\\*Status:\\*\\* \\*\\*Accepted through revision " +
+      versionManifest.spec.acceptedThroughRevision +
+      "\\*\\*",
+    "i",
+  ),
+  "SPEC records the accepted M4 semantic-evidence amendment boundary",
+);
+must(
+  spec,
+  new RegExp(
+    "\\| " +
+      versionManifest.spec.acceptedThroughRevision +
+      " \\|[\\s\\S]{0,500}Owner, 2026-09-13",
+    "i",
+  ),
+  "SPEC amendment history records owner acceptance of the current accepted boundary",
+);
 mustNot(spec, /revisions 13–20 remain[\s\S]{0,80}pending owner review/i, "SPEC does not leave accepted M4 amendments pending");
 must(spec, /0\.09996461252716539 mol\/kg/, "SPEC records the current independently frozen envelope maximum");
 
@@ -71,7 +111,7 @@ must(adr0011, /ScenarioSnapshot\.indicators/i, "ADR-0011 names the persisted ind
 must(adr0012, /Kw\s*=\s*a_H\s*·\s*a_OH/, "ADR-0012 records the accepted Kw convention");
 must(adr0012, /BRACKET_NOT_FOUND[\s\S]{0,240}NOT_CONVERGED/i, "ADR-0012 distinguishes bracket failure from domain refusal");
 must(adr0012, /total analytical solute/i, "ADR-0012 records the analytical total gate");
-must(adr0012, /current scientific wire schema is v3/i, "ADR-0012 identifies the current scientific wire version");
+must(adr0012, new RegExp(`current scientific wire schema is v${versionManifest.schema.scientific}`, "i"), "ADR-0012 identifies the current scientific wire version");
 mustNot(adr0012, /the v0 equation[\s\S]{0,100}waterActivity[\s\S]{0,100}multiplied/i, "ADR-0012 does not reintroduce the rejected Kw multiplier");
 
 mustNot(content, /fullyDissociated/, "authoring schema has no ignored dissociation field");
@@ -105,7 +145,7 @@ must(quantityBoundaryGuard, /isNoSubstitutionTemplateLiteral/, "scientific quant
 must(adr0011, /\*\*Status:\*\* \*\*Accepted\*\*/i, "ADR-0011 is accepted");
 must(adr0012, /\*\*Status:\*\* \*\*Accepted\*\*/i, "ADR-0012 is accepted");
 must(plan, /\*\*Status:\*\* \*\*M0–M4 S3 Verified \/ Accepted; M5\b[\s\S]{0,180}\bS2\b/i, "PLAN records M5 S2 status after M4 S3");
-must(v0Inputs, /"schemaVersion": 2/, "v0 input manifest has the source-fidelity schema version");
+must(v0Inputs, new RegExp(`"schemaVersion": ${versionManifest.oracle.v0Inputs}`), "v0 input manifest has the source-fidelity schema version");
 mustNot(v0Inputs, /expectedMaximum/, "v0 input manifest does not contain its own acceptance output");
 must(v0Inputs, /"sourceLiteral": "1 g\/cm³ \(25 °C\)"/, "NaOH source literal preserves reported precision");
 must(v0Inputs, /"edition": "8th"/, "HOAc Perry provenance uses the matching edition");

@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4
 
       # --- TypeScript toolchain -------------------------------------------
-      # No `version:` input. The pnpm version lives in package.json's
+      # No pnpm `version:` input. The pnpm version lives in package.json's
       # `packageManager` field, and action-setup reads it from there. Naming it
       # in both places makes the action fail with "Multiple versions of pnpm
       # specified" — one version, one source of truth, the same rule the
@@ -23,7 +23,7 @@ jobs:
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
@@ -49,6 +49,10 @@ jobs:
       # The committed JSON Schema artifacts must match a fresh emission, so the
       # Python side never validates against a stale contract.
       - run: pnpm verify:schema-artifacts
+      # All current package, schema, scientific, native, toolchain, and oracle
+      # versions are distributed from contracts/version-manifest.json. This is
+      # a drift gate, not a convention.
+      - run: pnpm verify:versions
 
       # Architectural rules, plus the guard that proves they bite. The guard is
       # what makes M0's stop condition machine-checked rather than a claim.

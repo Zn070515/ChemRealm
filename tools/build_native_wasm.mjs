@@ -3,12 +3,14 @@ import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
+import { readVersionManifest } from "./version-manifest.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const manifest = join(ROOT, "native", "sci-core", "Cargo.toml");
 const target = join(ROOT, "native", "sci-core", "target", "wasm32-unknown-unknown", "release", "chemrealm_sci_core.wasm");
 const outputDirectory = join(ROOT, "packages", "sci", "dist", "wasm");
 const output = join(outputDirectory, "chemrealm_sci_core.wasm");
+const versionManifest = await readVersionManifest();
 
 function run(command, args) {
   return new Promise((resolvePromise, reject) => {
@@ -37,8 +39,8 @@ await writeFile(
   join(outputDirectory, "chemrealm_sci_core.wasm.json"),
   `${JSON.stringify({
     artifact: "chemrealm_sci_core.wasm",
-    modelId: "acidbase-monoprotic-davies",
-    modelVersion: "2.0.0",
+    modelId: versionManifest.scientific.acidBase.id,
+    modelVersion: versionManifest.scientific.acidBase.nativeVersion,
     target: "wasm32-unknown-unknown",
     profile: "release",
     sha256: `sha256:${sha256}`,

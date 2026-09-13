@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { CURRENT_SCHEMA_VERSION } from "@chemrealm/schema";
 
 import { highPrecisionWorldCreated, WORLD_CREATED } from "../test/fixtures.js";
 import { quantize } from "./hash.js";
@@ -14,7 +15,7 @@ describe("World Runtime reducer", () => {
     const state = createInitialState(WORLD_CREATED);
     const next = reduce(state, {
       seq: 1,
-      schemaVersion: 4,
+      schemaVersion: CURRENT_SCHEMA_VERSION,
       type: "MaterialCharged",
       payload: {
         vesselId: "flask",
@@ -34,7 +35,7 @@ describe("World Runtime reducer", () => {
     const genesis = createInitialState(WORLD_CREATED);
     const flaskCharged = reduce(genesis, {
       seq: 1,
-      schemaVersion: 4,
+      schemaVersion: CURRENT_SCHEMA_VERSION,
       type: "MaterialCharged",
       payload: {
         vesselId: "flask",
@@ -44,7 +45,7 @@ describe("World Runtime reducer", () => {
     });
     const bothCharged = reduce(flaskCharged, {
       seq: 2,
-      schemaVersion: 4,
+      schemaVersion: CURRENT_SCHEMA_VERSION,
       type: "MaterialCharged",
       payload: {
         vesselId: "burette",
@@ -54,7 +55,7 @@ describe("World Runtime reducer", () => {
     });
     const transferred = reduce(bothCharged, {
       seq: 3,
-      schemaVersion: 4,
+      schemaVersion: CURRENT_SCHEMA_VERSION,
       type: "TransferCommitted",
       payload: {
         fromVesselId: "flask",
@@ -80,7 +81,7 @@ describe("World Runtime reducer", () => {
     const genesis = createInitialState(WORLD_CREATED);
     const charged = reduce(genesis, {
       seq: 1,
-      schemaVersion: 4,
+      schemaVersion: CURRENT_SCHEMA_VERSION,
       type: "MaterialCharged",
       payload: {
         vesselId: "flask",
@@ -90,7 +91,7 @@ describe("World Runtime reducer", () => {
     });
     const transferred = reduce(charged, {
       seq: 2,
-      schemaVersion: 4,
+      schemaVersion: CURRENT_SCHEMA_VERSION,
       type: "TransferCommitted",
       payload: {
         fromVesselId: "flask",
@@ -123,7 +124,7 @@ describe("World Runtime reducer", () => {
     const genesis = createInitialState(highPrecisionWorldCreated());
     const charged = reduce(genesis, {
       seq: 1,
-      schemaVersion: 4,
+      schemaVersion: CURRENT_SCHEMA_VERSION,
       type: "MaterialCharged",
       payload: {
         vesselId: "flask",
@@ -151,7 +152,7 @@ describe("World Runtime reducer", () => {
 
     const next = reduce(highPrecisionCharged, {
       seq: 2,
-      schemaVersion: 4,
+      schemaVersion: CURRENT_SCHEMA_VERSION,
       type: "TransferCommitted",
       payload: {
         fromVesselId: "flask",
@@ -176,7 +177,7 @@ describe("World Runtime reducer", () => {
     expect(() =>
       reduce(state, {
         seq: 2,
-        schemaVersion: 4,
+        schemaVersion: CURRENT_SCHEMA_VERSION,
         type: "ApparatusPlaced",
         payload: {
           apparatusId: "stand",
@@ -192,7 +193,7 @@ describe("World Runtime reducer", () => {
     let solverInvoked = false;
     const charged = reduce(state, {
       seq: 1,
-      schemaVersion: 4,
+      schemaVersion: CURRENT_SCHEMA_VERSION,
       type: "MaterialCharged",
       payload: {
         vesselId: "flask",
@@ -204,7 +205,7 @@ describe("World Runtime reducer", () => {
       charged,
       {
         seq: 2,
-      schemaVersion: 4,
+      schemaVersion: CURRENT_SCHEMA_VERSION,
         type: "TransferCommitted",
         payload: {
           fromVesselId: "flask",

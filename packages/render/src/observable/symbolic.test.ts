@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { presentSymbolicLines } from "./symbolic.js";
 import {
   SCIENTIFIC_EXPRESSION_SCHEMA_VERSION,
+  TEST_MODEL_VERSION,
   type ScientificExpression,
 } from "@chemrealm/schema";
 
@@ -18,9 +19,9 @@ describe("symbolic observable", () => {
         substitutions: [{ symbol: "m(H+)", value: 0.1, unit: "mol/kg" }],
         omittedTerms: [],
         producerId: "scientific-core",
-        producerVersion: "1.0.0",
+        producerVersion: TEST_MODEL_VERSION,
         modelId: "acidbase-monoprotic-davies",
-        modelVersion: "1.0.0",
+        modelVersion: TEST_MODEL_VERSION,
         sourceStateHash: "state-hash",
       },
       {
@@ -33,9 +34,9 @@ describe("symbolic observable", () => {
         substitutions: [{ symbol: "Ka", value: 1e-5, unit: "1" }],
         omittedTerms: ["activity correction"],
         producerId: "scientific-core",
-        producerVersion: "1.0.0",
+        producerVersion: TEST_MODEL_VERSION,
         modelId: "acidbase-monoprotic-davies",
-        modelVersion: "1.0.0",
+        modelVersion: TEST_MODEL_VERSION,
         sourceStateHash: "state-hash",
       },
     ];
@@ -43,7 +44,7 @@ describe("symbolic observable", () => {
     const lines = presentSymbolicLines(source, {
       sourceStateHash: "state-hash",
       modelId: "acidbase-monoprotic-davies",
-      modelVersion: "1.0.0",
+      modelVersion: TEST_MODEL_VERSION,
     });
     expect(lines).toEqual(source);
     expect(lines).not.toBe(source);
@@ -65,16 +66,16 @@ describe("symbolic observable", () => {
             substitutions: [{ symbol: "m(H+)", value: 0.1, unit: "mol/kg" }],
             omittedTerms: [],
             producerId: "scientific-core",
-            producerVersion: "1.0.0",
+            producerVersion: TEST_MODEL_VERSION,
             modelId: "acidbase-monoprotic-davies",
-            modelVersion: "1.0.0",
+            modelVersion: TEST_MODEL_VERSION,
             sourceStateHash: "other-state",
           },
         ],
         {
           sourceStateHash: "state-hash",
           modelId: "acidbase-monoprotic-davies",
-          modelVersion: "1.0.0",
+          modelVersion: TEST_MODEL_VERSION,
         },
       ),
     ).toThrow(RangeError);
@@ -94,16 +95,16 @@ describe("symbolic observable", () => {
             substitutions: [{ symbol: "m(H+)", value: 0.1, unit: "mol/kg" }],
             omittedTerms: [],
             producerId: "scientific-core",
-            producerVersion: "1.0.0",
+            producerVersion: TEST_MODEL_VERSION,
             modelId: "other-model",
-            modelVersion: "1.0.0",
+            modelVersion: TEST_MODEL_VERSION,
             sourceStateHash: "state-hash",
           },
         ],
         {
           sourceStateHash: "state-hash",
           modelId: "acidbase-monoprotic-davies",
-          modelVersion: "1.0.0",
+          modelVersion: TEST_MODEL_VERSION,
         },
       ),
     ).toThrow(RangeError);

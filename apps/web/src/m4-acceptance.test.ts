@@ -4,7 +4,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   COMMAND_SCHEMA_VERSION,
+  SCENARIO_CONTENT_VERSION,
   SCENARIO_SCHEMA_VERSION,
+  VOLUME_PROFILE_VERSION,
   kelvin,
   kilogram,
   litre,
@@ -15,6 +17,8 @@ import {
 import {
   ACID_BASE_COMPONENT_CATALOG,
   DEFAULT_ACID_BASE_CONSTANTS,
+  ACID_BASE_MODEL_ID,
+  ACID_BASE_MODEL_VERSION,
   SolverRegistry,
   createAcidBaseAdapter,
 } from "@chemrealm/sci";
@@ -97,7 +101,7 @@ function stock(stockId: string): V0Stock {
 function volumeProfile(profileId: string, maxVolume: number, maxHeight: number) {
   return {
     profileId,
-    profileVersion: "1.0.0",
+    profileVersion: VOLUME_PROFILE_VERSION,
     representation: "piecewise-linear" as const,
     maxVolume: { value: maxVolume, unit: "L" as const },
     maxHeight: { value: maxHeight, unit: "mm" as const },
@@ -166,7 +170,7 @@ function material(stockId: string) {
 
 const scenario = {
   schemaVersion: SCENARIO_SCHEMA_VERSION,
-  contentVersion: 1,
+  contentVersion: SCENARIO_CONTENT_VERSION,
   scenarioRef: "m4-component-conservation",
   title: "M4 component conservation",
   materials: v0Inputs.stocks.map((source) => material(source.stockId)),
@@ -214,7 +218,7 @@ function scenarioForEnvelopePoint(
   const base = stock(family.baseStockId);
   return {
     schemaVersion: SCENARIO_SCHEMA_VERSION,
-    contentVersion: 1,
+  contentVersion: SCENARIO_CONTENT_VERSION,
     scenarioRef: `m4-envelope-${family.familyId}-${factor}`,
     title: `M4 envelope ${family.familyId} at ${factor} equivalents`,
     materials: factor === 0
@@ -319,6 +323,7 @@ describe("M4 world/science acceptance evidence", () => {
       worldId: "m4-conservation-world",
       scenario,
       seed: null,
+      solverSelection: { id: ACID_BASE_MODEL_ID, version: ACID_BASE_MODEL_VERSION },
     });
     expect(created.accepted).toBe(true);
     if (!created.accepted) throw new Error(created.reason);
@@ -375,6 +380,7 @@ describe("M4 world/science acceptance evidence", () => {
           worldId: `m4-envelope-world-${family.familyId}-${factor}`,
           scenario: scenarioForEnvelopePoint(family, factor),
           seed: null,
+          solverSelection: { id: ACID_BASE_MODEL_ID, version: ACID_BASE_MODEL_VERSION },
         });
         expect(created.accepted).toBe(true);
         if (!created.accepted) throw new Error(created.reason);

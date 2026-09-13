@@ -187,7 +187,7 @@ None. M0 adds the mechanism by which contracts will be enforced.
 6. CI runs both toolchains:
 
    ```
-   pnpm install --frozen-lockfile && pnpm build && pnpm test && pnpm depcruise
+   pnpm install --frozen-lockfile && pnpm verify:versions && pnpm build && pnpm test && pnpm depcruise
    uv sync && uv run pytest
    uv run python tools/check_acceptance_coverage.py
    ```
@@ -1244,7 +1244,9 @@ likely explanation is that the review was not adversarial enough.
 
 - **Read order:** `GOAL.md` → `CLAUDE.md` → `AGENTS.md` → the relevant ADRs →
   this spec → this plan. Do not begin from a milestone title.
-- **Run:** `pnpm install`, `pnpm build`, `pnpm test`, `pnpm depcruise`,
+- **Run:** `pnpm generate:versions` after editing
+  `contracts/version-manifest.json`; then `pnpm install`,
+  `pnpm verify:versions`, `pnpm build`, `pnpm test`, `pnpm depcruise`,
   `uv sync`, `uv run pytest`.
 - **Never** weaken a test to reach green. If a criterion cannot be met, report it.
 - **Never** generate a reference value with the code under test (spike finding F7).

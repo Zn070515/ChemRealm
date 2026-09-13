@@ -4,6 +4,7 @@ import {
   type ScientificState,
   type TeachingHydrogenIonExponent,
   type VolumeProfileSnapshot,
+  VERSION_MANIFEST,
 } from "@chemrealm/schema";
 import {
   deriveBuretteState,
@@ -24,7 +25,7 @@ import {
   type PresentedScientificExpression,
 } from "./symbolic.js";
 
-export const OBSERVABLE_MODEL_VERSION = 1;
+export const OBSERVABLE_MODEL_VERSION = VERSION_MANIFEST.representation.observableModel;
 
 export interface ScientificProjectionReadout {
   readonly sourceStateHash: string;

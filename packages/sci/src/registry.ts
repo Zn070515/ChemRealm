@@ -42,6 +42,12 @@ export interface CompatibilityResult {
   readonly reasons: readonly string[];
 }
 
+/** Exact backend identity selected by a composition boundary for new worlds. */
+export interface SolverSelectionPolicy {
+  readonly id: string;
+  readonly version: string;
+}
+
 /** Runtime-only facts derived by a composition boundary for one resolution. */
 export interface SolverResolutionContext {
   /** Actual input components present in the resolved scenario. */
@@ -158,32 +164,38 @@ export class SolverRegistry {
   resolve(
     requirements: SolverRequirements,
     context: SolverResolutionContext = {},
+    selection: SolverSelectionPolicy,
   ): SolverResolution {
-    const candidates = [...this.adapters.values()];
-    if (candidates.length === 0) {
+    if (this.adapters.size === 0) {
       return {
         status: "unavailable",
         requirements,
         reason: "no solver adapters are registered",
       };
     }
+    const selected = this.adapters.get(keyOf(selection.id, selection.version));
+    if (selected === undefined) {
+      return {
+        status: "unavailable",
+        requirements,
+        reason: `selected solver adapter ${selection.id}@${selection.version} is unavailable; exact selection does not fall back to another adapter`,
+      };
+    }
 
-    const failures: string[] = [];
-    for (const adapter of candidates) {
-      const model = adapter.model;
-      const compatibility = checkModelCompatibility(requirements, model, context);
-      if (compatibility.compatible) {
-        return { status: "compatible", adapter, model, solverConfig: adapter.solverConfig };
-      }
-      failures.push(
-        `${adapter.id}@${adapter.version}: ${compatibility.reasons.join("; ")}`,
-      );
+    const compatibility = checkModelCompatibility(requirements, selected.model, context);
+    if (compatibility.compatible) {
+      return {
+        status: "compatible",
+        adapter: selected,
+        model: selected.model,
+        solverConfig: selected.solverConfig,
+      };
     }
 
     return {
       status: "incompatible",
       requirements,
-      reason: `no registered solver satisfies the requirements: ${failures.join(" | ")}`,
+      reason: `selected solver ${selected.id}@${selected.version} is incompatible: ${compatibility.reasons.join("; ")}`,
     };
   }
 }
@@ -195,8 +207,9 @@ export class SolverResolver {
   resolve(
     requirements: SolverRequirements,
     context: SolverResolutionContext = {},
+    selection: SolverSelectionPolicy,
   ): SolverResolution {
-    return this.registry.resolve(requirements, context);
+    return this.registry.resolve(requirements, context, selection);
   }
 }
 
@@ -204,6 +217,7 @@ export function resolveSolver(
   registry: SolverRegistry,
   requirements: SolverRequirements,
   context: SolverResolutionContext = {},
+  selection: SolverSelectionPolicy,
 ): SolverResolution {
-  return new SolverResolver(registry).resolve(requirements, context);
+  return new SolverResolver(registry).resolve(requirements, context, selection);
 }

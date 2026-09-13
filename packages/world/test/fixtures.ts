@@ -1,4 +1,9 @@
 import type { SerializedWorldCreated } from "../src/state.js";
+import {
+  CURRENT_SCHEMA_VERSION,
+  TEST_SOLVER_VERSION,
+  VOLUME_PROFILE_VERSION,
+} from "@chemrealm/schema";
 import { scenarioSnapshotHash, volumeProfileHash } from "../src/state.js";
 
 function volumeProfile(
@@ -18,7 +23,7 @@ function volumeProfile(
 } {
   const payload = {
     profileId,
-    profileVersion: "1.0.0",
+    profileVersion: VOLUME_PROFILE_VERSION,
     representation: "piecewise-linear" as const,
     maxVolume: { value: maxVolume, unit: "L" as const },
     maxHeight: { value: maxHeight, unit: "mm" as const },
@@ -39,7 +44,7 @@ function volumeProfile(
 
 export const WORLD_CREATED: SerializedWorldCreated = {
   seq: 0,
-  schemaVersion: 4,
+  schemaVersion: CURRENT_SCHEMA_VERSION,
   type: "WorldCreated",
   payload: {
     worldId: "w-1",
@@ -128,7 +133,7 @@ export const WORLD_CREATED: SerializedWorldCreated = {
     contentHash: "sha256:fixture",
     solverConfig: {
       id: "acidbase-monoprotic-davies",
-      version: "1.0.0",
+      version: TEST_SOLVER_VERSION,
       parameters: { Kw: 1e-14 },
     },
     seed: null,

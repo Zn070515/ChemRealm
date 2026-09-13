@@ -6,7 +6,10 @@ import {
   kelvin,
   litre,
   mol,
+  SCIENTIFIC_EXPRESSION_SCHEMA_VERSION,
+  SCIENTIFIC_SCHEMA_VERSION,
   thermodynamicConstant,
+  VERSION_MANIFEST,
   type SolveRequest,
 } from "@chemrealm/schema";
 import { buildAcidBaseSolveRequest } from "./acidbase/request.js";
@@ -14,6 +17,7 @@ import { createAcidBaseAdapter } from "./acidbase/index.js";
 import {
   createNativeJsonAdapter,
   loadNativeWasmExecutor,
+  NATIVE_BRIDGE_SCHEMA_VERSION,
   type NativeBackendPayload,
 } from "./native-backend.js";
 
@@ -26,7 +30,7 @@ const parameters = {
   neutralAcidActivityCoefficient: 1,
   waterActivity: 1,
   numericPrecisionSignificantDigits: 12,
-  numericPolicyVersion: 1,
+  numericPolicyVersion: VERSION_MANIFEST.scientific.numericPolicyVersion,
 };
 
 const request = buildAcidBaseSolveRequest({
@@ -39,17 +43,18 @@ const request = buildAcidBaseSolveRequest({
 
 function payload(overrides: Partial<NativeBackendPayload> = {}): NativeBackendPayload {
   return {
-    schemaVersion: 3,
+    bridgeSchemaVersion: NATIVE_BRIDGE_SCHEMA_VERSION,
     backend: {
-      id: "acidbase-monoprotic-davies",
-      version: "2.0.0",
+      id: VERSION_MANIFEST.scientific.acidBase.id,
+      version: VERSION_MANIFEST.scientific.acidBase.nativeVersion,
     },
     requestHash: "sha256:native-test-request",
+    sourceStateHash: "sha256:native-test-source",
     result: {
-      schemaVersion: 3,
+      schemaVersion: SCIENTIFIC_SCHEMA_VERSION,
       status: "OK",
       state: {
-        schemaVersion: 3,
+        schemaVersion: SCIENTIFIC_SCHEMA_VERSION,
         species: [
           ["H+", 0.1, 0.8],
           ["OH-", 1e-13, 0.8],
@@ -72,7 +77,7 @@ function payload(overrides: Partial<NativeBackendPayload> = {}): NativeBackendPa
         validity: { inDomain: true, withinProposedAccuracyEnvelope: true },
         provenance: {
           modelId: "acidbase-monoprotic-davies",
-          modelVersion: "2.0.0",
+          modelVersion: VERSION_MANIFEST.scientific.acidBase.nativeVersion,
           activityModel: "Davies",
           category: "calculated",
           parameters,
@@ -86,7 +91,7 @@ function payload(overrides: Partial<NativeBackendPayload> = {}): NativeBackendPa
       "davies-activity-coefficient",
       "activity-definition",
     ].map((equationId) => ({
-      schemaVersion: 4,
+      schemaVersion: SCIENTIFIC_EXPRESSION_SCHEMA_VERSION,
       id: equationId,
       equationId,
       label: "exact",
@@ -95,11 +100,11 @@ function payload(overrides: Partial<NativeBackendPayload> = {}): NativeBackendPa
       substitutions: [{ symbol: "m(H+)", value: 0.1, unit: "mol/kg" }],
       omittedTerms: [],
       producerId: "scientific-core",
-      producerVersion: "3.0.0",
-      modelId: "acidbase-monoprotic-davies",
-      modelVersion: "2.0.0",
-      sourceStateHash: "sha256:native-test-request",
-    })),
+      producerVersion: VERSION_MANIFEST.scientific.acidBase.expressionProducerVersion,
+      modelId: VERSION_MANIFEST.scientific.acidBase.id,
+      modelVersion: VERSION_MANIFEST.scientific.acidBase.nativeVersion,
+      sourceStateHash: "sha256:native-test-source",
+    })) as NativeBackendPayload["expressions"],
     ...overrides,
   };
 }
@@ -109,12 +114,16 @@ function payloadForRequest(
   overrides: Partial<NativeBackendPayload> = {},
 ): NativeBackendPayload {
   const requestHash = `sha256:${hashUtf8(requestJson)}`;
+  const sourceStateHash = (JSON.parse(requestJson) as {
+    context: { sourceStateHash: string };
+  }).context.sourceStateHash;
   const base = payload({
     requestHash,
     expressions: payload().expressions.map((expression) => ({
       ...(expression as Record<string, unknown>),
-      sourceStateHash: requestHash,
-    })),
+      sourceStateHash,
+    })) as NativeBackendPayload["expressions"],
+    sourceStateHash,
   });
   return { ...base, ...overrides };
 }
@@ -143,21 +152,51 @@ describe("native scientific backend facade", () => {
     const result = await adapter.solve(request);
 
     expect(JSON.parse(received)).toMatchObject({
-      schemaVersion: 3,
-      waterMass: { value: 1, unit: "kg" },
-      liquidVolume: { value: 0.1, unit: "L" },
-      temperature: { value: 298.15, unit: "K" },
+      bridgeSchemaVersion: NATIVE_BRIDGE_SCHEMA_VERSION,
+      request: {
+        schemaVersion: SCIENTIFIC_SCHEMA_VERSION,
+        waterMass: { value: 1, unit: "kg" },
+        liquidVolume: { value: 0.1, unit: "L" },
+        temperature: { value: 298.15, unit: "K" },
+      },
+      context: { sourceStateHash: "native-unbound-source" },
     });
     expect(result.status).toBe("OK");
     if (result.status === "OK") {
-      expect(result.state.provenance.modelVersion).toBe("2.0.0");
+      expect(result.state.provenance.modelVersion).toBe(
+        VERSION_MANIFEST.scientific.acidBase.nativeVersion,
+      );
     }
+  });
+
+  it("keeps the caller's replay source identity separate from the wire request hash", async () => {
+    let received = "";
+    const adapter = createNativeJsonAdapter(async (requestJson) => {
+      received = requestJson;
+      return JSON.stringify(payloadForRequest(requestJson));
+    });
+    const sourceStateHash = "sha256:world-sequence-44";
+
+    const execution = await adapter.solveWithScientificArtifacts(request, {
+      sourceStateHash,
+    });
+    const envelope = JSON.parse(received) as {
+      context: { sourceStateHash: string };
+    };
+
+    expect(execution.sourceStateHash).toBe(sourceStateHash);
+    expect(execution.requestHash).not.toBe(sourceStateHash);
+    expect(envelope.context.sourceStateHash).toBe(sourceStateHash);
+    expect(execution.expressions[0]?.sourceStateHash).toBe(sourceStateHash);
   });
 
   it("rejects a payload from another backend version instead of selecting a fallback", async () => {
     const adapter = createNativeJsonAdapter(async (requestJson) =>
       JSON.stringify(payloadForRequest(requestJson, {
-        backend: { id: "acidbase-monoprotic-davies", version: "1.0.0" },
+        backend: {
+          id: VERSION_MANIFEST.scientific.acidBase.id,
+          version: VERSION_MANIFEST.scientific.acidBase.legacyVersion,
+        },
       })),
     );
 

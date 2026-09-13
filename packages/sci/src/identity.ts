@@ -1,15 +1,22 @@
 import {
   parseSolveResult,
   serializeSolveResult,
+  ScientificExpressionSchema,
   SolveResultSchema,
   type ModelDescriptor,
+  type ScientificExpression,
   type SolveResult,
   type SolverConfig,
 } from "@chemrealm/schema";
 import type {
   SolveRequest,
 } from "@chemrealm/schema";
-import type { SolverAdapter } from "./adapter.js";
+import type {
+  ScientificExecution,
+  ScientificExecutionAdapter,
+  ScientificExecutionContext,
+  SolverAdapter,
+} from "./adapter.js";
 
 function cloneAndFreezeObject<T extends object>(value: T): T {
   return Object.freeze({ ...value }) as T;
@@ -82,6 +89,50 @@ function validateSolveResult(result: unknown): SolveResult {
   }
 }
 
+function validateScientificExecution(
+  execution: unknown,
+  model: ModelDescriptor,
+  solverConfig: SolverConfig,
+  context: ScientificExecutionContext,
+): ScientificExecution {
+  if (!isRecord(execution)) {
+    throw new TypeError("scientific execution must be an object");
+  }
+  if (execution.sourceStateHash !== context.sourceStateHash) {
+    throw new TypeError("scientific execution source identity mismatch");
+  }
+  const result = assertSolveResultIdentity(execution.result, model, solverConfig);
+  if (!Array.isArray(execution.expressions)) {
+    throw new TypeError("scientific execution expressions must be an array");
+  }
+  const expressions = execution.expressions.map((expression) => {
+    const parsed = ScientificExpressionSchema.parse(expression);
+    if (
+      parsed.modelId !== model.id ||
+      parsed.modelVersion !== model.version ||
+      parsed.sourceStateHash !== context.sourceStateHash
+    ) {
+      throw new TypeError("scientific expression identity mismatch");
+    }
+    return Object.freeze({
+      ...parsed,
+      substitutions: Object.freeze(parsed.substitutions.map((entry) => Object.freeze({ ...entry }))),
+      omittedTerms: Object.freeze([...parsed.omittedTerms]),
+    }) as unknown as ScientificExpression;
+  });
+  if (result.status === "OK" && expressions.length === 0) {
+    throw new TypeError("successful scientific execution omitted expressions");
+  }
+  if (result.status !== "OK" && expressions.length > 0) {
+    throw new TypeError("non-OK scientific execution emitted expressions");
+  }
+  return Object.freeze({
+    result,
+    expressions: Object.freeze(expressions),
+    sourceStateHash: context.sourceStateHash,
+  });
+}
+
 /** Enforce that a successful result names the identity that produced it. */
 export function assertSolveResultIdentity(
   result: unknown,
@@ -118,11 +169,15 @@ export function assertSolveResultIdentity(
 
 /** Freeze a registered adapter's public identity while preserving its solve seam. */
 export function freezeSolverAdapter(
+  adapter: ScientificExecutionAdapter,
+): ScientificExecutionAdapter;
+export function freezeSolverAdapter(adapter: SolverAdapter): SolverAdapter;
+export function freezeSolverAdapter(
   adapter: SolverAdapter,
-): SolverAdapter {
+): SolverAdapter | ScientificExecutionAdapter {
   const model = cloneAndFreezeModelDescriptor(adapter.model);
   const solverConfig = cloneAndFreezeSolverConfig(adapter.solverConfig);
-  return Object.freeze({
+  const frozen = {
     id: adapter.id,
     version: adapter.version,
     model,
@@ -133,5 +188,23 @@ export function freezeSolverAdapter(
         model,
         solverConfig,
       ),
-  });
+  };
+  if (typeof (adapter as Partial<ScientificExecutionAdapter>)
+    .solveWithScientificArtifacts === "function") {
+    const executionAdapter = adapter as ScientificExecutionAdapter;
+    return Object.freeze({
+      ...frozen,
+      solveWithScientificArtifacts: async (
+        request: SolveRequest,
+        context: ScientificExecutionContext,
+      ): Promise<ScientificExecution> =>
+        validateScientificExecution(
+          await executionAdapter.solveWithScientificArtifacts(request, context),
+          model,
+          solverConfig,
+          context,
+        ),
+    });
+  }
+  return Object.freeze(frozen);
 }

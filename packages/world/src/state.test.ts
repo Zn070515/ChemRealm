@@ -1,4 +1,9 @@
 import { describe, expect, it } from "vitest";
+import {
+  CURRENT_SCHEMA_VERSION,
+  TEST_SOLVER_VERSION,
+  VOLUME_PROFILE_VERSION,
+} from "@chemrealm/schema";
 
 import {
   createInitialState,
@@ -17,7 +22,7 @@ import { quantize } from "./hash.js";
 
 const WORLD_CREATED: SerializedWorldCreated = {
   seq: 0,
-  schemaVersion: 4,
+  schemaVersion: CURRENT_SCHEMA_VERSION,
   type: "WorldCreated",
   payload: {
     worldId: "w-1",
@@ -72,7 +77,7 @@ const WORLD_CREATED: SerializedWorldCreated = {
           geometryRef: "flask-250",
           volumeProfile: {
             profileId: "flask-250",
-            profileVersion: "1.0.0",
+            profileVersion: VOLUME_PROFILE_VERSION,
             profileHash: "sha256:placeholder",
             representation: "piecewise-linear",
             maxVolume: { value: 0.25, unit: "L" },
@@ -110,7 +115,7 @@ const WORLD_CREATED: SerializedWorldCreated = {
     contentHash: "sha256:fixture",
     solverConfig: {
       id: "acidbase-monoprotic-davies",
-      version: "1.0.0",
+      version: TEST_SOLVER_VERSION,
       parameters: { Kw: 1e-14 },
     },
     seed: null,

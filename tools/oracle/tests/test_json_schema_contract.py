@@ -44,6 +44,15 @@ from jsonschema.exceptions import ValidationError
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 ARTIFACT_DIR = REPO_ROOT / "packages" / "schema" / "json-schema"
+VERSION_MANIFEST = json.loads(
+    (REPO_ROOT / "contracts" / "version-manifest.json").read_text(encoding="utf-8")
+)
+WORLD_SCHEMA_VERSION = VERSION_MANIFEST["schema"]["world"]
+SCENARIO_SCHEMA_VERSION = VERSION_MANIFEST["schema"]["scenario"]
+EXPORT_FORMAT_VERSION = VERSION_MANIFEST["schema"]["exportFormat"]
+SCENARIO_CONTENT_VERSION = VERSION_MANIFEST["content"]["current"]
+VOLUME_PROFILE_VERSION = VERSION_MANIFEST["representation"]["volumeProfile"]
+LEGACY_MODEL_VERSION = VERSION_MANIFEST["scientific"]["acidBase"]["legacyVersion"]
 
 # Mirrors FORBIDDEN_BUNDLE_FIELDS in packages/schema/src/export.ts. Duplicated
 # on purpose: this is the Python side's own statement of what it refuses to
@@ -74,6 +83,8 @@ EXPECTED_ARTIFACTS = [
     "scientific-expression",
     "solve-result",
     "export-bundle",
+    "native-backend-payload",
+    "native-solve-envelope",
 ]
 
 
@@ -111,7 +122,7 @@ SOLUTE = {
 
 VOLUME_PROFILE_DEFINITION = {
     "profileId": "flask-250-profile",
-    "profileVersion": "1.0.0",
+    "profileVersion": VOLUME_PROFILE_VERSION,
     "representation": "piecewise-linear",
     "maxVolume": {"value": 0.25, "unit": "L"},
     "maxHeight": {"value": 100, "unit": "mm"},
@@ -132,8 +143,8 @@ VOLUME_PROFILE_SNAPSHOT = {
 }
 
 VALID_SCENARIO = {
-    "schemaVersion": 4,
-    "contentVersion": 1,
+    "schemaVersion": SCENARIO_SCHEMA_VERSION,
+    "contentVersion": SCENARIO_CONTENT_VERSION,
     "scenarioRef": "hcl-naoh",
     "title": "HCl vs NaOH",
     "materials": [
@@ -237,7 +248,7 @@ SCENARIO_SNAPSHOT = {
 
 WORLD_CREATED_EVENT = {
     "seq": 0,
-    "schemaVersion": 4,
+    "schemaVersion": WORLD_SCHEMA_VERSION,
     "type": "WorldCreated",
     "payload": {
         "worldId": "w-1",
@@ -245,7 +256,7 @@ WORLD_CREATED_EVENT = {
         "contentHash": "sha256:0000",
         "solverConfig": {
             "id": "acidbase-monoprotic-davies",
-            "version": "1.0.0",
+            "version": LEGACY_MODEL_VERSION,
             "parameters": {"Kw": 1.0e-14},
         },
         "seed": None,
@@ -254,8 +265,8 @@ WORLD_CREATED_EVENT = {
 
 VALID_BUNDLE = {
     "format": "chemrealm.export",
-    "formatVersion": 1,
-    "schemaVersion": 4,
+    "formatVersion": EXPORT_FORMAT_VERSION,
+    "schemaVersion": WORLD_SCHEMA_VERSION,
     "lineage": [
         {
             "worldId": "w-1",
@@ -573,7 +584,7 @@ class TestWorldGenesisSnapshot:
             "provenance"
         ] = {
             "modelId": "acidbase-monoprotic-davies",
-            "modelVersion": "1.0.0",
+            "modelVersion": LEGACY_MODEL_VERSION,
             "activityModel": "davies",
             "category": "calculated",
             "parameters": {},

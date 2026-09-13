@@ -16,6 +16,7 @@
   <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=20232A" alt="React 19">
   <img src="https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white" alt="Vite 7">
   <img src="https://img.shields.io/badge/Python-3.12+-3776AB?logo=python&logoColor=white" alt="Python 3.12 or newer">
+  <img src="https://img.shields.io/badge/Cargo-1.97-9D4C00?logo=cargo&logoColor=white" alt="Cargo 1.97">
 </p>
 
 <p>
@@ -123,6 +124,7 @@ pnpm test               # vitest
 pnpm depcruise          # architectural import rules
 pnpm guards             # proves those rules actually fail on a violation
 pnpm verify:world       # World Runtime determinism/browser contract guard
+pnpm verify:versions    # central version manifest and generated metadata drift
 pnpm artifacts          # no third-party origin (AC-P5), no API route (AC-P1)
 pnpm lint
 

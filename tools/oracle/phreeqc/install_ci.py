@@ -27,6 +27,17 @@ def load_manifest(repo_root: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def load_version_manifest(repo_root: Path) -> dict:
+    path = repo_root / "contracts" / "version-manifest.json"
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def expand_version_template(template: str, version: str, *, field: str) -> str:
+    if "{version}" not in template:
+        raise RuntimeError(f"PHREEQC manifest field {field} must contain {{version}}")
+    return template.replace("{version}", version)
+
+
 def verify_archive(path: Path, expected: str) -> None:
     actual = sha256_file(path)
     if actual.lower() != expected.lower():
@@ -80,11 +91,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = parser.parse_args(argv)
     repo_root = args.repo_root.resolve()
     manifest = load_manifest(repo_root)
-    version = manifest["version"]
+    version = load_version_manifest(repo_root)["oracle"]["phreeqc"]
     cache = Path(os.environ.get("CHEMREALM_PHREEQC_CACHE", repo_root / "tools" / "oracle" / "phreeqc" / ".cache" / version))
     cache.mkdir(parents=True, exist_ok=True)
 
-    archive_url = manifest["sourceUrl"]
+    archive_url = expand_version_template(
+        manifest["sourceUrlTemplate"], version, field="sourceUrlTemplate"
+    )
     archive = cache / Path(archive_url).name
     if not archive.is_file():
         print(f"Downloading pinned PHREEQC source: {archive_url}")
@@ -93,7 +106,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     verify_archive(archive, manifest["sourceSha256"])
 
     source = cache / "source"
-    source_root = source / Path(manifest["database"]["archivePath"]).parts[0]
+    archive_path = expand_version_template(
+        manifest["database"]["archivePathTemplate"],
+        version,
+        field="database.archivePathTemplate",
+    )
+    source_root = source / Path(archive_path).parts[0]
     if not source_root.is_dir():
         safe_extract(archive, source)
     if not source_root.is_dir():
@@ -112,7 +130,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         raise RuntimeError(f"built PHREEQC executable was not found below {build}")
     executable = candidates[0]
 
-    database = source / Path(manifest["database"]["archivePath"])
+    database = source / Path(archive_path)
     if not database.is_file():
         raise RuntimeError(f"pinned PHREEQC database was not found: {database}")
     database_sha256 = sha256_file(database)

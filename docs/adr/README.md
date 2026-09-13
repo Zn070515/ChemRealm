@@ -45,6 +45,7 @@ new ADR**, not quietly edited.
 | [0012](0012-m4-domain-and-constant-semantics.md) | M4 domain and equilibrium-constant semantics | **Accepted** (M4) | M4 |
 | [0013](0013-replayable-geometry-and-scientific-frame.md) | Replayable geometry and bound scientific frames | **Proposed** | M5, M6 |
 | [0014](0014-native-scientific-core-and-wasm-deployment.md) | Native Scientific Core and WebAssembly deployment | **Proposed** (owner-approved direction) | M4 backend gate, M5, M6 |
+| [0015](0015-central-version-manifest.md) | Central version manifest and generated release metadata | **Accepted** (owner direction) | All versioned contracts |
 
 > **Revision note (2026-09-11, owner review remediation).** ADR-0004 and ADR-0007
 > were rewritten rather than amended: the original ADR-0004 overstated what

@@ -7,6 +7,7 @@ import {
   litre,
   mol,
   thermodynamicConstant,
+  VERSION_MANIFEST,
   type SolveRequest,
 } from "@chemrealm/schema";
 import {
@@ -23,7 +24,7 @@ interface ReferenceSolute {
 }
 
 interface ReferenceFixture {
-  readonly schemaVersion: 1;
+  readonly schemaVersion: typeof VERSION_MANIFEST.oracle.referenceFixture;
   readonly id: string;
   readonly kind: "single";
   readonly description: string;
@@ -77,7 +78,7 @@ interface HalfEquivalenceCase extends ReferenceCase {
 }
 
 interface AnalyticReferenceFixture {
-  readonly schemaVersion: 1;
+  readonly schemaVersion: typeof VERSION_MANIFEST.oracle.referenceFixture;
   readonly id: "REF-3" | "REF-4" | "REF-8";
   readonly kind: "analytic-acid-excess" | "analytic-base-excess" | "analytic-half-equivalence";
   readonly description: string;
@@ -87,7 +88,7 @@ interface AnalyticReferenceFixture {
 }
 
 interface ChargeConservationFixture {
-  readonly schemaVersion: 1;
+  readonly schemaVersion: typeof VERSION_MANIFEST.oracle.referenceFixture;
   readonly id: "REF-9";
   readonly kind: "charge-conservation-sweep";
   readonly description: string;
@@ -105,7 +106,7 @@ interface ScaleComparisonCase {
 }
 
 interface ScaleComparisonFixture {
-  readonly schemaVersion: 1;
+  readonly schemaVersion: typeof VERSION_MANIFEST.oracle.referenceFixture;
   readonly id: "REF-10";
   readonly kind: "molality-molarity-bound";
   readonly description: string;
@@ -122,7 +123,7 @@ type ReferenceRecord =
   | ScaleComparisonFixture;
 
 interface ReferenceManifest {
-  readonly schemaVersion: 2;
+  readonly schemaVersion: typeof VERSION_MANIFEST.oracle.referenceManifest;
   readonly model: { readonly id: string; readonly version: string };
   readonly derivation: {
     readonly method: string;
@@ -351,7 +352,7 @@ async function assertScaleComparisonFixture(fixture: ScaleComparisonFixture): Pr
 
 describe("independent M4 reference fixtures", () => {
   it("has a complete, independently-derived REF-1…REF-10 manifest", () => {
-    expect(manifest.schemaVersion).toBe(2);
+    expect(manifest.schemaVersion).toBe(VERSION_MANIFEST.oracle.referenceManifest);
     expect(manifest.derivation.notGeneratedBy).toBe("packages/sci");
     expect(manifest.derivation.basis).toBe("molality");
     expect(fixtures).toHaveLength(10);

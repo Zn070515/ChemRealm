@@ -39,11 +39,12 @@
 
 import { z } from "zod";
 
+import { VERSION_MANIFEST } from "./generated/versions.js";
 import { EventLogSchema } from "./events.js";
 import { CURRENT_SCHEMA_VERSION, LineageSchema, WorldIdSchema } from "./world.js";
 
 export const EXPORT_FORMAT = "chemrealm.export";
-export const EXPORT_FORMAT_VERSION = 1;
+export const EXPORT_FORMAT_VERSION = VERSION_MANIFEST.schema.exportFormat;
 
 /**
  * One link in the chain from genesis to the exported branch tip. The last entry

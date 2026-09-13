@@ -9,6 +9,8 @@ import {
   createAcidBaseAdapter,
   createScientificExpressions,
   projectScientificFrame,
+  ACID_BASE_MODEL_ID,
+  ACID_BASE_MODEL_VERSION,
   type ScientificFrame,
   type SolverAdapter,
 } from "@chemrealm/sci";
@@ -215,6 +217,7 @@ export async function composeProductionTitration(
     worldId,
     scenario,
     seed: null,
+    solverSelection: { id: ACID_BASE_MODEL_ID, version: ACID_BASE_MODEL_VERSION },
   });
   if (!created.accepted) throw new Error(`production composition: ${created.reason}`);
 

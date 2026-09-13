@@ -17,6 +17,8 @@
     "guards": "node tools/check_dependency_rules.mjs",
     "verify:scientific-math": "node tools/check_scientific_math.mjs",
     "verify:scientific-quantities": "node tools/check_scientific_quantity_boundary.mjs",
+    "verify:versions": "node tools/check_versions.mjs",
+    "generate:versions": "node tools/generate_version_sources.mjs",
     "verify:m4-contracts": "node tools/check_m4_contract_consistency.mjs",
     "verify:m5-contracts": "node tools/check_m5_contract_consistency.mjs",
     "verify:world": "node tools/check_world_runtime_contract.mjs",

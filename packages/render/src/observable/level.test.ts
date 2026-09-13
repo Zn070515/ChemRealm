@@ -3,6 +3,7 @@ import {
   litre,
   millimetre,
   volumeProfileHash,
+  VOLUME_PROFILE_VERSION,
   type VolumeProfileSnapshot,
 } from "@chemrealm/schema";
 import {
@@ -14,7 +15,7 @@ import {
 describe("liquid level observable", () => {
   const conicalProfile: VolumeProfile = {
     profileId: "conical-test",
-    profileVersion: "1.0.0",
+    profileVersion: VOLUME_PROFILE_VERSION,
     profileHash: "sha256:test",
     maxVolume: litre(1),
     maxHeight: millimetre(50),
@@ -25,7 +26,7 @@ describe("liquid level observable", () => {
 
 const snapshot: VolumeProfileSnapshot = {
     profileId: "conical-snapshot",
-    profileVersion: "1.0.0",
+    profileVersion: VOLUME_PROFILE_VERSION,
     profileHash: "sha256:test",
     representation: "piecewise-linear",
     maxVolume: { value: 1, unit: "L" },
@@ -65,7 +66,7 @@ snapshot.profileHash = volumeProfileHash(snapshot);
     const calls: number[] = [];
     const profile: VolumeProfile = {
       profileId: "custom",
-      profileVersion: "1.0.0",
+    profileVersion: VOLUME_PROFILE_VERSION,
       profileHash: "sha256:custom",
       maxVolume: litre(1),
       maxHeight: millimetre(42),

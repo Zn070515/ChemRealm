@@ -1,18 +1,28 @@
 import {
+  NATIVE_BRIDGE_SCHEMA_VERSION,
+  NativeBackendPayloadSchema,
+  NativeSolveEnvelopeSchema,
   SCIENTIFIC_EXPRESSION_SCHEMA_VERSION,
-  SCIENTIFIC_SCHEMA_VERSION,
-  ScientificExpressionSchema,
+  VERSION_MANIFEST,
   SolveResultSchema,
   hashUtf8,
   parseSolveResult,
+  serializeSolveRequest,
   type ModelDescriptor,
+  type NativeBackendPayloadDto,
   type ScientificExpression,
   type SolveRequest,
   type SolveResult,
   type SolverConfig,
 } from "@chemrealm/schema";
 
-import type { SolverAdapter } from "./adapter.js";
+export { NATIVE_BRIDGE_SCHEMA_VERSION } from "@chemrealm/schema";
+
+import type {
+  ScientificExecution,
+  ScientificExecutionAdapter,
+  ScientificExecutionContext,
+} from "./adapter.js";
 import { validateSolveRequest } from "./request.js";
 import {
   assertSolveResultIdentity,
@@ -24,71 +34,28 @@ import {
   buildAcidBaseSolverConfig,
 } from "./acidbase/model.js";
 
-export const NATIVE_SCIENTIFIC_MODEL_VERSION = "2.0.0" as const;
-export const NATIVE_SCIENTIFIC_BACKEND_ID = "acidbase-monoprotic-davies" as const;
+export const NATIVE_SCIENTIFIC_MODEL_VERSION =
+  VERSION_MANIFEST.scientific.acidBase.nativeVersion;
+export const NATIVE_SCIENTIFIC_BACKEND_ID = VERSION_MANIFEST.scientific.acidBase.id;
 
+/** A strict executor for the schema-owned native bridge envelope. */
 export type NativeJsonExecutor = (requestJson: string) => Promise<string> | string;
 
-/** The untrusted wire envelope returned by a native host/WASM executor. */
-export interface NativeBackendPayload {
-  readonly schemaVersion: number;
-  readonly backend: { readonly id: string; readonly version: string };
+/** Compatibility alias for tests and host tooling; shape is schema-owned. */
+export type NativeBackendPayload = NativeBackendPayloadDto;
+
+export type NativeSolveOutcome = ScientificExecution & {
   readonly requestHash: string;
-  readonly result: unknown;
-  readonly expressions: readonly unknown[];
+};
+
+export interface NativeExpressionSolverAdapter extends ScientificExecutionAdapter {
+  solveWithScientificArtifacts(
+    request: SolveRequest,
+    context: ScientificExecutionContext,
+  ): Promise<NativeSolveOutcome>;
 }
 
-export interface NativeSolveOutcome {
-  readonly result: SolveResult;
-  readonly expressions: readonly ScientificExpression[];
-  /** Present for backend-produced payloads; absent for facade validation failures. */
-  readonly requestHash?: string;
-}
-
-export interface NativeExpressionSolverAdapter extends SolverAdapter {
-  solveWithExpressions(request: SolveRequest): Promise<NativeSolveOutcome>;
-}
-
-function record(value: unknown, name: string): Record<string, unknown> {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    throw new TypeError(`native backend ${name} must be an object`);
-  }
-  return value as Record<string, unknown>;
-}
-
-function finiteNumber(value: unknown, name: string): number {
-  if (typeof value !== "number" || !Number.isFinite(value)) {
-    throw new TypeError(`native backend ${name} must be finite`);
-  }
-  return value;
-}
-
-function quantityValue(value: unknown, name: string): number {
-  if (typeof value === "number") return finiteNumber(value, name);
-  const parsed = record(value, name);
-  return finiteNumber(parsed.value, name);
-}
-
-function serializeRequest(request: SolveRequest): string {
-  return JSON.stringify({
-    schemaVersion: SCIENTIFIC_SCHEMA_VERSION,
-    waterMass: { value: quantityValue(request.waterMass, "waterMass"), unit: "kg" },
-    liquidVolume: { value: quantityValue(request.liquidVolume, "liquidVolume"), unit: "L" },
-    solutes: request.solutes.map((solute) => ({
-      soluteId: solute.soluteId,
-      amount: { value: quantityValue(solute.amount, "solute amount"), unit: "mol" },
-      mode: solute.mode,
-      ...(solute.mode === "monoprotic-equilibrium"
-        ? { ka: { value: quantityValue(solute.ka, "solute Ka"), unit: "1" } }
-        : {}),
-    })),
-    temperature: { value: quantityValue(request.temperature, "temperature"), unit: "K" },
-    indicators: request.indicators.map((indicator) => ({
-      indicatorId: indicator.indicatorId,
-      kaIn: { value: quantityValue(indicator.kaIn, "indicator Ka"), unit: "1" },
-    })),
-  });
-}
+export const NATIVE_UNBOUND_SOURCE_STATE_HASH = "native-unbound-source";
 
 function nativeModel(): ModelDescriptor {
   const legacy = buildAcidBaseModelDescriptor();
@@ -100,10 +67,22 @@ function nativeSolverConfig(): SolverConfig {
   return cloneAndFreezeSolverConfig({ ...legacy, version: NATIVE_SCIENTIFIC_MODEL_VERSION });
 }
 
+function assertSourceStateHash(context: ScientificExecutionContext): string {
+  if (
+    typeof context.sourceStateHash !== "string" ||
+    context.sourceStateHash.trim().length === 0
+  ) {
+    throw new TypeError("native execution sourceStateHash must be a non-empty string");
+  }
+  return context.sourceStateHash;
+}
+
 function parseNativePayload(
   rawJson: string,
   model: ModelDescriptor,
+  solverConfig: SolverConfig,
   expectedRequestHash: string,
+  expectedSourceStateHash: string,
 ): NativeSolveOutcome {
   let raw: unknown;
   try {
@@ -111,111 +90,127 @@ function parseNativePayload(
   } catch (error) {
     throw new TypeError("native backend returned invalid JSON", { cause: error });
   }
-  const payload = record(raw, "payload") as unknown as NativeBackendPayload;
-  if (payload.schemaVersion !== SCIENTIFIC_SCHEMA_VERSION) {
-    throw new TypeError("native backend schema version mismatch");
+
+  let payload: NativeBackendPayloadDto;
+  try {
+    payload = NativeBackendPayloadSchema.parse(raw);
+  } catch (error) {
+    throw new TypeError("native backend returned a schema-invalid payload", { cause: error });
   }
-  const backend = record(payload.backend, "identity");
   if (
-    backend.id !== model.id ||
-    backend.version !== model.version
+    payload.backend.id !== model.id ||
+    payload.backend.version !== model.version
   ) {
     throw new TypeError("native backend identity mismatch");
-  }
-  if (typeof payload.requestHash !== "string" || payload.requestHash.trim().length === 0) {
-    throw new TypeError("native backend request hash is missing");
   }
   if (payload.requestHash !== expectedRequestHash) {
     throw new TypeError("native backend request hash mismatch");
   }
-  if (!Array.isArray(payload.expressions)) {
-    throw new TypeError("native backend expressions must be an array");
+  if (payload.sourceStateHash !== expectedSourceStateHash) {
+    throw new TypeError("native backend source state hash mismatch");
   }
 
-  let result: SolveResult;
-  try {
-    result = parseSolveResult(SolveResultSchema.parse(payload.result));
-  } catch (error) {
-    throw new TypeError("native backend returned a schema-invalid result", { cause: error });
-  }
+  const result = assertSolveResultIdentity(
+    parseSolveResult(SolveResultSchema.parse(payload.result)),
+    model,
+    solverConfig,
+  );
   const expressions: ScientificExpression[] = [];
-  try {
-    for (const expression of payload.expressions) {
-      const parsed = ScientificExpressionSchema.parse(expression);
-      if (
-        parsed.modelId !== model.id ||
-        parsed.modelVersion !== model.version ||
-        parsed.sourceStateHash !== payload.requestHash ||
-        parsed.schemaVersion !== SCIENTIFIC_EXPRESSION_SCHEMA_VERSION
-      ) {
-        throw new TypeError("native expression identity does not match its backend payload");
-      }
-      expressions.push(parsed);
+  for (const expression of payload.expressions) {
+    if (
+      expression.modelId !== model.id ||
+      expression.modelVersion !== model.version ||
+      expression.sourceStateHash !== expectedSourceStateHash ||
+      expression.schemaVersion !== SCIENTIFIC_EXPRESSION_SCHEMA_VERSION
+    ) {
+      throw new TypeError("native expression identity does not match execution context");
     }
-  } catch (error) {
-    throw new TypeError("native backend returned an invalid expression payload", { cause: error });
+    expressions.push(Object.freeze({
+      ...expression,
+      substitutions: Object.freeze(expression.substitutions.map((entry) => Object.freeze({ ...entry }))),
+      omittedTerms: Object.freeze([...expression.omittedTerms]),
+    }) as unknown as ScientificExpression);
   }
 
-  if (result.status === "OK") {
-    const ids = expressions.map((expression) => expression.equationId);
-    const required = [
-      "charge-balance",
-      "water-autoprotolysis",
-      "ionic-strength-fixed-point",
-      "davies-activity-coefficient",
-      "activity-definition",
-    ];
-    if (!required.every((id) => ids.some((candidate) => candidate === id))) {
-      throw new TypeError("native backend omitted a required scientific expression");
-    }
-  } else if (expressions.length > 0) {
+  const required = [
+    "charge-balance",
+    "water-autoprotolysis",
+    "ionic-strength-fixed-point",
+    "davies-activity-coefficient",
+    "activity-definition",
+  ];
+  if (result.status === "OK" && !required.every((id) =>
+    expressions.some((expression) => expression.equationId === id)
+  )) {
+    throw new TypeError("native backend omitted a required scientific expression");
+  }
+  if (result.status !== "OK" && expressions.length > 0) {
     throw new TypeError("native backend emitted expressions for a non-OK result");
   }
 
   return Object.freeze({
-    result: assertSolveResultIdentity(result, model, nativeSolverConfig()),
+    result,
     expressions: Object.freeze(expressions),
+    sourceStateHash: expectedSourceStateHash,
     requestHash: payload.requestHash,
   });
 }
 
+function serializeEnvelope(
+  request: SolveRequest,
+  context: ScientificExecutionContext,
+): string {
+  const sourceStateHash = assertSourceStateHash(context);
+  return JSON.stringify(NativeSolveEnvelopeSchema.parse({
+    bridgeSchemaVersion: NATIVE_BRIDGE_SCHEMA_VERSION,
+    request: serializeSolveRequest(request),
+    context: { sourceStateHash },
+  }));
+}
+
 /**
- * Create a candidate native adapter from any strict JSON executor. The
- * executor is intentionally injected: host tests can use the Rust binary and
- * the browser loader can use the bundled WASM module without changing the
- * scientific validation path.
+ * Create a native adapter from a strict JSON executor. The executor receives
+ * the schema-owned envelope; it never receives a hand-maintained request DTO.
  */
 export function createNativeJsonAdapter(
   execute: NativeJsonExecutor,
 ): NativeExpressionSolverAdapter {
   const model = nativeModel();
   const solverConfig = nativeSolverConfig();
-  const solveWithExpressions = async (request: SolveRequest): Promise<NativeSolveOutcome> => {
+  const solveWithScientificArtifacts = async (
+    request: SolveRequest,
+    context: ScientificExecutionContext,
+  ): Promise<NativeSolveOutcome> => {
+    const sourceStateHash = assertSourceStateHash(context);
     const violations = validateSolveRequest(request);
     if (violations.length > 0) {
       return Object.freeze({
         result: { status: "INVALID_INPUT" as const, violations },
         expressions: Object.freeze([]),
+        sourceStateHash,
+        requestHash: "",
       });
     }
-    const requestJson = serializeRequest(request);
-    const payload = parseNativePayload(
+    const requestJson = serializeEnvelope(request, context);
+    return parseNativePayload(
       await execute(requestJson),
       model,
+      solverConfig,
       `sha256:${hashUtf8(requestJson)}`,
+      sourceStateHash,
     );
-    return Object.freeze({
-      ...payload,
-      result: assertSolveResultIdentity(payload.result, model, solverConfig),
-    });
   };
+
   return Object.freeze({
     id: NATIVE_SCIENTIFIC_BACKEND_ID,
     version: NATIVE_SCIENTIFIC_MODEL_VERSION,
     model,
     solverConfig,
-    solveWithExpressions,
-    solve: async (request: SolveRequest) => (await solveWithExpressions(request)).result,
+    solveWithScientificArtifacts,
+    solve: async (request: SolveRequest): Promise<SolveResult> =>
+      (await solveWithScientificArtifacts(request, {
+        sourceStateHash: NATIVE_UNBOUND_SOURCE_STATE_HASH,
+      })).result,
   });
 }
 
@@ -273,9 +268,11 @@ export function createWasmJsonExecutor(instance: RawWasmInstance): NativeJsonExe
       throw new Error("native WASM returned an invalid JSON buffer");
     }
     const output = new Uint8Array(exports.memory.buffer, outputPointer, outputLength);
-    const decoded = decoder.decode(output);
-    exports.chemrealm_dealloc(outputPointer, outputLength);
-    return decoded;
+    try {
+      return decoder.decode(output);
+    } finally {
+      exports.chemrealm_dealloc(outputPointer, outputLength);
+    }
   };
 }
 

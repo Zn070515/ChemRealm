@@ -24,6 +24,7 @@
 
 export * from "./units.js";
 export * from "./quantity.js";
+export * from "./generated/versions.js";
 export * from "./scientific.js";
 export * from "./world.js";
 export * from "./events.js";

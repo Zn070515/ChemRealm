@@ -18,6 +18,7 @@
 
 import { z } from "zod";
 
+import { VERSION_MANIFEST } from "./generated/versions.js";
 import { quantityOfDimension } from "./quantity.js";
 import {
   ApparatusIdSchema,
@@ -34,7 +35,7 @@ import {
  * type. An unversioned wire format cannot be migrated later without guesswork
  * (M1 contract remediation item 6).
  */
-export const COMMAND_SCHEMA_VERSION = 1;
+export const COMMAND_SCHEMA_VERSION = VERSION_MANIFEST.schema.command;
 
 export const CommandSchema = z.discriminatedUnion("type", [
   z.strictObject({

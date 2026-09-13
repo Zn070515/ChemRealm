@@ -1,5 +1,6 @@
 import {
   SCIENTIFIC_EXPRESSION_SCHEMA_VERSION,
+  VERSION_MANIFEST,
   type ScientificExpressionEquationId,
   type ScientificExpressionSubstitution,
   type ScientificExpression,
@@ -9,7 +10,8 @@ import type { ScientificFrame } from "./frame.js";
 import { detLog10 } from "./deterministic-math.js";
 
 /** Version of the Scientific Core's expression producer contract. */
-export const SCIENTIFIC_EXPRESSION_PRODUCER_VERSION = "3.0.0";
+export const SCIENTIFIC_EXPRESSION_PRODUCER_VERSION =
+  VERSION_MANIFEST.scientific.acidBase.expressionProducerVersion;
 
 function finite(value: number, name: string): number {
   if (!Number.isFinite(value)) throw new RangeError(`${name} must be finite`);
@@ -99,6 +101,7 @@ export function createScientificExpressions(
   const oacActivity = speciesValue(frame, "OAc-", "activity");
   const ha = speciesValue(frame, "HOAc", "molality");
   const ionicStrength = frame.scientificState.ionicStrengthMolal.value;
+  const reducedIonicStrength = frame.scientificState.ionicStrengthReduced.value;
   const daviesA = frame.scientificState.provenance.parameters.Davies_A;
   const daviesB = frame.scientificState.provenance.parameters.Davies_b;
   const acidFamilyTotal = ha + oac;
@@ -158,12 +161,12 @@ export function createScientificExpressions(
     makeExpression(
       frame,
       "davies-activity-coefficient",
-      "log10(γ_i) = -A(√I/(1+√I) - bI)",
-      `${substituted("log10(γ(H+))", detLog10(speciesValue(frame, "H+", "activityCoefficient")), "1")} = -${substituted("A", daviesA, "1")} · (√${substituted("I", ionicStrength, "mol/kg")} / (1 + √${substituted("I", ionicStrength, "mol/kg")}) - ${substituted("b", daviesB, "1")} · ${substituted("I", ionicStrength, "mol/kg")})`,
+      "log10(γ_i) = -A(√Î/(1+√Î) - bÎ)",
+      `${substituted("log10(γ(H+))", detLog10(speciesValue(frame, "H+", "activityCoefficient")), "1")} = -${substituted("A", daviesA, "1")} · (√${substituted("Î", reducedIonicStrength, "1")} / (1 + √${substituted("Î", reducedIonicStrength, "1")}) - ${substituted("b", daviesB, "1")} · ${substituted("Î", reducedIonicStrength, "1")})`,
       [
         substitution("A", daviesA, "1"),
         substitution("b", daviesB, "1"),
-        substitution("I", ionicStrength, "mol/kg"),
+        substitution("Î", reducedIonicStrength, "1"),
         substitution("γ(H+)", speciesValue(frame, "H+", "activityCoefficient"), "1"),
       ],
       [],
@@ -214,4 +217,15 @@ export function createScientificExpressions(
   }
 
   return Object.freeze(expressions);
+}
+
+/** Native/legacy adapters use this producer without constructing a frame. */
+export function createScientificExpressionsFromState(
+  state: ScientificFrame["scientificState"],
+  sourceStateHash: string,
+): readonly ScientificExpression[] {
+  return createScientificExpressions({
+    scientificState: state,
+    sourceStateHash,
+  } as ScientificFrame);
 }

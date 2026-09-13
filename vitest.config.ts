@@ -28,6 +28,7 @@ export default defineConfig({
       "packages/sci/test/**/*.test.ts",
       "apps/*/src/**/*.test.ts",
       "tests/**/*.test.ts",
+      "tests/**/*.test.mjs",
     ],
     exclude: ["**/node_modules/**", "**/dist/**", "spikes/**"],
   },

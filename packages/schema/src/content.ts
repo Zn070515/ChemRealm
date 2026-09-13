@@ -14,12 +14,13 @@
 
 import { z } from "zod";
 
+import { VERSION_MANIFEST } from "./generated/versions.js";
 import { quantityOfDimension } from "./quantity.js";
 import { DataProvenanceSchema } from "./scientific.js";
 import { VolumeProfileDefinitionSchema } from "./volume-profile.js";
 
 /** Authoring shape version; independent from the persisted world event version. */
-export const SCENARIO_SCHEMA_VERSION = 4;
+export const SCENARIO_SCHEMA_VERSION = VERSION_MANIFEST.schema.scenario;
 
 /**
  * A solute, on ONE named composition scale.

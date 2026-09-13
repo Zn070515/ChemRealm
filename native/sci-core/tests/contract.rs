@@ -1,9 +1,12 @@
-use chemrealm_sci_core::{det_exp10, det_log10, solve_canonical_json};
+use chemrealm_sci_core::{
+    det_exp10, det_log10, solve_canonical_json, MODEL_ID, MODEL_VERSION,
+    NATIVE_BRIDGE_SCHEMA_VERSION, SCIENTIFIC_EXPRESSION_SCHEMA_VERSION, SCIENTIFIC_SCHEMA_VERSION,
+};
 use serde_json::{json, Value};
 
 fn hcl_request(amount: f64) -> Value {
     json!({
-        "schemaVersion": 3,
+        "schemaVersion": SCIENTIFIC_SCHEMA_VERSION,
         "waterMass": { "value": 1.0, "unit": "kg" },
         "liquidVolume": { "value": 0.1, "unit": "L" },
         "temperature": { "value": 298.15, "unit": "K" },
@@ -17,7 +20,12 @@ fn hcl_request(amount: f64) -> Value {
 }
 
 fn solve(value: Value) -> Value {
-    let wire = serde_json::to_string(&value).expect("request serializes");
+    let envelope = json!({
+        "bridgeSchemaVersion": NATIVE_BRIDGE_SCHEMA_VERSION,
+        "request": value,
+        "context": { "sourceStateHash": "sha256:test-world-state" }
+    });
+    let wire = serde_json::to_string(&envelope).expect("request serializes");
     let response = solve_canonical_json(&wire).expect("native bridge succeeds");
     serde_json::from_str(&response).expect("native response is JSON")
 }
@@ -32,11 +40,18 @@ fn deterministic_math_matches_pinned_vectors() {
 #[test]
 fn host_bridge_returns_schema_shaped_state_and_complete_base_equations() {
     let response = solve(hcl_request(0.1));
-    assert_eq!(response["schemaVersion"], 3);
-    assert_eq!(response["backend"]["id"], "acidbase-monoprotic-davies");
-    assert_eq!(response["backend"]["version"], "2.0.0");
+    assert_eq!(
+        response["bridgeSchemaVersion"],
+        NATIVE_BRIDGE_SCHEMA_VERSION
+    );
+    assert_eq!(response["sourceStateHash"], "sha256:test-world-state");
+    assert_eq!(response["backend"]["id"], MODEL_ID);
+    assert_eq!(response["backend"]["version"], MODEL_VERSION);
     assert_eq!(response["result"]["status"], "OK");
-    assert_eq!(response["result"]["state"]["schemaVersion"], 3);
+    assert_eq!(
+        response["result"]["state"]["schemaVersion"],
+        SCIENTIFIC_SCHEMA_VERSION
+    );
     assert_eq!(response["expressions"].as_array().unwrap().len(), 5);
     let equations: Vec<&str> = response["expressions"]
         .as_array()
@@ -55,16 +70,41 @@ fn host_bridge_returns_schema_shaped_state_and_complete_base_equations() {
         ]
     );
     assert_eq!(response["expressions"][0]["producerId"], "scientific-core");
-    assert_eq!(response["expressions"][0]["schemaVersion"], 4);
+    assert_eq!(
+        response["expressions"][0]["schemaVersion"],
+        SCIENTIFIC_EXPRESSION_SCHEMA_VERSION
+    );
+    assert_eq!(
+        response["expressions"][3]["substitutions"][2]["symbol"],
+        "Î"
+    );
+    assert_eq!(response["expressions"][3]["substitutions"][2]["unit"], "1");
+}
+
+#[test]
+fn host_bridge_echoes_context_identity_not_request_hash() {
+    let request = hcl_request(0.1);
+    let envelope = json!({
+        "bridgeSchemaVersion": NATIVE_BRIDGE_SCHEMA_VERSION,
+        "request": request,
+        "context": { "sourceStateHash": "sha256:another-world-state" }
+    });
+    let wire = serde_json::to_string(&envelope).unwrap();
+    let response: Value = serde_json::from_str(&solve_canonical_json(&wire).unwrap()).unwrap();
+
+    assert_eq!(response["sourceStateHash"], "sha256:another-world-state");
+    assert_eq!(
+        response["expressions"][0]["sourceStateHash"],
+        "sha256:another-world-state"
+    );
+    assert_ne!(response["requestHash"], response["sourceStateHash"]);
 }
 
 #[test]
 fn host_bridge_rejects_wrong_units_and_unsupported_components() {
     let mut request = hcl_request(0.1);
     request["waterMass"]["unit"] = json!("L");
-    let malformed = serde_json::to_string(&request).unwrap();
-    let wrong_unit: Value =
-        serde_json::from_str(&solve_canonical_json(&malformed).unwrap()).unwrap();
+    let wrong_unit = solve(request);
     assert_eq!(wrong_unit["result"]["status"], "INVALID_INPUT");
 
     let unsupported = hcl_request(0.1).tap_mut(|value| {
@@ -109,7 +149,7 @@ fn host_bridge_rejects_explicit_null_ka_even_for_fully_dissociated_solute() {
 #[test]
 fn host_bridge_preserves_common_acetate_family_representation() {
     let hoac_plus_base = json!({
-        "schemaVersion": 3,
+        "schemaVersion": SCIENTIFIC_SCHEMA_VERSION,
         "waterMass": { "value": 1.0, "unit": "kg" },
         "liquidVolume": { "value": 0.1, "unit": "L" },
         "temperature": { "value": 298.15, "unit": "K" },
@@ -120,7 +160,7 @@ fn host_bridge_preserves_common_acetate_family_representation() {
         "indicators": []
     });
     let naoac = json!({
-        "schemaVersion": 3,
+        "schemaVersion": SCIENTIFIC_SCHEMA_VERSION,
         "waterMass": { "value": 1.0, "unit": "kg" },
         "liquidVolume": { "value": 0.1, "unit": "L" },
         "temperature": { "value": 298.15, "unit": "K" },

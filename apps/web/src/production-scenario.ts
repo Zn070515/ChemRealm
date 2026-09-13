@@ -1,5 +1,6 @@
 import {
   SCENARIO_SCHEMA_VERSION,
+  VERSION_MANIFEST,
   type Scenario,
 } from "@chemrealm/schema";
 
@@ -64,7 +65,7 @@ const indicatorProvenance = {
 function profile(profileId: string, maxVolume: number, maxHeight: number) {
   return {
     profileId,
-    profileVersion: "1.0.0",
+    profileVersion: VERSION_MANIFEST.representation.volumeProfile,
     representation: "piecewise-linear" as const,
     maxVolume: { value: maxVolume, unit: "L" as const },
     maxHeight: { value: maxHeight, unit: "mm" as const },
@@ -90,7 +91,7 @@ function profile(profileId: string, maxVolume: number, maxHeight: number) {
  */
 export const productionTitrationScenario: Scenario = {
   schemaVersion: SCENARIO_SCHEMA_VERSION,
-  contentVersion: 1,
+  contentVersion: VERSION_MANIFEST.content.current,
   scenarioRef: "m5-production-titration",
   title: "M5 production titration composition",
   description: "Deterministic local composition fixture for the scientific inspection surface.",

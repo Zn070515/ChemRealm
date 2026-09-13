@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
+import { COMMAND_SCHEMA_VERSION } from "@chemrealm/schema";
 
 import { WORLD_CREATED } from "../test/fixtures.js";
 import { emitCommand } from "./command.js";
@@ -18,7 +19,7 @@ function eventLog(count: number) {
   let state = createInitialState(WORLD_CREATED);
   let log = createLog(WORLD_CREATED);
   const charge = emitCommand(state, {
-    schemaVersion: 1,
+    schemaVersion: COMMAND_SCHEMA_VERSION,
     type: "ChargeVessel",
     vesselId: "flask",
     materialId: "hcl-0.1",
@@ -29,7 +30,7 @@ function eventLog(count: number) {
   state = reduce(state, charge.event);
   for (let i = 0; i < count - 2; i += 1) {
     const transfer = emitCommand(state, {
-      schemaVersion: 1,
+      schemaVersion: COMMAND_SCHEMA_VERSION,
       type: "DeliverTitrant",
       fromVesselId: "flask",
       toVesselId: "burette",

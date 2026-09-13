@@ -9,6 +9,7 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 MANIFEST_PATH = REPO_ROOT / "tools" / "oracle" / "phreeqc" / "manifest.json"
+VERSION_MANIFEST_PATH = REPO_ROOT / "contracts" / "version-manifest.json"
 PROVENANCE_PATH = REPO_ROOT / "docs" / "research" / "constants-provenance.md"
 
 
@@ -20,14 +21,27 @@ def load_manifest() -> dict:
     return value
 
 
+def load_version_manifest() -> dict:
+    with VERSION_MANIFEST_PATH.open(encoding="utf-8") as handle:
+        value = json.load(handle)
+    assert isinstance(value, dict)
+    return value
+
+
 def test_phreeqc_manifest_pins_executable_and_database() -> None:
     manifest = load_manifest()
+    versions = load_version_manifest()
     assert manifest["tool"] == "PHREEQC"
-    assert manifest["version"] == "3.8.6-17100"
-    assert manifest["sourceUrl"].startswith("https://")
+    assert "version" not in manifest
+    version = versions["oracle"]["phreeqc"]
+    assert "{version}" in manifest["sourceUrlTemplate"]
+    assert manifest["sourceUrlTemplate"].startswith("https://")
     assert manifest["sourceSha256"]
     assert manifest["database"]["name"] == "phreeqc.dat"
-    assert manifest["database"]["sourceUrl"].startswith("https://")
+    assert "{version}" in manifest["database"]["archivePathTemplate"]
+    assert manifest["database"]["archivePathTemplate"].replace("{version}", version).startswith(
+        "phreeqc-"
+    )
     assert manifest["database"]["sha256"]
     assert manifest["database"]["licenseSource"]
 
@@ -47,7 +61,7 @@ def test_constants_provenance_is_present_and_mentions_all_identity_inputs() -> N
         assert token in text
 
 
-@pytest.mark.parametrize("field", ["sourceSha256", "version"])
+@pytest.mark.parametrize("field", ["sourceSha256"])
 def test_manifest_required_fields_cannot_be_empty(field: str) -> None:
     manifest = load_manifest()
     assert isinstance(manifest[field], str)

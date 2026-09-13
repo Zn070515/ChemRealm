@@ -10,6 +10,7 @@ import {
   reducedIonicStrength,
   reducedMolality,
   type ScientificState,
+  TEST_MODEL_VERSION,
 } from "@chemrealm/schema";
 import { projectScientificFrame } from "./frame.js";
 import { projectScientificState } from "./projection.js";
@@ -37,7 +38,7 @@ function scientificState(): ScientificState {
     },
     provenance: {
       modelId: "acidbase-monoprotic-davies",
-      modelVersion: "1.0.0",
+      modelVersion: TEST_MODEL_VERSION,
       activityModel: "Davies",
       category: "calculated",
       parameters: { Kw: 1e-14 },

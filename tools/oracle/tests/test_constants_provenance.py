@@ -10,6 +10,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 PROVENANCE_PATH = REPO_ROOT / "docs" / "research" / "constants-provenance.json"
+VERSION_MANIFEST_PATH = REPO_ROOT / "contracts" / "version-manifest.json"
 V0_INPUTS_PATH = REPO_ROOT / "docs" / "research" / "v0-scientific-inputs.json"
 V0_ENVELOPE_REFERENCE_PATH = REPO_ROOT / "docs" / "research" / "v0-envelope-reference.json"
 M4_ACCEPTANCE_TEST_PATH = REPO_ROOT / "apps" / "web" / "src" / "m4-acceptance.test.ts"
@@ -18,6 +19,13 @@ M4_ACCEPTANCE_TEST_PATH = REPO_ROOT / "apps" / "web" / "src" / "m4-acceptance.te
 def load_provenance() -> dict:
     assert PROVENANCE_PATH.is_file(), f"missing constants provenance: {PROVENANCE_PATH}"
     with PROVENANCE_PATH.open(encoding="utf-8") as handle:
+        value = json.load(handle)
+    assert isinstance(value, dict)
+    return value
+
+
+def load_version_manifest() -> dict:
+    with VERSION_MANIFEST_PATH.open(encoding="utf-8") as handle:
         value = json.load(handle)
     assert isinstance(value, dict)
     return value
@@ -43,10 +51,12 @@ def load_v0_envelope_reference() -> dict:
 
 def test_every_solver_identity_numeric_has_machine_readable_provenance() -> None:
     document = load_provenance()
-    assert document["schemaVersion"] == 1
+    versions = load_version_manifest()
+    assert document["schemaVersion"] == versions["oracle"]["constantsProvenance"]
+    acid_base = load_version_manifest()["scientific"]["acidBase"]
     assert document["model"] == {
-        "id": "acidbase-monoprotic-davies",
-        "version": "1.0.0",
+        "id": acid_base["id"],
+        "version": acid_base["legacyVersion"],
     }
 
     records = document["records"]

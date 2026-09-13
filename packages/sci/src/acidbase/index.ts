@@ -19,7 +19,10 @@ import {
 
 import { assertSolveResultIdentity, freezeSolverAdapter } from "../identity.js";
 import { validateSolveRequest } from "../request.js";
-import type { SolverAdapter } from "../adapter.js";
+import type {
+  ScientificExecutionAdapter,
+} from "../adapter.js";
+import { createScientificExpressionsFromState } from "../expressions.js";
 import { detLog10 } from "../deterministic-math.js";
 import { protonationRatio } from "./indicator.js";
 import { aggregateComponents, type AcidBaseComponentTotals } from "./catalog.js";
@@ -263,7 +266,7 @@ function solveRequest(
 }
 
 /** Create the fixed v0 acid-base adapter; constants cannot be overridden. */
-export function createAcidBaseAdapter(): SolverAdapter {
+export function createAcidBaseAdapter(): ScientificExecutionAdapter {
   const model = buildAcidBaseModelDescriptor();
   const solverConfig = buildAcidBaseSolverConfig();
   return freezeSolverAdapter({
@@ -272,5 +275,23 @@ export function createAcidBaseAdapter(): SolverAdapter {
     model,
     solverConfig,
     solve: async (request) => solveRequest(request, model, solverConfig),
+    solveWithScientificArtifacts: async (request, context) => {
+      const result = solveRequest(request, model, solverConfig);
+      if (result.status !== "OK") {
+        return {
+          result,
+          expressions: [],
+          sourceStateHash: context.sourceStateHash,
+        };
+      }
+      return {
+        result,
+        expressions: createScientificExpressionsFromState(
+          result.state,
+          context.sourceStateHash,
+        ),
+        sourceStateHash: context.sourceStateHash,
+      };
+    },
   });
 }

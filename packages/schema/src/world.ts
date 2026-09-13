@@ -21,6 +21,7 @@
 
 import { z } from "zod";
 
+import { VERSION_MANIFEST } from "./generated/versions.js";
 import { canonicalQuantityOfDimension, quantityOfDimension } from "./quantity.js";
 import { DataProvenanceSchema, SolverConfigSchema } from "./scientific.js";
 import { VolumeProfileSnapshotSchema } from "./volume-profile.js";
@@ -253,7 +254,7 @@ export const LineageSchema = z.strictObject({
 export type Lineage = z.infer<typeof LineageSchema>;
 
 /** Current persisted World/Event/State schema version. */
-export const CURRENT_SCHEMA_VERSION = 4;
+export const CURRENT_SCHEMA_VERSION = VERSION_MANIFEST.schema.world;
 
 /**
  * `sequence` is the present cursor and is NOT hashed. Wall-clock time appears

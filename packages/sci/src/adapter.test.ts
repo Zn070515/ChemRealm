@@ -12,13 +12,15 @@ import {
   type ScientificState,
   type SolveRequest,
   type SolveResult,
+  TEST_SOLVER_VERSION,
+  VERSION_MANIFEST,
 } from "@chemrealm/schema";
 
 import { StubSolverAdapter } from "./stub.js";
 
 const descriptor: ModelDescriptor = {
   id: "test-solver",
-  version: "1.0.0",
+  version: TEST_SOLVER_VERSION,
   description: "contract-test solver",
   validity: {
     temperature: { min: kelvin(273.15), max: kelvin(373.15) },
@@ -162,7 +164,7 @@ describe("SolverAdapter contract", () => {
 
   it.each([
     ["model id", { modelId: "different-solver" }],
-    ["model version", { modelVersion: "2.0.0" }],
+    ["model version", { modelVersion: VERSION_MANIFEST.scientific.acidBase.nativeVersion }],
     ["parameters", { parameters: { Kw: 2e-14 } }],
   ] as const)("rejects an OK result with mismatched provenance %s", async (_name, mismatch) => {
     const adapter = new StubSolverAdapter({

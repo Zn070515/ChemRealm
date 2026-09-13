@@ -3,6 +3,7 @@ import {
   litre,
   taughtHydrogenIonExponent,
   volumeProfileHash,
+  VOLUME_PROFILE_VERSION,
   type VolumeProfileSnapshot,
 } from "@chemrealm/schema";
 import { buildObservableModel, type ObservableInput } from "./index.js";
@@ -10,7 +11,7 @@ import { scientificState } from "../../test/fixtures.js";
 
 const volumeProfileSnapshot: VolumeProfileSnapshot = {
   profileId: "test-profile",
-  profileVersion: "1.0.0",
+  profileVersion: VOLUME_PROFILE_VERSION,
   profileHash: "sha256:profile",
   representation: "piecewise-linear",
   maxVolume: { value: 1, unit: "L" },

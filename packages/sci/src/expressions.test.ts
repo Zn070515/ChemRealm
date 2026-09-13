@@ -10,6 +10,8 @@ import {
   reducedIonicStrength,
   reducedMolality,
   type ScientificState,
+  TEST_MODEL_VERSION,
+  VERSION_MANIFEST,
 } from "@chemrealm/schema";
 import { createScientificExpressions } from "./expressions.js";
 import { projectScientificFrame } from "./frame.js";
@@ -39,7 +41,7 @@ function frame(withAcidFamily = false) {
     validity: { inDomain: true, withinProposedAccuracyEnvelope: true },
     provenance: {
       modelId: "acidbase-monoprotic-davies",
-      modelVersion: "1.0.0",
+      modelVersion: TEST_MODEL_VERSION,
       activityModel: "Davies",
       category: "calculated",
       parameters: {
@@ -64,7 +66,7 @@ describe("Scientific Core expression producer", () => {
     expect(expressions).toHaveLength(5);
     expect(expressions[0]).toMatchObject({
       producerId: "scientific-core",
-      producerVersion: "3.0.0",
+      producerVersion: VERSION_MANIFEST.scientific.acidBase.expressionProducerVersion,
       label: "exact",
       sourceStateHash: "world-state-44",
       modelId: "acidbase-monoprotic-davies",
@@ -96,10 +98,11 @@ describe("Scientific Core expression producer", () => {
     expect(expressions[3]?.formula).toContain("log10(γ_i)");
     expect(expressions[3]?.substitutions).toEqual(
       expect.arrayContaining([
-        { symbol: "I", value: 0.2, unit: "mol/kg" },
+        { symbol: "Î", value: 0.2, unit: "1" },
         { symbol: "γ(H+)", value: 0.8, unit: "1" },
       ]),
     );
+    expect(expressions[3]?.formula).toContain("√Î");
     expect(expressions[4]?.formula).toBe("a_i = γ_i · m̂_i");
     expect(expressions[4]?.substitutions).toEqual(
       expect.arrayContaining([

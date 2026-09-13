@@ -11,10 +11,12 @@ import {
   type MolPerKilogram,
   type SolverConfig,
   type ThermodynamicConstant,
+  VERSION_MANIFEST,
 } from "@chemrealm/schema";
 
-export const ACID_BASE_MODEL_ID = "acidbase-monoprotic-davies" as const;
-export const ACID_BASE_MODEL_VERSION = "1.0.0" as const;
+const ACID_BASE_VERSION = VERSION_MANIFEST.scientific.acidBase;
+export const ACID_BASE_MODEL_ID = ACID_BASE_VERSION.id;
+export const ACID_BASE_MODEL_VERSION = ACID_BASE_VERSION.legacyVersion;
 
 /** Analytical component-total molality bounds for the v0 model. */
 export const ACID_BASE_MIN_TOTAL_SOLUTE_MOLALITY = 1e-9;
@@ -116,7 +118,7 @@ export function buildAcidBaseSolverConfig(): SolverConfig {
         DEFAULT_ACID_BASE_CONSTANTS.neutralAcidActivityCoefficient.value,
       waterActivity: DEFAULT_ACID_BASE_CONSTANTS.waterActivity.value,
       numericPrecisionSignificantDigits: 12,
-      numericPolicyVersion: 1,
+      numericPolicyVersion: VERSION_MANIFEST.scientific.numericPolicyVersion,
     }),
   });
 }

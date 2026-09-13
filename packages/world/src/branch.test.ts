@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { CURRENT_SCHEMA_VERSION } from "@chemrealm/schema";
 
 import { WORLD_CREATED } from "../test/fixtures.js";
 import { appendEvent, createLog } from "./log.js";
@@ -12,7 +13,7 @@ describe("World Runtime branches", () => {
     const genesis = createInitialState(WORLD_CREATED);
     const parentEvent = {
       seq: 1,
-      schemaVersion: 4 as const,
+      schemaVersion: CURRENT_SCHEMA_VERSION,
       type: "MaterialCharged" as const,
       payload: {
         vesselId: "flask",
@@ -44,7 +45,7 @@ describe("World Runtime branches", () => {
 
     const childEvent = {
       seq: 3,
-      schemaVersion: 4 as const,
+      schemaVersion: CURRENT_SCHEMA_VERSION,
       type: "MaterialCharged" as const,
       payload: {
         vesselId: "flask",

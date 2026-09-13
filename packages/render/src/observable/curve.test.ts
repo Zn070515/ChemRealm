@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { litre, ph, taughtHydrogenIonExponent } from "@chemrealm/schema";
+import {
+  litre,
+  ph,
+  taughtHydrogenIonExponent,
+  TEST_MODEL_VERSION,
+} from "@chemrealm/schema";
 import { buildCurve, type CurveFrame } from "./curve.js";
 
 describe("pH-volume curve observable", () => {
@@ -8,7 +13,7 @@ describe("pH-volume curve observable", () => {
       sourceStateHash: "world-state-42",
       sequence: 0,
       modelId: "acidbase-monoprotic-davies",
-      modelVersion: "1.0.0",
+      modelVersion: TEST_MODEL_VERSION,
       deliveredTitrantVolume: litre(0),
       taughtHydrogenIonExponent: taughtHydrogenIonExponent(1),
       modelPh: ph(1.1),
@@ -17,7 +22,7 @@ describe("pH-volume curve observable", () => {
       sourceStateHash: "world-state-43",
       sequence: 1,
       modelId: "acidbase-monoprotic-davies",
-      modelVersion: "1.0.0",
+      modelVersion: TEST_MODEL_VERSION,
       deliveredTitrantVolume: litre(0.025),
       taughtHydrogenIonExponent: taughtHydrogenIonExponent(2),
       modelPh: ph(2.1),

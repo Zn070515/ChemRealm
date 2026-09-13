@@ -32,6 +32,7 @@ import {
   parseSolverRequirements,
   type SolverRegistry,
   type SolverResolution,
+  type SolverSelectionPolicy,
 } from "@chemrealm/sci";
 import {
   createInitialState,
@@ -50,6 +51,8 @@ export interface WorldCreationInput {
   /** New worlds are created from authored content, never from a forged snapshot. */
   readonly scenario: unknown;
   readonly seed: number | null;
+  /** New genesis must choose one exact backend; registry order is not policy. */
+  readonly solverSelection: SolverSelectionPolicy;
 }
 
 export type CompatibleSolverResolution = Extract<
@@ -386,7 +389,7 @@ export function createWorld(
   const requirements = parseSolverRequirements(snapshot.modelRequirements);
   const resolution = registry.resolve(requirements, {
     requiredComponents: requiredScenarioComponents(snapshot),
-  });
+  }, input.solverSelection);
   if (resolution.status !== "compatible") return rejected(resolution);
 
   const event: WorldCreated = WorldCreatedSchema.parse({
@@ -443,6 +446,7 @@ export function createWorldFromScenario(
       worldId: input.worldId,
       scenario,
       seed: input.seed,
+      solverSelection: input.solverSelection,
     });
   } catch (error) {
     return {

@@ -6,7 +6,11 @@ import {
   ScenarioSchema,
   SoluteDefinitionSchema,
 } from "./content.js";
-import { FORBIDDEN_BUNDLE_FIELDS, ExportBundleSchema } from "./export.js";
+import {
+  EXPORT_FORMAT_VERSION,
+  FORBIDDEN_BUNDLE_FIELDS,
+  ExportBundleSchema,
+} from "./export.js";
 import { DomainEventSchema, WorldBranchedSchema, WorldCreatedSchema } from "./events.js";
 import { migrateScenario } from "./scenario-migrate.js";
 import { SCENARIO_MIGRATIONS } from "./scenario-migrate.js";
@@ -24,6 +28,9 @@ import {
   parseSolveRequest,
   parseSolveResult,
   SCIENTIFIC_SCHEMA_VERSION,
+  NativeBackendPayloadSchema,
+  NativeSolveEnvelopeSchema,
+  NATIVE_BRIDGE_SCHEMA_VERSION,
 } from "./scientific.js";
 import {
   CURRENT_SCHEMA_VERSION,
@@ -35,10 +42,16 @@ import {
   WorldStateSchema,
 } from "./world.js";
 import { generateJsonSchemas, serializeJsonSchema } from "./json-schema.js";
+import {
+  SCENARIO_CONTENT_VERSION,
+  TEST_MODEL_VERSION,
+  VERSION_MANIFEST,
+  VOLUME_PROFILE_VERSION,
+} from "./generated/versions.js";
 
 const fixtureVolumeProfile = {
   profileId: "fixture-flask-profile",
-  profileVersion: "1.0.0",
+  profileVersion: VOLUME_PROFILE_VERSION,
   representation: "piecewise-linear" as const,
   maxVolume: { value: 0.25, unit: "L" as const },
   maxHeight: { value: 100, unit: "mm" as const },
@@ -74,6 +87,69 @@ describe("content-addressed volume profile snapshots", () => {
     expect(() => parseVolumeProfileSnapshot(tampered)).toThrow(
       /volume profile hash mismatch/,
     );
+  });
+});
+
+describe("native scientific bridge contracts", () => {
+  const request = {
+    schemaVersion: SCIENTIFIC_SCHEMA_VERSION,
+    waterMass: { value: 1, unit: "kg" as const },
+    liquidVolume: { value: 0.1, unit: "L" as const },
+    solutes: [{
+      soluteId: "HCl",
+      amount: { value: 0.1, unit: "mol" as const },
+      mode: "fully-dissociated" as const,
+    }],
+    temperature: { value: 298.15, unit: "K" as const },
+    indicators: [],
+  };
+
+  it("owns a strict, independently versioned envelope", () => {
+    expect(NativeSolveEnvelopeSchema.parse({
+      bridgeSchemaVersion: NATIVE_BRIDGE_SCHEMA_VERSION,
+      request,
+      context: { sourceStateHash: "sha256:world-state" },
+    })).toEqual({
+      bridgeSchemaVersion: NATIVE_BRIDGE_SCHEMA_VERSION,
+      request,
+      context: { sourceStateHash: "sha256:world-state" },
+    });
+  });
+
+  it.each([
+    ["bridge version", { bridgeSchemaVersion: NATIVE_BRIDGE_SCHEMA_VERSION + 1 }],
+    ["source identity", { context: { sourceStateHash: "" } }],
+    ["unknown envelope field", { extra: true }],
+  ] as const)("rejects an invalid native envelope %s", (_name, override) => {
+    expect(() => NativeSolveEnvelopeSchema.parse({
+      bridgeSchemaVersion: NATIVE_BRIDGE_SCHEMA_VERSION,
+      request,
+      context: { sourceStateHash: "sha256:world-state" },
+      ...override,
+    })).toThrow();
+  });
+
+  it("requires payload source identity independently from request hash", () => {
+    const minimal = {
+      bridgeSchemaVersion: NATIVE_BRIDGE_SCHEMA_VERSION,
+      backend: {
+        id: VERSION_MANIFEST.scientific.acidBase.id,
+        version: VERSION_MANIFEST.scientific.acidBase.nativeVersion,
+      },
+      requestHash: "sha256:wire",
+      sourceStateHash: "sha256:world-state",
+      result: {
+        schemaVersion: SCIENTIFIC_SCHEMA_VERSION,
+        status: "INVALID_INPUT" as const,
+        violations: [{ field: "fixture", message: "fixture" }],
+      },
+      expressions: [],
+    };
+    expect(NativeBackendPayloadSchema.parse(minimal)).toEqual(minimal);
+    expect(() => NativeBackendPayloadSchema.parse({
+      ...minimal,
+      sourceStateHash: undefined,
+    })).toThrow();
   });
 });
 
@@ -228,7 +304,7 @@ describe("AC-R19 — world identity is event-sourced", () => {
 describe("AC-C1 — content declares a scenario and cannot express chemistry", () => {
   const minimalScenario = {
     schemaVersion: SCENARIO_SCHEMA_VERSION,
-    contentVersion: 1,
+    contentVersion: SCENARIO_CONTENT_VERSION,
     scenarioRef: "hcl-naoh",
     title: "HCl vs NaOH",
     materials: [
@@ -460,7 +536,7 @@ describe("the migration harness exists before it is needed", () => {
     expect(result.status).toBe("OK");
     if (result.status === "OK") {
       expect(result.record.events).toMatchObject([{
-        schemaVersion: 4,
+        schemaVersion: CURRENT_SCHEMA_VERSION,
         payload: {
           scenarioSnapshot: {
             modelRequirements: { temperature: { value: 298.15, unit: "K" } },
@@ -571,7 +647,7 @@ describe("dimension coherence — the contract cannot express dimensional nonsen
   // dimension confusion; only checking the dimension does (ADR-0004).
   const valid = {
     schemaVersion: SCENARIO_SCHEMA_VERSION,
-    contentVersion: 1,
+    contentVersion: SCENARIO_CONTENT_VERSION,
     scenarioRef: "x",
     title: "x",
     materials: [
@@ -701,7 +777,7 @@ describe("scientific contract carries the model's identity and validity", () => 
       reason: "temperature outside the model's range",
       nearestSupported: {
         id: "test-solver",
-        version: "1.0.0",
+        version: TEST_MODEL_VERSION,
         description: "contract test",
         validity: {
           temperature: {
@@ -1028,7 +1104,7 @@ describe("persisted material snapshots tag every scientific input", () => {
     const broken = structuredClone(snapshot) as Record<string, unknown>;
     (broken.density as Record<string, unknown>)["provenance"] = {
       modelId: "acidbase-monoprotic-davies",
-      modelVersion: "1.0.0",
+      modelVersion: TEST_MODEL_VERSION,
       activityModel: "davies",
       category: "calculated",
       parameters: {},
@@ -1040,7 +1116,7 @@ describe("persisted material snapshots tag every scientific input", () => {
 describe("the export bundle cannot carry learner identity", () => {
   const bundle = (over: Record<string, unknown>) => ({
     format: "chemrealm.export",
-    formatVersion: 1,
+    formatVersion: EXPORT_FORMAT_VERSION,
     schemaVersion: CURRENT_SCHEMA_VERSION,
     lineage: [
       {
@@ -1096,7 +1172,7 @@ describe("the export bundle cannot carry learner identity", () => {
 describe("model descriptors declare machine-checkable capabilities", () => {
   const base = {
     id: "test-solver",
-    version: "1.0.0",
+    version: TEST_MODEL_VERSION,
     description: "contract test",
     validity: {
       temperature: {
@@ -1262,7 +1338,7 @@ describe("DTOs parse into domain quantities, not bare numbers", () => {
         validity: { inDomain: true, withinProposedAccuracyEnvelope: true },
         provenance: {
           modelId: "acidbase-monoprotic-davies",
-          modelVersion: "1.0.0",
+          modelVersion: TEST_MODEL_VERSION,
           activityModel: "davies",
           category: "calculated",
           parameters: {},
@@ -1278,7 +1354,7 @@ describe("DTOs parse into domain quantities, not bare numbers", () => {
         reason: "temperature outside the model range",
         nearestSupported: {
           id: "acidbase-monoprotic-davies",
-          version: "1.0.0",
+          version: TEST_MODEL_VERSION,
           description: "test model",
           validity: {
             temperature: {

@@ -1,14 +1,16 @@
 # ChemRealm native Scientific Core
 
-This crate is the candidate `acidbase-monoprotic-davies@2.0.0` backend. It is
-not the legacy `@chemrealm/sci` TypeScript 1.0.0 adapter and must not be used to
-silently re-solve an existing v1 world.
+This crate is the candidate native backend for the acid-base model. Its model,
+bridge, and package versions are generated from
+`contracts/version-manifest.json`. It is not the legacy `@chemrealm/sci`
+adapter and must not be used to silently re-solve an existing legacy world.
 
 The host binary reads one canonical scientific request JSON object from stdin
 and writes one backend payload JSON object to stdout:
 
 ```powershell
-'{"schemaVersion":3,...}' | cargo run --manifest-path native/sci-core/Cargo.toml --bin sci-core-host
+# The scientific schema version is read from contracts/version-manifest.json.
+'{"schemaVersion":<current-scientific-schema>,...}' | cargo run --manifest-path native/sci-core/Cargo.toml --bin sci-core-host
 ```
 
 The same library also exposes a small raw WASM ABI:

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { COMMAND_SCHEMA_VERSION, CURRENT_SCHEMA_VERSION } from "@chemrealm/schema";
 
 import { WORLD_CREATED } from "../test/fixtures.js";
 import { emitCommand } from "./command.js";
@@ -11,7 +12,7 @@ describe("World Runtime append-only log", () => {
     const state = createInitialState(WORLD_CREATED);
     const genesis = createLog(WORLD_CREATED);
     const emission = emitCommand(state, {
-      schemaVersion: 1,
+      schemaVersion: COMMAND_SCHEMA_VERSION,
       type: "PlaceApparatus",
       apparatusId: "stand",
       kind: "stand",
@@ -31,7 +32,7 @@ describe("World Runtime append-only log", () => {
     const genesis = createLog(WORLD_CREATED);
     const event = {
       seq: 2,
-      schemaVersion: 4 as const,
+      schemaVersion: CURRENT_SCHEMA_VERSION,
       type: "ApparatusPlaced" as const,
       payload: {
         apparatusId: "stand",
@@ -47,7 +48,7 @@ describe("World Runtime append-only log", () => {
     const genesis = createLog(WORLD_CREATED);
     const event = {
       seq: 1,
-      schemaVersion: 4 as const,
+      schemaVersion: CURRENT_SCHEMA_VERSION,
       type: "ApparatusPlaced" as const,
       payload: {
         apparatusId: "stand",
@@ -63,7 +64,7 @@ describe("World Runtime append-only log", () => {
   it("normalizes a directly appended volume before persistence", () => {
     const event = {
       seq: 1,
-      schemaVersion: 4 as const,
+      schemaVersion: CURRENT_SCHEMA_VERSION,
       type: "MaterialCharged" as const,
       payload: {
         vesselId: "flask",

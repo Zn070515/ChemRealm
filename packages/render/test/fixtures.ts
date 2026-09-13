@@ -7,6 +7,7 @@ import {
   ph,
   reducedIonicStrength,
   reducedMolality,
+  TEST_MODEL_VERSION,
   type ScientificState,
 } from "@chemrealm/schema";
 
@@ -40,7 +41,7 @@ export function scientificState(): ScientificState {
     },
     provenance: {
       modelId: "acidbase-monoprotic-davies",
-      modelVersion: "1.0.0",
+      modelVersion: TEST_MODEL_VERSION,
       activityModel: "Davies",
       category: "calculated",
       parameters: { Kw: 1e-14 },

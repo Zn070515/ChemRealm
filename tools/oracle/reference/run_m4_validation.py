@@ -17,6 +17,7 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parents[3]
 REFERENCE_DIR = REPO_ROOT / "packages" / "sci" / "test" / "reference"
 TS_RUNNER = REPO_ROOT / "tools" / "oracle" / "reference" / "run_ts_cases.mjs"
+VERSION_MANIFEST_PATH = REPO_ROOT / "contracts" / "version-manifest.json"
 PHREEQC_RUNNER = REPO_ROOT / "tools" / "oracle" / "phreeqc" / "run_batch.py"
 MANIFEST_PATH = REFERENCE_DIR / "manifest.json"
 
@@ -39,6 +40,14 @@ def load_fixture(name: str) -> dict[str, Any]:
         value = json.load(handle)
     if not isinstance(value, dict):
         raise ValueError(f"fixture is not an object: {name}")
+    return value
+
+
+def load_version_manifest() -> dict[str, Any]:
+    with VERSION_MANIFEST_PATH.open(encoding="utf-8") as handle:
+        value = json.load(handle)
+    if not isinstance(value, dict):
+        raise RuntimeError("central version manifest is not an object")
     return value
 
 
@@ -245,6 +254,9 @@ def run_phreeqc() -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
 
 
 def compare(ts_rows: list[dict[str, Any]], phreeqc_rows: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    versions = load_version_manifest()
+    schema_versions = versions["oracle"]
+    acid_base = versions["scientific"]["acidBase"]
     oracle_ids = fixture_ids("oracleFixtures")
     if [row.get("id") for row in ts_rows] != oracle_ids:
         raise RuntimeError("TypeScript runner did not return every oracle fixture in order")
@@ -321,8 +333,8 @@ def compare(ts_rows: list[dict[str, Any]], phreeqc_rows: dict[str, dict[str, Any
         "attributionAxes": attribution_axes(),
     }
     return {
-        "schemaVersion": 1,
-        "model": {"id": "acidbase-monoprotic-davies", "version": "1.0.0"},
+        "schemaVersion": schema_versions["crossCheckReport"],
+        "model": {"id": acid_base["id"], "version": acid_base["legacyVersion"]},
         "basis": "molality",
         "constants": "docs/research/constants-provenance.json",
         "oracleFixtures": oracle_ids,

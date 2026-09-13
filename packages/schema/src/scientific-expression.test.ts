@@ -3,6 +3,7 @@ import {
   SCIENTIFIC_EXPRESSION_SCHEMA_VERSION,
   ScientificExpressionSchema,
 } from "./scientific.js";
+import { TEST_MODEL_VERSION } from "./generated/versions.js";
 
 describe("scientific expression contract", () => {
   it("requires model and source-state identity", () => {
@@ -17,9 +18,9 @@ describe("scientific expression contract", () => {
         substitutions: [{ symbol: "m(H+)", value: 0.1, unit: "mol/kg" }],
         omittedTerms: [],
         producerId: "scientific-core",
-        producerVersion: "1.0.0",
+        producerVersion: TEST_MODEL_VERSION,
         modelId: "acidbase-monoprotic-davies",
-        modelVersion: "1.0.0",
+        modelVersion: TEST_MODEL_VERSION,
         sourceStateHash: "state-hash",
       }),
     ).not.toThrow();

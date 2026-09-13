@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { COMMAND_SCHEMA_VERSION, CURRENT_SCHEMA_VERSION } from "@chemrealm/schema";
 
 import { highPrecisionWorldCreated, WORLD_CREATED } from "../test/fixtures.js";
 import { reduce } from "./reduce.js";
@@ -9,7 +10,7 @@ describe("World Runtime command boundary", () => {
   it("emits a canonical charge event at the next sequence", () => {
     const state = createInitialState(WORLD_CREATED);
     const result = emitCommand(state, {
-      schemaVersion: 1,
+      schemaVersion: COMMAND_SCHEMA_VERSION,
       type: "ChargeVessel",
       vesselId: "flask",
       materialId: "hcl-0.1",
@@ -33,7 +34,7 @@ describe("World Runtime command boundary", () => {
     const genesis = createInitialState(WORLD_CREATED);
     const state = reduce(genesis, {
       seq: 1,
-      schemaVersion: 4,
+      schemaVersion: CURRENT_SCHEMA_VERSION,
       type: "MaterialCharged",
       payload: {
         vesselId: "burette",
@@ -42,7 +43,7 @@ describe("World Runtime command boundary", () => {
       },
     });
     const result = emitCommand(state, {
-      schemaVersion: 1,
+      schemaVersion: COMMAND_SCHEMA_VERSION,
       type: "DeliverTitrant",
       fromVesselId: "burette",
       toVesselId: "flask",
@@ -66,7 +67,7 @@ describe("World Runtime command boundary", () => {
   it("rejects an invalid charge without emitting an event", () => {
     const state = createInitialState(WORLD_CREATED);
     const result = validateCommand(state, {
-      schemaVersion: 1,
+      schemaVersion: COMMAND_SCHEMA_VERSION,
       type: "ChargeVessel",
       vesselId: "missing",
       materialId: "hcl-0.1",
@@ -78,7 +79,7 @@ describe("World Runtime command boundary", () => {
       reason: "VESSEL_NOT_FOUND",
     });
     expect(emitCommand(state, {
-      schemaVersion: 1,
+      schemaVersion: COMMAND_SCHEMA_VERSION,
       type: "ChargeVessel",
       vesselId: "missing",
       materialId: "hcl-0.1",
@@ -89,7 +90,7 @@ describe("World Runtime command boundary", () => {
   it("rejects a delivery that exceeds the source volume", () => {
     const state = createInitialState(WORLD_CREATED);
     const result = validateCommand(state, {
-      schemaVersion: 1,
+      schemaVersion: COMMAND_SCHEMA_VERSION,
       type: "DeliverTitrant",
       fromVesselId: "burette",
       toVesselId: "flask",
@@ -106,7 +107,7 @@ describe("World Runtime command boundary", () => {
     const genesis = createInitialState(highPrecisionWorldCreated());
     const charged = reduce(genesis, {
       seq: 1,
-      schemaVersion: 4,
+      schemaVersion: CURRENT_SCHEMA_VERSION,
       type: "MaterialCharged",
       payload: {
         vesselId: "flask",
@@ -116,7 +117,7 @@ describe("World Runtime command boundary", () => {
     });
 
     const result = emitCommand(charged, {
-      schemaVersion: 1,
+      schemaVersion: COMMAND_SCHEMA_VERSION,
       type: "DeliverTitrant",
       fromVesselId: "flask",
       toVesselId: "burette",

@@ -16,6 +16,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 RUNNER_PATH = REPO_ROOT / "tools" / "oracle" / "phreeqc" / "run_batch.py"
 INSTALLER_PATH = REPO_ROOT / "tools" / "oracle" / "phreeqc" / "install_ci.sh"
 MANIFEST_PATH = REPO_ROOT / "tools" / "oracle" / "phreeqc" / "manifest.json"
+VERSION_MANIFEST_PATH = REPO_ROOT / "contracts" / "version-manifest.json"
 
 
 def load_runner():
@@ -25,6 +26,10 @@ def load_runner():
     sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return module
+
+
+def load_version_manifest() -> dict:
+    return json.loads(VERSION_MANIFEST_PATH.read_text(encoding="utf-8"))
 
 
 def test_manifest_points_to_checked_in_runner_and_ci_installer() -> None:
@@ -121,12 +126,11 @@ def test_ci_toolchain_metadata_binds_the_actual_executable_checksum(tmp_path) ->
     database.write_text("pinned database", encoding="utf-8")
     manifest = {
         "tool": "PHREEQC",
-        "version": "3.8.6-17100",
         "sourceSha256": "source-sha",
     }
     metadata = {
         "tool": "PHREEQC",
-        "version": "3.8.6-17100",
+        "version": load_version_manifest()["oracle"]["phreeqc"],
         "sourceSha256": "source-sha",
         "executable": str(executable),
         "executableSha256": "wrong-sha",
@@ -143,6 +147,7 @@ def test_ci_toolchain_metadata_binds_the_actual_executable_checksum(tmp_path) ->
             executable_sha256="actual-sha",
             database_sha256="database-sha",
             manifest=manifest,
+            expected_version=load_version_manifest()["oracle"]["phreeqc"],
         )
 
 
@@ -152,7 +157,6 @@ def test_database_checksum_is_checked_before_execution(tmp_path) -> None:
     database.write_text("not the pinned database", encoding="utf-8")
     manifest = {
         "tool": "PHREEQC",
-        "version": "test",
         "sourceSha256": "source",
         "database": {
             "name": "phreeqc.dat",

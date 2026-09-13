@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { ionicStrengthMolal, kelvin, SCENARIO_SCHEMA_VERSION, type ModelDescriptor } from "@chemrealm/schema";
+import {
+  ionicStrengthMolal,
+  kelvin,
+  SCENARIO_CONTENT_VERSION,
+  SCENARIO_SCHEMA_VERSION,
+  TEST_SOLVER_VERSION,
+  VOLUME_PROFILE_VERSION,
+  type ModelDescriptor,
+} from "@chemrealm/schema";
 import { SolverRegistry, StubSolverAdapter } from "@chemrealm/sci";
 import { createInitialState, createLog, scenarioSnapshotHash } from "@chemrealm/world";
 
@@ -8,7 +16,7 @@ import { createWorld, createWorldFromScenario, resolveScenario } from "./world-c
 
 const descriptor: ModelDescriptor = {
   id: "test-solver",
-  version: "1.0.0",
+  version: TEST_SOLVER_VERSION,
   description: "composition-root contract solver",
   validity: {
     temperature: { min: kelvin(273.15), max: kelvin(373.15) },
@@ -29,7 +37,7 @@ const provenance = {
 
 const volumeProfile = {
   profileId: "flask-250-profile",
-  profileVersion: "1.0.0",
+  profileVersion: VOLUME_PROFILE_VERSION,
   representation: "piecewise-linear" as const,
   maxVolume: { value: 0.25, unit: "L" as const },
   maxHeight: { value: 100, unit: "mm" as const },
@@ -43,7 +51,7 @@ const volumeProfile = {
 
 const authoringScenario = {
   schemaVersion: SCENARIO_SCHEMA_VERSION,
-  contentVersion: 1,
+  contentVersion: SCENARIO_CONTENT_VERSION,
   scenarioRef: "hcl-authoring",
   title: "HCl authoring resolver",
   materials: [
@@ -106,13 +114,14 @@ describe("composition-level world creation", () => {
       worldId: "world-m3",
       scenario: authoringScenario,
       seed: null,
+      solverSelection: { id: "test-solver", version: TEST_SOLVER_VERSION },
     });
 
     expect(result.accepted).toBe(true);
     if (!result.accepted) throw new Error("expected compatible world");
     expect(result.event.payload.solverConfig).toEqual({
       id: "test-solver",
-      version: "1.0.0",
+      version: TEST_SOLVER_VERSION,
       parameters: { Kw: 1e-14 },
     });
     expect(() => createLog(result.event)).not.toThrow();
@@ -130,6 +139,7 @@ describe("composition-level world creation", () => {
         },
       },
       seed: null,
+      solverSelection: { id: "test-solver", version: TEST_SOLVER_VERSION },
     });
 
     expect(result).toMatchObject({ accepted: false, status: "incompatible" });
@@ -152,6 +162,7 @@ describe("composition-level world creation", () => {
         }],
       },
       seed: null,
+      solverSelection: { id: "test-solver", version: TEST_SOLVER_VERSION },
     });
 
     expect(result).toMatchObject({ accepted: false, status: "incompatible" });
@@ -165,6 +176,7 @@ describe("composition-level world creation", () => {
       worldId: "world-authored",
       scenario: authoringScenario,
       seed: null,
+      solverSelection: { id: "test-solver", version: TEST_SOLVER_VERSION },
     });
 
     expect(result.accepted).toBe(true);
@@ -190,6 +202,7 @@ describe("composition-level world creation", () => {
       worldId: "world-resolved-bypass",
       scenario: resolved,
       seed: null,
+      solverSelection: { id: "test-solver", version: TEST_SOLVER_VERSION },
     });
 
     expect(result).toMatchObject({ accepted: false, status: "invalid" });
@@ -262,6 +275,7 @@ describe("composition-level world creation", () => {
       worldId: "world-authored-events",
       scenario: authoringScenario,
       seed: null,
+      solverSelection: { id: "test-solver", version: TEST_SOLVER_VERSION },
     });
 
     expect(result.accepted).toBe(true);
@@ -291,6 +305,7 @@ describe("composition-level world creation", () => {
       worldId: `world-invalid-${materialId}`,
       scenario: invalid,
       seed: null,
+      solverSelection: { id: "test-solver", version: TEST_SOLVER_VERSION },
     });
 
     expect(result).toMatchObject({
@@ -311,6 +326,7 @@ describe("composition-level world creation", () => {
       worldId: "world-missing-provenance",
       scenario: missingProvenance,
       seed: null,
+      solverSelection: { id: "test-solver", version: TEST_SOLVER_VERSION },
     })).toMatchObject({ accepted: false, status: "invalid" });
   });
 });
