@@ -94,6 +94,22 @@ function stock(stockId: string): V0Stock {
   return value;
 }
 
+function volumeProfile(profileId: string, maxVolume: number, maxHeight: number) {
+  return {
+    profileId,
+    profileVersion: "1.0.0",
+    representation: "piecewise-linear" as const,
+    maxVolume: { value: maxVolume, unit: "L" as const },
+    maxHeight: { value: maxHeight, unit: "mm" as const },
+    roundTripTolerance: { value: 1e-12, unit: "L" as const },
+    knots: [
+      { volume: { value: 0, unit: "L" as const }, height: { value: 0, unit: "mm" as const } },
+      { volume: { value: maxVolume, unit: "L" as const }, height: { value: maxHeight, unit: "mm" as const } },
+    ],
+    provenance: { source: "M4 fixture", reference: `${profileId} profile`, category: "evaluated" as const },
+  };
+}
+
 function solveSolute(
   source: V0Stock,
   amount: number,
@@ -160,6 +176,7 @@ const scenario = {
       kind: "conicalFlask" as const,
       capacity: { value: 1, unit: "L" as const },
       geometryRef: "flask-1L",
+      volumeProfile: volumeProfile("flask-1L", 1, 100),
       position: { unit: "mm" as const, x: 0, y: 0 },
       initialContents: [
         { materialId: "hcl-stock", volume: { value: 0.1, unit: "L" as const } },
@@ -173,6 +190,7 @@ const scenario = {
       kind: "beaker" as const,
       capacity: { value: 1, unit: "L" as const },
       geometryRef: "beaker-1L",
+      volumeProfile: volumeProfile("beaker-1L", 1, 100),
       position: { unit: "mm" as const, x: 100, y: 0 },
       initialContents: [],
     },
@@ -207,6 +225,7 @@ function scenarioForEnvelopePoint(
       kind: "conicalFlask" as const,
       capacity: { value: 3, unit: "L" as const },
       geometryRef: "flask-3L",
+      volumeProfile: volumeProfile("flask-3L", 3, 120),
       position: { unit: "mm" as const, x: 0, y: 0 },
       initialContents: [
         { materialId: acid.materialId, volume: { value: 1, unit: "L" as const } },

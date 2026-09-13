@@ -24,6 +24,8 @@ const [spec, childSpec, evidence, plan, adr, visualStandard] = await Promise.all
   document("docs/adr/0006-renderer-and-observable-architecture.md"),
   document("docs/visual/apparatus-standard.md"),
 ]);
+const observableSource = await document("packages/render/src/observable/index.ts");
+const frameSource = await document("packages/sci/src/frame.ts");
 
 const failures = [];
 function must(text, pattern, message) {
@@ -33,7 +35,7 @@ function mustNot(text, pattern, message) {
   if (pattern.test(text)) failures.push(`stale: ${message}`);
 }
 
-must(spec, /\*\*Current revision:\*\* \*\*21 Candidate\*\*/i, "SPEC is revision 21 Candidate");
+must(spec, /\*\*Current revision:\*\* \*\*22 Candidate\*\*/i, "SPEC is revision 22 Candidate");
 must(spec, /AC-V3 \|[^\n]*declared[^\n]*provenance[^\n]*empirical[^\n]*palette/i, "canonical AC-V3 permits only declared provenance-bearing empirical palettes");
 mustNot(spec, /AC-V3 \| No hard-coded chemical colour literal exists in the render path/i, "old unqualified AC-V3 wording is removed");
 must(spec, /Readout (?:labels|text)[^\n]*precision[^\n]*ObservableModel/i, "canonical ownership assigns readout precision policy to ObservableModel");
@@ -41,14 +43,25 @@ must(spec, /DOM\/Pixi[^\n]*Renderer|text drawing[^\n]*Renderer/i, "canonical own
 mustNot(spec, /Readout text, 2 dp formatting \| Renderer/i, "old readout ownership row is removed");
 must(spec, /projectScientificFrame|sourceStateHash[^\n]*projection/i, "canonical contract records source-identified projection frames");
 must(spec, /\| 21 \|[^\n]*(?:empirical indicator palettes|provenance-bearing)[^\n]*(?:provenance-bearing|empirical indicator palettes)/i, "revision 21 amendment records the representation clarification");
+must(spec, /\| 22 \|[\s\S]{0,700}volumeProfile[\s\S]{0,700}ScientificFrame/i, "revision 22 amendment records replayable geometry and frame identity");
 
 must(childSpec, /does not override `SPEC-0001`/i, "M5 child specification remains subordinate");
 must(childSpec, /projectScientificFrame|sourceStateHash/i, "M5 child specification names the bound frame factory");
 must(childSpec, /palette[\s\S]{0,200}provenance|provenance[\s\S]{0,200}palette/i, "M5 child specification preserves palette provenance");
 must(childSpec, /(?:format(?:ting)?|readout strings)[^\n]*Observable|Observable[^\n]*(?:format(?:ting)?|readout strings)/i, "M5 child specification assigns formatting to the observable boundary");
+must(childSpec, /SPEC-0001`? revision 22/i, "M5 child specification names the current canonical amendment");
+must(childSpec, /persisted (?:World\/Event|world\/event) schema v(?:ersion )?4/i, "M5 child specification records the persisted profile schema");
+must(childSpec, /VolumeProfileSnapshot/i, "M5 child specification records serializable geometry identity");
+mustNot(childSpec, /No persisted schema migration is needed/i, "M5 child specification does not erase the profile migration");
 
 must(plan, /projectScientificFrame|sourceStateHash/i, "PLAN names the source-identified frame boundary");
 must(plan, /compensated sum|roundoff bound/i, "PLAN names the burette floating-point policy");
+must(plan, /revision 22/i, "PLAN names the current M5 canonical amendment");
+must(plan, /schema v4|schema version 4|v3→v4/i, "PLAN names the replayable profile schema boundary");
+must(observableSource, /interface ScientificFrame[\s\S]{0,500}physical[\s\S]{0,180}liquidVolume/i, "Observable frame includes the bound physical volume");
+must(observableSource, /interface ObservableInput[\s\S]{0,300}volumeProfile/i, "Observable input retains only the executable profile adapter");
+mustNot(observableSource, /interface ObservableInput[\s\S]{0,300}readonly liquidVolume/i, "Observable input has no duplicate liquid-volume field");
+must(frameSource, /physical[\s\S]{0,180}liquidVolume[\s\S]{0,180}volumeProfileHash/i, "ScientificFrame owns physical input identity");
 
 must(evidence, /M5-FRAME[^\n]*\| PARTIAL/i, "M5 frame evidence is not overstated before composition integration evidence");
 must(evidence, /AC-V3[^\n]*PARTIAL/i, "AC-V3 remains partial without final visual/source review");

@@ -329,12 +329,13 @@ computational ionic-strength ceiling of 0.5 mol/kg, the closed supported
 species set, and activityCorrected: true. The persisted SolverConfig contains
 the exact numeric parameter bag required by the M3 identity contract.
 
-The persisted world/event schema is version 3 because v2 could persist a
-non-canonical temperature spelling. Migration `1 → 2` adds `indicators: []`
-only where no prior value exists; migration `2 → 3` canonicalizes a persisted
-requirement temperature to Kelvin. Neither step invents a missing constant.
-The authored `Scenario` shape is a separate versioned contract and is currently
-version 3 with its own migration namespace. Its resolved snapshot freezes
+At the M4 acceptance baseline the persisted world/event schema was version 3
+because v2 could persist a non-canonical temperature spelling. M5 revision 22
+subsequently advanced the current repository schema to version 4: migration
+`3 → 4` freezes a serializable volume profile in each genesis vessel and
+requires an explicit resolver for legacy geometry-only records. The authored
+`Scenario` shape is a separate versioned contract and is currently version 4
+with its own migration namespace. Its resolved snapshot freezes
 canonical Kelvin requirements, canonical positive dimensionless `kaIn`,
 per-datum `DataProvenance`, and actual component identities before genesis;
 authoring units are never retained as alternate snapshot representations.
@@ -440,13 +441,13 @@ evidence-pinning tasks only.
 
 M4 is additive to the M3 adapter contract. The stub remains available for
 contract tests, while composition tests gain a real acid-base adapter fixture.
-The persisted world/event schema is version 3. Its explicit migration chain is
-`1 → 2 → 3`: the first step adds an empty indicator list where no prior block
-exists, and the second canonicalizes legacy persisted requirement temperature
-to Kelvin. Both steps preserve the original record and the World Runtime
-rebuilds the derived genesis checksum after the snapshot changes. The authored
-Scenario shape is a separate version 3 contract with an independent migration
-namespace; removal of the ignored dissociation field has no automatic rewrite.
+At the M4 acceptance baseline the persisted world/event schema migration chain
+was `1 → 2 → 3`; the current M5 repository extends it to `1 → 2 → 3 → 4` with
+an explicit volume-profile resolver. Both historical M4 steps preserve the
+original record and the World Runtime rebuilds the derived genesis checksum
+after snapshot changes. The authored Scenario shape is a separate version 4
+contract with an independent migration namespace; removal of the ignored
+dissociation field has no automatic rewrite.
 
 The adapter is eligible for the v0 application composition after the reference
 and PHREEQC evidence pass. The bounded disagreement remains visible in the

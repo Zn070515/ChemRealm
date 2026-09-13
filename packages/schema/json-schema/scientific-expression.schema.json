@@ -31,8 +31,16 @@
       },
       "type": "array"
     },
+    "producerId": {
+      "const": "scientific-core",
+      "type": "string"
+    },
+    "producerVersion": {
+      "minLength": 1,
+      "type": "string"
+    },
     "schemaVersion": {
-      "const": 1,
+      "const": 2,
       "type": "number"
     },
     "sourceStateHash": {
@@ -46,6 +54,8 @@
     "label",
     "expression",
     "omittedTerms",
+    "producerId",
+    "producerVersion",
     "modelId",
     "modelVersion",
     "sourceStateHash"

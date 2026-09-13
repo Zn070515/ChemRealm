@@ -109,8 +109,30 @@ SOLUTE = {
     "molarMass": {"value": 36.4609, "unit": "g/mol"},
 }
 
+VOLUME_PROFILE_DEFINITION = {
+    "profileId": "flask-250-profile",
+    "profileVersion": "1.0.0",
+    "representation": "piecewise-linear",
+    "maxVolume": {"value": 0.25, "unit": "L"},
+    "maxHeight": {"value": 100, "unit": "mm"},
+    "roundTripTolerance": {"value": 1.0e-12, "unit": "L"},
+    "knots": [
+        {"volume": {"value": 0, "unit": "L"}, "height": {"value": 0, "unit": "mm"}},
+        {"volume": {"value": 0.25, "unit": "L"}, "height": {"value": 100, "unit": "mm"}},
+    ],
+    "provenance": {
+        "source": "fixture",
+        "reference": "flask profile",
+        "category": "evaluated",
+    },
+}
+VOLUME_PROFILE_SNAPSHOT = {
+    **VOLUME_PROFILE_DEFINITION,
+    "profileHash": "sha256:fixture-profile",
+}
+
 VALID_SCENARIO = {
-    "schemaVersion": 3,
+    "schemaVersion": 4,
     "contentVersion": 1,
     "scenarioRef": "hcl-naoh",
     "title": "HCl vs NaOH",
@@ -129,6 +151,7 @@ VALID_SCENARIO = {
             "kind": "conicalFlask",
             "capacity": {"value": 0.25, "unit": "L"},
             "geometryRef": "flask-250",
+            "volumeProfile": VOLUME_PROFILE_DEFINITION,
             "position": {"unit": "mm", "x": 0, "y": 0},
             "initialContents": [
                 {"materialId": "hcl-0.1", "volume": {"value": 0.025, "unit": "L"}}
@@ -197,6 +220,7 @@ SCENARIO_SNAPSHOT = {
             "kind": "conicalFlask",
             "capacity": {"value": 0.25, "unit": "L"},
             "geometryRef": "flask-250",
+            "volumeProfile": VOLUME_PROFILE_SNAPSHOT,
             "position": {"unit": "mm", "x": 0, "y": 0},
         }
     ],
@@ -213,7 +237,7 @@ SCENARIO_SNAPSHOT = {
 
 WORLD_CREATED_EVENT = {
     "seq": 0,
-    "schemaVersion": 3,
+    "schemaVersion": 4,
     "type": "WorldCreated",
     "payload": {
         "worldId": "w-1",
@@ -231,7 +255,7 @@ WORLD_CREATED_EVENT = {
 VALID_BUNDLE = {
     "format": "chemrealm.export",
     "formatVersion": 1,
-    "schemaVersion": 3,
+    "schemaVersion": 4,
     "lineage": [
         {
             "worldId": "w-1",

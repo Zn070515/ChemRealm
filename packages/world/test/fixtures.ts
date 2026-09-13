@@ -1,9 +1,45 @@
 import type { SerializedWorldCreated } from "../src/state.js";
-import { scenarioSnapshotHash } from "../src/state.js";
+import { scenarioSnapshotHash, volumeProfileHash } from "../src/state.js";
+import { hashCanonical } from "../src/hash.js";
+
+function volumeProfile(
+  profileId: string,
+  maxVolume: number,
+  maxHeight: number,
+): {
+  profileId: string;
+  profileVersion: string;
+  profileHash: string;
+  representation: "piecewise-linear";
+  maxVolume: { value: number; unit: "L" };
+  maxHeight: { value: number; unit: "mm" };
+  roundTripTolerance: { value: number; unit: "L" };
+  knots: { volume: { value: number; unit: "L" }; height: { value: number; unit: "mm" } }[];
+  provenance: { source: string; reference: string; category: "evaluated" };
+} {
+  const payload = {
+    profileId,
+    profileVersion: "1.0.0",
+    representation: "piecewise-linear" as const,
+    maxVolume: { value: maxVolume, unit: "L" as const },
+    maxHeight: { value: maxHeight, unit: "mm" as const },
+    roundTripTolerance: { value: 1e-12, unit: "L" as const },
+    knots: [
+      { volume: { value: 0, unit: "L" as const }, height: { value: 0, unit: "mm" as const } },
+      { volume: { value: maxVolume, unit: "L" as const }, height: { value: maxHeight, unit: "mm" as const } },
+    ],
+    provenance: {
+      source: "World runtime fixture",
+      reference: `${profileId} piecewise-linear profile`,
+      category: "evaluated" as const,
+    },
+  };
+  return { ...payload, profileHash: `sha256:${hashCanonical(payload)}` };
+}
 
 export const WORLD_CREATED: SerializedWorldCreated = {
   seq: 0,
-  schemaVersion: 3,
+  schemaVersion: 4,
   type: "WorldCreated",
   payload: {
     worldId: "w-1",
@@ -56,6 +92,7 @@ export const WORLD_CREATED: SerializedWorldCreated = {
           kind: "conicalFlask",
           capacity: { value: 0.25, unit: "L" },
           geometryRef: "flask-250",
+          volumeProfile: volumeProfile("flask-250", 0.25, 100),
           position: { unit: "mm", x: 0, y: 0 },
         },
         {
@@ -63,6 +100,7 @@ export const WORLD_CREATED: SerializedWorldCreated = {
           kind: "burette",
           capacity: { value: 0.05, unit: "L" },
           geometryRef: "burette-50",
+          volumeProfile: volumeProfile("burette-50", 0.05, 500),
           position: { unit: "mm", x: 100, y: 0 },
         },
       ],
@@ -109,6 +147,11 @@ export function highPrecisionWorldCreated(): SerializedWorldCreated {
   const molarMass = material.molarMasses[0]!.molarMass.value;
 
   snapshot.vessels[1]!.capacity = { value: 0.5, unit: "L" };
+  snapshot.vessels[1]!.volumeProfile.maxVolume = { value: 0.5, unit: "L" };
+  snapshot.vessels[1]!.volumeProfile.knots[1]!.volume = { value: 0.5, unit: "L" };
+  snapshot.vessels[1]!.volumeProfile.profileHash = volumeProfileHash(
+    snapshot.vessels[1]!.volumeProfile,
+  );
   material.composition[0]!.amountConcentration = { value: amountPerLitre, unit: "mol/L" };
   material.resolvedInventoryPerLitre.waterMass = { value: waterMassPerLitre, unit: "kg" };
   material.resolvedInventoryPerLitre.soluteAmounts[0]!.amount = {

@@ -2,8 +2,8 @@
 
 - **Status:** **M0–M4 S3 Verified / Accepted; M5 S2 remediation in progress** — the original plan was approved
   on 2026-09-11 at `SPEC-0001` revision 6; revisions 13–20 were accepted
-  on 2026-09-13 and revision 21 is a candidate amendment for the current M5
-  contract remediation.
+  on 2026-09-13 and revision 22 is a candidate amendment for the current M5
+  replay/provenance closure.
 - **Completed:** `M0 — Repository foundation` reached **S3 — Verified** on
   2026-09-11. Evidence: `docs/evidence/M0.md`, commits `1f3dfee`/`565a2e8`,
   CI run `34595967023` (13/13 gate steps on a clean `ubuntu-latest` checkout).
@@ -40,7 +40,7 @@
 > **Final-closure note.** DTO→domain bridges canonicalize units before
 > construction; every resolved snapshot datum is canonical, carries its own
 > `DataProvenance`, and is required structurally; export contracts are aligned
-> with the v1 export format, v3 persisted world schema, and v3 authored Scenario shape; persisted v2→v3 temperature migration is explicit; and v0 rejects mixed composition bases until the Scientific
+> with the v1 export format, v4 persisted world schema, and v4 authored Scenario shape; persisted v2→v3 temperature and v3→v4 volume-profile migrations are explicit; and v0 rejects mixed composition bases until the Scientific
 > Reality Core owns the joint resolver. M1–M4 are S3 verified; M5 is
 > authorized.
 
@@ -761,10 +761,10 @@ If PHREEQC cannot be installed and driven in CI:
 ## M5 — Observable state
 
 **Target stage:** S3
-**Current stage:** S2 implementation locally verified; contract remediation is
-complete locally, while M5 S3 evidence remains open. The governing scope is
-`docs/superpowers/specs/2026-09-13-m5-contract-remediation.md`, subordinate to
-`SPEC-0001` revision 21 Candidate and not an override of it.
+**Current stage:** S2 implementation locally verified; replay/profile/frame
+closure is being verified locally, while M5 S3 evidence remains open. The
+governing scope is `docs/superpowers/specs/2026-09-13-m5-contract-remediation.md`,
+subordinate to `SPEC-0001` revision 22 Candidate and not an override of it.
 **Addresses:** ADR-0006, ADR-0007; `SPEC-0001` AC-V2..AC-V4, AC-V6, AC-V8, AC-V9, AC-V10, AC-V11
 
 `AC-V1` (`packages/render` has no import path to `packages/sci`) is **not**
@@ -798,11 +798,18 @@ does not invent a second projection identity. Burette delivery aggregation uses
 a deterministic compensated sum and only treats a full draw as exact when the
 discrepancy is within its explicit floating-point round-off bound.
 
+For replayable physical presentation, the genesis snapshot carries a hashed,
+serializable `VolumeProfileSnapshot`. The frame owns the committed liquid
+volume and profile hash; Observable reconstructs or receives the matching
+profile adapter and cannot accept a second liquid-volume source. Legacy
+geometry-only persisted worlds require the explicit v3→v4 resolver boundary.
+
 **No PixiJS import anywhere in this milestone.** Everything here runs in Node.
 
 ### Contracts changed
 
-`ObservableModel`, `RenderState`, `ObservableModelVersion`.
+`ObservableModel`, `RenderState`, `ObservableModelVersion`, persisted vessel
+volume-profile identity, and the ScientificFrame physical-input block.
 
 ### Implementation
 
@@ -820,7 +827,8 @@ discrepancy is within its explicit floating-point round-off bound.
    `deliveredVolume = Σ delivered`, and
    `containedVolume = initialContainedVolume − Σ delivered`. The scale reading
    is not the remaining liquid volume, and is displayed in `mL` at `0.01 mL`.
-4. `curve.ts` takes the **state sequence**, not one state.
+4. `curve.ts` takes a source-identified **state sequence**, not one hand-authored
+   volume table; each point preserves its world replay identity and sequence.
 5. `format.ts` enforces 2 decimal places for pH from the ±0.02 tolerance, and
     2 dp for the burette's `mL` scale reading from the instrument resolution. **This is where the
    `GOAL.md` §5.2 fake-precision rule is enforced**, so it needs a test.

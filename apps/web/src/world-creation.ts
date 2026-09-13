@@ -23,6 +23,8 @@ import {
   toCanonical,
   type Scenario,
   type ScenarioSnapshot,
+  type VolumeProfileDefinition,
+  type VolumeProfileSnapshot,
   type WorldCreated,
 } from "@chemrealm/schema";
 import {
@@ -35,6 +37,7 @@ import {
   appendEvent,
   createLog,
   emitCommand,
+  hashCanonical,
   reduce,
   scenarioSnapshotHash,
   type SerializedWorldCreated,
@@ -109,6 +112,63 @@ function requiredScenarioComponents(
       material.composition.map((entry) => entry.soluteId),
     ),
   )].sort();
+}
+
+function resolveVolumeProfile(
+  profile: VolumeProfileDefinition,
+): VolumeProfileSnapshot {
+  const maxVolume = toCanonical(profile.maxVolume).value;
+  const maxHeight = toCanonical(profile.maxHeight).value;
+  const roundTripTolerance = toCanonical(profile.roundTripTolerance).value;
+  finitePositive(maxVolume, "volume profile maximum volume");
+  finitePositive(maxHeight, "volume profile maximum height");
+  if (!Number.isFinite(roundTripTolerance) || roundTripTolerance < 0) {
+    throw new Error(
+      "SCENARIO_RESOLUTION_INVALID: volume profile " +
+        profile.profileId +
+        " round-trip tolerance must be finite and non-negative",
+    );
+  }
+
+  const knots = profile.knots.map((knot) => ({
+    volume: {
+      value: canonicalNumber(
+        toCanonical(knot.volume).value,
+        "volume profile knot volume",
+      ),
+      unit: "L" as const,
+    },
+    height: {
+      value: canonicalNumber(
+        toCanonical(knot.height).value,
+        "volume profile knot height",
+      ),
+      unit: "mm" as const,
+    },
+  }));
+  const profilePayload = {
+    profileId: profile.profileId,
+    profileVersion: profile.profileVersion,
+    representation: profile.representation,
+    maxVolume: {
+      value: canonicalNumber(maxVolume, "volume profile maximum volume"),
+      unit: "L" as const,
+    },
+    maxHeight: {
+      value: canonicalNumber(maxHeight, "volume profile maximum height"),
+      unit: "mm" as const,
+    },
+    roundTripTolerance: {
+      value: canonicalNumber(roundTripTolerance, "volume profile round-trip tolerance"),
+      unit: "L" as const,
+    },
+    knots,
+    provenance: profile.provenance,
+  };
+  return {
+    ...profilePayload,
+    profileHash: "sha256:" + hashCanonical(profilePayload),
+  };
 }
 
 function resolveMaterial(material: Scenario["materials"][number]): ScenarioSnapshot["materials"][number] {
@@ -260,13 +320,26 @@ export function resolveScenario(input: unknown): ScenarioSnapshot {
   return ScenarioSnapshotSchema.parse({
     scenarioRef: scenario.scenarioRef,
     materials: scenario.materials.map(resolveMaterial),
-    vessels: scenario.vessels.map((vessel) => ({
+    vessels: scenario.vessels.map((vessel) => {
+      const capacity = canonicalNumber(
+        toCanonical(vessel.capacity).value,
+        `vessel ${vessel.vesselId} capacity`,
+      );
+      const volumeProfile = resolveVolumeProfile(vessel.volumeProfile);
+      if (volumeProfile.maxVolume.value !== capacity) {
+        throw new Error(
+          `SCENARIO_RESOLUTION_INVALID: vessel ${vessel.vesselId} capacity must equal its volume profile maximum`,
+        );
+      }
+      return {
       vesselId: vessel.vesselId,
       kind: vessel.kind,
-      capacity: { value: litre(toCanonical(vessel.capacity).value), unit: "L" },
+      capacity: { value: litre(capacity), unit: "L" },
       geometryRef: vessel.geometryRef,
+      volumeProfile,
       position: vessel.position,
-    })),
+      };
+    }),
     apparatusDefaults: scenario.apparatus.map((entry) => ({
       kind: entry.kind,
       state: { ...entry.state },

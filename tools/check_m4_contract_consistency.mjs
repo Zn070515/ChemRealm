@@ -47,8 +47,8 @@ must(spec, /authoring `Scenario` shape has no dissociation-mode field/i, "SPEC k
 mustNot(spec, /to be pinned at M4/i, "SPEC does not leave the implemented fixed constants unpinned");
 mustNot(spec, /All of the above enter the genesis event's `solverConfig`/i, "SPEC does not put scenario indicators in global solverConfig");
 mustNot(spec, /Kw\s*=\s*a_H\s*·\s*a_OH\s*\/\s*a_w/i, "SPEC does not use the rejected Kw/water-activity equation");
-must(spec, /Persisted World\/Event `schemaVersion` is currently `3`/i, "SPEC identifies persisted schema version 3");
-must(spec, /forward migration is `1 → 2 → 3`/i, "SPEC identifies the complete persisted migration chain");
+must(spec, /Persisted World\/Event `schemaVersion` is currently `4`/i, "SPEC identifies persisted schema version 4");
+must(spec, /forward migration is `1 → 2 → 3 → 4`/i, "SPEC identifies the complete persisted migration chain");
 mustNot(spec, /World and content `schemaVersion` is currently `2`/i, "SPEC does not merge authoring and persisted version namespaces");
 must(spec, /AC-S12\s*\|[^\n]*activity-based[^\n]*\|[^\n]*ScientificState/i, "M4 AC-S12 owns the scientific model-pH distinction");
 must(spec, /AC-V10[\s\S]{0,260}inspection view/i, "M5 owns the model-pH inspection presentation criterion");

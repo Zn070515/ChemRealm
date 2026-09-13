@@ -3,7 +3,13 @@
 - **Status:** **Accepted through revision 20** — M4 S3 owner acceptance recorded
   on 2026-09-13 against the committed implementation baseline and CI attestation.
 - **Accepted baseline:** commit `8310c685`, `SPEC-0001` revision 6
-- **Current revision:** **21 Candidate** — M5 contract remediation removes the
+- **Current revision:** **22 Candidate** — M5 replay/provenance closure freezes
+  a serializable, content-addressed `V(h)`/`h(V)` volume profile in every
+  persisted genesis vessel; binds `ScientificFrame` to its event sequence,
+  liquid volume, and volume-profile hash; removes the duplicate Observable
+  liquid-volume input; makes the hydrogen-ion policy discriminated; and
+  version-2 scientific expressions identify their Scientific Core producer.
+  Revision 21's M5 contract remediation removes the
   unused `ScientificProjection` water-mass input; restores AC-V4's complete
   `V(h)`/`h(V)` inverse contract; distinguishes burette contained volume,
   delivered volume, and graduated scale reading (displayed in `mL` at `0.01
@@ -65,6 +71,7 @@
 | 20 | 2026-09-13 | M4 semantic-evidence closure: v0 provenance records distinguish source observations, derived values, and model approximations without inventing precision or pressure; the input manifest is separate from a digest-bound envelope reference; AC-S14 executes the complete family sweep through `Scenario → WorldCreated → WorldState → SolveRequest → SolverAdapter`; and an AST guard confines molarity construction to `ScientificProjection`. | Owner, 2026-09-13 |
 
 | 21 | 2026-09-13 | M5 contract remediation: `ScientificProjection` accepts only the solution volume and source-state identity needed for its conversion; the Scientific Core composition boundary creates a bound `ScientificFrame`; AC-V4 retains both declared `V(h)` and `h(V)` with a stated round-trip tolerance; burette state separates contained/delivered volume from graduated scale reading and displays the latter in `mL` at `0.01 mL`; empirical indicator palettes are keyed by identity and are the only permitted home for provenance-bearing colour literals; one hydrogen-ion convention is selected by a replaceable presentation policy; ObservableModel owns readout text/precision policy while DOM/Pixi drawing remains Renderer-owned; and scientific expressions carry schema-owned model/source identity. | Candidate — owner review pending |
+| 22 | 2026-09-13 | M5 replay/provenance closure: every authored and persisted vessel carries a serializable piecewise-linear `VolumeProfile`; persisted World/Event schema advances to v4 with an explicit v3→v4 migration that requires an explicit profile resolver for legacy geometry-only records; `ScientificFrame` binds sequence, liquid volume, and profile hash; Observable consumes that single frame-owned volume; the hydrogen-ion policy is a discriminated union; curve points carry source sequence/model identity; and ScientificExpression v2 records the Scientific Core producer. `sourceStateHash` is explicitly the quantized World Runtime replay-equivalence identity, not an exact floating-point checksum. | Candidate — owner review pending |
 
 A revision bump is recorded here rather than only in the body because the header
 is what a reader checks before deciding whether the file they are reading is the
@@ -927,7 +934,7 @@ state it claimed to own.
 
 ```
 WorldState {
-  schemaVersion: 3
+  schemaVersion: 4
   worldId: WorldId
   lineage: { parentWorldId: WorldId | null, forkSequence: number, forkStateHash: Hash }
   sequence: number                      // present cursor; not hashed
@@ -943,9 +950,11 @@ WorldState {
 Vessel {
   id, kind,
   capacity: Litre,                      // fixed geometry
-  geometryRef,                          // -> the V(h) / h(V) profile
+  geometryRef,                          // visual/content lookup only
   position: { x: Millimetre, y: Millimetre }
 }                                       // NO contents field. See P1-B.
+
+ScenarioSnapshot.vessels[].volumeProfile // frozen V(h) / h(V) profile snapshot
 
 CanonicalContents {
   waterMass:        Kilogram                      // conserved solvent
@@ -1689,7 +1698,7 @@ zod; JSON Schema is emitted for the Python oracle (`ADR-0001` rule 1).
 
 | Contract | Kind | Versioned |
 |---|---|---|
-| `WorldState`, `Vessel`, `Apparatus`, `Attachment` | Persisted | yes, `schemaVersion: 3` |
+| `WorldState`, `Vessel`, `Apparatus`, `Attachment` | Persisted | yes, `schemaVersion: 4` |
 | The six v0 events | Persisted | yes |
 | `Command` union | Runtime | yes |
 | `SolveRequest`, `SolveResult`, `ScientificState`, `Provenance` | Runtime | yes |
@@ -1890,13 +1899,15 @@ Binary and verifiable. Every criterion maps to an evidence method.
 
 ## Rollout/migration
 
-- Persisted World/Event `schemaVersion` is currently `3`. Version 2 added the
+- Persisted World/Event `schemaVersion` is currently `4`. Version 2 added the
   explicit resolved `ScenarioSnapshot.indicators` block; version 3 requires the
-  persisted snapshot requirement temperature to be canonical Kelvin. The tested
-  forward migration is `1 → 2 → 3`: it inserts only an empty indicator list
-  where no value was previously persisted, then canonicalizes legacy temperature
-  units. A World Runtime migration boundary rebuilds the derived genesis
-  `contentHash` after either snapshot change. Authored Scenario shape version 3
+  persisted snapshot requirement temperature to be canonical Kelvin; version 4
+  freezes a serializable volume profile into each genesis vessel. The tested
+  forward migration is `1 → 2 → 3 → 4`: it inserts only an empty indicator list
+  where no value was previously persisted, canonicalizes legacy temperature
+  units, then requires an explicit profile resolver for geometry-only legacy
+  vessels. A World Runtime migration boundary rebuilds the derived genesis
+  `contentHash` after each snapshot change. Authored Scenario shape version 4
   has its own migration namespace; no automatic migration deletes the removed
   `fullyDissociated` field. Scientific DTO schema versions remain independent.
 - Export format `chemrealm.export` begins at `formatVersion: 1`.

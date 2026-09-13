@@ -7,15 +7,20 @@ function input(): ObservableInput {
   return {
     frame: {
       sourceStateHash: "state-hash",
+      sequence: 0,
       scientificState: scientificState(),
+      physical: { liquidVolume: litre(0.5), volumeProfileHash: "sha256:profile" },
       projection: {
         sourceStateHash: "state-hash",
         taughtHydrogenIonExponent: taughtHydrogenIonExponent(2),
       },
     },
-    liquidVolume: litre(0.5),
     volumeProfile: {
+      profileId: "test-profile",
+      profileVersion: "1.0.0",
+      profileHash: "sha256:profile",
       maxVolume: litre(1),
+      maxHeight: millimetre(20),
       roundTripTolerance: litre(1e-12),
       heightAtVolume: () => millimetre(20),
       volumeAtHeight: () => litre(0.5),
@@ -64,6 +69,47 @@ describe("observable model", () => {
         },
       }),
     ).toThrow(/source identities differ/);
+  });
+
+  it("uses the frame-owned volume for the liquid level", () => {
+    const source = input();
+    const model = buildObservableModel({
+      ...source,
+      volumeProfile: {
+        ...source.volumeProfile,
+        heightAtVolume: (volume) => volume * 100,
+        volumeAtHeight: (height) => height / 100,
+      },
+    });
+
+    expect(model.liquidLevel.volume).toBe(0.5);
+    expect(model.liquidLevel.height).toBe(50);
+  });
+
+  it("rejects a volume profile from a different replay-frozen frame", () => {
+    expect(() => buildObservableModel({
+      ...input(),
+      volumeProfile: {
+        ...input().volumeProfile,
+        profileHash: "sha256:other-profile",
+      },
+    })).toThrow(/volume profile does not belong/);
+  });
+
+  it("rejects a frame with an invalid committed sequence", () => {
+    expect(() => buildObservableModel({
+      ...input(),
+      frame: {
+        ...input().frame,
+        sequence: -1,
+      },
+    })).toThrow(/sequence/);
+  });
+
+  it("does not expose a second liquid-volume input at the observable boundary", () => {
+    // @ts-expect-error liquid volume is owned by ScientificFrame.physical
+    const invalidInput: ObservableInput = { ...input(), liquidVolume: litre(0.25) };
+    expect(invalidInput).toBeDefined();
   });
 
   it("uses the declared identity when presenting multiple indicator palettes", () => {

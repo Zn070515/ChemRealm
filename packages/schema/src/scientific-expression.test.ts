@@ -5,11 +5,13 @@ describe("scientific expression contract", () => {
   it("requires model and source-state identity", () => {
     expect(() =>
       ScientificExpressionSchema.parse({
-        schemaVersion: 1,
+        schemaVersion: 2,
         id: "equilibrium",
         label: "exact",
         expression: "supplied-expression",
         omittedTerms: [],
+        producerId: "scientific-core",
+        producerVersion: "1.0.0",
         modelId: "acidbase-monoprotic-davies",
         modelVersion: "1.0.0",
         sourceStateHash: "state-hash",
@@ -20,7 +22,7 @@ describe("scientific expression contract", () => {
   it("rejects an expression without source identity", () => {
     expect(() =>
       ScientificExpressionSchema.parse({
-        schemaVersion: 1,
+        schemaVersion: 2,
         id: "equilibrium",
         label: "exact",
         expression: "supplied-expression",

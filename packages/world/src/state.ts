@@ -31,6 +31,8 @@ import {
   type DomainEvent,
   type MaterialSnapshot as SerializedMaterialSnapshot,
   type ScenarioSnapshot as SerializedScenarioSnapshot,
+  type VolumeProfileSnapshot as SerializedVolumeProfileSnapshot,
+  type VolumeProfileMigrationResolver,
   type SolverConfigDto,
   type WorldCreated as SchemaWorldCreated,
   type WorldState as SchemaWorldState,
@@ -48,6 +50,12 @@ export type SerializedWorldState = SchemaWorldState;
 /** Content-address the self-contained genesis snapshot, including its units. */
 export function scenarioSnapshotHash(snapshot: SerializedScenarioSnapshot): string {
   return `sha256:${hashCanonical(snapshot)}`;
+}
+
+/** Content-address the profile payload without allowing self-reference. */
+export function volumeProfileHash(profile: SerializedVolumeProfileSnapshot): string {
+  const { profileHash: _profileHash, ...payload } = profile;
+  return "sha256:" + hashCanonical(payload);
 }
 
 export type RuntimeDataProvenance = DataProvenanceDto;
@@ -83,6 +91,7 @@ export interface RuntimeVesselDefinition {
   readonly kind: string;
   readonly capacity: ReturnType<typeof litre>;
   readonly geometryRef: string;
+  readonly volumeProfile: SerializedVolumeProfileSnapshot;
   readonly position: {
     readonly unit: "mm";
     readonly x: ReturnType<typeof millimetre>;
@@ -298,17 +307,32 @@ function parseScenarioSnapshot(dto: SerializedScenarioSnapshot): RuntimeScenario
   return {
     scenarioRef: parsed.scenarioRef,
     materials: parsed.materials.map(parseMaterialSnapshot),
-    vessels: parsed.vessels.map((vessel) => ({
-      vesselId: vessel.vesselId,
-      kind: vessel.kind,
-      capacity: litre(toCanonical(vessel.capacity).value),
-      geometryRef: vessel.geometryRef,
-      position: {
-        unit: "mm",
-        x: millimetre(vessel.position.x),
-        y: millimetre(vessel.position.y),
-      },
-    })),
+    vessels: parsed.vessels.map((vessel) => {
+      if (volumeProfileHash(vessel.volumeProfile) !== vessel.volumeProfile.profileHash) {
+        throw new Error(
+          "VOLUME_PROFILE_HASH_MISMATCH: vessel " +
+            vessel.vesselId +
+            " profile checksum does not match its payload",
+        );
+      }
+      if (vessel.volumeProfile.maxVolume.value !== toCanonical(vessel.capacity).value) {
+        throw new Error(
+          `VOLUME_PROFILE_CAPACITY_MISMATCH: vessel ${vessel.vesselId} profile maximum must equal capacity`,
+        );
+      }
+      return {
+        vesselId: vessel.vesselId,
+        kind: vessel.kind,
+        capacity: litre(toCanonical(vessel.capacity).value),
+        geometryRef: vessel.geometryRef,
+        volumeProfile: vessel.volumeProfile,
+        position: {
+          unit: "mm" as const,
+          x: millimetre(vessel.position.x),
+          y: millimetre(vessel.position.y),
+        },
+      };
+    }),
     apparatusDefaults: parsed.apparatusDefaults.map((entry) => ({
       kind: entry.kind,
       state: { ...entry.state },
@@ -471,11 +495,18 @@ export function createInitialState(input: unknown): WorldState {
  * checksum is a derived field owned by World Runtime and must be rebuilt at
  * this boundary rather than copied from the legacy record.
  */
-export function migrateWorldCreated(input: unknown): SerializedWorldCreated {
+export function migrateWorldCreated(
+  input: unknown,
+  options: { readonly resolveVolumeProfile?: VolumeProfileMigrationResolver } = {},
+): SerializedWorldCreated {
   if (input === null || typeof input !== "object" || Array.isArray(input)) {
     throw new TypeError("WorldCreated migration requires an object record");
   }
-  const result = migrateWorld(input as Record<string, unknown>, CURRENT_SCHEMA_VERSION);
+  const result = migrateWorld(
+    input as Record<string, unknown>,
+    CURRENT_SCHEMA_VERSION,
+    options,
+  );
   if (result.status !== "OK") {
     throw new Error(`WorldCreated migration failed: ${result.status}`);
   }
@@ -543,6 +574,7 @@ function serializeScenarioSnapshot(snapshot: RuntimeScenarioSnapshot): Serialize
       kind: vessel.kind,
       capacity: { value: vessel.capacity, unit: "L" },
       geometryRef: vessel.geometryRef,
+      volumeProfile: vessel.volumeProfile,
       position: { unit: "mm", x: vessel.position.x, y: vessel.position.y },
     })),
     apparatusDefaults: snapshot.apparatusDefaults.map((entry) => ({

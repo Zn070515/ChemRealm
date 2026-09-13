@@ -27,6 +27,20 @@ const provenance = {
   category: "evaluated" as const,
 };
 
+const volumeProfile = {
+  profileId: "flask-250-profile",
+  profileVersion: "1.0.0",
+  representation: "piecewise-linear" as const,
+  maxVolume: { value: 0.25, unit: "L" as const },
+  maxHeight: { value: 100, unit: "mm" as const },
+  roundTripTolerance: { value: 1e-12, unit: "L" as const },
+  knots: [
+    { volume: { value: 0, unit: "L" as const }, height: { value: 0, unit: "mm" as const } },
+    { volume: { value: 0.25, unit: "L" as const }, height: { value: 100, unit: "mm" as const } },
+  ],
+  provenance,
+};
+
 const authoringScenario = {
   schemaVersion: SCENARIO_SCHEMA_VERSION,
   contentVersion: 1,
@@ -54,6 +68,7 @@ const authoringScenario = {
       kind: "conicalFlask" as const,
       capacity: { value: 250, unit: "mL" as const },
       geometryRef: "flask-250",
+      volumeProfile,
       position: { unit: "mm" as const, x: 0, y: 0 },
       initialContents: [{ materialId: "hcl-0.1", volume: { value: 25, unit: "mL" as const } }],
     },

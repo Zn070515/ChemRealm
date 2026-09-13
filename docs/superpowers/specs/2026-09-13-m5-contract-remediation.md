@@ -2,7 +2,7 @@
 
 **Status:** S1 specified; owner-approved remediation direction, 2026-09-13
 
-**Canonical amendment:** `SPEC-0001` revision 21 Candidate. This document
+**Canonical amendment:** `SPEC-0001` revision 22 Candidate. This document
 does not override `SPEC-0001`; it describes the implementation needed to bring
 the M5 slice back into alignment with that amendment.
 
@@ -15,7 +15,9 @@ reading and displayed litres at the wrong resolution, all indicators shared one
 palette, and the scene emitted both pH conventions at once. Two bounded P2
 risks are closed here as well: symbolic expressions become schema-owned
 scientific outputs, and state/projection inputs travel as one source-identified
-frame.
+frame. Revision 22 additionally makes the vessel volume profile part of frozen
+genesis truth and binds the frame to the physical volume/profile identity used
+by Observable.
 
 ## Goal
 
@@ -35,8 +37,9 @@ frame.
 ## Non-goals
 
 - No PixiJS, DOM screen, final apparatus art, animation clock, or M6 work.
-- No change to M4 equations, constants, solver identity, event schemas, or
-  persisted world schema.
+- No change to M4 equations, constants, solver identity, or event semantics.
+  Persisted World/Event schema v4 is required by the replayable volume-profile
+  contract; its explicit v3→v4 migration is owned by the World Runtime boundary.
 - No renderer-side chemistry, indicator `Ka`, activity calculation, or
   reaction decision.
 - No automatic migration of already-persisted M5 RenderState; the observable
@@ -69,6 +72,11 @@ by `projectScientificFrame(...)`, containing the state, projection, and source
 identity. The render package does not compute or verify
 chemistry; it preserves and labels the supplied identity. Presentation policy
 chooses one hydrogen-ion readout at scene construction time.
+
+The persisted `VolumeProfileSnapshot` is the replayable geometry contract. It
+contains canonical knots, ranges, tolerance, provenance, and a hash of the
+hash-excluded payload; `geometryRef` is not consulted to reconstruct an old
+world.
 
 ## Scientific design
 
@@ -127,13 +135,17 @@ input is:
 ```ts
 interface ScientificFrame {
   readonly sourceStateHash: string;
+  readonly sequence: number;
   readonly scientificState: ScientificState;
+  readonly physical: {
+    readonly liquidVolume: Litre;
+    readonly volumeProfileHash: string;
+  };
   readonly projection: ScientificProjectionReadout;
 }
 
 interface ObservableInput {
   readonly frame: ScientificFrame;
-  readonly liquidVolume: Litre;
   readonly volumeProfile: VolumeProfile;
   readonly burette?: BuretteInput;
   readonly curveFrames?: readonly CurveFrame[];
@@ -143,7 +155,12 @@ interface ObservableInput {
 
 The `ScientificExpression.sourceStateHash` and `modelId/modelVersion` must
 match the frame's source-state and ScientificState provenance when the
-expression is presented. No persisted world/event schema version changes.
+expression is presented. Scientific expressions are emitted by the
+Scientific-Core producer and carry `producerId = "scientific-core"`; render
+validates this boundary but does not claim cryptographic authorship. Persisted
+world/event schema version 4 freezes serializable volume profiles in genesis;
+legacy geometry-only v3 records require an explicit profile resolver and are
+never guessed from `geometryRef`.
 
 ## Failure modes
 
@@ -188,8 +205,11 @@ expression is presented. No persisted world/event schema version changes.
 
 ## Rollout/migration
 
-No persisted schema migration is needed. Existing internal M5 callers are
-updated atomically because the package is not yet a released public API.
+Persisted World/Event schema v4 is not an in-place reinterpretation: v3→v4
+requires an explicit, reviewable volume-profile resolver for legacy
+geometry-only records. Existing internal M5 callers are updated atomically
+because the package is not yet a released public API; the persisted migration
+is still explicit and non-destructive.
 
 ## Open questions
 

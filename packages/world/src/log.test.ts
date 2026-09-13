@@ -31,7 +31,7 @@ describe("World Runtime append-only log", () => {
     const genesis = createLog(WORLD_CREATED);
     const event = {
       seq: 2,
-      schemaVersion: 3 as const,
+      schemaVersion: 4 as const,
       type: "ApparatusPlaced" as const,
       payload: {
         apparatusId: "stand",
@@ -47,7 +47,7 @@ describe("World Runtime append-only log", () => {
     const genesis = createLog(WORLD_CREATED);
     const event = {
       seq: 1,
-      schemaVersion: 3 as const,
+      schemaVersion: 4 as const,
       type: "ApparatusPlaced" as const,
       payload: {
         apparatusId: "stand",
@@ -63,7 +63,7 @@ describe("World Runtime append-only log", () => {
   it("normalizes a directly appended volume before persistence", () => {
     const event = {
       seq: 1,
-      schemaVersion: 3 as const,
+      schemaVersion: 4 as const,
       type: "MaterialCharged" as const,
       payload: {
         vesselId: "flask",

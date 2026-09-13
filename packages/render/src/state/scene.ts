@@ -16,13 +16,17 @@ export interface RenderState {
   readonly nodes: readonly RenderNode[];
 }
 
-type HydrogenIonReadoutKey = "taughtPh" | "modelPh";
-
-export interface HydrogenIonPresentationPolicy {
-  readonly id: "taught" | "scientific-model";
-  readonly readoutId: "taught-ph-readout" | "model-ph-readout";
-  readonly readoutKey: HydrogenIonReadoutKey;
-}
+export type HydrogenIonPresentationPolicy =
+  | {
+      readonly id: "taught";
+      readonly readoutId: "taught-ph-readout";
+      readonly readoutKey: "taughtPh";
+    }
+  | {
+      readonly id: "scientific-model";
+      readonly readoutId: "model-ph-readout";
+      readonly readoutKey: "modelPh";
+    };
 
 export const TAUGHT_HYDROGEN_ION_POLICY: HydrogenIonPresentationPolicy = Object.freeze({
   id: "taught",

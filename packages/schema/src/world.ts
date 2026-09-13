@@ -23,6 +23,7 @@ import { z } from "zod";
 
 import { canonicalQuantityOfDimension, quantityOfDimension } from "./quantity.js";
 import { DataProvenanceSchema, SolverConfigSchema } from "./scientific.js";
+import { VolumeProfileSnapshotSchema } from "./volume-profile.js";
 
 export const WorldIdSchema = z.string().min(1);
 export const VesselIdSchema = z.string().min(1);
@@ -140,7 +141,10 @@ export const ScenarioSnapshotSchema = z.strictObject({
       capacity: quantityOfDimension("volume"),
       /** The asset, which publishes V(h)/h(V). One reference, not two —
        *  see the note in `content.ts`. */
+      /** The asset reference, retained for content and visual lookup. */
       geometryRef: z.string().min(1),
+      /** Frozen, serializable geometry used to derive liquid height on replay. */
+      volumeProfile: VolumeProfileSnapshotSchema,
       position: PositionSchema,
     }),
   ),
@@ -249,7 +253,7 @@ export const LineageSchema = z.strictObject({
 export type Lineage = z.infer<typeof LineageSchema>;
 
 /** Current persisted World/Event/State schema version. */
-export const CURRENT_SCHEMA_VERSION = 3;
+export const CURRENT_SCHEMA_VERSION = 4;
 
 /**
  * `sequence` is the present cursor and is NOT hashed. Wall-clock time appears

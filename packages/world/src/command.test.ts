@@ -33,7 +33,7 @@ describe("World Runtime command boundary", () => {
     const genesis = createInitialState(WORLD_CREATED);
     const state = reduce(genesis, {
       seq: 1,
-      schemaVersion: 3,
+      schemaVersion: 4,
       type: "MaterialCharged",
       payload: {
         vesselId: "burette",
@@ -106,7 +106,7 @@ describe("World Runtime command boundary", () => {
     const genesis = createInitialState(highPrecisionWorldCreated());
     const charged = reduce(genesis, {
       seq: 1,
-      schemaVersion: 3,
+      schemaVersion: 4,
       type: "MaterialCharged",
       payload: {
         vesselId: "flask",

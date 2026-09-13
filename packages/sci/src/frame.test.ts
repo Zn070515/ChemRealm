@@ -13,6 +13,7 @@ import {
 } from "@chemrealm/schema";
 import { projectScientificFrame } from "./frame.js";
 import { projectScientificState } from "./projection.js";
+import { detLog10 } from "./deterministic-math.js";
 
 function scientificState(): ScientificState {
   return {
@@ -49,13 +50,50 @@ describe("scientific projection frame", () => {
     const state = scientificState();
     const frame = projectScientificFrame(state, {
       sourceStateHash: "world-state-42",
+      sequence: 7,
       liquidVolume: litre(0.5),
+      volumeProfileHash: "sha256:profile-42",
     });
 
-    expect(frame.scientificState).toBe(state);
+    expect(frame.scientificState).not.toBe(state);
     expect(frame.sourceStateHash).toBe("world-state-42");
+    expect(frame.sequence).toBe(7);
     expect(frame.projection.sourceStateHash).toBe("world-state-42");
+    expect(frame.physical.liquidVolume).toBe(0.5);
+    expect(frame.physical.volumeProfileHash).toBe("sha256:profile-42");
+    expect(Object.isFrozen(frame.physical)).toBe(true);
     expect(Object.isFrozen(frame)).toBe(true);
+  });
+
+  it("uses the frame-owned physical volume for the taught projection", () => {
+    const frame = projectScientificFrame(scientificState(), {
+      sourceStateHash: "world-state-volume",
+      sequence: 10,
+      liquidVolume: litre(0.25),
+      volumeProfileHash: "sha256:profile-volume",
+    });
+
+    expect(frame.projection.taughtHydrogenIonExponent.value).toBeCloseTo(
+      -detLog10(0.2),
+      12,
+    );
+    expect(frame.physical.liquidVolume).toBe(0.25);
+  });
+
+  it("deep-freezes the scientific payload crossing the frame boundary", () => {
+    const frame = projectScientificFrame(scientificState(), {
+      sourceStateHash: "world-state-43",
+      sequence: 8,
+      liquidVolume: litre(0.5),
+      volumeProfileHash: "sha256:profile-43",
+    });
+
+    expect(Object.isFrozen(frame.scientificState)).toBe(true);
+    expect(Object.isFrozen(frame.scientificState.species)).toBe(true);
+    expect(Object.isFrozen(frame.scientificState.species[0])).toBe(true);
+    expect(() => {
+      (frame.scientificState.species as Array<unknown>).push({});
+    }).toThrow();
   });
 
   it("does not allow a projection to be created without an authoritative identity", () => {
@@ -65,5 +103,14 @@ describe("scientific projection frame", () => {
         liquidVolume: litre(0.5),
       }),
     ).toThrow(RangeError);
+  });
+
+  it("rejects malformed profile identity at the frame boundary", () => {
+    expect(() => projectScientificFrame(scientificState(), {
+      sourceStateHash: "world-state-invalid-profile",
+      sequence: 11,
+      liquidVolume: litre(0.5),
+      volumeProfileHash: undefined as never,
+    })).toThrow(RangeError);
   });
 });

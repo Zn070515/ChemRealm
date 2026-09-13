@@ -16,9 +16,10 @@ import { z } from "zod";
 
 import { quantityOfDimension } from "./quantity.js";
 import { DataProvenanceSchema } from "./scientific.js";
+import { VolumeProfileDefinitionSchema } from "./volume-profile.js";
 
 /** Authoring shape version; independent from the persisted world event version. */
-export const SCENARIO_SCHEMA_VERSION = 3;
+export const SCENARIO_SCHEMA_VERSION = 4;
 
 /**
  * A solute, on ONE named composition scale.
@@ -117,6 +118,8 @@ export const VesselDefinitionSchema = z.strictObject({
    * known function of height (`docs/visual/apparatus-standard.md`).
    */
   geometryRef: z.string().min(1),
+  /** Serializable volume profile, resolved into genesis. */
+  volumeProfile: VolumeProfileDefinitionSchema,
   position: z.strictObject({ unit: z.literal("mm"), x: z.number(), y: z.number() }),
   initialContents: z.array(
     z.strictObject({

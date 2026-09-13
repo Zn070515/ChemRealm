@@ -12,8 +12,12 @@
 
 `GOAL.md` §5.5 and §9 set the policy: no accounts, no mandatory registration, no
 cloud-required progress, no public user uploads, learner state local by default,
-and export/import for learning state. `GOAL.md` §10 sets the deployment target:
-a free, non-commercial, ICP-filed site accessible in mainland China.
+and export/import for learning state. `GOAL.md` §10 sets the deployment
+posture: free, non-commercial, public-good software that remains lawful to
+deploy in mainland China, without making a particular filing category, host,
+or operator a project-level constraint. Future public instances may be
+operated by a qualified institution or another owner-approved operator;
+deployment governance is separate from the cores.
 
 The owner chose a hybrid scientific architecture on 2026-09-11: TypeScript
 solves in the browser, Python is test-time only. That choice has a persistence
@@ -68,7 +72,7 @@ Export produces a single self-describing, versioned bundle:
 {
   "format": "chemrealm.export",
   "formatVersion": 1,
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "lineage": [ {
     "worldId": "world-1",
     "lineage": {
@@ -134,7 +138,7 @@ recording the fork points. Internal storage may share the prefix; export is a
 {
   "format": "chemrealm.export",
   "formatVersion": 1,
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "lineage": [
     { "worldId": "root", "lineage": {
       "parentWorldId": null, "forkSequence": null, "forkStateHash": null
@@ -170,19 +174,21 @@ Not generated, not stored, not derivable from stored data:
 - Every persisted record carries `schemaVersion`.
 - Migrations are explicit, versioned, and tested forward. `SPEC-0001` requires a
   migration test for every version bump.
-- The current persisted world/event schema is version 3. Migration `1 → 2`
+- The current persisted world/event schema is version 4. Migration `1 → 2`
   adds the explicit `ScenarioSnapshot.indicators` block as an empty list when
   no prior value was persisted; migration `2 → 3` canonicalizes the persisted
-  snapshot requirement temperature to Kelvin. Neither step fabricates a
-  scientific input. Because both migrations can change snapshot bytes, the
-  World Runtime migration boundary rebuilds the derived genesis `contentHash`
-  before loading the migrated event.
+  snapshot requirement temperature to Kelvin; migration `3 → 4` freezes a
+  serializable `VolumeProfileSnapshot` in each genesis vessel and requires an
+  explicit resolver for legacy geometry-only records. No migration fabricates
+  a scientific or geometric input. Because these migrations can change
+  snapshot bytes, the World Runtime migration boundary rebuilds the derived
+  genesis `contentHash` before loading the migrated event.
 - Persisted World/Event and authored Scenario records use separate migration
-  namespaces. The current authored Scenario shape is version 3; no automatic
+  namespaces. The current authored Scenario shape is version 4; no automatic
   migration is promised for the removed `fullyDissociated` field, because
   silently deleting an authored scientific assertion would be unsafe.
 - The authored `Scenario` shape is a separate contract and is currently version
-  3; authoring-only changes do not alter the persisted world migration path.
+  4; authoring-only changes do not alter the persisted world migration path.
 - A schema-level migration of a generic event-log/export container does not
   repair derived genesis hashes. The M8 import/load boundary must identify each
   migrated `WorldCreated`, rebuild its `contentHash` in World Runtime, validate

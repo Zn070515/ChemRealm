@@ -6,21 +6,25 @@ describe("symbolic observable", () => {
   it("presents supplied scientific expressions without rewriting them", () => {
     const source: ScientificExpression[] = [
       {
-        schemaVersion: 1,
+        schemaVersion: 2,
         id: "exact",
         label: "exact",
         expression: "supplied-exact-expression",
         omittedTerms: [],
+        producerId: "scientific-core",
+        producerVersion: "1.0.0",
         modelId: "acidbase-monoprotic-davies",
         modelVersion: "1.0.0",
         sourceStateHash: "state-hash",
       },
       {
-        schemaVersion: 1,
+        schemaVersion: 2,
         id: "shortcut",
         label: "shortcut",
         expression: "supplied-shortcut-expression",
         omittedTerms: ["activity correction"],
+        producerId: "scientific-core",
+        producerVersion: "1.0.0",
         modelId: "acidbase-monoprotic-davies",
         modelVersion: "1.0.0",
         sourceStateHash: "state-hash",
@@ -43,11 +47,13 @@ describe("symbolic observable", () => {
       presentSymbolicLines(
         [
           {
-            schemaVersion: 1,
+            schemaVersion: 2,
             id: "exact",
             label: "exact",
             expression: "supplied-expression",
             omittedTerms: [],
+            producerId: "scientific-core",
+            producerVersion: "1.0.0",
             modelId: "acidbase-monoprotic-davies",
             modelVersion: "1.0.0",
             sourceStateHash: "other-state",
@@ -67,11 +73,13 @@ describe("symbolic observable", () => {
       presentSymbolicLines(
         [
           {
-            schemaVersion: 1,
+            schemaVersion: 2,
             id: "exact",
             label: "exact",
             expression: "supplied-expression",
             omittedTerms: [],
+            producerId: "scientific-core",
+            producerVersion: "1.0.0",
             modelId: "other-model",
             modelVersion: "1.0.0",
             sourceStateHash: "state-hash",

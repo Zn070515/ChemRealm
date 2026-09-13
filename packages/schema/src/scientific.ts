@@ -84,7 +84,7 @@ import {
 export const SCIENTIFIC_SCHEMA_VERSION = 3;
 
 /** Standalone schema version for model-generated symbolic expressions. */
-export const SCIENTIFIC_EXPRESSION_SCHEMA_VERSION = 1;
+export const SCIENTIFIC_EXPRESSION_SCHEMA_VERSION = 2;
 
 /**
  * A symbolic expression is a scientific output, not free-form render copy.
@@ -97,6 +97,8 @@ export const ScientificExpressionSchema = z.strictObject({
   label: z.enum(["exact", "shortcut"]),
   expression: z.string().min(1),
   omittedTerms: z.array(z.string()),
+  producerId: z.literal("scientific-core"),
+  producerVersion: z.string().min(1),
   modelId: z.string().min(1),
   modelVersion: z.string().min(1),
   sourceStateHash: z.string().min(1),

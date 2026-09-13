@@ -19,7 +19,7 @@ import { App } from "./App.js";
  */
 describe("apps/web placeholder", () => {
   it("resolves the workspace link to packages/schema", () => {
-    expect(CURRENT_SCHEMA_VERSION).toBe(3);
+    expect(CURRENT_SCHEMA_VERSION).toBe(4);
   });
 
   it("exposes the app component", () => {

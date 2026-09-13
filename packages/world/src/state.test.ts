@@ -8,6 +8,7 @@ import {
   scenarioSnapshotHash,
   serializeWorldState,
   stateHash,
+  volumeProfileHash,
   type SerializedWorldCreated,
 } from "./state.js";
 import { createLog } from "./log.js";
@@ -16,7 +17,7 @@ import { quantize } from "./hash.js";
 
 const WORLD_CREATED: SerializedWorldCreated = {
   seq: 0,
-  schemaVersion: 3,
+  schemaVersion: 4,
   type: "WorldCreated",
   payload: {
     worldId: "w-1",
@@ -69,6 +70,20 @@ const WORLD_CREATED: SerializedWorldCreated = {
           kind: "conicalFlask",
           capacity: { value: 0.25, unit: "L" },
           geometryRef: "flask-250",
+          volumeProfile: {
+            profileId: "flask-250",
+            profileVersion: "1.0.0",
+            profileHash: "sha256:placeholder",
+            representation: "piecewise-linear",
+            maxVolume: { value: 0.25, unit: "L" },
+            maxHeight: { value: 100, unit: "mm" },
+            roundTripTolerance: { value: 1e-12, unit: "L" },
+            knots: [
+              { volume: { value: 0, unit: "L" }, height: { value: 0, unit: "mm" } },
+              { volume: { value: 0.25, unit: "L" }, height: { value: 100, unit: "mm" } },
+            ],
+            provenance: { source: "fixture", reference: "flask profile", category: "evaluated" },
+          },
           position: { unit: "mm", x: 0, y: 0 },
         },
       ],
@@ -101,6 +116,9 @@ const WORLD_CREATED: SerializedWorldCreated = {
     seed: null,
   },
 };
+
+const profile = WORLD_CREATED.payload.scenarioSnapshot.vessels[0]!.volumeProfile;
+profile.profileHash = volumeProfileHash(profile);
 
 WORLD_CREATED.payload.contentHash = scenarioSnapshotHash(WORLD_CREATED.payload.scenarioSnapshot);
 
@@ -240,6 +258,14 @@ describe("WorldState domain boundary", () => {
     expect(() => createInitialState(stale)).toThrow(/CONTENT_HASH_MISMATCH/);
   });
 
+  it("rejects a genesis profile whose payload no longer matches its profile hash", () => {
+    const tampered = structuredClone(WORLD_CREATED) as SerializedWorldCreated;
+    tampered.payload.scenarioSnapshot.vessels[0]!.volumeProfile.provenance.reference =
+      "tampered profile";
+    tampered.payload.contentHash = scenarioSnapshotHash(tampered.payload.scenarioSnapshot);
+    expect(() => createInitialState(tampered)).toThrow(/VOLUME_PROFILE_HASH_MISMATCH/);
+  });
+
   it("rebuilds the derived content checksum when migrating a v1 genesis", () => {
     const legacySnapshot = { ...WORLD_CREATED.payload.scenarioSnapshot };
     delete (legacySnapshot as Record<string, unknown>).indicators;
@@ -255,10 +281,37 @@ describe("WorldState domain boundary", () => {
 
     const migrated = migrateWorldCreated(legacy);
 
-    expect(migrated.schemaVersion).toBe(3);
+    expect(migrated.schemaVersion).toBe(4);
     expect(migrated.payload.scenarioSnapshot.indicators).toEqual([]);
     expect(migrated.payload.contentHash).toBe(
       scenarioSnapshotHash(migrated.payload.scenarioSnapshot),
+    );
+    expect(() => createInitialState(migrated)).not.toThrow();
+  });
+
+  it("requires an explicit profile resolver for legacy geometry-only genesis", () => {
+    const legacySnapshot = structuredClone(WORLD_CREATED.payload.scenarioSnapshot) as SerializedWorldCreated["payload"]["scenarioSnapshot"];
+    delete (legacySnapshot.vessels[0] as Record<string, unknown>).volumeProfile;
+    const legacy = {
+      ...WORLD_CREATED,
+      schemaVersion: 3,
+      payload: {
+        ...WORLD_CREATED.payload,
+        scenarioSnapshot: legacySnapshot,
+        contentHash: scenarioSnapshotHash(legacySnapshot),
+      },
+    };
+
+    expect(() => migrateWorldCreated(legacy)).toThrow(/NO_PATH/);
+    const migrated = migrateWorldCreated(legacy, {
+      resolveVolumeProfile: (geometryRef) => {
+        if (geometryRef !== "flask-250") return undefined;
+        return WORLD_CREATED.payload.scenarioSnapshot.vessels[0]!.volumeProfile;
+      },
+    });
+    expect(migrated.schemaVersion).toBe(4);
+    expect(migrated.payload.scenarioSnapshot.vessels[0]?.volumeProfile.profileId).toBe(
+      "flask-250",
     );
     expect(() => createInitialState(migrated)).not.toThrow();
   });
@@ -281,10 +334,10 @@ describe("WorldState domain boundary", () => {
       },
     };
 
-    expect(() => createInitialState(legacy)).toThrow(/expected 3/);
+    expect(() => createInitialState(legacy)).toThrow(/expected 4/);
     const migrated = migrateWorldCreated(legacy);
 
-    expect(migrated.schemaVersion).toBe(3);
+    expect(migrated.schemaVersion).toBe(4);
     expect(migrated.payload.scenarioSnapshot.modelRequirements.temperature).toEqual({
       value: 298.15,
       unit: "K",

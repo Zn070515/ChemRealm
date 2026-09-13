@@ -47,13 +47,15 @@ content during replay. `SolverConfig` continues to contain global model
 parameters, including the explicit v0 `waterActivity: 1` convention, but not
 scenario indicator constants.
 
-The persisted world/event schema is version 3. Migration `1 → 2` adds
+The persisted world/event schema is now version 4. Migration `1 → 2` adds
 `indicators: []` to legacy records that have no block; migration `2 → 3`
-canonicalizes the persisted requirement temperature to Kelvin. Neither step
-invents a missing indicator constant. A pre-v2 world whose indicator existed
+canonicalizes the persisted requirement temperature to Kelvin; migration
+`3 → 4` freezes a serializable volume profile in every genesis vessel and
+requires an explicit profile resolver for legacy geometry-only records. Neither
+step invents a missing indicator constant. A pre-v2 world whose indicator existed
 only in an unpersisted request cannot be represented as having preserved that
 input and must not receive a false replay guarantee. The authored `Scenario`
-shape is a separate version 3 contract and has its own migration namespace;
+shape is a separate version 4 contract and has its own migration namespace;
 removing the ignored `fullyDissociated` field changes authoring validation and
 has no automatic v2→v3 rewrite.
 

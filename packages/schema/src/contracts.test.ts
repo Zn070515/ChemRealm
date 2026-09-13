@@ -35,6 +35,20 @@ import {
 } from "./world.js";
 import { generateJsonSchemas, serializeJsonSchema } from "./json-schema.js";
 
+const fixtureVolumeProfile = {
+  profileId: "fixture-flask-profile",
+  profileVersion: "1.0.0",
+  representation: "piecewise-linear" as const,
+  maxVolume: { value: 0.25, unit: "L" as const },
+  maxHeight: { value: 100, unit: "mm" as const },
+  roundTripTolerance: { value: 1e-12, unit: "L" as const },
+  knots: [
+    { volume: { value: 0, unit: "L" as const }, height: { value: 0, unit: "mm" as const } },
+    { volume: { value: 0.25, unit: "L" as const }, height: { value: 100, unit: "mm" as const } },
+  ],
+  provenance: { source: "fixture", reference: "volume profile", category: "evaluated" as const },
+};
+
 describe("AC-R15 — contents live in exactly one place", () => {
   it("gives Vessel no contents field", () => {
     const shape = VesselSchema.shape as Record<string, unknown>;
@@ -123,6 +137,31 @@ describe("AC-R16 — requirements and the resolved solver are different things",
     nonPositive.indicators[0]!.kaIn = { value: 0, unit: "1" };
     expect(ScenarioSnapshotSchema.safeParse(nonPositive).success).toBe(false);
   });
+
+  it("requires a serializable replayable volume profile in each persisted vessel", () => {
+    const snapshot = {
+      scenarioRef: "profile-required",
+      materials: [],
+      vessels: [{
+        vesselId: "flask",
+        kind: "conicalFlask",
+        capacity: { value: 0.25, unit: "L" },
+        geometryRef: "flask-250",
+        position: { unit: "mm", x: 0, y: 0 },
+      }],
+      apparatusDefaults: [],
+      indicators: [],
+      modelRequirements: {
+        temperature: { value: 298.15, unit: "K" },
+        species: ["H+"],
+        solvent: "water",
+        phase: "aqueous",
+        activityCorrected: true,
+      },
+    };
+
+    expect(ScenarioSnapshotSchema.safeParse(snapshot).success).toBe(false);
+  });
 });
 
 describe("AC-R19 — world identity is event-sourced", () => {
@@ -210,6 +249,7 @@ describe("AC-C1 — content declares a scenario and cannot express chemistry", (
         kind: "conicalFlask",
         capacity: { value: 0.25, unit: "L" },
         geometryRef: "flask-250",
+        volumeProfile: fixtureVolumeProfile,
         position: { unit: "mm", x: 0, y: 0 },
         initialContents: [{ materialId: "hcl-0.1", volume: { value: 0.025, unit: "L" } }],
       },
@@ -283,6 +323,7 @@ describe("the migration harness exists before it is needed", () => {
     expect(WORLD_MIGRATIONS).toEqual([
       expect.objectContaining({ from: 1, to: 2 }),
       expect.objectContaining({ from: 2, to: 3 }),
+      expect.objectContaining({ from: 3, to: 4 }),
     ]);
   });
 
@@ -304,7 +345,7 @@ describe("the migration harness exists before it is needed", () => {
     expect(result.status).toBe("NO_PATH");
   });
 
-  it("migrates a v1 genesis record through v2 into canonical-temperature v3", () => {
+  it("migrates a v1 genesis record through v2, v3, and v4", () => {
     const result = migrateWorld(
       {
         schemaVersion: 1,
@@ -325,7 +366,7 @@ describe("the migration harness exists before it is needed", () => {
     expect(result.status).toBe("OK");
     if (result.status === "OK") {
       expect(result.record.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
-      expect(result.applied).toEqual([2, 3]);
+      expect(result.applied).toEqual([2, 3, 4]);
       const payload = result.record.payload;
       expect(payload).toBeTypeOf("object");
       if (payload !== null && typeof payload === "object") {
@@ -338,7 +379,7 @@ describe("the migration harness exists before it is needed", () => {
     }
   });
 
-  it("migrates a persisted v2 genesis temperature without mutating the legacy record", () => {
+  it("migrates a persisted v2 genesis temperature through v4 without mutating the legacy record", () => {
     const legacy = {
       schemaVersion: 2,
       type: "WorldCreated",
@@ -358,7 +399,7 @@ describe("the migration harness exists before it is needed", () => {
 
     expect(result.status).toBe("OK");
     if (result.status === "OK") {
-      expect(result.applied).toEqual([3]);
+      expect(result.applied).toEqual([3, 4]);
       expect(result.record.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
       expect(result.record.payload).toMatchObject({
         scenarioSnapshot: {
@@ -391,7 +432,7 @@ describe("the migration harness exists before it is needed", () => {
     expect(result.status).toBe("OK");
     if (result.status === "OK") {
       expect(result.record.events).toMatchObject([{
-        schemaVersion: 3,
+        schemaVersion: 4,
         payload: {
           scenarioSnapshot: {
             modelRequirements: { temperature: { value: 298.15, unit: "K" } },
@@ -539,6 +580,7 @@ describe("dimension coherence — the contract cannot express dimensional nonsen
         kind: "conicalFlask" as const,
         capacity: { value: 0.25, unit: "L" },
         geometryRef: "g",
+        volumeProfile: fixtureVolumeProfile,
         position: { unit: "mm" as const, x: 0, y: 0 },
         initialContents: [],
       },

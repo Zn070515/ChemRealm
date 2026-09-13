@@ -847,7 +847,7 @@
       "type": "string"
     },
     "schemaVersion": {
-      "const": 3,
+      "const": 4,
       "type": "number"
     },
     "title": {
@@ -954,6 +954,239 @@
           "vesselId": {
             "minLength": 1,
             "type": "string"
+          },
+          "volumeProfile": {
+            "additionalProperties": false,
+            "properties": {
+              "knots": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "height": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "unit": {
+                          "enum": [
+                            "mm",
+                            "cm",
+                            "m"
+                          ],
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "value",
+                        "unit"
+                      ],
+                      "type": "object"
+                    },
+                    "volume": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "unit": {
+                          "enum": [
+                            "L",
+                            "mL",
+                            "uL"
+                          ],
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "value",
+                        "unit"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "volume",
+                    "height"
+                  ],
+                  "type": "object"
+                },
+                "minItems": 2,
+                "type": "array"
+              },
+              "maxHeight": {
+                "additionalProperties": false,
+                "properties": {
+                  "unit": {
+                    "enum": [
+                      "mm",
+                      "cm",
+                      "m"
+                    ],
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "value",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              "maxVolume": {
+                "additionalProperties": false,
+                "properties": {
+                  "unit": {
+                    "enum": [
+                      "L",
+                      "mL",
+                      "uL"
+                    ],
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "value",
+                  "unit"
+                ],
+                "type": "object"
+              },
+              "profileId": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "profileVersion": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "provenance": {
+                "additionalProperties": false,
+                "properties": {
+                  "category": {
+                    "enum": [
+                      "measured",
+                      "evaluated",
+                      "calculated",
+                      "empirical",
+                      "pedagogicalApproximation"
+                    ],
+                    "type": "string"
+                  },
+                  "edition": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "lastVerified": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "pressure": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "unit": {
+                        "enum": [
+                          "kPa",
+                          "Pa",
+                          "atm"
+                        ],
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "value",
+                      "unit"
+                    ],
+                    "type": "object"
+                  },
+                  "reference": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "source": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "temperature": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "unit": {
+                        "enum": [
+                          "K",
+                          "degC"
+                        ],
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "value",
+                      "unit"
+                    ],
+                    "type": "object"
+                  },
+                  "uncertainty": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "version": {
+                    "minLength": 1,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "source",
+                  "reference",
+                  "category"
+                ],
+                "type": "object"
+              },
+              "representation": {
+                "const": "piecewise-linear",
+                "type": "string"
+              },
+              "roundTripTolerance": {
+                "additionalProperties": false,
+                "properties": {
+                  "unit": {
+                    "enum": [
+                      "L",
+                      "mL",
+                      "uL"
+                    ],
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "value",
+                  "unit"
+                ],
+                "type": "object"
+              }
+            },
+            "required": [
+              "profileId",
+              "profileVersion",
+              "representation",
+              "maxVolume",
+              "maxHeight",
+              "roundTripTolerance",
+              "knots",
+              "provenance"
+            ],
+            "type": "object"
           }
         },
         "required": [
@@ -961,6 +1194,7 @@
           "kind",
           "capacity",
           "geometryRef",
+          "volumeProfile",
           "position",
           "initialContents"
         ],

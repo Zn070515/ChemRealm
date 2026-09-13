@@ -1,5 +1,6 @@
 import {
   SCIENTIFIC_EXPRESSION_SCHEMA_VERSION,
+  ScientificExpressionSchema,
   type ScientificExpression,
 } from "@chemrealm/schema";
 
@@ -22,23 +23,24 @@ export function presentSymbolicLines(
   expectedIdentity: ScientificExpressionIdentity,
 ): readonly PresentedScientificExpression[] {
   const result = lines.map((line) => {
-    if (line.id.trim().length === 0 || line.expression.trim().length === 0) {
+    const parsed = ScientificExpressionSchema.parse(line);
+    if (parsed.id.trim().length === 0 || parsed.expression.trim().length === 0) {
       throw new RangeError("symbolic line requires an id and expression");
     }
-    if (line.label !== "exact" && line.label !== "shortcut") {
-      throw new RangeError(`unsupported symbolic line label: ${line.label}`);
+    if (parsed.label !== "exact" && parsed.label !== "shortcut") {
+      throw new RangeError(`unsupported symbolic line label: ${parsed.label}`);
     }
     if (
-      line.schemaVersion !== SCIENTIFIC_EXPRESSION_SCHEMA_VERSION ||
-      line.sourceStateHash !== expectedIdentity.sourceStateHash ||
-      line.modelId !== expectedIdentity.modelId ||
-      line.modelVersion !== expectedIdentity.modelVersion
+      parsed.schemaVersion !== SCIENTIFIC_EXPRESSION_SCHEMA_VERSION ||
+      parsed.sourceStateHash !== expectedIdentity.sourceStateHash ||
+      parsed.modelId !== expectedIdentity.modelId ||
+      parsed.modelVersion !== expectedIdentity.modelVersion
     ) {
       throw new RangeError("symbolic line does not belong to the scientific frame identity");
     }
     return Object.freeze({
-      ...line,
-      omittedTerms: Object.freeze([...line.omittedTerms]),
+      ...parsed,
+      omittedTerms: Object.freeze([...parsed.omittedTerms]),
     });
   });
   return Object.freeze(result) as readonly PresentedScientificExpression[];

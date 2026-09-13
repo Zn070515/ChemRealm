@@ -1,4 +1,9 @@
-import { type Litre, type ScientificState } from "@chemrealm/schema";
+import {
+  parseScientificState,
+  serializeScientificState,
+  type Litre,
+  type ScientificState,
+} from "@chemrealm/schema";
 import {
   projectScientificState,
   type ScientificProjection,
@@ -6,13 +11,37 @@ import {
 
 export interface ScientificFrame {
   readonly sourceStateHash: string;
+  /** World event sequence represented by this frame. */
+  readonly sequence: number;
   readonly scientificState: ScientificState;
+  readonly physical: {
+    readonly liquidVolume: Litre;
+    /** Content hash of the replay-frozen volume profile used by Observable. */
+    readonly volumeProfileHash: string;
+  };
   readonly projection: ScientificProjection;
 }
 
 export interface ScientificFrameInput {
   readonly sourceStateHash: string;
+  readonly sequence: number;
   readonly liquidVolume: Litre;
+  readonly volumeProfileHash: string;
+}
+
+function deepFreeze<T>(value: T): T {
+  if (value === null || typeof value !== "object" || Object.isFrozen(value)) {
+    return value;
+  }
+  for (const child of Object.values(value)) deepFreeze(child);
+  return Object.freeze(value);
+}
+
+function nonEmptyIdentity(value: unknown, name: string): string {
+  if (typeof value !== "string" || value.trim().length === 0) {
+    throw new RangeError(`${name} cannot be empty`);
+  }
+  return value;
 }
 
 /**
@@ -24,10 +53,30 @@ export function projectScientificFrame(
   scientificState: ScientificState,
   input: ScientificFrameInput,
 ): ScientificFrame {
-  const projection = projectScientificState(scientificState, input);
-  return Object.freeze({
+  if (!Number.isInteger(input.sequence) || input.sequence < 0) {
+    throw new RangeError("scientific frame sequence must be a non-negative integer");
+  }
+  const sourceStateHash = nonEmptyIdentity(input.sourceStateHash, "scientific frame source state hash");
+  const volumeProfileHash = nonEmptyIdentity(
+    input.volumeProfileHash,
+    "scientific frame volume profile hash",
+  );
+  const frozenState = deepFreeze(
+    parseScientificState(serializeScientificState(scientificState)),
+  );
+  const physical = Object.freeze({
+    liquidVolume: input.liquidVolume,
+    volumeProfileHash,
+  });
+  const projection = projectScientificState(frozenState, {
+    sourceStateHash,
+    liquidVolume: physical.liquidVolume,
+  });
+  return deepFreeze({
     sourceStateHash: projection.sourceStateHash,
-    scientificState,
+    sequence: input.sequence,
+    scientificState: frozenState,
+    physical,
     projection,
   });
 }
