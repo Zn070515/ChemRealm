@@ -167,7 +167,7 @@ describe("WorldState domain boundary", () => {
     };
 
     const parsed = parseWorldState(stateWithHighPrecisionContents);
-    const contents = parsed.canonical.byVessel.flask;
+    const contents = parsed.canonical.byVessel.flask!;
     expect(contents.waterMass).toBe(quantize(0.7999999999996));
     expect(contents.liquidVolume).toBe(quantize(0.1234567890126));
     expect(contents.componentAmounts[0]?.amount).toBe(quantize(0.1234567890126));
@@ -192,8 +192,8 @@ describe("WorldState domain boundary", () => {
     };
 
     const parsed = parseWorldStateForSnapshot(checkpoint);
-    expect(parsed.canonical.byVessel.flask.waterMass).toBe(0.09404493832199984);
-    expect(parsed.canonical.byVessel.flask.componentAmounts[0]?.amount).toBe(
+    expect(parsed.canonical.byVessel.flask!.waterMass).toBe(0.09404493832199984);
+    expect(parsed.canonical.byVessel.flask!.componentAmounts[0]?.amount).toBe(
       0.009420000000000024,
     );
   });

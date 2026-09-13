@@ -23,9 +23,9 @@ describe("World Runtime reducer", () => {
       },
     });
 
-    expect(next.canonical.byVessel.flask.waterMass).toBeCloseTo(0.99835391 * 0.05, 14);
-    expect(next.canonical.byVessel.flask.liquidVolume).toBeCloseTo(0.05, 14);
-    expect(next.canonical.byVessel.flask.componentAmounts).toEqual([
+    expect(next.canonical.byVessel.flask!.waterMass).toBeCloseTo(0.99835391 * 0.05, 14);
+    expect(next.canonical.byVessel.flask!.liquidVolume).toBeCloseTo(0.05, 14);
+    expect(next.canonical.byVessel.flask!.componentAmounts).toEqual([
       { componentId: "HCl", amount: expect.closeTo(0.005, 14) },
     ]);
   });
@@ -64,14 +64,14 @@ describe("World Runtime reducer", () => {
       },
     });
 
-    expect(transferred.canonical.byVessel.flask.waterMass).toBeCloseTo(0.99835391 * 0.075, 14);
-    expect(transferred.canonical.byVessel.flask.liquidVolume).toBeCloseTo(0.075, 14);
-    expect(transferred.canonical.byVessel.flask.componentAmounts).toEqual([
+    expect(transferred.canonical.byVessel.flask!.waterMass).toBeCloseTo(0.99835391 * 0.075, 14);
+    expect(transferred.canonical.byVessel.flask!.liquidVolume).toBeCloseTo(0.075, 14);
+    expect(transferred.canonical.byVessel.flask!.componentAmounts).toEqual([
       { componentId: "HCl", amount: expect.closeTo(0.0075, 14) },
     ]);
-    expect(transferred.canonical.byVessel.burette.waterMass).toBeCloseTo(0.99835391 * 0.045, 14);
-    expect(transferred.canonical.byVessel.burette.liquidVolume).toBeCloseTo(0.045, 14);
-    expect(transferred.canonical.byVessel.burette.componentAmounts).toEqual([
+    expect(transferred.canonical.byVessel.burette!.waterMass).toBeCloseTo(0.99835391 * 0.045, 14);
+    expect(transferred.canonical.byVessel.burette!.liquidVolume).toBeCloseTo(0.045, 14);
+    expect(transferred.canonical.byVessel.burette!.componentAmounts).toEqual([
       { componentId: "HCl", amount: expect.closeTo(0.0045, 14) },
     ]);
   });
@@ -100,21 +100,21 @@ describe("World Runtime reducer", () => {
       },
     });
 
-    const source = charged.canonical.byVessel.flask;
+    const source = charged.canonical.byVessel.flask!;
     const fraction = 0.013 / source.liquidVolume;
     const expectedWaterDelta = quantize(source.waterMass * fraction);
     const sourceComponentAmount = source.componentAmounts[0]?.amount ?? 0;
     const expectedComponentDelta = quantize(sourceComponentAmount * fraction);
-    const target = transferred.canonical.byVessel.burette;
+    const target = transferred.canonical.byVessel.burette!;
 
     expect(target.waterMass).toBe(expectedWaterDelta);
     expect(target.componentAmounts).toEqual([
       { componentId: "HCl", amount: expectedComponentDelta },
     ]);
-    expect(transferred.canonical.byVessel.flask.waterMass).toBe(
+    expect(transferred.canonical.byVessel.flask!.waterMass).toBe(
       source.waterMass - expectedWaterDelta,
     );
-    expect(transferred.canonical.byVessel.flask.componentAmounts[0]?.amount).toBe(
+    expect(transferred.canonical.byVessel.flask!.componentAmounts[0]?.amount).toBe(
       sourceComponentAmount - expectedComponentDelta,
     );
   });
@@ -161,14 +161,14 @@ describe("World Runtime reducer", () => {
       },
     });
 
-    const source = next.canonical.byVessel.flask;
-    const target = next.canonical.byVessel.burette;
+    const source = next.canonical.byVessel.flask!;
+    const target = next.canonical.byVessel.burette!;
     expect(source.liquidVolume).toBe(0);
     expect(source.waterMass).toBe(0);
     expect(source.componentAmounts).toEqual([{ componentId: "HCl", amount: 0 }]);
-    expect(target.liquidVolume).toBe(highPrecisionCharged.canonical.byVessel.flask.liquidVolume);
-    expect(target.waterMass).toBe(highPrecisionCharged.canonical.byVessel.flask.waterMass);
-    expect(target.componentAmounts).toEqual(highPrecisionCharged.canonical.byVessel.flask.componentAmounts);
+    expect(target.liquidVolume).toBe(highPrecisionCharged.canonical.byVessel.flask!.liquidVolume);
+    expect(target.waterMass).toBe(highPrecisionCharged.canonical.byVessel.flask!.waterMass);
+    expect(target.componentAmounts).toEqual(highPrecisionCharged.canonical.byVessel.flask!.componentAmounts);
   });
 
   it("rejects an event that is not the next sequence boundary", () => {
@@ -222,7 +222,7 @@ describe("World Runtime reducer", () => {
 
     expect(next).not.toBeInstanceOf(Promise);
     expect(solverInvoked).toBe(false);
-    expect(next.canonical.byVessel.flask.liquidVolume).toBeCloseTo(0.009, 14);
-    expect(state.canonical.byVessel.flask.liquidVolume).toBe(0);
+    expect(next.canonical.byVessel.flask!.liquidVolume).toBeCloseTo(0.009, 14);
+    expect(state.canonical.byVessel.flask!.liquidVolume).toBe(0);
   });
 });

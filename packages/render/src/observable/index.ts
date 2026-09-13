@@ -3,6 +3,7 @@ import {
   type ScientificExpression,
   type ScientificState,
   type TeachingHydrogenIonExponent,
+  type VolumeProfileSnapshot,
 } from "@chemrealm/schema";
 import {
   deriveBuretteState,
@@ -12,7 +13,11 @@ import {
 import { mapIndicatorRatioToColor, type IndicatorColour } from "./color.js";
 import { buildCurve, type CurveFrame, type CurvePoint } from "./curve.js";
 import { formatModelPh, formatTaughtPh } from "./format.js";
-import { deriveLiquidLevel, type LiquidLevel, type VolumeProfile } from "./level.js";
+import {
+  deriveLiquidLevel,
+  volumeProfileFromSnapshot,
+  type LiquidLevel,
+} from "./level.js";
 import { speciesRows, type SpeciesRow } from "./species.js";
 import {
   presentSymbolicLines,
@@ -39,7 +44,8 @@ export interface ScientificFrame {
 
 export interface ObservableInput {
   readonly frame: ScientificFrame;
-  readonly volumeProfile: VolumeProfile;
+  /** Replay-frozen data; executable profile functions are created internally. */
+  readonly volumeProfileSnapshot: VolumeProfileSnapshot;
   readonly burette?: BuretteInput;
   readonly curveFrames?: readonly CurveFrame[];
   readonly symbolicLines?: readonly ScientificExpression[];
@@ -92,10 +98,11 @@ export function buildObservableModel(input: ObservableInput): ObservableModel {
   }
   if (
     typeof input.frame.physical.volumeProfileHash !== "string" ||
-    input.volumeProfile.profileHash !== input.frame.physical.volumeProfileHash
+    input.volumeProfileSnapshot.profileHash !== input.frame.physical.volumeProfileHash
   ) {
     throw new RangeError("volume profile does not belong to the scientific frame");
   }
+  const volumeProfile = volumeProfileFromSnapshot(input.volumeProfileSnapshot);
 
   const scientificState = input.frame.scientificState;
   const indicatorIds = new Set<string>();
@@ -128,7 +135,7 @@ export function buildObservableModel(input: ObservableInput): ObservableModel {
     indicators: Object.freeze(indicators),
     liquidLevel: deriveLiquidLevel(
       input.frame.physical.liquidVolume,
-      input.volumeProfile,
+      volumeProfile,
     ),
     burette:
       input.burette === undefined ? undefined : deriveBuretteState(input.burette),

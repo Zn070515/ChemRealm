@@ -103,8 +103,10 @@ boundary creates a `ScientificFrame` with `projectScientificFrame(...)`; the
 projection carries the same `sourceStateHash` as the frame, and render consumes
 that bound structural contract rather than inventing a second identity. The
 frame also owns the committed liquid volume and the hash of the replay-frozen
-`VolumeProfileSnapshot`; render receives only the matching executable profile
-adapter and never resolves `geometryRef` from mutable content.
+`VolumeProfileSnapshot`; render/Observable receives only the matching serialized
+snapshot and reconstructs the executable interpolation adapter internally. It
+never accepts caller-supplied profile functions or resolves `geometryRef` from
+mutable content.
 
 ### The indicator boundary — corrected
 

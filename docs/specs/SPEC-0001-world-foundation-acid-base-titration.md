@@ -3,7 +3,7 @@
 - **Status:** **Accepted through revision 20** — M4 S3 owner acceptance recorded
   on 2026-09-13 against the committed implementation baseline and CI attestation.
 - **Accepted baseline:** commit `8310c685`, `SPEC-0001` revision 6
-- **Current revision:** **22 Candidate** — M5 replay/provenance closure freezes
+- **Current revision:** **23 Candidate** — M5 replay/provenance closure freezes
   a serializable, content-addressed `V(h)`/`h(V)` volume profile in every
   persisted genesis vessel; binds `ScientificFrame` to its event sequence,
   liquid volume, and volume-profile hash; removes the duplicate Observable
@@ -72,6 +72,8 @@
 
 | 21 | 2026-09-13 | M5 contract remediation: `ScientificProjection` accepts only the solution volume and source-state identity needed for its conversion; the Scientific Core composition boundary creates a bound `ScientificFrame`; AC-V4 retains both declared `V(h)` and `h(V)` with a stated round-trip tolerance; burette state separates contained/delivered volume from graduated scale reading and displays the latter in `mL` at `0.01 mL`; empirical indicator palettes are keyed by identity and are the only permitted home for provenance-bearing colour literals; one hydrogen-ion convention is selected by a replaceable presentation policy; ObservableModel owns readout text/precision policy while DOM/Pixi drawing remains Renderer-owned; and scientific expressions carry schema-owned model/source identity. | Candidate — owner review pending |
 | 22 | 2026-09-13 | M5 replay/provenance closure: every authored and persisted vessel carries a serializable piecewise-linear `VolumeProfile`; persisted World/Event schema advances to v4 with an explicit v3→v4 migration that requires an explicit profile resolver for legacy geometry-only records; `ScientificFrame` binds sequence, liquid volume, and profile hash; Observable consumes that single frame-owned volume; the hydrogen-ion policy is a discriminated union; curve points carry source sequence/model identity; and ScientificExpression v2 records the Scientific Core producer. `sourceStateHash` is explicitly the quantized World Runtime replay-equivalence identity, not an exact floating-point checksum. | Candidate — owner review pending |
+
+| 23 | 2026-09-13 | M5 executable-profile boundary closure: Observable receives only the replay-frozen serializable `VolumeProfileSnapshot` whose hash matches `ScientificFrame.physical.volumeProfileHash`; it reconstructs the runtime interpolation adapter internally and no longer accepts caller-supplied `heightAtVolume`/`volumeAtHeight` functions. This prevents a self-reported profile hash from authorizing executable geometry that was not derived from genesis truth. | Candidate — owner review pending |
 
 A revision bump is recorded here rather than only in the body because the header
 is what a reader checks before deciding whether the file they are reading is the

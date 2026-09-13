@@ -2,7 +2,7 @@
 
 **Status:** S1 specified; owner-approved remediation direction, 2026-09-13
 
-**Canonical amendment:** `SPEC-0001` revision 22 Candidate. This document
+**Canonical amendment:** `SPEC-0001` revision 23 Candidate. This document
 does not override `SPEC-0001`; it describes the implementation needed to bring
 the M5 slice back into alignment with that amendment.
 
@@ -17,7 +17,10 @@ risks are closed here as well: symbolic expressions become schema-owned
 scientific outputs, and state/projection inputs travel as one source-identified
 frame. Revision 22 additionally makes the vessel volume profile part of frozen
 genesis truth and binds the frame to the physical volume/profile identity used
-by Observable.
+by Observable. Revision 23 closes the last executable-geometry seam: Observable
+consumes the replay-frozen `VolumeProfileSnapshot` and reconstructs its runtime
+adapter internally. A caller cannot provide functions that merely self-report
+the frame's profile hash.
 
 ## Goal
 
@@ -146,7 +149,7 @@ interface ScientificFrame {
 
 interface ObservableInput {
   readonly frame: ScientificFrame;
-  readonly volumeProfile: VolumeProfile;
+  readonly volumeProfileSnapshot: VolumeProfileSnapshot;
   readonly burette?: BuretteInput;
   readonly curveFrames?: readonly CurveFrame[];
   readonly symbolicLines?: readonly ScientificExpression[];

@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript 5.9, Zod 4, Vitest, pnpm workspaces, JSON Schema generation.
 
-**Spec:** SPEC-0001 revision 22 Candidate, ADR-0013, and the M5 remediation spec.
+**Spec:** SPEC-0001 revision 23 Candidate, ADR-0013, and the M5 remediation spec.
 
 ## Global Constraints
 
@@ -59,7 +59,7 @@
 - [x] Rebuild scenario contentHash at the World Runtime boundary whenever migration changes profile data; keep schema migration unaware of derived hashes.
 - [x] Update valid fixtures to v4 and run schema/world tests.
 
-### Task 3: Resolve profiles in the composition root and expose a runtime profile adapter
+### Task 3: Resolve profiles in the composition root and expose an internal runtime profile adapter
 
 **Files:**
 - Modify apps/web/src/world-creation.ts and its tests
@@ -68,7 +68,8 @@
 
 **Interfaces:**
 - Consumes authored profile knots and persisted VolumeProfileSnapshot.
-- Produces deterministic profile hashing/resolution and volumeProfileFromSnapshot(snapshot): VolumeProfile.
+- Produces deterministic profile hashing/resolution and an internal
+  volumeProfileFromSnapshot(snapshot): VolumeProfile adapter.
 
 - [x] Write failing tests for equivalent profile inputs, persisted profile hashes, and both-direction calculation from frozen knots without external lookup.
 - [x] Run focused tests and verify RED.
@@ -85,7 +86,7 @@
 
 **Interfaces:**
 - Consumes ScientificState, source replay identity, and canonical Litre.
-- Produces frozen ScientificFrame.physical.liquidVolume; ObservableInput consumes only frame plus volumeProfile.
+- Produces frozen ScientificFrame.physical.liquidVolume; ObservableInput consumes only frame plus volumeProfileSnapshot.
 
 - [x] Write failing tests for a frame made at 0.1 L being unable to accept a second 0.5 L input, and for the frame exposing the projection volume.
 - [x] Run focused tests and verify RED.
@@ -141,6 +142,30 @@
 - [x] Update canonical/spec/ADR/plan/evidence language, bump persisted world schema and SPEC revision, and keep DOM/visual evidence open.
 - [x] Run the complete repository verification chain: typecheck, test typecheck, build, test, scientific math/quantity guards, M4/M5 contracts, world, guarantees, schema artifacts, dependency cruise, guards, lint, browser, Python Oracle, acceptance coverage, artifact inspection, and git diff check.
 - [x] Inspect the diff, commit, push, and record hosted CI: implementation commit `fe323d4`, hosted CI `34754417753` success. Handoff states M4 S3 remains accepted, M5 remains S2, M6 is not authorized, and symbolic/browser/visual evidence remains open.
+
+### Task 8: Close the executable geometry seam at the Observable boundary
+
+**Objective:** Ensure all Observable liquid-level geometry is derived from the
+replay-frozen profile snapshot rather than from caller-supplied functions.
+
+**Files:** `packages/render/src/observable/index.ts`, Observable/scene tests,
+render/world test TypeScript configurations, the M5 contract guard, and the
+revision 23 specification/evidence documents.
+
+**Interfaces:** `ObservableInput` accepts `volumeProfileSnapshot` only;
+`buildObservableModel` validates the frame/profile hash and calls
+`volumeProfileFromSnapshot` internally.
+
+- [x] Add a compile-time negative fixture proving an executable `volumeProfile`
+  cannot satisfy `ObservableInput`.
+- [x] Enable the render/world test TypeScript projects to include their test
+  sources so the negative boundary is actually checked.
+- [x] Replace render callers with the frozen snapshot input and reconstruct the
+  runtime adapter inside Observable.
+- [x] Update canonical revision, ADR/spec/plan/evidence wording, and the M5
+  consistency guard.
+- [ ] Run the complete verification chain, inspect the diff, commit, push, and
+  record the hosted CI attestation. Keep M5 S2 and M6 unauthorized.
 
 ## Stop/Go Conditions
 

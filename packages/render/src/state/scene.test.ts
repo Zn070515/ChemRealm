@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { litre, millimetre, taughtHydrogenIonExponent } from "@chemrealm/schema";
+import {
+  litre,
+  taughtHydrogenIonExponent,
+  type VolumeProfileSnapshot,
+} from "@chemrealm/schema";
 import { buildObservableModel, type ObservableInput } from "../observable/index.js";
 import {
   SCIENTIFIC_MODEL_HYDROGEN_ION_POLICY,
@@ -8,6 +12,25 @@ import {
   toRenderState,
 } from "./scene.js";
 import { scientificState } from "../../test/fixtures.js";
+
+const volumeProfileSnapshot: VolumeProfileSnapshot = {
+  profileId: "test-profile",
+  profileVersion: "1.0.0",
+  profileHash: "sha256:profile",
+  representation: "piecewise-linear",
+  maxVolume: { value: 1, unit: "L" },
+  maxHeight: { value: 20, unit: "mm" },
+  roundTripTolerance: { value: 1e-12, unit: "L" },
+  knots: [
+    { volume: { value: 0, unit: "L" }, height: { value: 0, unit: "mm" } },
+    { volume: { value: 1, unit: "L" }, height: { value: 20, unit: "mm" } },
+  ],
+  provenance: {
+    source: "fixture",
+    reference: "scene volume profile",
+    category: "evaluated",
+  },
+};
 
 function model() {
   const input: ObservableInput = {
@@ -21,16 +44,7 @@ function model() {
         taughtHydrogenIonExponent: taughtHydrogenIonExponent(2),
       },
     },
-    volumeProfile: {
-      profileId: "test-profile",
-      profileVersion: "1.0.0",
-      profileHash: "sha256:profile",
-      maxVolume: litre(1),
-      maxHeight: millimetre(20),
-      roundTripTolerance: litre(1e-12),
-      heightAtVolume: () => millimetre(20),
-      volumeAtHeight: () => litre(0.5),
-    },
+    volumeProfileSnapshot,
   };
   return buildObservableModel(input);
 }

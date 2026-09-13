@@ -1,7 +1,30 @@
 import { describe, expect, it } from "vitest";
-import { litre, millimetre, taughtHydrogenIonExponent } from "@chemrealm/schema";
+import {
+  litre,
+  taughtHydrogenIonExponent,
+  type VolumeProfileSnapshot,
+} from "@chemrealm/schema";
 import { buildObservableModel, type ObservableInput } from "./index.js";
 import { scientificState } from "../../test/fixtures.js";
+
+const volumeProfileSnapshot: VolumeProfileSnapshot = {
+  profileId: "test-profile",
+  profileVersion: "1.0.0",
+  profileHash: "sha256:profile",
+  representation: "piecewise-linear",
+  maxVolume: { value: 1, unit: "L" },
+  maxHeight: { value: 20, unit: "mm" },
+  roundTripTolerance: { value: 1e-12, unit: "L" },
+  knots: [
+    { volume: { value: 0, unit: "L" }, height: { value: 0, unit: "mm" } },
+    { volume: { value: 1, unit: "L" }, height: { value: 20, unit: "mm" } },
+  ],
+  provenance: {
+    source: "fixture",
+    reference: "observable volume profile",
+    category: "evaluated",
+  },
+};
 
 function input(): ObservableInput {
   return {
@@ -15,16 +38,7 @@ function input(): ObservableInput {
         taughtHydrogenIonExponent: taughtHydrogenIonExponent(2),
       },
     },
-    volumeProfile: {
-      profileId: "test-profile",
-      profileVersion: "1.0.0",
-      profileHash: "sha256:profile",
-      maxVolume: litre(1),
-      maxHeight: millimetre(20),
-      roundTripTolerance: litre(1e-12),
-      heightAtVolume: () => millimetre(20),
-      volumeAtHeight: () => litre(0.5),
-    },
+    volumeProfileSnapshot,
     burette: {
       initialScaleReading: litre(0),
       initialContainedVolume: litre(0.05),
@@ -75,10 +89,21 @@ describe("observable model", () => {
     const source = input();
     const model = buildObservableModel({
       ...source,
-      volumeProfile: {
-        ...source.volumeProfile,
-        heightAtVolume: (volume) => volume * 100,
-        volumeAtHeight: (height) => height / 100,
+      frame: {
+        ...source.frame,
+        physical: {
+          ...source.frame.physical,
+          volumeProfileHash: "sha256:custom-profile",
+        },
+      },
+      volumeProfileSnapshot: {
+        ...source.volumeProfileSnapshot,
+        profileHash: "sha256:custom-profile",
+        maxHeight: { value: 100, unit: "mm" },
+        knots: [
+          { volume: { value: 0, unit: "L" }, height: { value: 0, unit: "mm" } },
+          { volume: { value: 1, unit: "L" }, height: { value: 100, unit: "mm" } },
+        ],
       },
     });
 
@@ -89,8 +114,8 @@ describe("observable model", () => {
   it("rejects a volume profile from a different replay-frozen frame", () => {
     expect(() => buildObservableModel({
       ...input(),
-      volumeProfile: {
-        ...input().volumeProfile,
+      volumeProfileSnapshot: {
+        ...input().volumeProfileSnapshot,
         profileHash: "sha256:other-profile",
       },
     })).toThrow(/volume profile does not belong/);
@@ -109,6 +134,12 @@ describe("observable model", () => {
   it("does not expose a second liquid-volume input at the observable boundary", () => {
     // @ts-expect-error liquid volume is owned by ScientificFrame.physical
     const invalidInput: ObservableInput = { ...input(), liquidVolume: litre(0.25) };
+    expect(invalidInput).toBeDefined();
+  });
+
+  it("does not expose an executable profile seam at the observable boundary", () => {
+    // @ts-expect-error executable geometry must be reconstructed from the frozen snapshot
+    const invalidInput: ObservableInput = { ...input(), volumeProfile: {} };
     expect(invalidInput).toBeDefined();
   });
 

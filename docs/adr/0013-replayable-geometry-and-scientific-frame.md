@@ -32,7 +32,10 @@ carry identity-shaped strings while its payload came from a different state.
    freezes the source replay-equivalence hash, world sequence, liquid volume,
    and volume-profile hash alongside the deep-frozen scientific state and
    projection. Observable consumes the frame-owned volume and verifies the
-   profile hash; it accepts no duplicate volume input.
+   profile hash; it accepts no duplicate volume input. Observable receives the
+   matching serializable `VolumeProfileSnapshot` and reconstructs its runtime
+   adapter internally, so a caller cannot replace frozen geometry with a
+   function-valued object that merely claims the same hash.
 5. `sourceStateHash` means the quantized World Runtime replay-equivalence
    identity. Exact snapshot-cache integrity remains the separate
    `exactStateHash`; neither name is reused for the other purpose.
@@ -48,8 +51,8 @@ carry identity-shaped strings while its payload came from a different state.
   resolver before they can be loaded into schema v4.
 - A frame cannot be combined with a second volume or a differently hashed
   profile without a boundary error.
-- Function-valued geometry remains a runtime adapter convenience only; the
-  persisted truth is serializable data.
+- Function-valued geometry remains an internal runtime adapter convenience
+  reconstructed from serializable data; it is not an Observable input seam.
 - Full browser composition and final apparatus visual review remain M5/M6
   work. This ADR does not claim either stage is complete.
 
