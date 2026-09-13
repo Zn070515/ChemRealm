@@ -66,6 +66,19 @@ if (
 ) {
   fail("state.ts: replay identity must explicitly quantize only canonical independent contents");
 }
+const snapshotSource = sourceByName["snapshot.ts"] ?? "";
+const replaySource = sourceByName["replay.ts"] ?? "";
+if (
+  !snapshotSource.includes("parseWorldStateForSnapshot") ||
+  !snapshotSource.includes("exactStateHash") ||
+  !snapshotSource.includes("hashCanonical(value.state)") ||
+  /\bparseWorldState\s*\(/.test(snapshotSource)
+) {
+  fail("snapshot.ts: snapshot validation must use the exact-state checksum and snapshot parser");
+}
+if (/\bparseWorldState\s*\(/.test(replaySource) || !replaySource.includes("parseWorldStateForSnapshot")) {
+  fail("replay.ts: snapshot replay must preserve exact fold arithmetic through the snapshot parser");
+}
 
 if (failures.length > 0) {
   for (const failure of failures) console.error(`FAIL  ${failure}`);
@@ -75,5 +88,6 @@ if (failures.length > 0) {
 
 console.log(`ok    World Runtime static contract (${files.length} production modules)`);
 console.log("ok    quantization uses approved command/reducer/state boundaries and explicit hash projections");
+console.log("ok    snapshot cache uses exact payload integrity plus semantic replay identity");
 console.log("ok    no Node-only, clock, or unseeded randomness dependency");
 console.log("\nRESULT: PASS");

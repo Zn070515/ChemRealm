@@ -169,11 +169,13 @@ and comparing the reconstructed identity and lineage against the live world's.
 
 - A snapshot is taken every `N` committed events (initial `N = 50`) and **always
   at a fork point**.
-- A snapshot stores: full serialized `WorldState`, its state hash, the sequence
-  number, schema version, solver configuration, the snapshot `worldId`, the
-  genesis `contentHash`, and an exact hash of the event-log prefix through the
-  snapshot sequence. Replay accepts a snapshot only when all of those bindings
-  match the current log; a snapshot from another world is ignored.
+- A snapshot stores: full serialized `WorldState`, its semantic replay `stateHash`,
+  an exact checksum of that serialized state payload, the sequence number,
+  schema version, solver configuration, the snapshot `worldId`, the genesis
+  `contentHash`, and an exact hash of the event-log prefix through the snapshot
+  sequence. Replay accepts a snapshot only when all of those bindings match the
+  current log; a snapshot from another world or with an exact-payload mutation
+  is ignored.
 - Snapshots are a **cache, not truth**. Deleting every snapshot must not change
   any computed result; it only makes replay slower. This is a testable invariant
   and is in `SPEC-0001`'s acceptance criteria.

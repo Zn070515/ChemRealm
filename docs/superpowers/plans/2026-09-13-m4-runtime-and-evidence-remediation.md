@@ -89,6 +89,11 @@ quantize-once transfer policy.
 5. Update the static guard from a brittle exact count to structural assertions
    that protect the required boundaries without preventing the valid full
    transfer path.
+6. Keep snapshot cache integrity separate from semantic replay identity:
+   snapshots preserve the exact paired fold representation and carry an
+   `exactStateHash` over their serialized state in addition to the quantized
+   `stateHash`. A cache mutation must be rejected even when both values would
+   have the same replay projection.
 
 **Tests/evidence:**
 
@@ -98,6 +103,8 @@ quantize-once transfer policy.
 - exact semantic zero source after full transfer;
 - no negative authoritative inventory after a legal transfer sequence;
 - existing 100-transfer relative conservation and wrong-strategy-fails tests;
+- snapshot mutation that preserves `stateHash` but fails `exactStateHash` and
+  falls back to event-log replay;
 - `pnpm verify:world` and the targeted World Runtime tests.
 
 **Stop/go:** Stop if the only way to pass is clamping, dropping a delta, or

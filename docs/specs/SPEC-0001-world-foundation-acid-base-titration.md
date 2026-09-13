@@ -47,7 +47,7 @@
 | 16 | 2026-09-12 | M4 cross-system compatibility closure candidate: genesis derives actual scenario input components from the resolved snapshot before solver resolution; authoring scenarios use shape version 3 and no longer carry an ignored dissociation flag; resolved requirement temperatures are canonical Kelvin; Davies activity evaluation never leaves its declared `I_m ≤ 0.5 mol/kg` domain, including boundary classification. | Pending owner review |
 | 17 | 2026-09-13 | Persisted schema migration closure candidate: persisted World/Event schema advances from v2 to v3; v2 requirement temperatures are explicitly canonicalized to Kelvin with a rebuilt genesis `contentHash`; persisted and authored Scenario migration namespaces are separate, and no automatic rewrite deletes the removed `fullyDissociated` authoring field. | Pending owner review |
 | 18 | 2026-09-13 | M4/M5 acceptance ownership closure candidate: AC-S12 is the scientific model-pH naming/provenance contract; AC-S13 is the scientific accuracy-envelope flag; inspection copy/DOM and visible qualification are separate M5 criteria AC-V10 and AC-V11. | Pending owner review |
-| 19 | 2026-09-13 | World Runtime numeric-semantics clarification candidate: Strategy A quantizes each conserved transfer delta once and applies it as a paired zero-sum update; post-transfer runtime values and exact snapshot caches are not independently rounded, while the explicit replay-identity projection remains quantized. | Pending owner review |
+| 19 | 2026-09-13 | World Runtime numeric-semantics clarification candidate: Strategy A quantizes each conserved transfer delta once and applies it as a paired zero-sum update; post-transfer runtime values and exact snapshot caches are not independently rounded, while the explicit replay-identity projection remains quantized. Snapshots carry a separate exact serialized-state checksum so semantic replay equality cannot mask cache corruption. | Pending owner review |
 
 A revision bump is recorded here rather than only in the body because the header
 is what a reader checks before deciding whether the file they are reading is the
@@ -1372,9 +1372,10 @@ external dependency.
   equal volume.
 - **Snapshots:** every 50 events and always at fork points. A cache, not truth —
   deleting all snapshots must not change any result (AC-R5). Each cache binds
-  its world identity, genesis content hash, solver configuration, and exact
-  event-log prefix hash through its sequence; a foreign or stale-prefix cache
-  is ignored.
+  its world identity, genesis content hash, solver configuration, exact
+  event-log prefix hash through its sequence, and an exact checksum of its
+  serialized state payload in addition to the semantic replay hash; a foreign,
+  stale-prefix, or exact-payload-mutated cache is ignored.
 
 ### Persistence and export
 

@@ -21,6 +21,8 @@ export interface WorldSnapshot {
   readonly prefixHash: string;
   readonly sequence: number;
   readonly state: ReturnType<typeof serializeWorldState>;
+  /** Exact serialized cache-payload checksum; distinct from semantic stateHash. */
+  readonly exactStateHash: string;
   readonly stateHash: string;
   readonly solverConfig: SolverConfigDto;
   readonly reason: SnapshotReason;
@@ -57,6 +59,7 @@ export function createSnapshot(
     prefixHash: eventPrefixHash(prefix),
     sequence: state.sequence,
     state: serialized,
+    exactStateHash: hashCanonical(serialized),
     stateHash: stateHash(state),
     solverConfig: {
       id: state.solverConfig.id,
@@ -82,6 +85,7 @@ export function validateSnapshot(input: unknown): WorldSnapshot {
   }
   if (
     value.state === undefined ||
+    typeof value.exactStateHash !== "string" ||
     typeof value.stateHash !== "string" ||
     value.solverConfig === undefined ||
     (value.reason !== "interval" && value.reason !== "fork")
@@ -89,6 +93,9 @@ export function validateSnapshot(input: unknown): WorldSnapshot {
     throw new TypeError("snapshot: incomplete cache");
   }
   const state = parseWorldStateForSnapshot(value.state);
+  if (hashCanonical(value.state) !== value.exactStateHash) {
+    throw new Error("snapshot: exact state hash mismatch");
+  }
   if (state.worldId !== value.worldId) throw new Error("snapshot: world identity mismatch");
   if (state.sequence !== value.sequence) throw new Error("snapshot: sequence mismatch");
   if (stateHash(state) !== value.stateHash) throw new Error("snapshot: state hash mismatch");
@@ -105,6 +112,7 @@ export function validateSnapshot(input: unknown): WorldSnapshot {
     prefixHash: value.prefixHash,
     sequence: value.sequence,
     state: serializeWorldState(state),
+    exactStateHash: value.exactStateHash,
     stateHash: value.stateHash,
     solverConfig: value.solverConfig,
     reason: value.reason,

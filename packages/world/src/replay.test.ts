@@ -11,8 +11,8 @@ import { quantize } from "./hash.js";
 import { appendEvent, createLog } from "./log.js";
 import { reduce } from "./reduce.js";
 import { replay, replayBranch } from "./replay.js";
-import { createSnapshot } from "./snapshot.js";
-import { createInitialState, stateHash } from "./state.js";
+import { createSnapshot, validateSnapshot } from "./snapshot.js";
+import { createInitialState, parseWorldStateForSnapshot, stateHash } from "./state.js";
 
 function eventLog(count: number) {
   let state = createInitialState(WORLD_CREATED);
@@ -109,6 +109,20 @@ describe("World Runtime replay", () => {
     const snapshot = createSnapshot(state, "interval", log);
     const corrupt = { ...snapshot, stateHash: "sha256:corrupt" };
     expect(replay(log, { snapshots: [corrupt] }).replayHash).toBe(replay(log).replayHash);
+  });
+
+  it("rejects an exact snapshot mutation hidden by the semantic replay hash", () => {
+    const { log, state } = eventLog(60);
+    const snapshot = createSnapshot(state, "interval", log);
+    const tamperedState = structuredClone(snapshot.state);
+    const flask = tamperedState.canonical.byVessel.flask;
+    if (flask === undefined) throw new Error("test fixture must contain flask contents");
+    flask.waterMass.value += 1e-16;
+    const tampered = { ...snapshot, state: tamperedState };
+
+    expect(stateHash(parseWorldStateForSnapshot(tampered.state))).toBe(snapshot.stateHash);
+    expect(() => validateSnapshot(tampered)).toThrow(/exact/i);
+    expect(replay(log, { snapshots: [tampered] }).state).toEqual(replay(log).state);
   });
 
   it("ignores a self-consistent snapshot from a different event-log prefix", () => {
