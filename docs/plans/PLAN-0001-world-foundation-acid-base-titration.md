@@ -1,6 +1,6 @@
 # PLAN-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** **M0–M4 S3 Verified / Accepted; M5 S2 remediation in progress** — the original plan was approved
+- **Status:** **M0–M4 S3 Verified / Accepted; M5 S2 production composition in progress** — the original plan was approved
   on 2026-09-11 at `SPEC-0001` revision 6; revisions 13–20 were accepted
   on 2026-09-13 and revision 24 is a candidate amendment for the current M5
   replay/provenance closure.
@@ -762,9 +762,11 @@ If PHREEQC cannot be installed and driven in CI:
 
 **Target stage:** S3
 **Current stage:** S2 implementation locally verified; replay/profile/frame
-closure is being verified locally, while M5 S3 evidence remains open. The
-governing scope is `docs/superpowers/specs/2026-09-13-m5-contract-remediation.md`,
-subordinate to `SPEC-0001` revision 24 Candidate and not an override of it.
+closure and a deterministic DOM composition slice are being verified locally,
+while M5 S3 evidence remains open. The governing scopes are
+`docs/superpowers/specs/2026-09-13-m5-contract-remediation.md` and
+`docs/superpowers/specs/2026-09-13-m5-production-composition.md`, subordinate to
+`SPEC-0001` revision 24 Candidate and not overrides of it.
 **Addresses:** ADR-0006, ADR-0007; `SPEC-0001` AC-V2..AC-V4, AC-V6, AC-V8, AC-V9, AC-V10, AC-V11
 
 `AC-V1` (`packages/render` has no import path to `packages/sci`) is **not**
@@ -790,6 +792,9 @@ packages/render/src/observable/species.ts     composition projection (micro view
 packages/render/src/observable/symbolic.ts    equilibrium expressions with substitutions
 packages/render/src/observable/format.ts      display precision rules
 packages/render/src/state/scene.ts            ObservableModel → RenderState
+apps/web/src/composition.ts                   committed World → science → observable
+apps/web/src/production-scenario.ts           deterministic authored M5 scenario
+apps/web/src/App.tsx                          DOM adapter for composition evidence
 ```
 
 The Scientific Core composition boundary creates the source-identified frame
@@ -806,6 +811,8 @@ supplied executable profile or a second liquid-volume source. Legacy
 geometry-only persisted worlds require the explicit v3→v4 resolver boundary.
 
 **No PixiJS import anywhere in this milestone.** Everything here runs in Node.
+The production composition adds a deterministic local DOM inspection surface;
+it does not claim the final M6 renderer or visual acceptance.
 
 ### Contracts changed
 
@@ -889,8 +896,10 @@ volume-profile identity, and the ScientificFrame physical-input block.
 
 ### Stop condition
 
-The entire observable layer is exercisable in Node with no browser, and no
-chemistry decision is made anywhere in it.
+The pure observable layer remains exercisable in Node with no browser, and the
+deterministic web composition additionally proves the committed World →
+Scientific Core → ScientificFrame → ObservableModel → DOM path. No chemistry
+decision is made in the web adapter.
 
 ---
 

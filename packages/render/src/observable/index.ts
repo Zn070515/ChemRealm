@@ -104,6 +104,15 @@ export function buildObservableModel(input: ObservableInput): ObservableModel {
   }
   const volumeProfile = volumeProfileFromSnapshot(input.volumeProfileSnapshot);
 
+  if (input.burette !== undefined) {
+    if (input.burette.sourceStateHash !== input.frame.sourceStateHash) {
+      throw new RangeError("burette does not belong to the scientific frame");
+    }
+    if (input.burette.sequence !== input.frame.sequence) {
+      throw new RangeError("burette sequence does not belong to the scientific frame");
+    }
+  }
+
   const scientificState = input.frame.scientificState;
   const indicatorIds = new Set<string>();
   const indicators = scientificState.indicators.map((indicator) => {

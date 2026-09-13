@@ -16,9 +16,10 @@ async function document(relativePath) {
   return readFile(new URL(relativePath, root), "utf8");
 }
 
-const [spec, childSpec, evidence, plan, adr, visualStandard] = await Promise.all([
+const [spec, childSpec, productionSpec, evidence, plan, adr, visualStandard] = await Promise.all([
   document("docs/specs/SPEC-0001-world-foundation-acid-base-titration.md"),
   document("docs/superpowers/specs/2026-09-13-m5-contract-remediation.md"),
+  document("docs/superpowers/specs/2026-09-13-m5-production-composition.md"),
   document("docs/evidence/M5.md"),
   document("docs/plans/PLAN-0001-world-foundation-acid-base-titration.md"),
   document("docs/adr/0006-renderer-and-observable-architecture.md"),
@@ -58,6 +59,15 @@ must(childSpec, /VolumeProfileSnapshot/i, "M5 child specification records serial
 must(childSpec, /recomputes? (?:and verifies|the)[\s\S]{0,180}(?:profile hash|hash-excluded)|parseVolumeProfileSnapshot/i, "M5 child specification requires profile payload hash verification");
 mustNot(childSpec, /No persisted schema migration is needed/i, "M5 child specification does not erase the profile migration");
 
+must(productionSpec, /subordinate to `SPEC-0001`/i, "production composition specification remains subordinate");
+must(productionSpec, /does not redefine or weaken them/i, "production composition specification cannot launder acceptance criteria");
+must(productionSpec, /composeProductionTitration/i, "production composition specification names the production entry point");
+must(productionSpec, /creates and replays an authored world through the real World Runtime/i, "production composition specification records the committed world path");
+must(productionSpec, /source-bound frames/i, "production composition specification records source-bound frames");
+must(productionSpec, /builds ObservableModel and renderer-neutral RenderState/i, "production composition specification records the observable boundary");
+must(productionSpec, /Playwright DOM assertion/i, "production composition specification requires browser evidence");
+must(productionSpec, /M6 authorization or an automatic M5 S3 claim/i, "production composition specification keeps later-stage claims out of scope");
+
 must(plan, /projectScientificFrame|sourceStateHash/i, "PLAN names the source-identified frame boundary");
 must(plan, /compensated sum|roundoff bound/i, "PLAN names the burette floating-point policy");
 must(plan, /revision 24/i, "PLAN names the current M5 canonical amendment");
@@ -70,12 +80,16 @@ mustNot(observableSource, /interface ObservableInput[\s\S]{0,350}readonly volume
 mustNot(observableSource, /interface ObservableInput[\s\S]{0,300}readonly liquidVolume/i, "Observable input has no duplicate liquid-volume field");
 must(frameSource, /physical[\s\S]{0,180}liquidVolume[\s\S]{0,180}volumeProfileHash/i, "ScientificFrame owns physical input identity");
 
-must(evidence, /M5-FRAME[^\n]*\| PARTIAL/i, "M5 frame evidence is not overstated before composition integration evidence");
+must(evidence, /M5-FRAME[^\n]*\| PASS locally/i, "M5 frame evidence records the production composition boundary");
 must(evidence, /AC-V3[^\n]*PARTIAL/i, "AC-V3 remains partial without final visual/source review");
 must(evidence, /AC-V4[^\n]*PARTIAL/i, "AC-V4 remains partial without final apparatus evidence");
-must(evidence, /AC-V6[^\n]*PARTIAL/i, "AC-V6 remains partial without DOM evidence");
-must(evidence, /AC-V8[^\n]*PARTIAL/i, "AC-V8 remains partial without DOM evidence");
-mustNot(evidence, /M5-FRAME[^\n]*\| PASS locally/i, "frame evidence does not claim a manually forgeable binding as complete");
+must(evidence, /AC-V6[^\n]*PASS locally/i, "AC-V6 records built DOM evidence");
+must(evidence, /AC-V8[^\n]*PASS locally/i, "AC-V8 records built DOM evidence");
+must(evidence, /AC-V10[^\n]*PASS locally/i, "AC-V10 records inspection copy and DOM evidence");
+must(evidence, /M5-SYMBOLIC[^\n]*PASS locally/i, "M5 symbolic evidence records the production producer path");
+must(evidence, /M5-CURVE[^\n]*PASS locally/i, "M5 curve evidence records the committed frame sequence");
+must(evidence, /M5-FRAME[^\n]*apps\/web\/src\/composition\.test\.ts/i, "M5 frame evidence names the production composition test");
+must(evidence, /AC-V11[^\n]*NOT RUN/i, "AC-V11 remains open without a negative qualification fixture");
 
 must(adr, /Readout (?:labels|text) and precision[^\n]*ObservableModel|Readout[^\n]*precision[^\n]*ObservableModel/i, "ADR-0006 records observable-owned readout policy");
 must(adr, /DOM\/Pixi[^\n]*Renderer|actual drawing[^\n]*Renderer/i, "ADR-0006 records renderer-owned drawing");

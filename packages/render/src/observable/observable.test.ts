@@ -45,6 +45,8 @@ function input(): ObservableInput {
     },
     volumeProfileSnapshot,
     burette: {
+      sourceStateHash: "state-hash",
+      sequence: 0,
       initialScaleReading: litre(0),
       initialContainedVolume: litre(0.05),
       deliveredVolumes: [litre(0.01)],
@@ -88,6 +90,16 @@ describe("observable model", () => {
         },
       }),
     ).toThrow(/source identities differ/);
+  });
+
+  it("rejects a burette prefix from a different committed frame", () => {
+    expect(() => buildObservableModel({
+      ...input(),
+      burette: {
+        ...input().burette!,
+        sourceStateHash: "other-state",
+      },
+    })).toThrow(/burette does not belong/);
   });
 
   it("uses the frame-owned volume for the liquid level", () => {

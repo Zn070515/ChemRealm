@@ -10,5 +10,10 @@
     "jsx": "react-jsx"
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "references": [{ "path": "../../packages/schema" }]
+  "references": [
+    { "path": "../../packages/schema" },
+    { "path": "../../packages/sci" },
+    { "path": "../../packages/world" },
+    { "path": "../../packages/render" }
+  ]
 }

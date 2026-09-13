@@ -1,6 +1,10 @@
 import { litre, type Litre } from "@chemrealm/schema";
 
 export interface BuretteInput {
+  /** Identity of the committed world prefix used to derive these deliveries. */
+  readonly sourceStateHash: string;
+  /** Sequence of the committed world prefix used to derive these deliveries. */
+  readonly sequence: number;
   /** Graduated scale reading before any delivery. */
   readonly initialScaleReading: Litre;
   /** Physical liquid amount in the burette before any delivery. */
@@ -9,6 +13,8 @@ export interface BuretteInput {
 }
 
 export interface BuretteState {
+  readonly sourceStateHash: string;
+  readonly sequence: number;
   readonly currentScaleReading: Litre;
   readonly deliveredVolume: Litre;
   readonly containedVolume: Litre;
@@ -63,6 +69,12 @@ function compensatedSum(values: readonly number[]): SummedVolume {
  * separate value and must never be used as the scale reading.
  */
 export function deriveBuretteState(input: BuretteInput): BuretteState {
+  if (typeof input.sourceStateHash !== "string" || input.sourceStateHash.trim().length === 0) {
+    throw new RangeError("burette source state hash cannot be empty");
+  }
+  if (!Number.isInteger(input.sequence) || input.sequence < 0) {
+    throw new RangeError("burette sequence must be a non-negative integer");
+  }
   const initialScaleReading = finiteNonNegative(
     input.initialScaleReading,
     "initial burette scale reading",
@@ -87,6 +99,8 @@ export function deriveBuretteState(input: BuretteInput): BuretteState {
     throw new RangeError("burette deliveries overdraw the initial volume");
   }
   return Object.freeze({
+    sourceStateHash: input.sourceStateHash,
+    sequence: input.sequence,
     currentScaleReading: litre(initialScaleReading + delivered),
     deliveredVolume: litre(delivered),
     containedVolume: litre(initialContainedVolume - delivered),

@@ -11,6 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@chemrealm/render": "workspace:*",
     "@chemrealm/schema": "workspace:*",
     "@chemrealm/sci": "workspace:*",
     "@chemrealm/world": "workspace:*",

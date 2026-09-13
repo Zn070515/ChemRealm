@@ -5,6 +5,8 @@ import { deriveBuretteState } from "./burette.js";
 describe("burette observable", () => {
   it("separates scale reading, delivered volume, and contained volume", () => {
     const state = deriveBuretteState({
+      sourceStateHash: "state-0",
+      sequence: 0,
       initialScaleReading: litre(0),
       initialContainedVolume: litre(0.05),
       deliveredVolumes: [litre(0.01), litre(0.015), litre(0.005)],
@@ -17,6 +19,8 @@ describe("burette observable", () => {
   it("allows a full draw and returns semantic zero", () => {
     expect(
       deriveBuretteState({
+        sourceStateHash: "state-0",
+        sequence: 0,
         initialScaleReading: litre(0),
         initialContainedVolume: litre(0.05),
         deliveredVolumes: [litre(0.02), litre(0.03)],
@@ -27,6 +31,8 @@ describe("burette observable", () => {
   it("treats a compensated floating-point full draw as exact semantic zero", () => {
     expect(
       deriveBuretteState({
+        sourceStateHash: "state-0",
+        sequence: 0,
         initialScaleReading: litre(0),
         initialContainedVolume: litre(0.3),
         deliveredVolumes: [litre(0.1), litre(0.1), litre(0.1)],
@@ -41,6 +47,8 @@ describe("burette observable", () => {
   it("does not turn a genuine near-boundary overdraw into a full draw", () => {
     expect(() =>
       deriveBuretteState({
+        sourceStateHash: "state-0",
+        sequence: 0,
         initialScaleReading: litre(0),
         initialContainedVolume: litre(0.3),
         deliveredVolumes: [litre(0.1), litre(0.1), litre(0.1000000001)],
@@ -51,6 +59,8 @@ describe("burette observable", () => {
   it("rejects a delivery sequence that overdraws the burette", () => {
     expect(() =>
       deriveBuretteState({
+        sourceStateHash: "state-0",
+        sequence: 0,
         initialScaleReading: litre(0),
         initialContainedVolume: litre(0.05),
         deliveredVolumes: [litre(0.04), litre(0.02)],

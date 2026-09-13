@@ -9,9 +9,9 @@ if (container === null) {
   throw new Error("apps/web: #root is missing from index.html");
 }
 
-// The import above is the point of M0: it proves the pnpm workspace link from
-// apps/web to packages/schema resolves through the built declaration output,
-// and it gives dependency-cruiser a real edge to analyse.
+// The app still receives the schema version through the workspace boundary;
+// the production composition itself is loaded by App and remains outside the
+// React DOM adapter's chemistry responsibilities.
 createRoot(container).render(
   <StrictMode>
     <App schemaVersion={CURRENT_SCHEMA_VERSION} />

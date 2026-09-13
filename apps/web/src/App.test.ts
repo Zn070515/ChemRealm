@@ -4,9 +4,9 @@ import { describe, expect, it } from "vitest";
 import { App } from "./App.js";
 
 /**
- * What M0 needs to prove for `apps/web` is narrow: the pnpm workspace link to
- * `packages/schema` resolves, and the component module loads. It does not need
- * a DOM, and has no jsdom dependency.
+ * The app module test keeps the React adapter's package boundary lightweight;
+ * the deterministic production composition and DOM assertions live in
+ * `composition.test.ts` and Playwright. It does not need jsdom.
  *
  * An earlier version of this file asserted `element.type === App`. That was
  * simply wrong — calling a function component returns the element it RENDERS
@@ -14,10 +14,10 @@ import { App } from "./App.js";
  * is kept in mind as a reminder that a green test only means the assertion
  * matched, not that the assertion was meaningful.
  *
- * Real rendering and interaction assertions arrive with the Playwright flows
- * in M7.
+ * The deterministic M5 composition and DOM assertions live in Playwright;
+ * M6 still owns final apparatus rendering and interaction.
  */
-describe("apps/web placeholder", () => {
+describe("apps/web composition adapter", () => {
   it("resolves the workspace link to packages/schema", () => {
     expect(CURRENT_SCHEMA_VERSION).toBe(4);
   });
