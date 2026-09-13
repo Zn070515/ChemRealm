@@ -5,6 +5,7 @@
     { "path": "packages/schema" },
     { "path": "packages/sci" },
     { "path": "packages/world" },
+    { "path": "packages/render" },
     { "path": "apps/web" },
     { "path": "tsconfig.node.json" }
   ]

@@ -1,12 +1,15 @@
 # Cross-System Contract Remediation Evidence
 
-**Status:** **S2 — remediation implemented; local verification complete; no
-milestone promotion claimed**
+**Status:** **Historical S2 remediation record** — the current M4 gate is
+recorded in [`M4.md`](M4.md), which is S3 Verified / Accepted.
 
 **Scope:** This packet records the whole-system contract fixes made before M4
 REF-1…REF-10 and PHREEQC execution. It does not claim M4 scientific acceptance.
 The current M4 packet remains the stage truth for M4 and deliberately keeps
 reference/oracle criteria pending.
+
+This is a historical pre-reference handoff. Later M4 evidence superseded its
+pending language; this file remains for traceability only.
 
 **Implementation baseline:** `91620c9` — Close cross-system contract gaps
 before M4 references. Local verification below passed before this evidence pin;
@@ -53,11 +56,12 @@ The following checks passed in the shared working tree:
 - `uv run python tools/check_acceptance_coverage.py` — 71/71 criteria claimed and evidenced
 - `git diff --check`
 
-## Known limitations and next gate
+## Historical limitations and next gate
 
-- M4 remains **S2**. REF-1…REF-10, independent reference review, actual
-  PHREEQC installation/execution, equivalence-region comparison, and the full
-  AC-S1…AC-S16 evidence matrix are not closed.
+- At the time of this handoff M4 remained **S2**. REF-1…REF-10, independent
+  reference review, actual PHREEQC installation/execution, equivalence-region
+  comparison, and the full AC-S1…AC-S16 evidence matrix were not yet closed.
+  They were later closed and accepted in [`M4.md`](M4.md).
 - `ScenarioSchema` permits draft authoring records without source provenance so
   content can be parsed/migrated; `resolveScenario()` is the mandatory genesis
   gate and rejects missing provenance. Resolved `MaterialSnapshot` records

@@ -1,11 +1,15 @@
 # M4 Persisted Schema v3 Migration Evidence
 
-**Status:** **S2 remediation complete locally; M4 S3 remains blocked**
+**Status:** **Historical S2 remediation record** — the current M4 gate is
+recorded in [`M4.md`](M4.md), which is S3 Verified / Accepted.
 
 **Scope:** Preserve the historical persisted World/Event v2 contract while
 introducing v3 canonical snapshot temperature, and keep authored Scenario
 migration in a separate namespace. This packet does not claim REF-1…REF-10 or
 PHREEQC validation.
+
+This companion records the pre-M4-S3 remediation state. Its old stop condition
+is historical and does not override the current M4 evidence packet.
 
 **Implementation baseline:** `04bf65ed1c4f48e6da281704eb800fb925605cc7` —
 Migrate persisted worlds to schema v3. Hosted CI run `34705233550` completed
@@ -49,8 +53,10 @@ uv run python tools/check_acceptance_coverage.py
 - Authored Scenario shape v3 is independent. The removed `fullyDissociated`
   field is not silently deleted or reinterpreted.
 
-## Remaining M4 stop condition
+## Historical stop condition
 
-Do not promote M4 to S3 until the independent reference matrix, pinned PHREEQC
-toolchain execution, equivalence-region sweep, constants/provenance review, and
-the complete AC-S1…AC-S16 evidence matrix have been run on a committed baseline.
+At the time this packet was written, M4 could not be promoted until the
+independent reference matrix, pinned PHREEQC toolchain execution,
+equivalence-region sweep, constants/provenance review, and complete AC-S1…AC-S16
+matrix were run. Those conditions were subsequently closed and accepted in
+[`M4.md`](M4.md).

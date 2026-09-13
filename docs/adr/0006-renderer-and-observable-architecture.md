@@ -222,12 +222,22 @@ it is easy. If it is bypassed in a few places under pressure, the boundary is
 gone — which is why the dependency rule is a build failure rather than a
 guideline.
 
+## Open decisions
+
+### M5 S1 decision — pH-volume curve ownership
+
+**Decided by the owner on 2026-09-13:** the pH-volume curve belongs to the
+ObservableModel. It consumes an ordered sequence of ScientificState and already
+computed ScientificProjection values; it may preserve order and map values to
+presentation geometry, but it may not solve chemistry or invent a curve from a
+volume-only table. This closes the former curve-ownership question without
+adding a fifth core or analysis package.
+
+The animation clock remains deferred to M6. It is renderer-owned presentation
+state and must never be written to WorldState or included in a replay hash.
+
 ## Open questions
 
-1. Does the pH-volume curve belong to the observable layer or to a fifth
-   "analysis" layer? It is a *derived view over a sequence of states*, not a
-   projection of one state. **Leaning: observable layer, taking the state
-   sequence rather than a single state, with its own pure tests.** Confirm at M5.
-2. Where does animation-time live? The renderer needs a clock; the world must not
-   have one (`ADR-0002`). **Leaning: the renderer owns a presentation clock that
-   is never written to world state and never hashed.** Confirm at M6.
+1. Where does animation-time live? The renderer needs a clock; the world must
+   not have one (`ADR-0002`). **Leaning: the renderer owns a presentation clock
+   that is never written to world state and never hashed.** Confirm at M6.

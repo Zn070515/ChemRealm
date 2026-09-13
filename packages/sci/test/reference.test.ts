@@ -250,7 +250,6 @@ async function assertSingleFixture(fixture: ReferenceFixture): Promise<void> {
   }
 
   const projection = projectScientificState(result.state, {
-    waterMass: request.waterMass,
     liquidVolume: request.liquidVolume,
   });
   if (fixture.publishedAnchor?.taughtHydrogenIonExponent !== undefined) {

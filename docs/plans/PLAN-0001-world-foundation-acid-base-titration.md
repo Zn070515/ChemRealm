@@ -760,6 +760,9 @@ If PHREEQC cannot be installed and driven in CI:
 ## M5 — Observable state
 
 **Target stage:** S3
+**Current stage:** S2 implementation locally verified; M5 S3 evidence remains
+open. The governing scope is
+`docs/superpowers/specs/2026-09-13-m5-observable-state.md`.
 **Addresses:** ADR-0006, ADR-0007; `SPEC-0001` AC-V2..AC-V4, AC-V6, AC-V8, AC-V9, AC-V10, AC-V11
 
 `AC-V1` (`packages/render` has no import path to `packages/sci`) is **not**
@@ -778,6 +781,7 @@ be tested at all.
 packages/render/src/observable/index.ts       ScientificState → ObservableModel
 packages/render/src/observable/level.ts       volume + volume profile → liquid level
 packages/render/src/observable/color.ts       indicator ratio → colour (empirical)
+packages/render/src/observable/tokens.ts      named empirical presentation tokens
 packages/render/src/observable/burette.ts     derived reading
 packages/render/src/observable/curve.ts       state sequence → pH–volume points
 packages/render/src/observable/species.ts     composition projection (micro view)
@@ -796,11 +800,13 @@ packages/render/src/state/scene.ts            ObservableModel → RenderState
 
 1. `level.ts` consumes a vessel's published interior volume profile
    (`docs/visual/apparatus-standard.md` §1). Fixture vessels provide profiles.
-2. `color.ts` consumes the **activity-coupled** indicator ratio
+2. `color.ts` consumes only the Scientific Core's already-computed
+   `protonationRatio`. The equilibrium expression
    `m(In⁻)/m(HIn) = Ka_in · γ_HIn / (a_H · γ_In)` with `γ_HIn = 1`
-   (`SPEC-0001` §Indicator model). Note it depends on the hydrogen-ion
-   **activity**, not its molality or molarity. Colour mixing between declared
-   acid-form and base-form endpoints. No threshold branch.
+   (`SPEC-0001` §Indicator model) is upstream scientific-contract context, not
+   code to copy into render. Colour mixing between declared empirical acid-form
+   and base-form endpoints has no threshold branch and imports no `Ka`,
+   activity, or activity coefficient.
 3. `burette.ts` derives `reading = initialVolume − Σ delivered`. Add the
    invariant test that it always equals that expression (failure mode 14).
 4. `curve.ts` takes the **state sequence**, not one state.

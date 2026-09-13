@@ -3,7 +3,6 @@ import {
   mol,
   molarityOf,
   taughtHydrogenIonExponent,
-  type Kilogram,
   type Litre,
   type MolPerLitre,
   type ScientificState,
@@ -17,7 +16,6 @@ export interface ScientificProjection {
 }
 
 export interface ScientificProjectionInput {
-  readonly waterMass: Kilogram;
   readonly liquidVolume: Litre;
 }
 
@@ -63,10 +61,7 @@ export function projectScientificState(
   state: ScientificState,
   input: ScientificProjectionInput,
 ): ScientificProjection {
-  const waterMass = positiveNumber(input?.waterMass, "projection water mass");
   const volumeValue = positiveNumber(input?.liquidVolume, "projection liquid volume");
-  void waterMass;
-
   const hydrogen = findHydrogenSpecies(state);
   const amountValue = positiveNumber(hydrogen.amount, "H+ amount");
   const hydrogenAmount = mol(amountValue);

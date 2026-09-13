@@ -11,7 +11,7 @@
   "scripts": {
     "build": "pnpm -r build",
     "typecheck": "tsc -b",
-    "typecheck:tests": "tsc -p packages/schema/tsconfig.tests.json && tsc -p packages/sci/tsconfig.tests.json && tsc -p packages/world/tsconfig.tests.json",
+    "typecheck:tests": "tsc -p packages/schema/tsconfig.tests.json && tsc -p packages/sci/tsconfig.tests.json && tsc -p packages/world/tsconfig.tests.json && tsc -p packages/render/tsconfig.tests.json",
     "test": "vitest run",
     "depcruise": "depcruise --config .dependency-cruiser.cjs packages apps",
     "guards": "node tools/check_dependency_rules.mjs",

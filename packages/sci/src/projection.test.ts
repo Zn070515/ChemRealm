@@ -3,7 +3,6 @@ import {
   activity,
   activityCoefficient,
   ionicStrengthMolal,
-  kilogram,
   litre,
   mol,
   molPerKilogram,
@@ -51,7 +50,6 @@ describe("scientific projection", () => {
   it("derives molarity from hydrogen amount and solution volume", () => {
     const scientificState = state(0.05, 0.1);
     const projection = projectScientificState(scientificState, {
-      waterMass: kilogram(0.5),
       liquidVolume: litre(0.5),
     });
 
@@ -65,7 +63,6 @@ describe("scientific projection", () => {
 
   it("does not substitute molality for amount when projecting concentration", () => {
     const projection = projectScientificState(state(0.05, 0.2), {
-      waterMass: kilogram(0.5),
       liquidVolume: litre(0.5),
     });
 
@@ -77,7 +74,6 @@ describe("scientific projection", () => {
     const scientificState = state();
     const species = scientificState.species;
     const projection = projectScientificState(scientificState, {
-      waterMass: kilogram(0.5),
       liquidVolume: litre(0.5),
     });
 
@@ -91,14 +87,13 @@ describe("scientific projection", () => {
   });
 
   it.each([
-    ["zero volume", state(), { waterMass: kilogram(0.5), liquidVolume: litre(0) }],
-    ["zero hydrogen amount", state(0), { waterMass: kilogram(0.5), liquidVolume: litre(0.5) }],
-    ["zero water mass", state(), { waterMass: kilogram(0), liquidVolume: litre(0.5) }],
-    ["missing hydrogen species", { ...state(), species: [] }, { waterMass: kilogram(0.5), liquidVolume: litre(0.5) }],
+    ["zero volume", state(), { liquidVolume: litre(0) }],
+    ["zero hydrogen amount", state(0), { liquidVolume: litre(0.5) }],
+    ["missing hydrogen species", { ...state(), species: [] }, { liquidVolume: litre(0.5) }],
     [
       "duplicate hydrogen species",
       { ...state(), species: [...state().species, ...state().species] },
-      { waterMass: kilogram(0.5), liquidVolume: litre(0.5) },
+      { liquidVolume: litre(0.5) },
     ],
   ])("rejects %s rather than producing a projection", (_label, scientificState, input) => {
     expect(() => projectScientificState(scientificState, input)).toThrow(RangeError);
