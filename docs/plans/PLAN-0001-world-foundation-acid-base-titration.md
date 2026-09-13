@@ -1,6 +1,6 @@
 # PLAN-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** **M0–M4 S3 Verified / Accepted; M5 S2 production composition in progress** — the original plan was approved
+- **Status:** **M0–M4 S3 Verified / Accepted; M5 S2 production composition locally verified** — the original plan was approved
   on 2026-09-11 at `SPEC-0001` revision 6; revisions 13–20 were accepted
   on 2026-09-13 and revision 24 is a candidate amendment for the current M5
   replay/provenance closure.
@@ -14,6 +14,10 @@
   is **S3 — Verified / Accepted** with evidence in `docs/evidence/M1.md`; `M2 —
   Event runtime and replay` is **S3 — Verified / Accepted** at baseline
   `778fadbd` with CI `34677042056` and evidence in `docs/evidence/M2.md`.
+- **M5 composition handoff:** the committed local DOM composition baseline is
+  `cb73528e7be25b7269d0d121d9128c71be10beff` with hosted CI
+  `34759135844` — **success**. M5 remains S2; final visual, interaction, and
+  owner acceptance evidence remain open.
 - **Coverage check:** `uv run python tools/check_acceptance_coverage.py` — every `AC-*` in
   `SPEC-0001` is required to appear in at least one milestone here. Run it after
   editing either document. This is a mapping/evidence-attachment check only;
@@ -762,8 +766,8 @@ If PHREEQC cannot be installed and driven in CI:
 
 **Target stage:** S3
 **Current stage:** S2 implementation locally verified; replay/profile/frame
-closure and a deterministic DOM composition slice are being verified locally,
-while M5 S3 evidence remains open. The governing scopes are
+closure and a deterministic DOM composition slice are locally verified, while
+M5 S3 evidence remains open. The governing scopes are
 `docs/superpowers/specs/2026-09-13-m5-contract-remediation.md` and
 `docs/superpowers/specs/2026-09-13-m5-production-composition.md`, subordinate to
 `SPEC-0001` revision 24 Candidate and not overrides of it.

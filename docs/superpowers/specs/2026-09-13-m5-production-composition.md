@@ -1,7 +1,7 @@
 # M5 Production Composition Specification
 
-**Status:** S1 specified; implementation is an S2 composition slice and its
-browser evidence is pending owner review.
+**Status:** S2 composition slice and browser evidence locally verified; M5 S3
+and owner review remain open.
 
 **Authority:** This document is subordinate to `SPEC-0001` and the M5
 observable-state specification. It references canonical `AC-*` criteria; it
