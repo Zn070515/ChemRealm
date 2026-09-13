@@ -152,6 +152,48 @@ def required_float(row: dict[str, str], *names: str) -> float:
     raise RuntimeError(f"selected output is missing one of {names}: {row}")
 
 
+def attribution_axes() -> list[dict[str, str]]:
+    """Describe controlled comparison axes without claiming a cause.
+
+    The current sweep observes an offset, but it does not isolate one variable
+    at a time. Keeping these axes in the report makes that limitation explicit
+    and gives the next scientific investigation reproducible controls instead
+    of allowing a tolerance pass to become an equivalence claim.
+    """
+    return [
+        {
+            "id": "equilibrium-constants",
+            "status": "partially-aligned",
+            "observation": "TS pins Kw and Ka from the constants record; the PHREEQC input pins the acetate log_k but also uses the database water chemistry.",
+            "nextControl": "Run a paired case with the same serialized Kw, Ka, and water-activity convention on both sides, then compare signed pH change.",
+        },
+        {
+            "id": "activity-coefficients",
+            "status": "not-aligned",
+            "observation": "TS uses the pinned Davies A/b expression; PHREEQC applies the activity convention supplied by its selected database/toolchain.",
+            "nextControl": "Run a documented activity-off or matched-activity variant and record the delta without changing totals or constants.",
+        },
+        {
+            "id": "species-representation",
+            "status": "not-identical",
+            "observation": "TS uses the model-owned HOAc/OAc- acid family; the PHREEQC input uses HAcetate/Acetate- master species.",
+            "nextControl": "Run an alternate PHREEQC input with an explicitly matched species basis and compare species totals as well as pH.",
+        },
+        {
+            "id": "water-activity",
+            "status": "not-isolated",
+            "observation": "TS records the explicit v0 unit-water-activity convention; PHREEQC receives water 1 and may apply its own water/activity treatment.",
+            "nextControl": "Hold all solute totals fixed while varying only the water-activity convention in a controlled pair, and report the resulting signed shift.",
+        },
+        {
+            "id": "basis-and-total-definition",
+            "status": "aligned",
+            "observation": "Both runners construct the comparison from mol/kg water totals; HOAc and NaOAc are combined into one acetate analytical family.",
+            "nextControl": "Keep a mass-balance assertion on every future variant so a convention experiment cannot silently change the analytical input.",
+        },
+    ]
+
+
 def run_phreeqc() -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
     results: dict[str, dict[str, Any]] = {}
     with tempfile.TemporaryDirectory(prefix="chemrealm-m4-phreeqc-") as directory:
@@ -263,6 +305,8 @@ def compare(ts_rows: list[dict[str, Any]], phreeqc_rows: dict[str, dict[str, Any
         else "signed differences do not have one strict sign at every compared point",
         "interpretation": "This is an observed cross-engine offset, not proof of a single cause; activity convention, database species representation, constants, and water conventions require separate investigation.",
         "notProven": "Tolerance pass does not establish model equivalence or explain the offset.",
+        "attributionStatus": "not-isolated",
+        "attributionAxes": attribution_axes(),
     }
     return {
         "schemaVersion": 1,

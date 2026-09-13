@@ -450,6 +450,12 @@ class TestWorldGenesisSnapshot:
     def test_accepts_a_snapshot_with_tagged_scientific_inputs_and_data_provenance(self):
         assert is_valid("domain-event", WORLD_CREATED_EVENT)
 
+    def test_REJECTS_snapshot_without_density(self):
+        """Density is a required scientific input, not an optional default."""
+        broken = copy.deepcopy(WORLD_CREATED_EVENT)
+        del broken["payload"]["scenarioSnapshot"]["materials"][0]["density"]
+        assert not is_valid("domain-event", broken)
+
     def test_accepts_separate_provenance_for_each_solute_datum(self):
         expanded = copy.deepcopy(WORLD_CREATED_EVENT)
         material = expanded["payload"]["scenarioSnapshot"]["materials"][0]

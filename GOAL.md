@@ -617,15 +617,23 @@ Preferred local storage:
 
 Any future server-side learner analytics requires a separate privacy design review and explicit owner approval.
 
-# 10. Compliance Direction
+# 10. Deployment and Governance Direction
 
-The intended deployment is a free, non-commercial personal scientific/educational tool website accessible in mainland China and suitable for ICP filing.
+ChemRealm's default product posture is free, non-commercial, public-good
+software for educational, research, and personal use. It MUST remain lawful to
+deploy in mainland China, but a specific filing category, deployment host, or
+operator is not a project-level architecture constraint.
 
-The product SHOULD remain factually describable as:
+The Scientific Reality, privacy, safety, and evidence contracts MUST NOT be
+weakened to optimize for the regulatory or operational convenience of one
+deployment. A future public instance MAY be operated by a qualified
+institutional operator or another owner-approved operator; the operator is
+responsible for hosting, filing, release, moderation, and deployment-specific
+content policy.
 
-> A personally developed chemistry simulation and scientific-visualization tool providing free interactive chemistry demonstrations and learning support.
-
-The project SHOULD avoid accidentally evolving into services that materially change its regulatory profile, including:
+The project SHOULD avoid accidentally evolving into services that materially
+change its product or regulatory profile without explicit owner approval,
+including:
 
 - paid training;
 - enrollment;
@@ -635,7 +643,11 @@ The project SHOULD avoid accidentally evolving into services that materially cha
 - public user publishing;
 - marketplace functions.
 
-Compliance assumptions MUST be re-checked before production filing and major public releases.
+Deployment compliance assumptions MUST be re-checked by the responsible
+operator before public deployment and major public releases. Deployment and
+governance decisions belong to the deployment boundary; they MUST NOT be
+encoded as hidden assumptions in the Scientific Reality Core, World Runtime,
+Representation Engine, or ACE.
 
 # 11. Content and Catalog Model
 

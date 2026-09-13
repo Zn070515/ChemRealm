@@ -6,6 +6,7 @@ import importlib.util
 import json
 import sys
 from pathlib import Path
+import re
 from typing import Any
 
 import pytest
@@ -15,6 +16,21 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 VALIDATION_PATH = REPO_ROOT / "tools" / "oracle" / "reference" / "run_m4_validation.py"
 REPORT_PATH = REPO_ROOT / "docs" / "evidence" / "M4-oracle-sweep-report.json"
 EVIDENCE_PATH = REPO_ROOT / "docs" / "evidence" / "M4.md"
+GOAL_PATH = REPO_ROOT / "GOAL.md"
+
+
+def evidence_matrix_rows() -> dict[str, tuple[str, str]]:
+    """Return the result/evidence cells for each individually listed M4 AC."""
+    rows: dict[str, tuple[str, str]] = {}
+    for line in EVIDENCE_PATH.read_text(encoding="utf-8").splitlines():
+        cells = [cell.strip() for cell in line.split("|")]
+        if len(cells) != 5 or not cells[1].startswith("AC-S"):
+            continue
+        criterion = cells[1]
+        if criterion in rows:
+            raise AssertionError(f"duplicate acceptance-matrix row: {criterion}")
+        rows[criterion] = (cells[2], cells[3])
+    return rows
 
 
 def load_validation() -> Any:
@@ -68,6 +84,35 @@ def test_evidence_matrix_keeps_canonical_and_oracle_claims_separate() -> None:
     assert "REF-9 remains" not in ac_s6
 
 
+def test_m4_acceptance_matrix_is_one_row_per_criterion() -> None:
+    rows = evidence_matrix_rows()
+    expected = {f"AC-S{index}" for index in range(1, 17)}
+
+    assert set(rows) == expected
+    assert "AC-S10 through AC-S16" not in EVIDENCE_PATH.read_text(encoding="utf-8")
+    assert all(result.strip() for result, _evidence in rows.values())
+    assert all(evidence.strip() for _result, evidence in rows.values())
+
+
+def test_m4_matrix_does_not_hide_already_exercised_contracts() -> None:
+    rows = evidence_matrix_rows()
+    result_s10, evidence_s10 = rows["AC-S10"]
+    assert not result_s10.startswith("NOT RUN")
+    assert "verify:scientific-math" in evidence_s10
+
+
+def test_goal_separates_product_constitution_from_deployment_operator() -> None:
+    text = GOAL_PATH.read_text(encoding="utf-8")
+    normalized = re.sub(r"\s+", " ", text).lower()
+
+    assert "# 10. Deployment and Governance Direction" in text
+    assert "personal scientific/educational tool website" not in normalized
+    assert "suitable for icp filing" not in normalized
+    assert "qualified institutional operator" in normalized
+    assert "scientific reality" in normalized
+    assert "deployment and governance decisions belong" in normalized
+
+
 def test_compare_preserves_signed_differences_when_the_offset_is_mixed() -> None:
     validation = load_validation()
     ts_rows = [
@@ -95,6 +140,43 @@ def test_compare_preserves_signed_differences_when_the_offset_is_mixed() -> None
     assert report["signedPhDifferenceSummary"]["allSameSign"] is False
     assert report["disagreementAnalysis"]["classification"] == "mixed-sign-or-insufficient-sample"
     assert report["disagreementAnalysis"]["notProven"]
+
+
+def test_compare_exposes_factor_axes_without_claiming_causality() -> None:
+    validation = load_validation()
+    ts_rows = [
+        {
+            "id": f"ORACLE-{index}",
+            "status": "OK",
+            "modelPh": 1.01,
+            "ionicStrengthMolal": 0.1,
+        }
+        for index in range(1, 11)
+    ]
+    oracle_rows = {
+        f"ORACLE-{index}": {
+            "status": "OK",
+            "modelPh": 1.0,
+            "ionicStrengthMolal": 0.1,
+        }
+        for index in range(1, 11)
+    }
+
+    analysis = validation.compare(ts_rows, oracle_rows)["disagreementAnalysis"]
+    axes = {axis["id"]: axis for axis in analysis["attributionAxes"]}
+
+    assert set(axes) == {
+        "equilibrium-constants",
+        "activity-coefficients",
+        "species-representation",
+        "water-activity",
+        "basis-and-total-definition",
+    }
+    assert analysis["attributionStatus"] == "not-isolated"
+    assert analysis["notProven"]
+    assert all(axis["status"] for axis in axes.values())
+    assert all(axis["nextControl"] for axis in axes.values())
+    assert "equivalence" not in analysis["interpretation"].lower()
 
 
 def test_compare_rejects_a_missing_or_failed_engine_point() -> None:

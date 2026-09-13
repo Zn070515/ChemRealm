@@ -17,6 +17,14 @@
    两个模型等价，更没有解释 systematic offset。
 5. **失败测试必须验证失败语义。** 缺行、错误状态、缺字段、混合符号和
    namespace 错配都必须显式失败，而不是被降级、平均或静默跳过。
+6. **Acceptance 状态必须逐项可审计。** 一个范围表达式或合并行不能把
+   已完成、未运行、部分完成和需要 owner review 的标准藏在同一个状态里。
+7. **跨引擎偏差必须按因素拆开。** signed difference 只能描述观察结果；
+   constants、activity convention、species representation、water convention
+   和 basis/total definition 必须分别记录对齐程度与下一项控制实验，不能
+   用一个总 tolerance 冒充因果解释。
+8. **项目宪法与部署运营必须分层。** 某个 operator 的备案或发布便利不能
+   变成 Scientific Reality、World Runtime 或隐私默认值的隐藏约束。
 
 ## 当前 M4 的证据分层
 
@@ -47,6 +55,9 @@ namespace 的通过不能替代另一个 namespace 的验收。
 | report 缺点或 engine 输出不完整 | comparison 要求完整 ordered rows、OK 状态和 pH/ionic-strength 数值 |
 | systematic offset 被误写成已解释 | report 保留 signed summary；mixed-sign fixture 必须得到 mixed classification |
 | evidence 文案把 ORACLE 当 REF | M4 acceptance matrix 的 AC-S1/AC-S6 文案测试检查 namespace 分工 |
+| acceptance matrix 合并不同状态 | Python contract test 要求 AC-S1…AC-S16 各有且只有一行，并保证已运行的 S10 不被写成 NOT RUN |
+| systematic offset 缺少可审计的归因边界 | report contract test 要求五个因素轴、`not-isolated` 状态和每轴下一项控制实验 |
+| 部署主体污染项目宪法 | GOAL contract test 拒绝 personal-ICP wording，并要求 qualified institutional operator 与 deployment/governance separation |
 | 独立测试只验证 happy path | tamper、缺行、失败状态、缺字段、adversarial fixture 均有 negative coverage |
 
 ## 维护规则
