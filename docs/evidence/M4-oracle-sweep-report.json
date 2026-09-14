@@ -35,14 +35,14 @@
         "status": "aligned"
       }
     ],
-    "attributionStatus": "not-isolated",
     "attributionDisposition": {
-      "code": "bounded-offset-no-equivalence-claim",
       "causalAttribution": "not-isolated",
+      "code": "bounded-offset-no-equivalence-claim",
       "decision": "retain-independent-models-and-report-bounded-disagreement",
       "followUp": "controlled one-factor variants are required before any equivalence claim",
       "parameterTuning": "prohibited"
     },
+    "attributionStatus": "not-isolated",
     "classification": "systematic-positive-offset-candidate",
     "interpretation": "This is an observed cross-engine offset, not proof of a single cause; activity convention, database species representation, constants, and water conventions require separate investigation.",
     "notProven": "Tolerance pass does not establish model equivalence or explain the offset.",
@@ -59,6 +59,126 @@
   "model": {
     "id": "acidbase-monoprotic-davies",
     "version": "1.0.0"
+  },
+  "nativeCrossEngine": {
+    "allPointsCompared": true,
+    "interpretation": "Native WASM and PHREEQC are independently executed; a bounded offset is not an equivalence claim.",
+    "maxAbsolutePhDifference": 0.0193938057606573,
+    "model": {
+      "id": "acidbase-monoprotic-davies",
+      "version": "2.0.0"
+    },
+    "pass": true,
+    "pointCount": 10,
+    "points": [
+      {
+        "absolutePhDifference": 0.015702542432526556,
+        "id": "ORACLE-1",
+        "nativeIonicStrengthMolal": 0.10000000000016407,
+        "nativeModelPh": 1.1070188143355266,
+        "phreeqcIonicStrengthMolal": 0.09808972733194,
+        "phreeqcModelPh": 1.091316271903,
+        "signedPhDifference": 0.015702542432526556,
+        "status": "PASS"
+      },
+      {
+        "absolutePhDifference": 0.015030998464471423,
+        "id": "ORACLE-2",
+        "nativeIonicStrengthMolal": 0.10000000000016371,
+        "nativeModelPh": 12.892981185664471,
+        "phreeqcIonicStrengthMolal": 0.1000000000002,
+        "phreeqcModelPh": 12.8779501872,
+        "signedPhDifference": 0.015030998464471423,
+        "status": "PASS"
+      },
+      {
+        "absolutePhDifference": 0.0005579265078616835,
+        "id": "ORACLE-3",
+        "nativeIonicStrengthMolal": 0.0013707817905459286,
+        "nativeModelPh": 2.8809947893438617,
+        "phreeqcIonicStrengthMolal": 0.00136954530993,
+        "phreeqcModelPh": 2.880436862836,
+        "signedPhDifference": 0.0005579265078616835,
+        "status": "PASS"
+      },
+      {
+        "absolutePhDifference": 0.012622782452821113,
+        "id": "ORACLE-4",
+        "nativeIonicStrengthMolal": 0.10000000216767453,
+        "nativeModelPh": 8.771024716820822,
+        "phreeqcIonicStrengthMolal": 0.1000000021133,
+        "phreeqcModelPh": 8.758401934368,
+        "signedPhDifference": 0.012622782452821113,
+        "status": "PASS"
+      },
+      {
+        "absolutePhDifference": 5.3823136763497814e-05,
+        "id": "ORACLE-5",
+        "nativeIonicStrengthMolal": 9.587369032120542e-07,
+        "nativeModelPh": 6.018798309688764,
+        "phreeqcIonicStrengthMolal": 9.588562297465e-07,
+        "phreeqcModelPh": 6.018744486552,
+        "signedPhDifference": 5.3823136763497814e-05,
+        "status": "PASS"
+      },
+      {
+        "absolutePhDifference": 0.005181055014291225,
+        "id": "ORACLE-6",
+        "nativeIonicStrengthMolal": 0.050025962633770266,
+        "nativeModelPh": 4.671048715982291,
+        "phreeqcIonicStrengthMolal": 0.05002528134366,
+        "phreeqcModelPh": 4.665867660968,
+        "signedPhDifference": 0.005181055014291225,
+        "status": "PASS"
+      },
+      {
+        "absolutePhDifference": 0.0026633784637377644,
+        "id": "ORACLE-7",
+        "nativeIonicStrengthMolal": 0.025070954865959172,
+        "nativeModelPh": 4.214766830213738,
+        "phreeqcIonicStrengthMolal": 0.02506964700896,
+        "phreeqcModelPh": 4.21210345175,
+        "signedPhDifference": 0.0026633784637377644,
+        "status": "PASS"
+      },
+      {
+        "absolutePhDifference": 0.012622782452821113,
+        "id": "ORACLE-8",
+        "nativeIonicStrengthMolal": 0.10000000216767453,
+        "nativeModelPh": 8.771024716820822,
+        "phreeqcIonicStrengthMolal": 0.1000000021133,
+        "phreeqcModelPh": 8.758401934368,
+        "signedPhDifference": 0.012622782452821113,
+        "status": "PASS"
+      },
+      {
+        "absolutePhDifference": 0.0193938057606573,
+        "id": "ORACLE-9",
+        "nativeIonicStrengthMolal": 0.14000000000042892,
+        "nativeModelPh": 12.484844563800657,
+        "phreeqcIonicStrengthMolal": 0.1400000000004,
+        "phreeqcModelPh": 12.46545075804,
+        "signedPhDifference": 0.0193938057606573,
+        "status": "PASS"
+      },
+      {
+        "absolutePhDifference": 0.011855784247998713,
+        "id": "ORACLE-10",
+        "nativeIonicStrengthMolal": 0.05000000000148187,
+        "nativeModelPh": 2.085381694730999,
+        "phreeqcIonicStrengthMolal": 0.04988746350623,
+        "phreeqcModelPh": 2.073525910483,
+        "signedPhDifference": 0.011855784247998713,
+        "status": "PASS"
+      }
+    ],
+    "signedPhDifferenceSummary": {
+      "allSameSign": true,
+      "maximum": 0.0193938057606573,
+      "mean": 0.009568487893395039,
+      "minimum": 5.3823136763497814e-05
+    },
+    "tolerancePh": 0.02
   },
   "oracleFixtures": [
     "ORACLE-1",
@@ -193,7 +313,7 @@
       "tsModelPh": 2.085381694730999
     }
   ],
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "signedPhDifferenceSummary": {
     "allSameSign": true,
     "maximum": 0.0193938057606573,
@@ -203,8 +323,8 @@
   "tolerancePh": 0.02,
   "validation": {
     "ciHardGate": false,
-    "ciRun": "local-commit-73a0444",
+    "ciRun": "local-pinned-phreeqc-9c3d55c",
     "executionEnvironment": "local oracle run; CI repeats the pinned installation and sweep",
-    "sourceCommit": "73a04448dc0c503bf0d920e785ff0c29d7557edf"
+    "sourceCommit": "9c3d55c1d27eb671a64b3e3a0d2679b3bfa4dc09"
   }
 }
