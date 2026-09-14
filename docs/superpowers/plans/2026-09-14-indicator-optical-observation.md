@@ -583,7 +583,7 @@ git commit -m "Add content-addressed indicator optical artifacts"
 - Consumes: Task 2 schemas.
 - Produces: optional authored `IndicatorDefinition.optical`, frozen `ScenarioSnapshot.indicatorOpticalInputs`, `CanonicalContents.indicatorAmounts`, and extends the existing v4→v5 world migration without inventing optical data.
 
-- [ ] **Step 1: Write failing persistence and conservation tests**
+- [x] **Step 1: Write failing persistence and conservation tests**
 
 ```ts
 expect(created.event.payload.scenarioSnapshot.indicatorOpticalInputs[0]).toMatchObject({
@@ -609,7 +609,7 @@ transfer fixture proving the same pre-transfer fraction is used for water,
 components, and every indicator amount. Add a migration fixture that retains
 existing `indicators[].kaIn` but produces no optical input or inventory.
 
-- [ ] **Step 2: Run focused tests and verify RED**
+- [x] **Step 2: Run focused tests and verify RED**
 
 ```text
 pnpm exec vitest run packages/schema/src/contracts.test.ts packages/schema/src/migrate.test.ts packages/world/src/reduce.test.ts packages/world/src/replay.test.ts
@@ -618,7 +618,7 @@ pnpm exec vitest run packages/schema/src/contracts.test.ts packages/schema/src/m
 Expected: schema fields and runtime inventory do not exist; v4 migration cannot
 produce the v5 shape.
 
-- [ ] **Step 3: Implement one source of truth per state layer**
+- [x] **Step 3: Implement one source of truth per state layer**
 
 Extend authoring indicators with optional `optical` containing `initialVesselId`,
 `totalAmount`, a profile reference resolved at genesis, and per-datum
@@ -639,7 +639,7 @@ fixed-path field only when an explicit resolver returns a validated path, and
 empty `indicatorAmounts`. If a legacy record requires an absent path resolver,
 return `NO_PATH`. It never creates a dose, profile, or spectrum.
 
-- [ ] **Step 4: Run focused tests and verify GREEN**
+- [x] **Step 4: Run focused tests and verify GREEN**
 
 ```text
 pnpm exec vitest run packages/schema/src/contracts.test.ts packages/schema/src/migrate.test.ts packages/world/src/reduce.test.ts packages/world/src/replay.test.ts
@@ -647,7 +647,7 @@ pnpm verify:world
 pnpm verify:schema-artifacts
 ```
 
-- [ ] **Step 5: Commit world truth and migration**
+- [x] **Step 5: Commit world truth and migration**
 
 ```text
 git add packages/schema/src/content.ts packages/schema/src/world.ts packages/schema/src/migrate.ts packages/schema/src/scenario-migrate.ts packages/schema/src/events.ts packages/world/src/state.ts packages/world/src/reduce.ts packages/world/src/hash.ts packages/schema/src/contracts.test.ts packages/schema/src/migrate.test.ts packages/world/src/reduce.test.ts packages/world/src/replay.test.ts

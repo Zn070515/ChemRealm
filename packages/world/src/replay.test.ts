@@ -3,9 +3,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
-import { COMMAND_SCHEMA_VERSION } from "@chemrealm/schema";
+import { COMMAND_SCHEMA_VERSION, CURRENT_SCHEMA_VERSION } from "@chemrealm/schema";
 
 import { WORLD_CREATED } from "../test/fixtures.js";
+import { opticalWorldCreated } from "../test/optical-fixtures.js";
 import { emitCommand } from "./command.js";
 import { forkWorld } from "./branch.js";
 import { quantize } from "./hash.js";
@@ -44,6 +45,53 @@ function eventLog(count: number) {
 }
 
 describe("World Runtime replay", () => {
+  it("replays and conserves indicator dose across a transfer", () => {
+    const genesis = opticalWorldCreated(0.1234567890126);
+    let state = createInitialState(genesis);
+    let log = createLog(genesis);
+    const charge = {
+      seq: 1,
+      schemaVersion: CURRENT_SCHEMA_VERSION,
+      type: "MaterialCharged" as const,
+      payload: {
+        vesselId: "flask",
+        materialId: "hcl-0.1",
+        volume: { value: 50, unit: "mL" as const },
+      },
+    };
+    state = reduce(state, charge);
+    log = appendEvent(log, charge);
+    const transfer = {
+      seq: 2,
+      schemaVersion: CURRENT_SCHEMA_VERSION,
+      type: "TransferCommitted" as const,
+      payload: {
+        fromVesselId: "flask",
+        toVesselId: "burette",
+        volume: { value: 10, unit: "mL" as const },
+        mechanism: "pipette" as const,
+      },
+    };
+    state = reduce(state, transfer);
+    log = appendEvent(log, transfer);
+
+    const replayed = replay(log);
+    const totalIndicator = (current: typeof state) =>
+      Object.values(current.canonical.byVessel).reduce(
+        (total, contents) =>
+          total + contents.indicatorAmounts.reduce((sum, entry) => sum + entry.amount, 0),
+        0,
+      );
+
+    expect(replayed.state).toEqual(state);
+    expect(totalIndicator(replayed.state)).toBeCloseTo(
+      totalIndicator(createInitialState(genesis)),
+      14,
+    );
+    expect(replayed.state.canonical.byVessel.flask!.indicatorAmounts[0]!.amount).toBeGreaterThan(0);
+    expect(replayed.state.canonical.byVessel.burette!.indicatorAmounts[0]!.amount).toBeGreaterThan(0);
+  });
+
   it("replays a nested branch whose shared prefix already contains a branch event", () => {
     const { log, state } = eventLog(3);
     const child = forkWorld(state, log, "child-world");

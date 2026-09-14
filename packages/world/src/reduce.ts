@@ -19,6 +19,7 @@ import {
   stateHash,
   type RuntimeCanonicalContents,
   type RuntimeComponentAmount,
+  type RuntimeIndicatorAmount,
   type RuntimeVessel,
   type WorldState,
 } from "./state.js";
@@ -124,6 +125,7 @@ function chargeMaterial(
       waterMass: kilogram(quantize(current.waterMass + inventory.waterMass * volume)),
       liquidVolume: litre(quantize(current.liquidVolume + volume)),
       componentAmounts: addComponentAmounts(current.componentAmounts, additions, volume),
+      indicatorAmounts: current.indicatorAmounts,
     },
   });
 }
@@ -184,16 +186,50 @@ function transfer(
     targetComponents.push({ componentId, amount: mol(targetAmount + delta) });
   }
 
+  const sourceByIndicator = new Map(
+    source.indicatorAmounts.map((entry) => [entry.indicatorId, entry.amount] as const),
+  );
+  const targetByIndicator = new Map(
+    target.indicatorAmounts.map((entry) => [entry.indicatorId, entry.amount] as const),
+  );
+  const indicatorIds = new Set([
+    ...sourceByIndicator.keys(),
+    ...targetByIndicator.keys(),
+  ]);
+  const sourceIndicators: RuntimeIndicatorAmount[] = [];
+  const targetIndicators: RuntimeIndicatorAmount[] = [];
+  for (const indicatorId of indicatorIds) {
+    const sourceAmount = sourceByIndicator.get(indicatorId) ?? 0;
+    const targetAmount = targetByIndicator.get(indicatorId) ?? 0;
+    const delta = isFullTransfer
+      ? sourceAmount
+      : quantize(
+          arithmeticPath === "perturbed"
+            ? (sourceAmount / source.liquidVolume) * volume
+            : sourceAmount * fraction,
+        );
+    sourceIndicators.push({
+      indicatorId,
+      amount: mol(isFullTransfer ? 0 : sourceAmount - delta),
+    });
+    targetIndicators.push({
+      indicatorId,
+      amount: mol(targetAmount + delta),
+    });
+  }
+
   return replaceContents(state, {
     [sourceVessel.id]: {
       waterMass: kilogram(source.waterMass - deltaWater),
       liquidVolume: litre(quantize(source.liquidVolume - volume)),
       componentAmounts: sourceComponents.sort((a, b) => compareIds(a.componentId, b.componentId)),
+      indicatorAmounts: sourceIndicators.sort((a, b) => compareIds(a.indicatorId, b.indicatorId)),
     },
     [targetVessel.id]: {
       waterMass: kilogram(target.waterMass + deltaWater),
       liquidVolume: litre(quantize(target.liquidVolume + volume)),
       componentAmounts: targetComponents.sort((a, b) => compareIds(a.componentId, b.componentId)),
+      indicatorAmounts: targetIndicators.sort((a, b) => compareIds(a.indicatorId, b.indicatorId)),
     },
   });
 }

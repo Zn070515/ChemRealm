@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { CURRENT_SCHEMA_VERSION } from "@chemrealm/schema";
 
 import { highPrecisionWorldCreated, WORLD_CREATED } from "../test/fixtures.js";
+import { opticalWorldCreated } from "../test/optical-fixtures.js";
 import { quantize } from "./hash.js";
 import {
   createInitialState,
@@ -11,6 +12,88 @@ import {
 import { reduce, WorldRuntimeError } from "./reduce.js";
 
 describe("World Runtime reducer", () => {
+  it("allocates a frozen indicator dose exactly once at genesis", () => {
+    const state = createInitialState(opticalWorldCreated());
+
+    expect(state.scenarioSnapshot.indicatorOpticalInputs[0]).toMatchObject({
+      indicatorId: "phenolphthalein",
+      initialVesselId: "flask",
+      totalAmount: 5e-7,
+    });
+    expect(state.canonical.byVessel.flask!.indicatorAmounts).toEqual([
+      { indicatorId: "phenolphthalein", amount: 5e-7 },
+    ]);
+    expect(state.canonical.byVessel.burette!.indicatorAmounts).toEqual([]);
+  });
+
+  it("uses one pre-transfer fraction for water, components, and indicator dose", () => {
+    const genesis = createInitialState(opticalWorldCreated());
+    const charged = reduce(genesis, {
+      seq: 1,
+      schemaVersion: CURRENT_SCHEMA_VERSION,
+      type: "MaterialCharged",
+      payload: {
+        vesselId: "flask",
+        materialId: "hcl-0.1",
+        volume: { value: 100, unit: "mL" },
+      },
+    });
+    const transferred = reduce(charged, {
+      seq: 2,
+      schemaVersion: CURRENT_SCHEMA_VERSION,
+      type: "TransferCommitted",
+      payload: {
+        fromVesselId: "flask",
+        toVesselId: "burette",
+        volume: { value: 25, unit: "mL" },
+        mechanism: "pipette",
+      },
+    });
+
+    const source = charged.canonical.byVessel.flask!;
+    const fraction = 0.025 / source.liquidVolume;
+    const expectedIndicatorDelta = quantize(5e-7 * fraction);
+    const target = transferred.canonical.byVessel.burette!;
+    expect(target.indicatorAmounts).toEqual([
+      { indicatorId: "phenolphthalein", amount: expectedIndicatorDelta },
+    ]);
+    expect(transferred.canonical.byVessel.flask!.indicatorAmounts).toEqual([
+      { indicatorId: "phenolphthalein", amount: 5e-7 - expectedIndicatorDelta },
+    ]);
+  });
+
+  it("makes a high-precision full-transfer dose exactly zero at the source", () => {
+    const genesis = createInitialState(opticalWorldCreated(0.1234567890126));
+    const charged = reduce(genesis, {
+      seq: 1,
+      schemaVersion: CURRENT_SCHEMA_VERSION,
+      type: "MaterialCharged",
+      payload: {
+        vesselId: "flask",
+        materialId: "hcl-0.1",
+        volume: { value: 50, unit: "mL" },
+      },
+    });
+    const transferred = reduce(charged, {
+      seq: 2,
+      schemaVersion: CURRENT_SCHEMA_VERSION,
+      type: "TransferCommitted",
+      payload: {
+        fromVesselId: "flask",
+        toVesselId: "burette",
+        volume: { value: 50, unit: "mL" },
+        mechanism: "pipette",
+      },
+    });
+
+    expect(transferred.canonical.byVessel.flask!.indicatorAmounts).toEqual([
+      { indicatorId: "phenolphthalein", amount: 0 },
+    ]);
+    expect(transferred.canonical.byVessel.burette!.indicatorAmounts).toEqual([
+      { indicatorId: "phenolphthalein", amount: 0.1234567890126 },
+    ]);
+  });
+
   it("turns a non-canonical charge volume into canonical typed state", () => {
     const state = createInitialState(WORLD_CREATED);
     const next = reduce(state, {

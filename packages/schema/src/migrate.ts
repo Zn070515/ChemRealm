@@ -81,6 +81,42 @@ function addVolumeProfilesToSnapshot(
   };
 }
 
+/** Admit the optical boundary without inventing any historical optical data. */
+function addOpticalBoundaryToSnapshot(value: unknown): unknown {
+  if (!isRecord(value) || "indicatorOpticalInputs" in value) return value;
+  if (
+    "scenarioRef" in value &&
+    "materials" in value &&
+    "vessels" in value &&
+    "modelRequirements" in value &&
+    "apparatusDefaults" in value
+  ) {
+    return { ...value, indicatorOpticalInputs: [] };
+  }
+  return value;
+}
+
+/** Add the empty conserved optical inventory to a legacy full-state record. */
+function addIndicatorAmountsToCanonical(value: unknown): unknown {
+  if (!isRecord(value) || !isRecord(value.canonical)) return value;
+  const canonical = value.canonical;
+  if (!isRecord(canonical.byVessel)) return value;
+  return {
+    ...value,
+    canonical: {
+      ...canonical,
+      byVessel: Object.fromEntries(
+        Object.entries(canonical.byVessel).map(([vesselId, contents]) => [
+          vesselId,
+          isRecord(contents) && !("indicatorAmounts" in contents)
+            ? { ...contents, indicatorAmounts: [] }
+            : contents,
+        ]),
+      ),
+    },
+  };
+}
+
 function migratePersistedContainer(
   record: Record<string, unknown>,
   destinationVersion: number,
@@ -94,7 +130,16 @@ function migratePersistedContainer(
     if (destinationVersion >= 4 && resolveVolumeProfile !== undefined) {
       snapshot = addVolumeProfilesToSnapshot(snapshot, resolveVolumeProfile);
     }
+    if (destinationVersion >= 5) {
+      snapshot = addOpticalBoundaryToSnapshot(snapshot);
+    }
     next.scenarioSnapshot = snapshot;
+  }
+  const withCanonicalInventory = destinationVersion >= 5
+    ? addIndicatorAmountsToCanonical(next)
+    : next;
+  if (withCanonicalInventory !== next) {
+    Object.assign(next, withCanonicalInventory);
   }
   if (isRecord(next.payload)) {
     next.payload = migratePersistedContainer(

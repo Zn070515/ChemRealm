@@ -48,6 +48,628 @@
                     },
                     "type": "array"
                   },
+                  "indicatorOpticalInputs": {
+                    "items": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "indicatorId": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "initialVesselId": {
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "opticalProfile": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "conditions": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "concentration": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "max": {
+                                      "additionalProperties": false,
+                                      "properties": {
+                                        "unit": {
+                                          "const": "mol/L",
+                                          "type": "string"
+                                        },
+                                        "value": {
+                                          "type": "number"
+                                        }
+                                      },
+                                      "required": [
+                                        "value",
+                                        "unit"
+                                      ],
+                                      "type": "object"
+                                    },
+                                    "min": {
+                                      "additionalProperties": false,
+                                      "properties": {
+                                        "unit": {
+                                          "const": "mol/L",
+                                          "type": "string"
+                                        },
+                                        "value": {
+                                          "type": "number"
+                                        }
+                                      },
+                                      "required": [
+                                        "value",
+                                        "unit"
+                                      ],
+                                      "type": "object"
+                                    }
+                                  },
+                                  "required": [
+                                    "min",
+                                    "max"
+                                  ],
+                                  "type": "object"
+                                },
+                                "ionicStrengthMolal": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "max": {
+                                      "additionalProperties": false,
+                                      "properties": {
+                                        "unit": {
+                                          "const": "mol/kg",
+                                          "type": "string"
+                                        },
+                                        "value": {
+                                          "type": "number"
+                                        }
+                                      },
+                                      "required": [
+                                        "value",
+                                        "unit"
+                                      ],
+                                      "type": "object"
+                                    },
+                                    "min": {
+                                      "additionalProperties": false,
+                                      "properties": {
+                                        "unit": {
+                                          "const": "mol/kg",
+                                          "type": "string"
+                                        },
+                                        "value": {
+                                          "type": "number"
+                                        }
+                                      },
+                                      "required": [
+                                        "value",
+                                        "unit"
+                                      ],
+                                      "type": "object"
+                                    }
+                                  },
+                                  "required": [
+                                    "min",
+                                    "max"
+                                  ],
+                                  "type": "object"
+                                },
+                                "pathLength": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "max": {
+                                      "additionalProperties": false,
+                                      "properties": {
+                                        "unit": {
+                                          "const": "mm",
+                                          "type": "string"
+                                        },
+                                        "value": {
+                                          "type": "number"
+                                        }
+                                      },
+                                      "required": [
+                                        "value",
+                                        "unit"
+                                      ],
+                                      "type": "object"
+                                    },
+                                    "min": {
+                                      "additionalProperties": false,
+                                      "properties": {
+                                        "unit": {
+                                          "const": "mm",
+                                          "type": "string"
+                                        },
+                                        "value": {
+                                          "type": "number"
+                                        }
+                                      },
+                                      "required": [
+                                        "value",
+                                        "unit"
+                                      ],
+                                      "type": "object"
+                                    }
+                                  },
+                                  "required": [
+                                    "min",
+                                    "max"
+                                  ],
+                                  "type": "object"
+                                },
+                                "ph": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "max": {
+                                      "type": "number"
+                                    },
+                                    "min": {
+                                      "type": "number"
+                                    }
+                                  },
+                                  "required": [
+                                    "min",
+                                    "max"
+                                  ],
+                                  "type": "object"
+                                },
+                                "solvent": {
+                                  "minLength": 1,
+                                  "type": "string"
+                                },
+                                "temperature": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "max": {
+                                      "additionalProperties": false,
+                                      "properties": {
+                                        "unit": {
+                                          "const": "K",
+                                          "type": "string"
+                                        },
+                                        "value": {
+                                          "type": "number"
+                                        }
+                                      },
+                                      "required": [
+                                        "value",
+                                        "unit"
+                                      ],
+                                      "type": "object"
+                                    },
+                                    "min": {
+                                      "additionalProperties": false,
+                                      "properties": {
+                                        "unit": {
+                                          "const": "K",
+                                          "type": "string"
+                                        },
+                                        "value": {
+                                          "type": "number"
+                                        }
+                                      },
+                                      "required": [
+                                        "value",
+                                        "unit"
+                                      ],
+                                      "type": "object"
+                                    }
+                                  },
+                                  "required": [
+                                    "min",
+                                    "max"
+                                  ],
+                                  "type": "object"
+                                }
+                              },
+                              "required": [
+                                "solvent",
+                                "temperature",
+                                "concentration",
+                                "pathLength",
+                                "ionicStrengthMolal"
+                              ],
+                              "type": "object"
+                            },
+                            "formSpectra": {
+                              "items": {
+                                "additionalProperties": false,
+                                "properties": {
+                                  "epsilonUnit": {
+                                    "const": "L mol^-1 cm^-1",
+                                    "type": "string"
+                                  },
+                                  "formId": {
+                                    "minLength": 1,
+                                    "type": "string"
+                                  },
+                                  "samples": {
+                                    "items": {
+                                      "additionalProperties": false,
+                                      "properties": {
+                                        "epsilon": {
+                                          "minimum": 0,
+                                          "type": "number"
+                                        },
+                                        "wavelengthNanometres": {
+                                          "exclusiveMinimum": 0,
+                                          "maximum": 9007199254740991,
+                                          "type": "integer"
+                                        }
+                                      },
+                                      "required": [
+                                        "wavelengthNanometres",
+                                        "epsilon"
+                                      ],
+                                      "type": "object"
+                                    },
+                                    "minItems": 2,
+                                    "type": "array"
+                                  },
+                                  "spectrumId": {
+                                    "minLength": 1,
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "formId",
+                                  "spectrumId",
+                                  "epsilonUnit",
+                                  "samples"
+                                ],
+                                "type": "object"
+                              },
+                              "type": "array"
+                            },
+                            "illuminant": {
+                              "const": "D65",
+                              "type": "string"
+                            },
+                            "indicatorId": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "observer": {
+                              "const": "CIE-1931-2deg",
+                              "type": "string"
+                            },
+                            "profileHash": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "profileId": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "profileVersion": {
+                              "const": "1.0.0",
+                              "type": "string"
+                            },
+                            "provenance": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "category": {
+                                  "enum": [
+                                    "measured",
+                                    "evaluated",
+                                    "calculated",
+                                    "empirical",
+                                    "pedagogicalApproximation"
+                                  ],
+                                  "type": "string"
+                                },
+                                "edition": {
+                                  "minLength": 1,
+                                  "type": "string"
+                                },
+                                "lastVerified": {
+                                  "minLength": 1,
+                                  "type": "string"
+                                },
+                                "pressure": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "unit": {
+                                      "enum": [
+                                        "kPa",
+                                        "Pa",
+                                        "atm"
+                                      ],
+                                      "type": "string"
+                                    },
+                                    "value": {
+                                      "type": "number"
+                                    }
+                                  },
+                                  "required": [
+                                    "value",
+                                    "unit"
+                                  ],
+                                  "type": "object"
+                                },
+                                "reference": {
+                                  "minLength": 1,
+                                  "type": "string"
+                                },
+                                "source": {
+                                  "minLength": 1,
+                                  "type": "string"
+                                },
+                                "temperature": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "unit": {
+                                      "enum": [
+                                        "K",
+                                        "degC"
+                                      ],
+                                      "type": "string"
+                                    },
+                                    "value": {
+                                      "type": "number"
+                                    }
+                                  },
+                                  "required": [
+                                    "value",
+                                    "unit"
+                                  ],
+                                  "type": "object"
+                                },
+                                "uncertainty": {
+                                  "minLength": 1,
+                                  "type": "string"
+                                },
+                                "version": {
+                                  "minLength": 1,
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "source",
+                                "reference",
+                                "category"
+                              ],
+                              "type": "object"
+                            },
+                            "representation": {
+                              "const": "spectral-molar-absorptivity",
+                              "type": "string"
+                            },
+                            "reviewStatus": {
+                              "enum": [
+                                "quantitative",
+                                "qualitative-only"
+                              ],
+                              "type": "string"
+                            },
+                            "source": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "accessedOn": {
+                                  "minLength": 1,
+                                  "type": "string"
+                                },
+                                "citation": {
+                                  "minLength": 1,
+                                  "type": "string"
+                                },
+                                "conditions": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "acidityOrIonicStrength": {
+                                      "minLength": 1,
+                                      "type": "string"
+                                    },
+                                    "concentration": {
+                                      "minLength": 1,
+                                      "type": "string"
+                                    },
+                                    "pathLength": {
+                                      "minLength": 1,
+                                      "type": "string"
+                                    },
+                                    "solvent": {
+                                      "minLength": 1,
+                                      "type": "string"
+                                    },
+                                    "temperature": {
+                                      "minLength": 1,
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "solvent",
+                                    "temperature",
+                                    "concentration",
+                                    "pathLength",
+                                    "acidityOrIonicStrength"
+                                  ],
+                                  "type": "object"
+                                },
+                                "digitisationUncertainty": {
+                                  "minLength": 1,
+                                  "type": "string"
+                                },
+                                "extractionMethod": {
+                                  "enum": [
+                                    "machine-readable",
+                                    "digitized"
+                                  ],
+                                  "type": "string"
+                                },
+                                "licenseOrPermission": {
+                                  "enum": [
+                                    "open",
+                                    "permission-recorded"
+                                  ],
+                                  "type": "string"
+                                },
+                                "rawDataLocation": {
+                                  "minLength": 1,
+                                  "type": "string"
+                                },
+                                "reportedPrecision": {
+                                  "minLength": 1,
+                                  "type": "string"
+                                },
+                                "sourceUrl": {
+                                  "format": "uri",
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "citation",
+                                "sourceUrl",
+                                "accessedOn",
+                                "licenseOrPermission",
+                                "extractionMethod",
+                                "rawDataLocation",
+                                "reportedPrecision",
+                                "conditions"
+                              ],
+                              "type": "object"
+                            },
+                            "transform": {
+                              "enum": [
+                                "sRGB-IEC-61966-2-1",
+                                "qualitative-reference"
+                              ],
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "profileId",
+                            "profileVersion",
+                            "profileHash",
+                            "indicatorId",
+                            "representation",
+                            "formSpectra",
+                            "conditions",
+                            "illuminant",
+                            "observer",
+                            "transform",
+                            "provenance",
+                            "source",
+                            "reviewStatus"
+                          ],
+                          "type": "object"
+                        },
+                        "provenance": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "category": {
+                              "enum": [
+                                "measured",
+                                "evaluated",
+                                "calculated",
+                                "empirical",
+                                "pedagogicalApproximation"
+                              ],
+                              "type": "string"
+                            },
+                            "edition": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "lastVerified": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "pressure": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "unit": {
+                                  "enum": [
+                                    "kPa",
+                                    "Pa",
+                                    "atm"
+                                  ],
+                                  "type": "string"
+                                },
+                                "value": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "value",
+                                "unit"
+                              ],
+                              "type": "object"
+                            },
+                            "reference": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "source": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "temperature": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "unit": {
+                                  "enum": [
+                                    "K",
+                                    "degC"
+                                  ],
+                                  "type": "string"
+                                },
+                                "value": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "value",
+                                "unit"
+                              ],
+                              "type": "object"
+                            },
+                            "uncertainty": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "version": {
+                              "minLength": 1,
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "source",
+                            "reference",
+                            "category"
+                          ],
+                          "type": "object"
+                        },
+                        "totalAmount": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "unit": {
+                              "const": "mol",
+                              "type": "string"
+                            },
+                            "value": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "value",
+                            "unit"
+                          ],
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "indicatorId",
+                        "initialVesselId",
+                        "totalAmount",
+                        "opticalProfile",
+                        "provenance"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
                   "indicators": {
                     "items": {
                       "additionalProperties": false,
@@ -686,6 +1308,175 @@
                         "kind": {
                           "minLength": 1,
                           "type": "string"
+                        },
+                        "opticalPath": {
+                          "additionalProperties": false,
+                          "properties": {
+                            "maxLiquidVolume": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "unit": {
+                                  "const": "L",
+                                  "type": "string"
+                                },
+                                "value": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "value",
+                                "unit"
+                              ],
+                              "type": "object"
+                            },
+                            "minLiquidVolume": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "unit": {
+                                  "const": "L",
+                                  "type": "string"
+                                },
+                                "value": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "value",
+                                "unit"
+                              ],
+                              "type": "object"
+                            },
+                            "pathLength": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "unit": {
+                                  "const": "mm",
+                                  "type": "string"
+                                },
+                                "value": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "value",
+                                "unit"
+                              ],
+                              "type": "object"
+                            },
+                            "pathRuleHash": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "pathRuleId": {
+                              "minLength": 1,
+                              "type": "string"
+                            },
+                            "pathRuleVersion": {
+                              "const": "1.0.0",
+                              "type": "string"
+                            },
+                            "provenance": {
+                              "additionalProperties": false,
+                              "properties": {
+                                "category": {
+                                  "enum": [
+                                    "measured",
+                                    "evaluated",
+                                    "calculated",
+                                    "empirical",
+                                    "pedagogicalApproximation"
+                                  ],
+                                  "type": "string"
+                                },
+                                "edition": {
+                                  "minLength": 1,
+                                  "type": "string"
+                                },
+                                "lastVerified": {
+                                  "minLength": 1,
+                                  "type": "string"
+                                },
+                                "pressure": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "unit": {
+                                      "enum": [
+                                        "kPa",
+                                        "Pa",
+                                        "atm"
+                                      ],
+                                      "type": "string"
+                                    },
+                                    "value": {
+                                      "type": "number"
+                                    }
+                                  },
+                                  "required": [
+                                    "value",
+                                    "unit"
+                                  ],
+                                  "type": "object"
+                                },
+                                "reference": {
+                                  "minLength": 1,
+                                  "type": "string"
+                                },
+                                "source": {
+                                  "minLength": 1,
+                                  "type": "string"
+                                },
+                                "temperature": {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "unit": {
+                                      "enum": [
+                                        "K",
+                                        "degC"
+                                      ],
+                                      "type": "string"
+                                    },
+                                    "value": {
+                                      "type": "number"
+                                    }
+                                  },
+                                  "required": [
+                                    "value",
+                                    "unit"
+                                  ],
+                                  "type": "object"
+                                },
+                                "uncertainty": {
+                                  "minLength": 1,
+                                  "type": "string"
+                                },
+                                "version": {
+                                  "minLength": 1,
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "source",
+                                "reference",
+                                "category"
+                              ],
+                              "type": "object"
+                            },
+                            "representation": {
+                              "const": "fixed-path",
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "pathRuleId",
+                            "pathRuleVersion",
+                            "pathRuleHash",
+                            "representation",
+                            "pathLength",
+                            "minLiquidVolume",
+                            "maxLiquidVolume",
+                            "provenance"
+                          ],
+                          "type": "object"
                         },
                         "position": {
                           "additionalProperties": false,

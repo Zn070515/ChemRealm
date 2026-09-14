@@ -24,6 +24,8 @@ import {
   millimetre,
   mol,
   molPerLitre,
+  parseFrozenOpticalPathSnapshot,
+  parseOpticalProfileSnapshot,
   thermodynamicConstant,
   toCanonical,
   volumeProfileHash as schemaVolumeProfileHash,
@@ -31,6 +33,8 @@ import {
   type DataProvenanceDto,
   type DomainEvent,
   type MaterialSnapshot as SerializedMaterialSnapshot,
+  type FrozenOpticalPathSnapshot as SerializedFrozenOpticalPathSnapshot,
+  type OpticalProfileSnapshot as SerializedOpticalProfileSnapshot,
   type ScenarioSnapshot as SerializedScenarioSnapshot,
   type VolumeProfileSnapshot as SerializedVolumeProfileSnapshot,
   type VolumeProfileMigrationResolver,
@@ -90,6 +94,7 @@ export interface RuntimeVesselDefinition {
   readonly capacity: ReturnType<typeof litre>;
   readonly geometryRef: string;
   readonly volumeProfile: SerializedVolumeProfileSnapshot;
+  readonly opticalPath?: SerializedFrozenOpticalPathSnapshot;
   readonly position: {
     readonly unit: "mm";
     readonly x: ReturnType<typeof millimetre>;
@@ -108,6 +113,13 @@ export interface RuntimeScenarioSnapshot {
   readonly indicators: readonly {
     readonly indicatorId: string;
     readonly kaIn: ReturnType<typeof thermodynamicConstant>;
+    readonly provenance: RuntimeDataProvenance;
+  }[];
+  readonly indicatorOpticalInputs: readonly {
+    readonly indicatorId: string;
+    readonly initialVesselId: string;
+    readonly totalAmount: ReturnType<typeof mol>;
+    readonly opticalProfile: SerializedOpticalProfileSnapshot;
     readonly provenance: RuntimeDataProvenance;
   }[];
   readonly modelRequirements: {
@@ -145,10 +157,16 @@ export interface RuntimeComponentAmount {
   readonly amount: ReturnType<typeof mol>;
 }
 
+export interface RuntimeIndicatorAmount {
+  readonly indicatorId: string;
+  readonly amount: ReturnType<typeof mol>;
+}
+
 export interface RuntimeCanonicalContents {
   readonly waterMass: ReturnType<typeof kilogram>;
   readonly liquidVolume: ReturnType<typeof litre>;
   readonly componentAmounts: readonly RuntimeComponentAmount[];
+  readonly indicatorAmounts: readonly RuntimeIndicatorAmount[];
 }
 
 export interface WorldState {
@@ -302,6 +320,26 @@ function parseScenarioSnapshot(dto: SerializedScenarioSnapshot): RuntimeScenario
   assertUnique(parsed.materials.map((material) => material.materialId), "material");
   assertUnique(parsed.vessels.map((vessel) => vessel.vesselId), "vessel");
   assertUnique(parsed.indicators.map((indicator) => indicator.indicatorId), "indicator");
+  const vesselIds = new Set(parsed.vessels.map((vessel) => vessel.vesselId));
+  const indicatorIds = new Set(parsed.indicators.map((indicator) => indicator.indicatorId));
+  const indicatorOpticalInputs = parsed.indicatorOpticalInputs ?? [];
+  assertUnique(
+    indicatorOpticalInputs.map((input) => input.indicatorId),
+    "indicator optical input",
+  );
+  for (const input of indicatorOpticalInputs) {
+    if (!indicatorIds.has(input.indicatorId)) {
+      throw new Error(
+        `INDICATOR_NOT_DECLARED: optical input ${input.indicatorId} is not in the scenario indicators`,
+      );
+    }
+    if (!vesselIds.has(input.initialVesselId)) {
+      throw new Error(
+        `VESSEL_NOT_FOUND: optical input ${input.indicatorId} names unknown initial vessel ${input.initialVesselId}`,
+      );
+    }
+    parseOpticalProfileSnapshot(input.opticalProfile);
+  }
   return {
     scenarioRef: parsed.scenarioRef,
     materials: parsed.materials.map(parseMaterialSnapshot),
@@ -318,12 +356,25 @@ function parseScenarioSnapshot(dto: SerializedScenarioSnapshot): RuntimeScenario
           `VOLUME_PROFILE_CAPACITY_MISMATCH: vessel ${vessel.vesselId} profile maximum must equal capacity`,
         );
       }
+      const opticalPath = vessel.opticalPath === undefined
+        ? undefined
+        : parseFrozenOpticalPathSnapshot(vessel.opticalPath);
+      if (
+        opticalPath !== undefined &&
+        (opticalPath.minLiquidVolume.value > toCanonical(vessel.capacity).value ||
+          opticalPath.maxLiquidVolume.value > toCanonical(vessel.capacity).value)
+      ) {
+        throw new Error(
+          `OPTICAL_PATH_VOLUME_MISMATCH: vessel ${vessel.vesselId} path volume bounds exceed capacity`,
+        );
+      }
       return {
         vesselId: vessel.vesselId,
         kind: vessel.kind,
         capacity: litre(toCanonical(vessel.capacity).value),
         geometryRef: vessel.geometryRef,
         volumeProfile: vessel.volumeProfile,
+        opticalPath,
         position: {
           unit: "mm" as const,
           x: millimetre(vessel.position.x),
@@ -339,6 +390,13 @@ function parseScenarioSnapshot(dto: SerializedScenarioSnapshot): RuntimeScenario
       indicatorId: indicator.indicatorId,
       kaIn: thermodynamicConstant(toCanonical(indicator.kaIn).value),
       provenance: cloneDataProvenance(indicator.provenance),
+    })),
+    indicatorOpticalInputs: indicatorOpticalInputs.map((input) => ({
+      indicatorId: input.indicatorId,
+      initialVesselId: input.initialVesselId,
+      totalAmount: mol(toCanonical(input.totalAmount).value),
+      opticalProfile: input.opticalProfile,
+      provenance: cloneDataProvenance(input.provenance),
     })),
     modelRequirements: {
       temperature: kelvin(toCanonical(parsed.modelRequirements.temperature).value),
@@ -395,6 +453,12 @@ function parseContents(
         amount: mol(canonicalValue(entry.amount)),
       }))
       .sort((a, b) => compareIds(a.componentId, b.componentId)),
+    indicatorAmounts: (contents.indicatorAmounts ?? [])
+      .map((entry) => ({
+        indicatorId: entry.indicatorId,
+        amount: mol(canonicalValue(entry.amount)),
+      }))
+      .sort((a, b) => compareIds(a.indicatorId, b.indicatorId)),
   };
 }
 
@@ -461,6 +525,22 @@ export function createInitialState(input: unknown): WorldState {
       waterMass: kilogram(0),
       liquidVolume: litre(0),
       componentAmounts: [],
+      indicatorAmounts: [],
+    };
+  }
+  for (const input of snapshot.indicatorOpticalInputs) {
+    const contents = byVessel[input.initialVesselId];
+    if (contents === undefined) {
+      throw new Error(
+        `VESSEL_NOT_FOUND: optical input ${input.indicatorId} names unknown initial vessel ${input.initialVesselId}`,
+      );
+    }
+    byVessel[input.initialVesselId] = {
+      ...contents,
+      indicatorAmounts: [
+        ...contents.indicatorAmounts,
+        { indicatorId: input.indicatorId, amount: input.totalAmount },
+      ].sort((a, b) => compareIds(a.indicatorId, b.indicatorId)),
     };
   }
   return deepFreeze({
@@ -573,6 +653,9 @@ function serializeScenarioSnapshot(snapshot: RuntimeScenarioSnapshot): Serialize
       capacity: { value: vessel.capacity, unit: "L" },
       geometryRef: vessel.geometryRef,
       volumeProfile: vessel.volumeProfile,
+      ...(vessel.opticalPath === undefined
+        ? {}
+        : { opticalPath: vessel.opticalPath }),
       position: { unit: "mm", x: vessel.position.x, y: vessel.position.y },
     })),
     apparatusDefaults: snapshot.apparatusDefaults.map((entry) => ({
@@ -583,6 +666,13 @@ function serializeScenarioSnapshot(snapshot: RuntimeScenarioSnapshot): Serialize
       indicatorId: indicator.indicatorId,
       kaIn: { value: indicator.kaIn.value, unit: "1" },
       provenance: serializeDataProvenance(indicator.provenance),
+    })),
+    indicatorOpticalInputs: snapshot.indicatorOpticalInputs.map((input) => ({
+      indicatorId: input.indicatorId,
+      initialVesselId: input.initialVesselId,
+      totalAmount: { value: input.totalAmount, unit: "mol" },
+      opticalProfile: input.opticalProfile,
+      provenance: serializeDataProvenance(input.provenance),
     })),
     modelRequirements: {
       temperature: { value: snapshot.modelRequirements.temperature, unit: "K" },
@@ -634,6 +724,12 @@ export function serializeWorldState(state: WorldState): SerializedWorldState {
                 componentId: entry.componentId,
                 amount: { value: entry.amount, unit: "mol" },
               })),
+            indicatorAmounts: [...contents.indicatorAmounts]
+              .sort((a, b) => compareIds(a.indicatorId, b.indicatorId))
+              .map((entry) => ({
+                indicatorId: entry.indicatorId,
+                amount: { value: entry.amount, unit: "mol" },
+              })),
           },
         ]),
       ),
@@ -682,6 +778,10 @@ export function replayIdentityProjection(state: WorldState): ReplayIdentityProje
             liquidVolume: { value: quantize(contents.liquidVolume.value), unit: "L" },
             componentAmounts: contents.componentAmounts.map((entry) => ({
               componentId: entry.componentId,
+              amount: { value: quantize(entry.amount.value), unit: "mol" },
+              })),
+            indicatorAmounts: (contents.indicatorAmounts ?? []).map((entry) => ({
+              indicatorId: entry.indicatorId,
               amount: { value: quantize(entry.amount.value), unit: "mol" },
             })),
           },

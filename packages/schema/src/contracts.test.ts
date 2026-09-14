@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   MaterialDefinitionSchema,
+  IndicatorDefinitionSchema,
   SCENARIO_SCHEMA_VERSION,
   ScenarioSchema,
   SoluteDefinitionSchema,
@@ -395,6 +396,87 @@ describe("AC-C1 — content declares a scenario and cannot express chemistry", (
     expect(ScenarioSchema.safeParse(minimalScenario).success).toBe(true);
   });
 
+  it("accepts an optional optical dose declaration without moving chemistry into content", () => {
+    expect(Object.keys(IndicatorDefinitionSchema.shape as Record<string, unknown>)).toContain(
+      "optical",
+    );
+    const scenario = structuredClone(minimalScenario) as Record<string, unknown>;
+    scenario.indicators = [{
+      indicatorId: "phenolphthalein",
+      kaIn: {
+        value: 3.98e-10,
+        unit: "1",
+        provenance: {
+          source: "fixture",
+          reference: "indicator fixture",
+          category: "pedagogicalApproximation",
+        },
+      },
+      optical: {
+        initialVesselId: "flask",
+        totalAmount: { value: 5e-7, unit: "mol" },
+        opticalProfile: {
+          profileId: "phenolphthalein-qualitative",
+          profileVersion: VERSION_MANIFEST.representation.indicatorOpticalProfile,
+          profileHash: "sha256:fixture",
+          indicatorId: "phenolphthalein",
+          representation: "spectral-molar-absorptivity",
+          formSpectra: [],
+          conditions: {
+            solvent: "water",
+            temperature: {
+              min: { value: 298.15, unit: "K" },
+              max: { value: 298.15, unit: "K" },
+            },
+            concentration: {
+              min: { value: 0, unit: "mol/L" },
+              max: { value: 1e-3, unit: "mol/L" },
+            },
+            pathLength: {
+              min: { value: 1, unit: "mm" },
+              max: { value: 10, unit: "mm" },
+            },
+            ionicStrengthMolal: {
+              min: { value: 0, unit: "mol/kg" },
+              max: { value: 0.5, unit: "mol/kg" },
+            },
+          },
+          illuminant: "D65",
+          observer: "CIE-1931-2deg",
+          transform: "qualitative-reference",
+          provenance: {
+            source: "fixture",
+            reference: "optical profile fixture",
+            category: "pedagogicalApproximation",
+          },
+          source: {
+            citation: "fixture",
+            sourceUrl: "https://example.com/optical-profile",
+            accessedOn: "2026-09-14",
+            licenseOrPermission: "permission-recorded",
+            extractionMethod: "digitized",
+            rawDataLocation: "fixture",
+            reportedPrecision: "qualitative only",
+            conditions: {
+              solvent: "water",
+              temperature: "298.15 K",
+              concentration: "qualitative",
+              pathLength: "1 mm",
+              acidityOrIonicStrength: "not stated",
+            },
+          },
+          reviewStatus: "qualitative-only",
+        },
+        provenance: {
+          source: "fixture",
+          reference: "indicator dose fixture",
+          category: "pedagogicalApproximation",
+        },
+      },
+    }];
+    expect(ScenarioSchema.safeParse(scenario).success).toBe(true);
+  });
+
   it("has no field through which an equilibrium could be supplied", () => {
     const names = Object.keys(ScenarioSchema.shape as Record<string, unknown>);
     for (const forbidden of ["ka", "kw", "equilibrium", "reactions", "ph", "solverConfig"]) {
@@ -535,6 +617,56 @@ describe("the migration harness exists before it is needed", () => {
       });
     }
     expect(legacy).toEqual(before);
+  });
+
+  it("admits the optical boundary without inventing legacy dose or profile data", () => {
+    const legacy = {
+      schemaVersion: 4,
+      scenarioSnapshot: {
+        scenarioRef: "legacy-v4",
+        materials: [],
+        vessels: [],
+        apparatusDefaults: [],
+        indicators: [{
+          indicatorId: "phenolphthalein",
+          kaIn: { value: 3.98e-10, unit: "1" },
+          provenance: {
+            source: "legacy fixture",
+            reference: "legacy indicator record",
+            category: "pedagogicalApproximation",
+          },
+        }],
+        modelRequirements: {
+          temperature: { value: 298.15, unit: "K" },
+          species: ["H2O", "H+", "OH-"],
+          solvent: "water",
+          phase: "aqueous",
+          activityCorrected: true,
+        },
+      },
+      canonical: {
+        byVessel: {
+          flask: {
+            waterMass: { value: 0, unit: "kg" },
+            liquidVolume: { value: 0, unit: "L" },
+            componentAmounts: [],
+          },
+        },
+      },
+    };
+
+    const result = migrateWorld(legacy, CURRENT_SCHEMA_VERSION);
+
+    expect(result.status).toBe("OK");
+    if (result.status === "OK") {
+      expect(result.record.scenarioSnapshot).toMatchObject({
+        indicators: [{ indicatorId: "phenolphthalein" }],
+        indicatorOpticalInputs: [],
+      });
+      expect(result.record.canonical).toMatchObject({
+        byVessel: { flask: { indicatorAmounts: [] } },
+      });
+    }
   });
 
   it("updates nested event envelopes when migrating a persisted event log", () => {
@@ -996,6 +1128,7 @@ describe("the conserved inventory is components, not materials", () => {
     );
     expect(names).not.toContain("materials");
     expect(names).toContain("componentAmounts");
+    expect(names).toContain("indicatorAmounts");
     expect(names).toContain("waterMass");
     expect(names).toContain("liquidVolume");
   });

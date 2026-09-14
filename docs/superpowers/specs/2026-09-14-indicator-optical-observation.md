@@ -281,10 +281,9 @@ persisted contracts are:
 ```ts
 interface FrozenIndicatorOpticalInput {
   readonly indicatorId: string;
+  readonly initialVesselId: string;
   readonly totalAmount: Mol;
-  readonly opticalProfileId: string;
-  readonly opticalProfileVersion: string;
-  readonly opticalProfileHash: string;
+  readonly opticalProfile: OpticalProfileSnapshot;
   readonly provenance: DataProvenance;
 }
 
@@ -315,13 +314,13 @@ full-transfer semantics as any other dissolved amount.
 ```text
 ScenarioSnapshot
   └─ indicatorOpticalInputs[]
-       indicatorId, totalAmount, opticalProfileRef, provenance
+       indicatorId, initialVesselId, totalAmount, opticalProfile, provenance
 
 WorldState vessel inventory
   └─ indicatorAmounts[]          // conserved and transferred with liquid
 
 Vessel optical profile snapshot
-  └─ effectivePathRule/hash      // frozen with geometry identity
+  └─ opticalPath?/pathRuleHash   // optional fixed path, frozen with geometry identity
 ```
 
 An optical profile or path-rule artifact is valid only when its payload hash is
@@ -338,6 +337,9 @@ properties are non-negotiable:
   isolation;
 - the frozen indicator optical input and profile hashes participate in the
   relevant world/replay identity.
+- the v4→v5 admission adds an empty `indicatorOpticalInputs` block and empty
+  per-vessel `indicatorAmounts` when absent; it never invents dose, profile,
+  spectrum, or path data.
 
 ## Representation design
 

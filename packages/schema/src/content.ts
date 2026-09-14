@@ -17,6 +17,10 @@ import { z } from "zod";
 import { VERSION_MANIFEST } from "./generated/versions.js";
 import { quantityOfDimension } from "./quantity.js";
 import { DataProvenanceSchema } from "./scientific.js";
+import {
+  FrozenOpticalPathSnapshotSchema,
+  OpticalProfileSnapshotSchema,
+} from "./indicator-optics.js";
 import { VolumeProfileDefinitionSchema } from "./volume-profile.js";
 
 /** Authoring shape version; independent from the persisted world event version. */
@@ -121,6 +125,8 @@ export const VesselDefinitionSchema = z.strictObject({
   geometryRef: z.string().min(1),
   /** Serializable volume profile, resolved into genesis. */
   volumeProfile: VolumeProfileDefinitionSchema,
+  /** Optional fixed optical path, resolved into genesis when an indicator is used. */
+  opticalPath: FrozenOpticalPathSnapshotSchema.optional(),
   position: z.strictObject({ unit: z.literal("mm"), x: z.number(), y: z.number() }),
   initialContents: z.array(
     z.strictObject({
@@ -160,6 +166,13 @@ export const IndicatorDefinitionSchema = z.strictObject({
     unit: z.literal("1"),
     provenance: DataProvenanceSchema.optional(),
   }),
+  /** Optional optical dose and reviewed profile, frozen into genesis. */
+  optical: z.strictObject({
+    initialVesselId: z.string().min(1),
+    totalAmount: quantityOfDimension("amount"),
+    opticalProfile: OpticalProfileSnapshotSchema,
+    provenance: DataProvenanceSchema,
+  }).optional(),
 });
 export type IndicatorDefinition = z.infer<typeof IndicatorDefinitionSchema>;
 

@@ -25,6 +25,10 @@ import { VERSION_MANIFEST } from "./generated/versions.js";
 import { canonicalQuantityOfDimension, quantityOfDimension } from "./quantity.js";
 import { DataProvenanceSchema, SolverConfigSchema } from "./scientific.js";
 import { VolumeProfileSnapshotSchema } from "./volume-profile.js";
+import {
+  FrozenOpticalPathSnapshotSchema,
+  OpticalProfileSnapshotSchema,
+} from "./indicator-optics.js";
 
 export const WorldIdSchema = z.string().min(1);
 export const VesselIdSchema = z.string().min(1);
@@ -124,6 +128,33 @@ export const IndicatorSnapshotSchema = z.strictObject({
 });
 export type IndicatorSnapshot = z.infer<typeof IndicatorSnapshotSchema>;
 
+/** A complete, content-addressed optical input frozen by WorldCreated. */
+export const FrozenIndicatorOpticalInputSchema = z.strictObject({
+  indicatorId: z.string().min(1),
+  initialVesselId: VesselIdSchema,
+  totalAmount: canonicalQuantityOfDimension("amount"),
+  opticalProfile: OpticalProfileSnapshotSchema,
+  provenance: DataProvenanceSchema,
+}).superRefine((input, context) => {
+  if (input.opticalProfile.indicatorId !== input.indicatorId) {
+    context.addIssue({
+      code: "custom",
+      path: ["opticalProfile", "indicatorId"],
+      message: "optical profile indicator ID must match its frozen input",
+    });
+  }
+  if (input.totalAmount.value < 0) {
+    context.addIssue({
+      code: "custom",
+      path: ["totalAmount", "value"],
+      message: "indicator dose cannot be negative",
+    });
+  }
+});
+export type FrozenIndicatorOpticalInput = z.infer<
+  typeof FrozenIndicatorOpticalInputSchema
+>;
+
 /**
  * The genesis snapshot. Self-contained: replaying a world never reads
  * `content/` (`SPEC-0001` AC-R12).
@@ -146,6 +177,8 @@ export const ScenarioSnapshotSchema = z.strictObject({
       geometryRef: z.string().min(1),
       /** Frozen, serializable geometry used to derive liquid height on replay. */
       volumeProfile: VolumeProfileSnapshotSchema,
+      /** Optional fixed optical path; absent means optical observation is unavailable. */
+      opticalPath: FrozenOpticalPathSnapshotSchema.optional(),
       position: PositionSchema,
     }),
   ),
@@ -154,6 +187,8 @@ export const ScenarioSnapshotSchema = z.strictObject({
   ),
   /** Resolved, canonical, per-datum scientific inputs frozen at genesis. */
   indicators: z.array(IndicatorSnapshotSchema),
+  /** Optional optical inputs. Empty for legacy worlds without an optical dose. */
+  indicatorOpticalInputs: z.array(FrozenIndicatorOpticalInputSchema).optional(),
   /** A constraint on what may be used, not a record of what was used. */
   modelRequirements: z.strictObject({
     /** Resolved snapshots freeze the requirement in canonical Kelvin. */
@@ -178,8 +213,16 @@ export const ComponentAmountSchema = z.strictObject({
 });
 export type ComponentAmount = z.infer<typeof ComponentAmountSchema>;
 
+/** Conserved indicator dose, distinct from model-derived chemical forms. */
+export const IndicatorAmountSchema = z.strictObject({
+  indicatorId: z.string().min(1),
+  amount: quantityOfDimension("amount"),
+});
+export type IndicatorAmount = z.infer<typeof IndicatorAmountSchema>;
+
 /**
- * Per-vessel conserved and operational state. Three fields. Nothing else.
+ * Per-vessel conserved and operational state. Independent water, volume,
+ * component, and indicator inventories. Nothing else.
  *
  * THE CONSERVED QUANTITY IS A COMPONENT, NOT A MATERIAL (M1 contract
  * remediation item 1, owner-approved 2026-09-11; this corrects an accepted
@@ -203,6 +246,7 @@ export type ComponentAmount = z.infer<typeof ComponentAmountSchema>;
  *   MaterialDefinition   authored reagent recipe            (content.ts)
  *   MaterialSnapshot     resolved genesis recipe            (below)
  *   componentAmounts     conserved world truth              (here)
+ *   indicatorAmounts     conserved optical dose             (here)
  *   SpeciesState         equilibrium-derived instant        (scientific.ts)
  *
  * For v0 the genesis resolution maps a material's solutes to components
@@ -215,6 +259,7 @@ export const CanonicalContentsSchema = z.strictObject({
   waterMass: quantityOfDimension("mass"),
   liquidVolume: quantityOfDimension("volume"),
   componentAmounts: z.array(ComponentAmountSchema),
+  indicatorAmounts: z.array(IndicatorAmountSchema).optional(),
 });
 export type CanonicalContents = z.infer<typeof CanonicalContentsSchema>;
 

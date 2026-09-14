@@ -16,6 +16,7 @@ import {
   volumeProfileHash,
   type SerializedWorldCreated,
 } from "./state.js";
+import { opticalWorldCreated } from "../test/optical-fixtures.js";
 import { createLog } from "./log.js";
 import { replay } from "./replay.js";
 import { quantize } from "./hash.js";
@@ -141,6 +142,7 @@ describe("WorldState domain boundary", () => {
       waterMass: 0,
       liquidVolume: 0,
       componentAmounts: [],
+      indicatorAmounts: [],
     });
     expect(state.vessels[0]?.capacity).toBe(0.25);
   });
@@ -349,10 +351,26 @@ describe("WorldState domain boundary", () => {
       value: 298.15,
       unit: "K",
     });
-    expect(migrated.payload.contentHash).toBe(WORLD_CREATED.payload.contentHash);
+    expect(migrated.payload.contentHash).toBe(
+      scenarioSnapshotHash(migrated.payload.scenarioSnapshot),
+    );
     expect(replay(createLog(migrated)).replayHash).toBe(
       replay(createLog(WORLD_CREATED)).replayHash,
     );
+  });
+
+  it("migrates a v4 genesis into the optical boundary without inventing dose", () => {
+    const legacy = structuredClone(WORLD_CREATED) as unknown as Record<string, unknown>;
+    legacy.schemaVersion = CURRENT_SCHEMA_VERSION - 1;
+    const payload = legacy.payload as Record<string, unknown>;
+    const snapshot = payload.scenarioSnapshot as Record<string, unknown>;
+    delete snapshot.indicatorOpticalInputs;
+    const migrated = migrateWorldCreated(legacy);
+
+    expect(migrated.payload.scenarioSnapshot.indicators).toHaveLength(1);
+    expect(migrated.payload.scenarioSnapshot.indicatorOpticalInputs).toEqual([]);
+    const replayed = replay(createLog(migrated));
+    expect(replayed.state.canonical.byVessel.flask!.indicatorAmounts).toEqual([]);
   });
 
   it("deep-freezes the complete state graph", () => {
@@ -393,6 +411,29 @@ describe("WorldState domain boundary", () => {
       },
     };
     expect(stateHash(parseWorldState(withComponents))).toBe(stateHash(parseWorldState(reversed)));
+  });
+
+  it("includes conserved indicator dose in replay identity", () => {
+    const state = createInitialState(opticalWorldCreated());
+    const serialized = serializeWorldState(state);
+    const changed = {
+      ...serialized,
+      canonical: {
+        ...serialized.canonical,
+        byVessel: {
+          ...serialized.canonical.byVessel,
+          flask: {
+            ...serialized.canonical.byVessel.flask,
+            indicatorAmounts: [{
+              indicatorId: "phenolphthalein",
+              amount: { value: 5e-7 + 1e-8, unit: "mol" as const },
+            }],
+          },
+        },
+      },
+    };
+
+    expect(stateHash(parseWorldState(changed))).not.toBe(stateHash(state));
   });
 
   it("rejects duplicate structure and missing canonical vessel contents", () => {
