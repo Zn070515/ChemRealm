@@ -286,7 +286,7 @@ describe("WorldState domain boundary", () => {
 
     const migrated = migrateWorldCreated(legacy);
 
-    expect(migrated.schemaVersion).toBe(4);
+    expect(migrated.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
     expect(migrated.payload.scenarioSnapshot.indicators).toEqual([]);
     expect(migrated.payload.contentHash).toBe(
       scenarioSnapshotHash(migrated.payload.scenarioSnapshot),
@@ -314,7 +314,7 @@ describe("WorldState domain boundary", () => {
         return WORLD_CREATED.payload.scenarioSnapshot.vessels[0]!.volumeProfile;
       },
     });
-    expect(migrated.schemaVersion).toBe(4);
+    expect(migrated.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
     expect(migrated.payload.scenarioSnapshot.vessels[0]?.volumeProfile.profileId).toBe(
       "flask-250",
     );
@@ -339,10 +339,12 @@ describe("WorldState domain boundary", () => {
       },
     };
 
-    expect(() => createInitialState(legacy)).toThrow(/expected 4/);
+    expect(() => createInitialState(legacy)).toThrow(
+      new RegExp(`expected ${CURRENT_SCHEMA_VERSION}`),
+    );
     const migrated = migrateWorldCreated(legacy);
 
-    expect(migrated.schemaVersion).toBe(4);
+    expect(migrated.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
     expect(migrated.payload.scenarioSnapshot.modelRequirements.temperature).toEqual({
       value: 298.15,
       unit: "K",

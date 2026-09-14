@@ -102,7 +102,23 @@ must(
   ),
   "M5 child specification names the current canonical amendment",
 );
-must(childSpec, /persisted (?:World\/Event|world\/event) schema v(?:ersion )?4/i, "M5 child specification records the persisted profile schema");
+must(
+  childSpec,
+  new RegExp(
+    "persisted (?:World\\/Event|world\\/event) schema v(?:ersion )?" +
+      versionManifest.schema.world,
+    "i",
+  ),
+  "M5 child specification records the current persisted schema",
+);
+must(
+  childSpec,
+  new RegExp(
+    "replayable volume-profile contract in v" + (versionManifest.schema.world - 1),
+    "i",
+  ),
+  "M5 child specification records the historical profile schema boundary",
+);
 must(childSpec, /VolumeProfileSnapshot/i, "M5 child specification records serializable geometry identity");
 must(childSpec, /recomputes? (?:and verifies|the)[\s\S]{0,180}(?:profile hash|hash-excluded)|parseVolumeProfileSnapshot/i, "M5 child specification requires profile payload hash verification");
 mustNot(childSpec, /No persisted schema migration is needed/i, "M5 child specification does not erase the profile migration");

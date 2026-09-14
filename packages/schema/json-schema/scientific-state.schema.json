@@ -131,7 +131,7 @@
       "type": "object"
     },
     "schemaVersion": {
-      "const": 3,
+      "const": 4,
       "type": "number"
     },
     "species": {

@@ -145,7 +145,7 @@
           "additionalProperties": false,
           "properties": {
             "schemaVersion": {
-              "const": 3,
+              "const": 4,
               "type": "number"
             },
             "state": {
@@ -280,7 +280,7 @@
                   "type": "object"
                 },
                 "schemaVersion": {
-                  "const": 3,
+                  "const": 4,
                   "type": "number"
                 },
                 "species": {
@@ -584,7 +584,7 @@
               "type": "string"
             },
             "schemaVersion": {
-              "const": 3,
+              "const": 4,
               "type": "number"
             },
             "status": {
@@ -626,7 +626,7 @@
               "type": "number"
             },
             "schemaVersion": {
-              "const": 3,
+              "const": 4,
               "type": "number"
             },
             "status": {
@@ -647,7 +647,7 @@
           "additionalProperties": false,
           "properties": {
             "schemaVersion": {
-              "const": 3,
+              "const": 4,
               "type": "number"
             },
             "status": {

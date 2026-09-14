@@ -56,8 +56,10 @@ unchanged; only the evidence ownership boundary is made explicit here.
 
 - No PixiJS, DOM screen, final apparatus art, animation clock, or M6 work.
 - No change to M4 equations, constants, solver identity, or event semantics.
-  Persisted World/Event schema v4 is required by the replayable volume-profile
-  contract; its explicit v3→v4 migration is owned by the World Runtime boundary.
+  Persisted World/Event schema v5 is current: this remediation introduced the
+  replayable volume-profile contract in v4, and the explicit v4→v5
+  optical-boundary admission is owned by the World Runtime without inventing
+  optical data.
 - No renderer-side chemistry, indicator `Ka`, activity calculation, or
   reaction decision.
 - No automatic migration of already-persisted M5 RenderState; the observable
@@ -232,9 +234,10 @@ never guessed from `geometryRef`.
 
 ## Rollout/migration
 
-Persisted World/Event schema v4 is not an in-place reinterpretation: v3→v4
+Persisted World/Event schema v5 is not an in-place reinterpretation: v3→v4
 requires an explicit, reviewable volume-profile resolver for legacy
-geometry-only records. Existing internal M5 callers are updated atomically
+geometry-only records, and v4→v5 admits the optical boundary without
+inventing optical data. Existing internal M5 callers are updated atomically
 because the package is not yet a released public API; the persisted migration
 is still explicit and non-destructive.
 

@@ -450,6 +450,7 @@ describe("the migration harness exists before it is needed", () => {
       expect.objectContaining({ from: 1, to: 2 }),
       expect.objectContaining({ from: 2, to: 3 }),
       expect.objectContaining({ from: 3, to: 4 }),
+      expect.objectContaining({ from: 4, to: CURRENT_SCHEMA_VERSION }),
     ]);
   });
 
@@ -471,7 +472,7 @@ describe("the migration harness exists before it is needed", () => {
     expect(result.status).toBe("NO_PATH");
   });
 
-  it("migrates a v1 genesis record through v2, v3, and v4", () => {
+  it("migrates a v1 genesis record through every current persisted schema boundary", () => {
     const result = migrateWorld(
       {
         schemaVersion: 1,
@@ -492,7 +493,7 @@ describe("the migration harness exists before it is needed", () => {
     expect(result.status).toBe("OK");
     if (result.status === "OK") {
       expect(result.record.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
-      expect(result.applied).toEqual([2, 3, 4]);
+      expect(result.applied).toEqual([2, 3, 4, CURRENT_SCHEMA_VERSION]);
       const payload = result.record.payload;
       expect(payload).toBeTypeOf("object");
       if (payload !== null && typeof payload === "object") {
@@ -505,7 +506,7 @@ describe("the migration harness exists before it is needed", () => {
     }
   });
 
-  it("migrates a persisted v2 genesis temperature through v4 without mutating the legacy record", () => {
+  it("migrates a persisted v2 genesis temperature through the current schema without mutating the legacy record", () => {
     const legacy = {
       schemaVersion: 2,
       type: "WorldCreated",
@@ -525,7 +526,7 @@ describe("the migration harness exists before it is needed", () => {
 
     expect(result.status).toBe("OK");
     if (result.status === "OK") {
-      expect(result.applied).toEqual([3, 4]);
+      expect(result.applied).toEqual([3, 4, CURRENT_SCHEMA_VERSION]);
       expect(result.record.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
       expect(result.record.payload).toMatchObject({
         scenarioSnapshot: {

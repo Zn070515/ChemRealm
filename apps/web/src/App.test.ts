@@ -1,4 +1,4 @@
-import { CURRENT_SCHEMA_VERSION } from "@chemrealm/schema";
+import { CURRENT_SCHEMA_VERSION, VERSION_MANIFEST } from "@chemrealm/schema";
 import { describe, expect, it } from "vitest";
 
 import { App } from "./App.js";
@@ -19,7 +19,7 @@ import { App } from "./App.js";
  */
 describe("apps/web composition adapter", () => {
   it("resolves the workspace link to packages/schema", () => {
-    expect(CURRENT_SCHEMA_VERSION).toBe(4);
+    expect(CURRENT_SCHEMA_VERSION).toBe(VERSION_MANIFEST.schema.world);
   });
 
   it("exposes the app component", () => {

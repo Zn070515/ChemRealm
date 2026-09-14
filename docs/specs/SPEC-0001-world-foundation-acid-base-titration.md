@@ -3,48 +3,13 @@
 - **Status:** **Accepted through revision 20** — M4 S3 owner acceptance recorded
   on 2026-09-13 against the committed implementation baseline and CI attestation.
 - **Accepted baseline:** commit `8310c685`, `SPEC-0001` revision 6
-- **Current revision:** **26 Candidate** — native Scientific Core/WASM backend
-  supersession contract and complete Scientific Core expression requirements;
-  M5 semantic composition closure remains a candidate amendment
-  makes Scientific Core expressions equation-bearing with current substitutions,
-  moves model-specific request construction into the Scientific Core, and
-  defines curve x-values as cumulative committed titrant delivery rather than
-  final vessel volume. Revision 24's M5 replay/provenance closure freezes
-  a serializable, content-addressed `V(h)`/`h(V)` volume profile in every
-  persisted genesis vessel; binds `ScientificFrame` to its event sequence,
-  liquid volume, and volume-profile hash; removes the duplicate Observable
-  liquid-volume input; makes the hydrogen-ion policy discriminated; and
-  version-3 scientific expressions identify their Scientific Core producer and
-  carry equation/formula/substitution records.
-  Revision 21's M5 contract remediation removes the
-  unused `ScientificProjection` water-mass input; restores AC-V4's complete
-  `V(h)`/`h(V)` inverse contract; distinguishes burette contained volume,
-  delivered volume, and graduated scale reading (displayed in `mL` at `0.01
-  mL`); makes empirical indicator palettes identity-specific; and makes the
-  one-pH-convention presentation policy executable; revision 21 also confines
-  empirical colour literals to a provenance-bearing identity-keyed palette
-  catalogue, assigns readout precision policy to the ObservableModel boundary,
-  and binds projections to a source-identified ScientificFrame created by the
-  Scientific Core composition boundary. Revision 20 accepted the
-  M4 chemical identity closure, which added scenario-frozen indicator inputs,
-  the explicit water-activity parameter, and
-  common acetate-family semantics; revision 14 adds the total-solute domain and
-  equilibrium-constant failure semantics; revision 15 makes numerical failure
-  diagnostics explicit; revision 16 closes the cross-system component,
-  authoring-schema, temperature-normalization, and Davies-domain boundaries;
-  revision 17 separates persisted v2→v3 migration from the authored Scenario
-  namespace and canonicalizes legacy persisted temperatures; revision 18 assigns
-  scientific halves of M4 criteria to M4 and inspection/display halves to M5;
-  revision 19 clarifies that Strategy A's paired runtime fold and snapshot
-  cache preserve exact arithmetic while only the replay-identity projection is
-  quantized. Revision 20 separates v0 scientific inputs from the independently
-  frozen envelope result, records source-faithful datum precision/conditions,
-  uses the production scenario-to-world-to-solver route for the complete AC-S14
-  sweep, and makes AC-S8's quantity boundary AST-enforced. Revision 24 makes
-  profile content-address verification a shared schema boundary rather than a
-  frame-label comparison. Revisions 7–20 are
-  accepted amendments; revisions 13–20 were accepted by the owner on
-  2026-09-13.
+- **Current revision:** **27 Candidate** — indicator optical observation
+  authority and refusal-first optical boundary. Revisions 21–27 remain
+  candidate amendments pending owner review; revision 27 adds the
+  data-backed optical statuses, frozen optical inputs, and v0
+  strong-acid-phenolphthalein boundary recorded in the amendment table below.
+  Revisions 7–20 are accepted amendments; revisions 13–20 were accepted by
+  the owner on 2026-09-13.
   See "Amendments since acceptance" below.
 - **Acceptance scope:** the specification and its acceptance criteria. Deferred
   items listed under Open questions remain open and must be resolved before the
@@ -86,6 +51,7 @@
 | 24 | 2026-09-13 | M5 profile content-address closure: the canonical schema owns the shared canonical JSON/SHA-256 helper; `VolumeProfileSnapshot` parsing recomputes and verifies `profileHash` over the hash-excluded payload before render or world code constructs an executable profile adapter. World and composition callers use the same helper, and tampered-but-structurally-valid profile payloads are rejected. | Candidate — owner review pending |
 | 25 | 2026-09-13 | M5 semantic composition closure: Scientific Core expressions are equation-bearing records with current numerical substitutions and explicit v0 omissions; acid-base component/mode/constant selection is owned by the Scientific Core request builder rather than web composition; curve x-values are cumulative committed source→target titrant delivery with an explicit initial zero point; burette derivation filters the same committed transfer relation; and the deterministic composition DOM exposes model/accuracy metadata from ObservableModel. | Candidate — owner review pending |
 | 26 | 2026-09-13 | Native Scientific Core/WASM backend supersession candidate: Rust becomes the next production implementation for new worlds after a dedicated differential/oracle gate; the exact TypeScript 1.0.0 adapter remains the legacy replay/reference backend; no silent cross-version fallback is allowed; Scientific Core expressions must include the ionic-strength fixed point, Davies activity relation, and `activity = γ · m̂` alongside existing equations; and the M4 scientific matrix plus M5 production composition must be rerun against the native backend before supersession. | Candidate — owner review pending |
+| 27 | 2026-09-14 | Indicator optical observation authority: the future data-backed optical boundary is refusal-first with `OPTICAL_MODEL_OK`, `OPTICAL_MODEL_OUT_OF_COVERAGE`, and `OPTICAL_MODEL_DATA_MISSING`; endpoint-RGB fallback is prohibited; genesis freezes indicator dose, optical profile, and optical path identity; chemical-form coverage remains distinct from optical coverage; and the v0 monoprotic model cannot emit strong-acid phenolphthalein orange. AC-O1–AC-O8 define the candidate optical contract. | Candidate — owner review pending |
 
 A revision bump is recorded here rather than only in the body because the header
 is what a reader checks before deciding whether the file they are reading is the
@@ -950,7 +916,7 @@ state it claimed to own.
 
 ```
 WorldState {
-  schemaVersion: 4
+  schemaVersion: 5
   worldId: WorldId
   lineage: { parentWorldId: WorldId | null, forkSequence: number, forkStateHash: Hash }
   sequence: number                      // present cursor; not hashed
@@ -1714,7 +1680,7 @@ zod; JSON Schema is emitted for the Python oracle (`ADR-0001` rule 1).
 
 | Contract | Kind | Versioned |
 |---|---|---|
-| `WorldState`, `Vessel`, `Apparatus`, `Attachment` | Persisted | yes, `schemaVersion: 4` |
+| `WorldState`, `Vessel`, `Apparatus`, `Attachment` | Persisted | yes, `schemaVersion: 5` |
 | The six v0 events | Persisted | yes |
 | `Command` union | Runtime | yes |
 | `SolveRequest`, `SolveResult`, `ScientificState`, `Provenance` | Runtime | yes |
@@ -1793,7 +1759,7 @@ Mapped one-to-one to acceptance criteria. Nothing below is "add tests later".
 | Integration | Command → validate → event → reduce → state, for each v0 command |
 | Replay | Full-log replay hash at every boundary; snapshot-deleted replay |
 | Branch | Parent-immutability hash; comparison alignment by cumulative volume |
-| Persistence | IndexedDB round-trip; export/import round-trip; explicit v1→v2→v3 migration with canonical-temperature normalization and derived genesis checksum rebuild |
+| Persistence | IndexedDB round-trip; export/import round-trip; explicit v1→v2→v3→v4→v5 migration with canonical-temperature normalization, derived genesis checksum rebuild, and no invented optical data |
 | Visual | Deterministic fixture world; screenshots at 4 named viewports; baseline diff |
 | Browser | Playwright core flow: deliver → observe → undo → fork → compare |
 | ACE | Evidence event emitted; ≥2 hypotheses retained; fading triggers; challenge mode has no intervention |
@@ -1867,6 +1833,27 @@ Binary and verifiable. Every criterion maps to an evidence method.
 | AC-V10 | The inspection view never labels model pH as "the true/thermodynamic pH"; it names the IUPAC notional convention and the activity model used | M5 copy review + DOM assertion |
 | AC-V11 | When `withinProposedAccuracyEnvelope` is `false`, the inspection view visibly carries that qualification beside the affected result | M5 deterministic fixture + DOM assertion |
 
+### Optical observation
+
+The optical observation amendment is a candidate contract only. It does not
+claim that a quantitative spectrum, optical profile, or `OPTICAL_MODEL_OK`
+production fixture has been implemented. Optical output uses no endpoint-RGB
+fallback: missing data is refused, and the genesis snapshot freezes indicator
+dose, optical profile, and optical path identity. The v0 monoprotic model
+cannot emit strong-acid phenolphthalein orange; that case requires a separate
+chemical-form model and covered optical profile.
+
+| ID | Criterion | Evidence |
+|---|---|---|
+| AC-O1 | Every optical profile resolves to checked-in spectral data, conditions, source provenance, review record, and content hash. | profile source packet, parser/hash test, and profile review record |
+| AC-O2 | Display tint is derived from declared species fractions, total indicator concentration, path length, spectral absorptivity, and pinned illuminant/observer conversion; no endpoint RGB fallback is used. | Beer–Lambert reference vectors and representation-engine test |
+| AC-O3 | A state without a covered form/profile/condition returns a tagged optical refusal and no display colour. | refusal matrix and observable boundary test |
+| AC-O4 | Phenolphthalein ordinary lactone, alkaline quinoid, and extreme-acid cation are distinct cases; the extreme-acid orange case cannot be emitted by the v0 monoprotic model. | chemical-form coverage test and v0 refusal test |
+| AC-O5 | Doubling concentration or path length has the declared Beer–Lambert absorbance effect inside the profile domain. | deterministic optical scaling test |
+| AC-O6 | Indicator dose is conserved through world transfers and its replay identity is frozen. | world transfer, branch, migration, and replay tests |
+| AC-O7 | Renderer consumes tint/strength/status only and cannot treat a scientific pH or ratio as a colour instruction. | dependency and renderer-boundary tests |
+| AC-O8 | Optical-profile data, deterministic transform, replay, refusal, and browser inspection evidence are reproducible on the committed baseline. | committed-baseline verification packet and browser evidence |
+
 ### ACE
 
 | ID | Criterion | Evidence |
@@ -1915,17 +1902,20 @@ Binary and verifiable. Every criterion maps to an evidence method.
 
 ## Rollout/migration
 
-- Persisted World/Event `schemaVersion` is currently `4`. Version 2 added the
+- Persisted World/Event `schemaVersion` is currently `5`. Version 2 added the
   explicit resolved `ScenarioSnapshot.indicators` block; version 3 requires the
   persisted snapshot requirement temperature to be canonical Kelvin; version 4
-  freezes a serializable volume profile into each genesis vessel. The tested
-  forward migration is `1 → 2 → 3 → 4`: it inserts only an empty indicator list
-  where no value was previously persisted, canonicalizes legacy temperature
-  units, then requires an explicit profile resolver for geometry-only legacy
-  vessels. A World Runtime migration boundary rebuilds the derived genesis
-  `contentHash` after each snapshot change. Authored Scenario shape version 4
-  has its own migration namespace; no automatic migration deletes the removed
-  `fullyDissociated` field. Scientific DTO schema versions remain independent.
+  freezes a serializable volume profile into each genesis vessel; version 5
+  admits the versioned optical-observation boundary without inventing an
+  optical dose, profile, or path. The tested forward migration is `1 → 2 → 3 → 4 → 5`:
+  it inserts only an empty indicator list where no value
+  was previously persisted, canonicalizes legacy temperature units, requires
+  an explicit profile resolver for geometry-only legacy vessels, then preserves
+  pre-optical records without fabricating optical data. A World Runtime
+  migration boundary rebuilds the derived genesis `contentHash` after each
+  snapshot change. Authored Scenario shape version 5 has its own migration
+  namespace; no automatic migration deletes the removed `fullyDissociated`
+  field. Scientific DTO schema versions remain independent.
 - Export format `chemrealm.export` begins at `formatVersion: 1`.
 - **Forward migration must be explicit and tested.** No automatic best-effort
   migration.

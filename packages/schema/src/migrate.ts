@@ -1,9 +1,12 @@
 /** Forward-only persisted World/Event migrations (`ADR-0005` §Schema versioning). */
 
 import { toCanonical } from "./quantity.js";
+import { VERSION_MANIFEST } from "./generated/versions.js";
 import { runMigrations, type Migration, type MigrationResult } from "./migration-core.js";
 
 export type { Migration, MigrationResult } from "./migration-core.js";
+
+const CURRENT_PERSISTED_SCHEMA_VERSION = VERSION_MANIFEST.schema.world;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
@@ -130,6 +133,12 @@ export const WORLD_MIGRATIONS: readonly Migration[] = [
     to: 4,
     describe: "freeze serializable volume profiles into persisted genesis vessels",
     migrate: (record) => migratePersistedContainer(record, 4),
+  },
+  {
+    from: 4,
+    to: CURRENT_PERSISTED_SCHEMA_VERSION,
+    describe: "admit the versioned indicator optical observation boundary without inventing optical data",
+    migrate: (record) => migratePersistedContainer(record, CURRENT_PERSISTED_SCHEMA_VERSION),
   },
 ];
 

@@ -24,22 +24,24 @@ export const VERSION_MANIFEST = deepFreeze({
     "rust": "1.97.1"
   },
   "schema": {
-    "world": 4,
-    "scenario": 4,
+    "world": 5,
+    "scenario": 5,
     "command": 1,
     "exportFormat": 1,
-    "scientific": 3,
+    "scientific": 4,
     "scientificExpression": 4,
     "nativeBridge": 1
   },
   "spec": {
-    "currentRevision": 26,
+    "currentRevision": 27,
     "acceptedThroughRevision": 20,
     "m5ContractRevision": 25
   },
   "representation": {
-    "observableModel": 1,
-    "volumeProfile": "1.0.0"
+    "observableModel": 2,
+    "volumeProfile": "1.0.0",
+    "indicatorOpticalProfile": "1.0.0",
+    "opticalPath": "1.0.0"
   },
   "content": {
     "current": 1
@@ -71,4 +73,6 @@ export const VERSION_MANIFEST = deepFreeze({
 export const TEST_SOLVER_VERSION = VERSION_MANIFEST.fixtures.testSolverVersion;
 export const TEST_MODEL_VERSION = VERSION_MANIFEST.fixtures.testModelVersion;
 export const VOLUME_PROFILE_VERSION = VERSION_MANIFEST.representation.volumeProfile;
+export const INDICATOR_OPTICAL_PROFILE_VERSION = VERSION_MANIFEST.representation.indicatorOpticalProfile;
+export const OPTICAL_PATH_VERSION = VERSION_MANIFEST.representation.opticalPath;
 export const SCENARIO_CONTENT_VERSION = VERSION_MANIFEST.content.current;

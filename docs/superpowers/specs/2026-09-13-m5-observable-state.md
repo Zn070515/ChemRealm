@@ -251,9 +251,10 @@ AC-V3/AC-V4 contracts.
 
 This M5 closure includes the persisted vessel-profile contract introduced by
 the current M5 contract amendment in `SPEC-0001`, whose revision is declared by
-`contracts/version-manifest.json` (revision 25); World/Event schema v4 is the current persisted
-version, with an explicit v3→v4 migration that requires a reviewable profile
-resolver for legacy geometry-only records. The observable model itself is not
+`contracts/version-manifest.json` (revision 25); World/Event schema v5 is the
+current persisted version. The replayable volume-profile contract is introduced
+by v3→v4, while the explicit v4→v5 optical-boundary admission preserves legacy
+records without inventing optical data. The observable model itself is not
 persisted. Future RenderState changes require an explicit
 `ObservableModelVersion` bump and a migration or rejection policy before any
 rendered state is persisted.

@@ -66,8 +66,9 @@ the adapter can map to that public result.
 Scientific wire schema v2 introduced explicit numerical diagnostics:
 `NOT_CONVERGED` carries a failure `code` and non-empty `reason`, while
 `residual` is optional and is emitted only when a finite residual was actually
-computed. The current scientific wire schema is v3; it additionally separates
-accepted input components from equilibrium species. A missing bracket or a
+computed. The current scientific wire schema is v4. Scientific wire schema v3
+introduced the separation of accepted input components from equilibrium species.
+A missing bracket or a
 numeric argument error is never reported with a fabricated zero residual.
 
 ## Alternatives considered

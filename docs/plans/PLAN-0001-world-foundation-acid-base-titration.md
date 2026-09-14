@@ -47,7 +47,7 @@
 > **Final-closure note.** DTO→domain bridges canonicalize units before
 > construction; every resolved snapshot datum is canonical, carries its own
 > `DataProvenance`, and is required structurally; export contracts are aligned
-> with the v1 export format, v4 persisted world schema, and v4 authored Scenario shape; persisted v2→v3 temperature and v3→v4 volume-profile migrations are explicit; and v0 rejects mixed composition bases until the Scientific
+> with the v1 export format, v5 persisted world schema, and v5 authored Scenario shape; persisted v2→v3 temperature, v3→v4 volume-profile, and v4→v5 optical-boundary migrations are explicit; and v0 rejects mixed composition bases until the Scientific
 > Reality Core owns the joint resolver. M1–M4 are S3 verified; M5 is
 > authorized.
 
@@ -779,7 +779,7 @@ M5 S3 evidence remains open. The governing scopes are
 `docs/superpowers/specs/2026-09-13-m5-production-composition.md`, subordinate to
 the M5 contract revision declared by `contracts/version-manifest.json` and not
 overrides of `SPEC-0001`; the native-backend amendment is a separate candidate.
-**Addresses:** ADR-0006, ADR-0007; `SPEC-0001` AC-V2..AC-V4, AC-V6, AC-V8, AC-V9, AC-V10, AC-V11
+**Addresses:** ADR-0006, ADR-0007, ADR-0016; `SPEC-0001` AC-V2..AC-V4, AC-V6, AC-V8, AC-V9, AC-V10, AC-V11, AC-O1..AC-O8
 
 ### M5/M6 acceptance ownership
 
@@ -828,7 +828,8 @@ serializable `VolumeProfileSnapshot`. The frame owns the committed liquid
 volume and profile hash; Observable receives the matching snapshot and
 reconstructs its profile adapter internally, so it cannot accept a caller
 supplied executable profile or a second liquid-volume source. Legacy
-geometry-only persisted worlds require the explicit v3→v4 resolver boundary.
+geometry-only persisted worlds require the explicit v3→v4 resolver boundary;
+the v4→v5 optical-boundary migration invents no optical data.
 
 **No PixiJS import anywhere in this milestone.** Everything here runs in Node.
 The production composition adds a deterministic local DOM inspection surface;
@@ -915,6 +916,7 @@ volume-profile identity, and the ScientificFrame physical-input block.
 | DOM assertions: the taught quantity may be labelled plainly "pH"; model pH always carries its activity-model label; no view mixes the two | AC-V8 |
 | Inspection copy/DOM assertion never calls model pH true/thermodynamic and names the IUPAC notional convention plus activity model | AC-V10 |
 | Deterministic fixture/DOM assertion visibly qualifies results whose `withinProposedAccuracyEnvelope` is false | AC-V11 |
+| Candidate optical observation authority, refusal statuses, frozen dose/profile/path identity, and v0 strong-acid phenolphthalein boundary are defined before optical implementation | AC-O1..AC-O8 — Tasks 1–11 of the approved indicator-optical plan; no optical S3 claim is made until those tasks produce criterion-specific evidence |
 
 ### Stop condition
 

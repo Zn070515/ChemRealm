@@ -103,6 +103,8 @@ export function validateVersionManifest(value) {
   const representation = requireObject(value, "representation");
   requirePositiveInteger(representation, "observableModel");
   requireString(representation, "volumeProfile");
+  requireString(representation, "indicatorOpticalProfile");
+  requireString(representation, "opticalPath");
   const content = requireObject(value, "content");
   requirePositiveInteger(content, "current");
 
@@ -149,6 +151,8 @@ export const VERSION_MANIFEST = deepFreeze(${json} as const);
 export const TEST_SOLVER_VERSION = VERSION_MANIFEST.fixtures.testSolverVersion;
 export const TEST_MODEL_VERSION = VERSION_MANIFEST.fixtures.testModelVersion;
 export const VOLUME_PROFILE_VERSION = VERSION_MANIFEST.representation.volumeProfile;
+export const INDICATOR_OPTICAL_PROFILE_VERSION = VERSION_MANIFEST.representation.indicatorOpticalProfile;
+export const OPTICAL_PATH_VERSION = VERSION_MANIFEST.representation.opticalPath;
 export const SCENARIO_CONTENT_VERSION = VERSION_MANIFEST.content.current;
 `;
 }
@@ -191,6 +195,8 @@ export function activeVersionLiterals(manifest) {
     String(manifest.scientific.numericPolicyVersion),
     String(manifest.representation.observableModel),
     manifest.representation.volumeProfile,
+    manifest.representation.indicatorOpticalProfile,
+    manifest.representation.opticalPath,
     String(manifest.content.current),
     String(manifest.oracle.referenceManifest),
     String(manifest.oracle.referenceFixture),

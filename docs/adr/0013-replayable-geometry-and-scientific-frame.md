@@ -24,7 +24,9 @@ carry identity-shaped strings while its payload came from a different state.
    World Runtime validates the profile hash and requires its maximum volume to
    equal vessel capacity. `geometryRef` remains a visual/content lookup, never
    the source of replay geometry.
-3. Persisted World/Event schema version 4 adds this requirement. A v3→v4
+3. Persisted World/Event schema version 4 added this requirement. The current
+   persisted World/Event schema is version 5; its explicit v4→v5 optical
+   admission preserves records without inventing optical data. A v3→v4
    migration without an explicit profile resolver returns `NO_PATH`; the
    migration never invents geometry from a string reference. A Runtime-owned
    genesis boundary rebuilds the derived `contentHash` after migration.
@@ -51,7 +53,8 @@ carry identity-shaped strings while its payload came from a different state.
 ## Consequences
 
 - Old worlds with only a geometry reference need an explicit, reviewable asset
-  resolver before they can be loaded into schema v4.
+  resolver before they can be loaded into schema v4; loading them into current
+  schema v5 also crosses the explicit v4→v5 optical admission boundary.
 - A frame cannot be combined with a second volume or a differently hashed
   profile without a boundary error.
 - A structurally valid profile cannot be used until its content reproduces its

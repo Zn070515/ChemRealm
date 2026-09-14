@@ -36,6 +36,18 @@ describe("central version manifest", () => {
     expect(manifest.oracle.phreeqc).toBeTypeOf("string");
   });
 
+  it("publishes the indicator-optics schema and representation identities centrally", async () => {
+    const manifest = await readVersionManifest();
+    const { VERSION_MANIFEST } = await import(
+      "../packages/schema/src/generated/versions.ts",
+    );
+
+    expect(VERSION_MANIFEST).toMatchObject(manifest);
+    expect(VERSION_MANIFEST.representation).toMatchObject(
+      manifest.representation,
+    );
+  });
+
   it("exports an immutable nested runtime snapshot", async () => {
     const { VERSION_MANIFEST } = await import(
       "../packages/schema/src/generated/versions.ts"
@@ -55,5 +67,15 @@ describe("central version manifest", () => {
     };
 
     expect(() => validateVersionManifest(invalid)).toThrow(/positive integer/);
+  });
+
+  it("rejects a representation namespace that omits an optical identity", async () => {
+    const manifest = await readVersionManifest();
+    const representation = { ...manifest.representation };
+    delete representation.opticalPath;
+
+    expect(() =>
+      validateVersionManifest({ ...manifest, representation }),
+    ).toThrow(/opticalPath.*non-empty string/);
   });
 });

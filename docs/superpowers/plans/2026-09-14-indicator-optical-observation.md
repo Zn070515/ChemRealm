@@ -412,14 +412,16 @@ git commit -m "Clarify indicator tint semantics and M5 baseline"
 - Create: `docs/adr/0016-indicator-optical-observation-boundary.md`
 - Create: `tools/check_indicator_optics_contract.mjs`
 - Modify: `package.json`
+- Modify: `packages/schema/src/migrate.ts`
 - Test: `tests/version-manifest.test.mjs`
 - Test: `tests/indicator-optics-contract.test.mjs`
+- Test: `packages/schema/src/contracts.test.ts`, `packages/world/src/state.test.ts`, `apps/web/src/App.test.ts`
 
 **Interfaces:**
 - Consumes: `VERSION_MANIFEST` and accepted revision 20.
 - Produces: revision 27 Candidate, `VERSION_MANIFEST.schema.world === 5`, `VERSION_MANIFEST.schema.scenario === 5`, `VERSION_MANIFEST.schema.scientific === 4`, `VERSION_MANIFEST.representation.observableModel === 2`, `VERSION_MANIFEST.representation.indicatorOpticalProfile === "1.0.0"`, and `VERSION_MANIFEST.representation.opticalPath === "1.0.0"`.
 
-- [ ] **Step 1: Write the failing manifest and contract checks**
+- [x] **Step 1: Write the failing manifest and contract checks**
 
 ```ts
 expect(VERSION_MANIFEST.schema.world).toBe(5);
@@ -434,7 +436,7 @@ revision 27 Candidate states all three optical statuses, prohibits endpoint-RGB
 fallback, freezes dose/profile/path in genesis, and says v0 cannot emit
 strong-acid phenolphthalein orange.
 
-- [ ] **Step 2: Run the checks and verify RED**
+- [x] **Step 2: Run the checks and verify RED**
 
 ```text
 pnpm exec vitest run tests/version-manifest.test.mjs tests/indicator-optics-contract.test.mjs
@@ -446,18 +448,21 @@ Expected: failures because the manifest has no optical profile/path versions,
 SPEC has no revision 27 contract, and the optical contract checker does not
 exist.
 
-- [ ] **Step 3: Make the central version and canonical-spec change**
+- [x] **Step 3: Make the central version and canonical-spec change**
 
 Edit only `contracts/version-manifest.json` for active version values, run
 `pnpm generate:versions`, and never insert an active schema/profile version
-literal in production TypeScript, Rust, Python, JSON artifacts, or docs. Add
+literal in production TypeScript, Rust, Python, JSON artifacts, or docs. The
+explicit v4→v5 persisted migration is an admission boundary only: it preserves
+legacy records and invents no optical dose, profile, or path; Task 3 extends
+that same central-version migration when the optical fields exist. Add
 SPEC revision 27 Candidate with AC-O1 through AC-O8 verbatim from the approved
 design. ADR-0016 records the four-core ownership, status/refusal rule, fixed
 path v1 scope, and the distinction between chemical-form coverage and optical
 coverage. Add the package scripts `verify:indicator-optics` for
 `node tools/check_indicator_optics_contract.mjs`.
 
-- [ ] **Step 4: Run focused checks and verify GREEN**
+- [x] **Step 4: Run focused checks and verify GREEN**
 
 ```text
 pnpm generate:versions
@@ -466,7 +471,7 @@ pnpm exec vitest run tests/version-manifest.test.mjs tests/indicator-optics-cont
 node tools/check_indicator_optics_contract.mjs
 ```
 
-- [ ] **Step 5: Commit the authority boundary**
+- [x] **Step 5: Commit the authority boundary**
 
 ```text
 git add contracts/version-manifest.json packages/schema/src/generated/versions.ts docs/specs/SPEC-0001-world-foundation-acid-base-titration.md docs/adr/0016-indicator-optical-observation-boundary.md tools/check_indicator_optics_contract.mjs package.json tests/version-manifest.test.mjs tests/indicator-optics-contract.test.mjs
@@ -574,7 +579,7 @@ git commit -m "Add content-addressed indicator optical artifacts"
 
 **Interfaces:**
 - Consumes: Task 2 schemas.
-- Produces: optional authored `IndicatorDefinition.optical`, frozen `ScenarioSnapshot.indicatorOpticalInputs`, `CanonicalContents.indicatorAmounts`, and a v4→v5 world migration that adds no invented optical data.
+- Produces: optional authored `IndicatorDefinition.optical`, frozen `ScenarioSnapshot.indicatorOpticalInputs`, `CanonicalContents.indicatorAmounts`, and extends the existing v4→v5 world migration without inventing optical data.
 
 - [ ] **Step 1: Write failing persistence and conservation tests**
 

@@ -8,8 +8,9 @@ is recorded as the accepted revision-13 amendment in `SPEC-0001` and
 as the accepted revision-14 amendment in `SPEC-0001` and `ADR-0012`.
 The scientific wire result diagnostics are the accepted revision-15 amendment:
 scientific schema v2 introduced an explicit numerical failure code and reason.
-The current scientific wire schema is v3; v3 additionally separates accepted
-input components from equilibrium species. The cross-system compatibility
+The current scientific wire schema is v4; scientific wire schema v3 introduced
+the separation of accepted input components from equilibrium species. The
+cross-system compatibility
 closure is the accepted revision-16 amendment: actual scenario components
 participate in genesis resolution, authoring scenarios are shape version 3,
 resolved requirement temperatures are canonical Kelvin, and the Davies solver
@@ -331,11 +332,13 @@ the exact numeric parameter bag required by the M3 identity contract.
 
 At the M4 acceptance baseline the persisted world/event schema was version 3
 because v2 could persist a non-canonical temperature spelling. M5 revision 22
-subsequently advanced the current repository schema to version 4: migration
-`3 → 4` freezes a serializable volume profile in each genesis vessel and
-requires an explicit resolver for legacy geometry-only records. The authored
-`Scenario` shape is a separate versioned contract and is currently version 4
-with its own migration namespace. Its resolved snapshot freezes
+subsequently advanced the repository schema to version 4, and the current
+repository schema is version 5: migration `3 → 4` freezes a serializable
+volume profile in each genesis vessel and requires an explicit resolver for
+legacy geometry-only records; migration `4 → 5` admits the optical boundary
+without inventing optical data. The authored `Scenario` shape is a separate
+versioned contract and is currently version 5 with its own migration namespace.
+Its resolved snapshot freezes
 canonical Kelvin requirements, canonical positive dimensionless `kaIn`,
 per-datum `DataProvenance`, and actual component identities before genesis;
 authoring units are never retained as alternate snapshot representations.

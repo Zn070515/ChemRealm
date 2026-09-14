@@ -174,21 +174,23 @@ Not generated, not stored, not derivable from stored data:
 - Every persisted record carries `schemaVersion`.
 - Migrations are explicit, versioned, and tested forward. `SPEC-0001` requires a
   migration test for every version bump.
-- The current persisted world/event schema is version 4. Migration `1 → 2`
+- The current persisted world/event schema is version 5. Migration `1 → 2`
   adds the explicit `ScenarioSnapshot.indicators` block as an empty list when
   no prior value was persisted; migration `2 → 3` canonicalizes the persisted
   snapshot requirement temperature to Kelvin; migration `3 → 4` freezes a
   serializable `VolumeProfileSnapshot` in each genesis vessel and requires an
-  explicit resolver for legacy geometry-only records. No migration fabricates
-  a scientific or geometric input. Because these migrations can change
-  snapshot bytes, the World Runtime migration boundary rebuilds the derived
-  genesis `contentHash` before loading the migrated event.
+  explicit resolver for legacy geometry-only records; migration `4 → 5`
+  admits the optical-observation boundary without fabricating dose, profile, or
+  path data. No migration fabricates a scientific or geometric input. Because
+  these migrations can change snapshot bytes, the World Runtime migration
+  boundary rebuilds the derived genesis `contentHash` before loading the
+  migrated event.
 - Persisted World/Event and authored Scenario records use separate migration
-  namespaces. The current authored Scenario shape is version 4; no automatic
+  namespaces. The current authored Scenario shape is version 5; no automatic
   migration is promised for the removed `fullyDissociated` field, because
   silently deleting an authored scientific assertion would be unsafe.
 - The authored `Scenario` shape is a separate contract and is currently version
-  4; authoring-only changes do not alter the persisted world migration path.
+  5; authoring-only changes do not alter the persisted world migration path.
 - A schema-level migration of a generic event-log/export container does not
   repair derived genesis hashes. The M8 import/load boundary must identify each
   migrated `WorldCreated`, rebuild its `contentHash` in World Runtime, validate

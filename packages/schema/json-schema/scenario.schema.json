@@ -847,7 +847,7 @@
       "type": "string"
     },
     "schemaVersion": {
-      "const": 4,
+      "const": 5,
       "type": "number"
     },
     "title": {
