@@ -7,12 +7,12 @@ import {
   SolverRegistry,
   buildAcidBaseSolveRequest,
   createAcidBaseAdapter,
-  createScientificExpressions,
+  createNativeJsonAdapter,
+  loadNativeWasmExecutor,
   projectScientificFrame,
-  ACID_BASE_MODEL_ID,
-  ACID_BASE_MODEL_VERSION,
+  type ScientificExecution,
   type ScientificFrame,
-  type SolverAdapter,
+  type ScientificExecutionAdapter,
 } from "@chemrealm/sci";
 import {
   buildObservableModel,
@@ -53,6 +53,8 @@ export interface ProductionTitrationComposition {
 export interface ProductionTitrationOptions {
   readonly scenario?: Scenario;
   readonly worldId?: string;
+  /** Explicit backend injection for native/browser validation; default is legacy TS. */
+  readonly adapter?: ScientificExecutionAdapter;
 }
 
 function targetContents(state: WorldState) {
@@ -83,8 +85,11 @@ function solveRequestFromState(state: WorldState) {
 function exactAdapterForState(
   registry: SolverRegistry,
   state: WorldState,
-): SolverAdapter {
-  const lookup = registry.lookup(state.solverConfig.id, state.solverConfig.version);
+): ScientificExecutionAdapter {
+  const lookup = registry.lookupScientificExecution(
+    state.solverConfig.id,
+    state.solverConfig.version,
+  );
   if (lookup.status !== "found") {
     throw new Error(`production composition: ${lookup.reason}`);
   }
@@ -150,19 +155,28 @@ export function statesAtCommittedTargetPrefixes(
 
 async function frameForState(
   state: WorldState,
-  adapter: SolverAdapter,
-): Promise<ScientificFrame> {
-  const result = await adapter.solve(solveRequestFromState(state));
-  if (result.status !== "OK") {
-    throw new Error(`production composition: solver refused sequence ${state.sequence}: ${result.status}`);
+  adapter: ScientificExecutionAdapter,
+): Promise<{ readonly frame: ScientificFrame; readonly expressions: ScientificExecution["expressions"] }> {
+  const sourceStateHash = stateHash(state);
+  const execution = await adapter.solveWithScientificArtifacts(
+    solveRequestFromState(state),
+    { sourceStateHash },
+  );
+  if (execution.result.status !== "OK") {
+    throw new Error(
+      `production composition: solver refused sequence ${state.sequence}: ${execution.result.status}`,
+    );
   }
   const profile = targetProfile(state);
-  return projectScientificFrame(result.state, {
-    sourceStateHash: stateHash(state),
-    sequence: state.sequence,
-    liquidVolume: litre(targetContents(state).liquidVolume),
-    volumeProfileHash: profile.profileHash,
-  });
+  return {
+    frame: projectScientificFrame(execution.result.state, {
+      sourceStateHash,
+      sequence: state.sequence,
+      liquidVolume: litre(targetContents(state).liquidVolume),
+      volumeProfileHash: profile.profileHash,
+    }),
+    expressions: execution.expressions,
+  };
 }
 
 function buretteInput(
@@ -206,7 +220,8 @@ function buretteInput(
 export async function composeProductionTitration(
   options: ProductionTitrationOptions = {},
 ): Promise<ProductionTitrationComposition> {
-  const registry = new SolverRegistry([createAcidBaseAdapter()]);
+  const adapter = options.adapter ?? createAcidBaseAdapter();
+  const registry = new SolverRegistry([adapter]);
   const scenario = options.scenario ?? productionTitrationScenario;
   const worldId = options.worldId ?? (
     scenario === productionTitrationScenario
@@ -217,7 +232,7 @@ export async function composeProductionTitration(
     worldId,
     scenario,
     seed: null,
-    solverSelection: { id: ACID_BASE_MODEL_ID, version: ACID_BASE_MODEL_VERSION },
+    solverSelection: { id: adapter.id, version: adapter.version },
   });
   if (!created.accepted) throw new Error(`production composition: ${created.reason}`);
 
@@ -243,11 +258,14 @@ export async function composeProductionTitration(
   }
   const replayed = replay(eventLog);
   state = replayed.state;
-  const adapter = exactAdapterForState(registry, state);
+  const exactAdapter = exactAdapterForState(registry, state);
   const prefixStates = statesAtCommittedTargetPrefixes(eventLog);
   const frames: ScientificFrame[] = [];
+  let finalExpressions: ScientificExecution["expressions"] = [];
   for (const prefix of prefixStates) {
-    frames.push(await frameForState(prefix.state, adapter));
+    const execution = await frameForState(prefix.state, exactAdapter);
+    frames.push(execution.frame);
+    finalExpressions = execution.expressions;
   }
   const finalFrame = frames[frames.length - 1];
   if (finalFrame === undefined) throw new Error("production composition: no target frame was produced");
@@ -266,7 +284,7 @@ export async function composeProductionTitration(
     volumeProfileSnapshot: targetProfile(state),
     burette: buretteInput(state, eventLog),
     curveFrames,
-    symbolicLines: createScientificExpressions(finalFrame),
+    symbolicLines: finalExpressions,
   });
   return Object.freeze({
     worldId,
@@ -275,5 +293,21 @@ export async function composeProductionTitration(
     frame: finalFrame,
     observable,
     renderState: toRenderState(observable),
+  });
+}
+
+/**
+ * Explicit native/browser composition entry point. Native loading is opt-in;
+ * initialization and execution failures cross the boundary unchanged, with no
+ * fallback to the accepted TypeScript adapter.
+ */
+export async function composeNativeProductionTitration(
+  source: string | URL | ArrayBuffer,
+  options: Omit<ProductionTitrationOptions, "adapter"> = {},
+): Promise<ProductionTitrationComposition> {
+  const execute = await loadNativeWasmExecutor(source);
+  return composeProductionTitration({
+    ...options,
+    adapter: createNativeJsonAdapter(execute),
   });
 }

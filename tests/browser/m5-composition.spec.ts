@@ -7,6 +7,7 @@ test.describe("M5 production composition", () => {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("ChemRealm");
     await expect(page.getByTestId("composition-status")).toHaveText("Committed world");
     await expect(page.getByTestId("world-id")).toHaveText("m5-production-world");
+    await expect(page.getByTestId("backend-version")).toHaveText(/^\d+\.\d+\.\d+$/);
     await expect(page.getByTestId("world-sequence")).not.toHaveText("");
     await expect(page.getByTestId("world-state-hash")).not.toHaveText("");
     await expect(page.getByTestId("ph-readout")).toHaveText(/^pH \d+\.\d{2}$/);
@@ -38,5 +39,23 @@ test.describe("M5 production composition", () => {
     await expect(page.getByTestId("accuracy-qualification")).toHaveText(
       "outside proposed accuracy envelope",
     );
+  });
+
+  test("uses native WASM only when the backend is explicitly selected", async ({ page }) => {
+    await page.goto("/?backend=native", { waitUntil: "networkidle" });
+
+    await expect(page.getByTestId("composition-status")).toHaveText("Committed world");
+    await expect(page.getByTestId("backend-version")).toHaveText(/^\d+\.\d+\.\d+$/);
+    await expect(page.getByTestId("symbolic-expression")).toContainText("Scientific Core");
+    await expect(page.getByTestId("ph-readout")).toHaveText(/^pH \d+\.\d{2}$/);
+  });
+
+  test("does not fall back to TypeScript when explicitly selected native WASM fails", async ({ page }) => {
+    await page.route("**/native/chemrealm_sci_core.wasm", (route) => route.abort());
+    await page.goto("/?backend=native", { waitUntil: "networkidle" });
+
+    await expect(page.getByTestId("composition-error")).toHaveAttribute("role", "alert");
+    await expect(page.getByTestId("composition-error")).toContainText(/failed|fetch|network|WASM/i);
+    await expect(page.getByTestId("composition-status")).toHaveCount(0);
   });
 });

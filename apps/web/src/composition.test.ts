@@ -1,16 +1,37 @@
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
+import { readFile } from "node:fs/promises";
 
 import { buildObservableModel, toRenderState } from "@chemrealm/render";
+import {
+  createNativeJsonAdapter,
+  loadNativeWasmExecutor,
+  type NativeExpressionSolverAdapter,
+} from "@chemrealm/sci";
+import { VERSION_MANIFEST } from "@chemrealm/schema";
 import { stateHash } from "@chemrealm/world";
 
 import {
   composeProductionTitration,
+  composeNativeProductionTitration,
   selectCommittedTitrantTransfers,
   statesAtCommittedTargetPrefixes,
 } from "./composition.js";
 import { accuracyEnvelopeProbeScenario } from "./production-scenario.js";
 
 describe("production composition vertical path", () => {
+  let nativeAdapter: NativeExpressionSolverAdapter;
+
+  beforeAll(async () => {
+    const bytes = await readFile(
+      new URL("../../../packages/sci/dist/wasm/chemrealm_sci_core.wasm", import.meta.url),
+    );
+    const arrayBuffer = bytes.buffer.slice(
+      bytes.byteOffset,
+      bytes.byteOffset + bytes.byteLength,
+    ) as ArrayBuffer;
+    nativeAdapter = createNativeJsonAdapter(await loadNativeWasmExecutor(arrayBuffer));
+  });
+
   it("projects a replayed committed world through science, observable, and scene", async () => {
     const composition = await composeProductionTitration();
 
@@ -113,5 +134,42 @@ describe("production composition vertical path", () => {
     expect(composition.renderState.nodes.find((node) => node.id === "accuracy-qualification")).toMatchObject({
       data: { text: "outside proposed accuracy envelope" },
     });
+  });
+
+  it("can explicitly compose the committed world through the native WASM adapter", async () => {
+    const composition = await composeProductionTitration({ adapter: nativeAdapter });
+
+    expect(composition.state.solverConfig.version).toBe(
+      VERSION_MANIFEST.scientific.acidBase.nativeVersion,
+    );
+    expect(composition.frame.scientificState.provenance.modelVersion).toBe(
+      VERSION_MANIFEST.scientific.acidBase.nativeVersion,
+    );
+    expect(composition.observable.symbolicLines.length).toBeGreaterThan(0);
+    expect(composition.observable.symbolicLines.every((line) =>
+      line.producerId === "scientific-core" &&
+      line.modelVersion === VERSION_MANIFEST.scientific.acidBase.nativeVersion &&
+      line.sourceStateHash === composition.frame.sourceStateHash,
+    )).toBe(true);
+    expect(composition.renderState.nodes.some((node) => node.id === "taught-ph-readout")).toBe(true);
+  });
+
+  it("loads native WASM only through an explicit composition entry point", async () => {
+    const bytes = await readFile(
+      new URL("../../../packages/sci/dist/wasm/chemrealm_sci_core.wasm", import.meta.url),
+    );
+    const arrayBuffer = bytes.buffer.slice(
+      bytes.byteOffset,
+      bytes.byteOffset + bytes.byteLength,
+    ) as ArrayBuffer;
+
+    const composition = await composeNativeProductionTitration(arrayBuffer);
+
+    expect(composition.state.solverConfig.version).toBe(
+      VERSION_MANIFEST.scientific.acidBase.nativeVersion,
+    );
+    expect(composition.observable.symbolicLines[0]?.modelVersion).toBe(
+      VERSION_MANIFEST.scientific.acidBase.nativeVersion,
+    );
   });
 });

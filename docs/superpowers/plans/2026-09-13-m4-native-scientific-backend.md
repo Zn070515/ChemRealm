@@ -4,8 +4,10 @@
 > schema-validated TypeScript facade, expression contract, and local toolchain
 > gates are implemented and verified. M4 S3 remains accepted for the TypeScript
 > 1.0.0 baseline. M5 remains S2 and M6 is not authorized. Native supersession,
-> full REF/ORACLE validation, identity registration, and native M5 browser
-> composition remain pending. This plan does not itself promote either stage.
+> full REF/ORACLE validation, default identity rollout, and final native M5
+> acceptance remain pending. An explicit opt-in native composition/browser
+> path is implemented and locally exercised; this plan does not promote either
+> stage.
 
 **Spec:** `docs/superpowers/specs/2026-09-13-m4-native-scientific-backend.md`  
 **ADR:** `docs/adr/0014-native-scientific-core-and-wasm-deployment.md`  
@@ -147,14 +149,16 @@ browser tests, `docs/evidence/M5.md`.
 
 **Implementation detail:** Route World → Sci request → explicit WASM adapter →
 ScientificFrame → ObservableModel → DOM. Burette, curve, expressions, volume,
-and qualification flags share world/sequence identity.
+and qualification flags share world/sequence identity. The opt-in route is now
+implemented; default backend rollout and final visual acceptance remain gated.
 
 **Tests/evidence:** Browser fixture; native backend identity; DOM readouts;
 frame/curve/symbolic identity; initialization/domain/failure states; privacy
 network check.
 
 **Stop/go:** Stop if any M5 output is hand-authored or comes from hidden TS
-fallback.
+fallback. Native supersession still requires the complete REF/ORACLE and
+committed hosted-CI evidence from Steps 5–6.
 
 ## Step 8 — Final attestation and gate decision
 

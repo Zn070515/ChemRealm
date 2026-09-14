@@ -8,6 +8,7 @@ import {
 import { useEffect, useState, type ReactElement } from "react";
 
 import {
+  composeNativeProductionTitration,
   composeProductionTitration,
   type ProductionTitrationComposition,
 } from "./composition.js";
@@ -15,28 +16,33 @@ import { accuracyEnvelopeProbeScenario } from "./production-scenario.js";
 
 type PolicyId = "taught" | "scientific-model";
 
-const productionCompositionPromises = new Map<
-  "default" | "accuracy-probe",
-  Promise<ProductionTitrationComposition>
->();
+const productionCompositionPromises = new Map<string, Promise<ProductionTitrationComposition>>();
 
 function loadProductionComposition(): Promise<ProductionTitrationComposition> {
-  const isAccuracyProbe =
-    typeof window !== "undefined" &&
-    new URLSearchParams(window.location.search).get("fixture") === "accuracy-probe";
+  const searchParams = typeof window === "undefined"
+    ? new URLSearchParams()
+    : new URLSearchParams(window.location.search);
+  const isAccuracyProbe = searchParams.get("fixture") === "accuracy-probe";
+  const isNative = searchParams.get("backend") === "native";
   const fixture = isAccuracyProbe ? "accuracy-probe" : "default";
-  const existing = productionCompositionPromises.get(fixture);
+  const backend = isNative ? "native" : "legacy";
+  const key = `${backend}:${fixture}`;
+  const existing = productionCompositionPromises.get(key);
   if (existing !== undefined) return existing;
 
-  const promise = composeProductionTitration(
-    isAccuracyProbe
-      ? {
-          scenario: accuracyEnvelopeProbeScenario,
-          worldId: "m5-accuracy-envelope-probe-world",
-        }
-      : undefined,
-  );
-  productionCompositionPromises.set(fixture, promise);
+  const options = isAccuracyProbe
+    ? {
+        scenario: accuracyEnvelopeProbeScenario,
+        worldId: "m5-accuracy-envelope-probe-world",
+      }
+    : {};
+  const promise = isNative
+    ? composeNativeProductionTitration(
+        new URL("/native/chemrealm_sci_core.wasm", window.location.origin),
+        options,
+      )
+    : composeProductionTitration(options);
+  productionCompositionPromises.set(key, promise);
   return promise;
 }
 function textFromNode(node: RenderNode | undefined): string {
@@ -110,6 +116,7 @@ export function App({ schemaVersion }: { schemaVersion: number }): ReactElement 
             <div><dt>World ID</dt><dd data-testid="world-id">{composition.worldId}</dd></div>
             <div><dt>Committed sequence</dt><dd data-testid="world-sequence">{composition.frame.sequence}</dd></div>
             <div><dt>Source replay hash</dt><dd data-testid="world-state-hash">{composition.frame.sourceStateHash}</dd></div>
+            <div><dt>Scientific backend version</dt><dd data-testid="backend-version">{composition.frame.scientificState.provenance.modelVersion}</dd></div>
           </dl>
 
           <section aria-label="Hydrogen ion presentation">

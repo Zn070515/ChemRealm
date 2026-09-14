@@ -10,6 +10,8 @@ const manifest = join(ROOT, "native", "sci-core", "Cargo.toml");
 const target = join(ROOT, "native", "sci-core", "target", "wasm32-unknown-unknown", "release", "chemrealm_sci_core.wasm");
 const outputDirectory = join(ROOT, "packages", "sci", "dist", "wasm");
 const output = join(outputDirectory, "chemrealm_sci_core.wasm");
+const webNativeDirectory = join(ROOT, "apps", "web", "public", "native");
+const webOutput = join(webNativeDirectory, "chemrealm_sci_core.wasm");
 const versionManifest = await readVersionManifest();
 
 function run(command, args) {
@@ -33,6 +35,8 @@ await run("cargo", [
 ]);
 await mkdir(outputDirectory, { recursive: true });
 await copyFile(target, output);
+await mkdir(webNativeDirectory, { recursive: true });
+await copyFile(target, webOutput);
 const bytes = await readFile(output);
 const sha256 = createHash("sha256").update(bytes).digest("hex");
 await writeFile(

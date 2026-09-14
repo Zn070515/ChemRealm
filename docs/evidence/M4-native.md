@@ -19,6 +19,7 @@ TypeScript `1.0.0` M4 S3 baseline.
 | Scientific execution capability | PASS locally | adapter/registry tests preserve and safely narrow the expression-producing capability |
 | Refusal identity | PASS locally | adapter and registry tests reject mismatched `nearestSupported` model identity |
 | Explicit solver selection | PASS locally | reversed registry-order tests preserve the explicitly selected identity |
+| Explicit native production composition | PASS locally | `apps/web/src/composition.test.ts` and `tests/browser/m5-composition.spec.ts?backend=native` prove a registered WASM adapter drives World → ScientificFrame → Observable → DOM without TS expression substitution |
 | Native governance boundary | PASS locally | `pnpm verify:native-governance` |
 
 ## Still required for native supersession S3
@@ -28,8 +29,8 @@ The following evidence is intentionally not claimed by this packet:
 - native REF-1…REF-10 and adversarial matrix;
 - Rust host ↔ WASM differential report over the complete reference set;
 - native PHREEQC oracle execution and disagreement disposition;
-- registered native backend used by the production new-world path;
-- native World → ScientificFrame → Observable → DOM/browser composition;
+- native backend as the default new-world path after the supersession gate;
+- complete native World → ScientificFrame → Observable → DOM/browser acceptance packet;
 - final native artifact and hosted-CI attestation for the supersession gate.
 
 Native initialization and solve failures remain explicit. There is no silent
@@ -46,4 +47,7 @@ pnpm native:fmt
 pnpm native:test
 pnpm native:clippy
 pnpm native:check-wasm
+pnpm build
+pnpm exec vitest run apps/web/src/composition.test.ts
+pnpm test:browser
 ```

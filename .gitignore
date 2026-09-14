@@ -7,6 +7,7 @@ dist/
 dist-types/
 build/
 *.tsbuildinfo
+apps/web/public/native/
 
 # Transient scratch trees created by tools/check_dependency_rules.mjs
 tmp-depcruise-guard/
