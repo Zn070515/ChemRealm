@@ -113,13 +113,18 @@ about where the light comes from read as a collage, not a scene.
 
 ## 4. Colour and contrast
 
-- The palette must be defined as tokens, not literals in components.
-- Indicator colours (phenolphthalein pink, methyl orange red/yellow) are the one
-  place where saturated colour is required. They must be checkable against the
-  labelled reference swatches in
+- Visual tokens must be declared rather than embedded ad hoc in components.
+- Labelled indicator reference swatches in
   [`indicator-palettes.json`](reference/indicator-palettes.json) and
-  [`indicator-reference-swatches.svg`](reference/indicator-reference-swatches.svg),
-  because the *colour is the observation*.
+  [`indicator-reference-swatches.svg`](reference/indicator-reference-swatches.svg)
+  are qualitative QA/sanity references only. They may catch a gross visual
+  mismatch, but they are not the source of a production tint and cannot
+  override an optical refusal.
+- A production indicator tint must come from the tagged `OpticalObservation`
+  Beer–Lambert/colourimetry pipeline with identity, source conditions, and
+  coverage. Strong-acid phenolphthalein orange is documented as a scientific
+  boundary and remains refusal-only until a supporting chemical form and
+  reviewed optical profile exist.
 - The scene must be legible under a light and a dark background setting if both
   are offered. `GOAL.md` §15 names light/dark/background contrast tests.
 - Colour must never be the sole channel carrying scientific information.
@@ -164,9 +169,10 @@ Every item is pass/fail. Any fail blocks the stage (`GOAL.md` §16 Gate D).
 
 **State linkage**
 - [ ] Every coloured element traces to an `ObservableModel` output.
-- [ ] Empirical chemical colour literals appear only in the declared,
-      provenance-bearing, identity-keyed palette catalogue; no render component
-      embeds an ad-hoc chemical colour or makes an equilibrium decision.
+- [ ] Any qualitative chemical colour literals appear only in the declared,
+      provenance-bearing, identity-keyed QA palette catalogue; production tint
+      comes from `OpticalObservation`, and no render component embeds an ad-hoc
+      chemical colour or makes an equilibrium decision.
 - [ ] Dependency rule verified: `packages/render` does not import `packages/sci`.
 
 **Evidence**

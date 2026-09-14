@@ -1,6 +1,6 @@
 # ADR-0014 — Native Scientific Core and WebAssembly deployment
 
-**Status:** **Accepted — architecture decision only; native supersession remains candidate/S2**, 2026-09-13
+**Status:** **Accepted — architecture decision only; native supersession is a local S3 candidate pending hosted/owner acceptance**, 2026-09-13
 **Date:** 2026-09-13  
 **Deciders:** Project owner  
 **Related:** `GOAL.md` §5.1, §5.2, §6.1, §20; ADR-0003, ADR-0007, ADR-0012  

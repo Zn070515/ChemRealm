@@ -5,6 +5,7 @@ import {
   kilogram,
   litre,
   mol,
+  serializeScientificState,
   thermodynamicConstant,
   VERSION_MANIFEST,
   type ScientificState,
@@ -145,6 +146,16 @@ function assertCharge(state: ScientificState, tolerance: number): void {
   const residual = species["H+"]! + species["Na+"]! -
     species["OH-"]! - species["OAc-"]! - species["Cl-"]!;
   expect(Math.abs(residual)).toBeLessThanOrEqual(tolerance);
+}
+
+function strongAcidRequest(amountMol: number, temperatureK = 298.15): SolveRequest {
+  return toRequest({
+    waterMassKg: 1,
+    liquidVolumeL: 1,
+    temperatureK,
+    solutes: [{ soluteId: "HCl", amountMol, mode: "fully-dissociated" }],
+    indicators: [],
+  });
 }
 
 describe("native WASM canonical reference matrix", () => {
@@ -290,6 +301,57 @@ describe("native WASM canonical reference matrix", () => {
       comparison.hendersonHasselbalchApproximationPh,
       1,
     );
+  });
+
+  it("classifies the native domain boundary and proposed envelope without extrapolation", async () => {
+    const inDomain = [0.1, 0.15, 0.3, 0.49];
+    const results = [];
+    for (const amountMol of inDomain) {
+      const result = await adapter.solve(strongAcidRequest(amountMol));
+      expect(result.status, `HCl ${amountMol} mol status`).toBe("OK");
+      if (result.status !== "OK") throw new Error(`HCl ${amountMol} must solve`);
+      results.push({ amountMol, state: result.state });
+    }
+
+    for (let index = 1; index < results.length; index += 1) {
+      expect(results[index]!.state.ionicStrengthMolal.value)
+        .toBeGreaterThanOrEqual(results[index - 1]!.state.ionicStrengthMolal.value);
+      expect(results[index]!.state.modelPh.value)
+        .toBeLessThanOrEqual(results[index - 1]!.state.modelPh.value);
+    }
+    expect(results[0]!.state.validity.withinProposedAccuracyEnvelope).toBe(true);
+    expect(results[1]!.state.validity.withinProposedAccuracyEnvelope).toBe(false);
+    expect(results[2]!.state.validity.withinProposedAccuracyEnvelope).toBe(false);
+    expect(results[3]!.state.ionicStrengthMolal.value).toBeLessThanOrEqual(0.5);
+
+    const boundary = await adapter.solve(strongAcidRequest(0.5));
+    expect(boundary.status).toBe("MODEL_OUT_OF_DOMAIN");
+    const belowMinimum = await adapter.solve(strongAcidRequest(1e-12));
+    expect(belowMinimum.status).toBe("MODEL_OUT_OF_DOMAIN");
+    const wrongTemperature = await adapter.solve(strongAcidRequest(0.1, 300));
+    expect(wrongTemperature.status).toBe("MODEL_OUT_OF_DOMAIN");
+  });
+
+  it("keeps native thermodynamic state on molality units until projection", async () => {
+    const result = await adapter.solve(strongAcidRequest(0.1));
+    expect(result.status).toBe("OK");
+    if (result.status !== "OK") throw new Error("native reference must solve");
+    const serialized = serializeScientificState(result.state);
+    expect(serialized.ionicStrengthMolal.unit).toBe("mol/kg");
+    expect(serialized.ionicStrengthReduced.unit).toBe("1");
+    expect(serialized.species.every((species) =>
+      species.reducedMolality.unit === "1" &&
+      species.molality.unit === "mol/kg" &&
+      species.amount.unit === "mol" &&
+      species.activityCoefficient.unit === "1" &&
+      species.activity.unit === "1",
+    )).toBe(true);
+    const projection = projectScientificState(result.state, {
+      sourceStateHash: "native-molality-boundary",
+      liquidVolume: litre(1),
+    });
+    expect(projection.hydrogenIonMolarity).toBeGreaterThan(0);
+    expect(projection.taughtHydrogenIonExponent.value).toBeGreaterThan(0);
   });
 
   it("emits the complete Scientific Core equation set for every solved canonical REF input", async () => {

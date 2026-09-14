@@ -5,6 +5,7 @@ import { buildObservableModel, toRenderState } from "@chemrealm/render";
 import {
   createNativeJsonAdapter,
   createAcidBaseAdapter,
+  createPhenolphthaleinMultiformAdapter,
   buildPhenolphthaleinMultiformObservation,
   DEFAULT_ACID_BASE_CONSTANTS,
   DEFAULT_PHENOLPHTHALEIN_MULTIFORM_CONSTANTS,
@@ -60,12 +61,15 @@ describe("production composition vertical path", () => {
     );
     expect(composition.renderState.nodes.some((node) => node.id === "liquid-level")).toBe(true);
     expect(composition.renderState.nodes.some((node) => node.id === "taught-ph-readout")).toBe(true);
-    expect(composition.observable.indicators[0]?.opticalObservation.status).toBe(
-      "OPTICAL_MODEL_DATA_MISSING",
-    );
+    const optical = composition.observable.indicators[0]?.opticalObservation;
+    expect(optical).toMatchObject({
+      status: "OPTICAL_MODEL_OK",
+      profileId: "phenolphthalein-ordinary-aqueous",
+    });
+    if (optical?.status !== "OPTICAL_MODEL_OK") throw new Error("expected optical success");
+    expect(optical.tintStrength).toBeGreaterThan(0);
     expect(composition.renderState.nodes.find((node) => node.id === "indicator-0")?.data).toMatchObject({
-      opticalStatus: "OPTICAL_MODEL_DATA_MISSING",
-      tint: undefined,
+      opticalStatus: "OPTICAL_MODEL_OK",
     });
   });
 
@@ -114,7 +118,7 @@ describe("production composition vertical path", () => {
     );
     expect(composition.observable.curve.every((point) => point.sourceStateHash.length > 0)).toBe(true);
     expect(composition.observable.curve.map((point) => point.deliveredTitrantVolume)).toEqual(
-      [0, 0.01, 0.02, 0.025],
+      [0, 0.01, 0.02, 0.0251],
     );
     expect(composition.observable.readouts.activityModel).toBe(
       composition.frame.scientificState.provenance.activityModel,
@@ -156,7 +160,7 @@ describe("production composition vertical path", () => {
     );
     const prefixes = statesAtCommittedTargetPrefixes([...composition.eventLog, unrelated]);
     expect(prefixes.map((prefix) => prefix.deliveredTitrantVolume)).toEqual(
-      [0, 0.01, 0.02, 0.025],
+      [0, 0.01, 0.02, 0.0251],
     );
   });
 
@@ -188,6 +192,11 @@ describe("production composition vertical path", () => {
   it("can explicitly compose the committed world through the native WASM adapter", async () => {
     const composition = await composeProductionTitration({ adapter: nativeAdapter });
 
+    expect(composition.eventLog[0]?.type).toBe("WorldCreated");
+    expect(composition.frame.sourceStateHash).toBe(stateHash(composition.state));
+    expect(composition.frame.sequence).toBe(composition.state.sequence);
+    expect(composition.observable.sourceStateHash).toBe(composition.frame.sourceStateHash);
+    expect(composition.renderState.nodes.some((node) => node.id === "liquid-level")).toBe(true);
     expect(composition.state.solverConfig.version).toBe(
       VERSION_MANIFEST.scientific.acidBase.nativeVersion,
     );
@@ -223,7 +232,7 @@ describe("production composition vertical path", () => {
   });
 
   it("preserves legacy v1 and native v2 solver identity across WorldCreated replay", async () => {
-    const legacy = await composeProductionTitration();
+    const legacy = await composeProductionTitration({ adapter: createAcidBaseAdapter() });
     const native = await composeProductionTitration({ adapter: nativeAdapter });
     const legacyGenesis = legacy.eventLog[0];
     const nativeGenesis = native.eventLog[0];
@@ -271,7 +280,7 @@ describe("production composition vertical path", () => {
 
   it("refuses a replayed world whose persisted solver parameter identity changed", async () => {
     const composition = await composeProductionTitration();
-    const registry = new SolverRegistry([createAcidBaseAdapter()]);
+    const registry = new SolverRegistry([createPhenolphthaleinMultiformAdapter()]);
     const persistedKa = composition.state.solverConfig.parameters.Ka_HOAc;
     if (persistedKa === undefined) {
       throw new Error("the production world must persist Ka_HOAc");

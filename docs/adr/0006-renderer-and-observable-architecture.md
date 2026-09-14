@@ -196,9 +196,10 @@ Engine consumes `IndicatorChemicalObservation` plus frozen optical profile/path,
 dose, volume, solvent, temperature, and source identity. It returns a tagged
 `IndicatorOpticalObservation`. Missing chemical forms, reviewed spectrum data,
 or covered conditions produce a visible refusal without a swatch or endpoint
-RGB fallback. Quantitative admission remains governed by the indicator-optical
-source-review plan and does not turn empirical colour into first-principles
-chemistry.
+RGB fallback. The admitted ordinary-aqueous profile is bounded and
+source-reviewed; reference swatches remain qualitative QA material only.
+Quantitative admission remains governed by the indicator-optical source-review
+plan and does not turn empirical colour into first-principles chemistry.
 
 ### Assets and the visual bar
 

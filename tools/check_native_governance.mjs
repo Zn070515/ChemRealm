@@ -38,9 +38,9 @@ function mustNot(text, pattern, message) {
   if (pattern.test(text)) failures.push(`stale: ${message}`);
 }
 
-must(adr0014, /^\*\*Status:\*\* \*\*Accepted — architecture decision only;/m,
-  "ADR-0014 is accepted as an architecture decision while native supersession remains S2");
-must(adr0014, /native supersession remains candidate\/S2/i,
+must(adr0014, /^\*\*Status:\*\* \*\*Accepted — architecture decision only; native supersession is a local S3 candidate pending hosted\/owner acceptance\*\*/m,
+  "ADR-0014 is accepted as an architecture decision while native supersession remains a candidate");
+must(adr0014, /native supersession is a local S3 candidate pending hosted\/owner acceptance/i,
   "ADR-0014 keeps native supersession separate from architecture acceptance");
 must(adr0001, /TypeScript(?:\/pnpm|[^\n]{0,80}pnpm)[\s\S]{0,500}Python(?:\/uv|[^\n]{0,80}uv)[\s\S]{0,500}Rust\/Cargo/i,
   "ADR-0001 names all three toolchains and their boundary");

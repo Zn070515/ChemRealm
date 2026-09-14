@@ -9,7 +9,10 @@ import {
   type SolveResult,
 } from "@chemrealm/schema";
 
-import { createAcidBaseAdapter } from "./index.js";
+import {
+  createAcidBaseAdapter,
+  createPhenolphthaleinMultiformAdapter,
+} from "./index.js";
 import {
   ACID_BASE_MODEL_ID,
   ACID_BASE_MODEL_VERSION,
@@ -37,6 +40,42 @@ function expectOk(result: SolveResult) {
 }
 
 describe("production acid-base SolverAdapter", () => {
+  it("produces ordinary phenolphthalein chemical forms for an optical solve", async () => {
+    const adapter = createPhenolphthaleinMultiformAdapter();
+    const result = await adapter.solveWithScientificArtifacts(
+      {
+        ...request(
+          [{ soluteId: "HCl", amount: mol(0.1), mode: "fully-dissociated" }],
+          [{
+            indicatorId: "phenolphthalein",
+            kaIn: thermodynamicConstant(3.98e-10),
+            totalAmount: mol(5e-7),
+          }],
+        ),
+      },
+      { sourceStateHash: "sha256:multiform-adapter-test" },
+    );
+
+    expect(result.result.status).toBe("OK");
+    if (result.result.status !== "OK") throw new Error("expected an OK result");
+    expect(result.result.state.provenance.modelId).toBe(
+      "acidbase-phenolphthalein-diprotic-davies",
+    );
+    expect(result.result.state.indicatorObservations).toEqual([
+      expect.objectContaining({
+        status: "CHEMICAL_FORMS_OK",
+        indicatorId: "phenolphthalein",
+        sourceReplayHash: "sha256:multiform-adapter-test",
+        forms: [
+          expect.objectContaining({ formId: "neutral-lactone" }),
+          expect.objectContaining({ formId: "intermediate-monoanion" }),
+          expect.objectContaining({ formId: "quinoid-base" }),
+        ],
+      }),
+    ]);
+    expect(result.expressions.length).toBeGreaterThan(0);
+  });
+
   it.each([0.26, 0.3, 0.4, 0.49])(
     "solves a legal high-concentration HCl request at %s mol/kg",
     async (concentration) => {

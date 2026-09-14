@@ -14,19 +14,23 @@ test.describe("M5 production composition", () => {
     await expect(page.getByTestId("burette-reading")).toHaveText(/mL$/);
     await expect(page.getByTestId("indicator-id")).toHaveText("phenolphthalein");
     await expect(page.getByTestId("indicator-optical-status")).toHaveText(
-      "OPTICAL_MODEL_DATA_MISSING",
+      "OPTICAL_MODEL_OK",
     );
-    await expect(page.getByTestId("indicator-amount")).toHaveText("5e-7 mol");
-    await expect(page.getByTestId("indicator-concentration")).toHaveText("0.00001 mol/L");
+    await expect(page.getByTestId("indicator-amount")).toHaveText("0.000002505 mol");
+    await expect(page.getByTestId("indicator-concentration")).toHaveText("0.00005 mol/L");
     await expect(page.getByTestId("indicator-path-length")).toHaveText("10 mm");
     await expect(page.getByTestId("indicator-profile-id")).toHaveText(
-      "phenolphthalein-qualitative-m5",
+      "phenolphthalein-ordinary-aqueous",
     );
-    await expect(page.getByTestId("indicator-optical-limitation")).toContainText(
-      "v0 acid-base model does not resolve",
+    await expect(page.getByTestId("indicator-profile-hash")).toHaveText(
+      /^sha256:[0-9a-f]{64}$/,
     );
-    await expect(page.getByTestId("indicator-swatch")).toHaveCount(0);
-    await expect(page.getByTestId("indicator-tint")).toHaveCount(0);
+    await expect(page.getByTestId("indicator-tint-strength")).toHaveText(/^0\.[0-9]+$/);
+    expect(Number(await page.getByTestId("indicator-tint-strength").textContent())).toBeGreaterThan(0);
+    await expect(page.getByTestId("indicator-transmittance-samples")).toHaveText("3");
+    await expect(page.getByTestId("indicator-swatch")).toHaveCount(1);
+    await expect(page.getByTestId("indicator-swatch")).toHaveAttribute("data-optical-model", "true");
+    await expect(page.getByTestId("indicator-optical-limitation")).toHaveCount(0);
     await expect(page.getByTestId("symbolic-expression")).toContainText("Scientific Core");
     await expect(page.getByTestId("symbolic-expression")).toContainText("m(H+)");
     expect(await page.getByTestId("curve-point").count()).toBeGreaterThanOrEqual(4);
@@ -59,7 +63,9 @@ test.describe("M5 production composition", () => {
     await page.goto("/?backend=native", { waitUntil: "networkidle" });
 
     await expect(page.getByTestId("composition-status")).toHaveText("Committed world");
+    await expect(page.getByTestId("backend-id")).toHaveText("acidbase-monoprotic-davies");
     await expect(page.getByTestId("backend-version")).toHaveText(/^\d+\.\d+\.\d+$/);
+    await expect(page.getByTestId("world-state-hash")).not.toHaveText("");
     await expect(page.getByTestId("symbolic-expression")).toContainText("Scientific Core");
     await expect(page.getByTestId("ph-readout")).toHaveText(/^pH \d+\.\d{2}$/);
   });

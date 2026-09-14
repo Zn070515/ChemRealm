@@ -1,9 +1,10 @@
 # PLAN-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** **M0–M4 S3 Verified / Accepted; M5 S2 production composition locally verified; native backend supersession S2 implementation in progress** — the original plan was approved
+- **Status:** **M0–M4 S3 Verified / Accepted; M5 and M4-B S3 verified locally; hosted/owner acceptance and M6 authorization remain open** — the original plan was approved
   on 2026-09-11 at `SPEC-0001` revision 6; revisions 13–20 were accepted
-  on 2026-09-13, M5 contract revision 25 and native-backend revision 26 remain
-  candidate amendments for the current M5/native-backend closure.
+  on 2026-09-13. The current optical candidate revision and native-backend
+  candidate are declared only by `contracts/version-manifest.json`; they remain
+  subject to owner review and hosted attestation.
 - **Completed:** `M0 — Repository foundation` reached **S3 — Verified** on
   2026-09-11. Evidence: `docs/evidence/M0.md`, commits `1f3dfee`/`565a2e8`,
   CI run `34595967023` (13/13 gate steps on a clean `ubuntu-latest` checkout).
@@ -14,13 +15,14 @@
   is **S3 — Verified / Accepted** with evidence in `docs/evidence/M1.md`; `M2 —
   Event runtime and replay` is **S3 — Verified / Accepted** at baseline
   `778fadbd` with CI `34677042056` and evidence in `docs/evidence/M2.md`.
-- **M5 composition handoff:** the committed local DOM composition baseline is
-  `cad8461bb5654d489234a968bbcfd9aaa99b315c` with hosted CI
-  `34761601096` — **success**. M5 remains S2; final visual, interaction, and
-  owner acceptance evidence remain open. Contract-level AC-V3/AC-V4 evidence
-  is an M5 responsibility; M6 final assets and visual review are downstream
-  realization evidence and do not gate M5 S3. Native backend work is governed
-  by `docs/superpowers/plans/2026-09-13-m4-native-scientific-backend.md`.
+- **M5 composition handoff:** the current local DOM composition and bounded
+  ordinary-aqueous optical-profile path are verified in `docs/evidence/M5.md`.
+  M5 is a local S3 candidate; final committed-baseline hosted attestation and
+  owner acceptance remain open. Contract-level AC-V3/AC-V4 evidence is an M5
+  responsibility; M6 final assets and visual review are downstream realization
+  evidence and do not gate M5 S3. Native backend work is governed by
+  `docs/superpowers/plans/2026-09-13-m4-native-scientific-backend.md` and
+  `docs/evidence/M4-native.md`.
 - **Coverage check:** `uv run python tools/check_acceptance_coverage.py` — every `AC-*` in
   `SPEC-0001` is required to appear in at least one milestone here. Run it after
   editing either document. This is a mapping/evidence-attachment check only;
@@ -772,13 +774,15 @@ If PHREEQC cannot be installed and driven in CI:
 ## M5 — Observable state
 
 **Target stage:** S3
-**Current stage:** S2 implementation locally verified; replay/profile/frame
-closure and a deterministic DOM composition slice are locally verified, while
-M5 S3 evidence remains open. The governing scopes are
+**Current stage:** S3 verified locally; replay/profile/frame closure, one
+bounded ordinary-aqueous optical profile, and a deterministic DOM composition
+slice are locally verified, while hosted attestation and owner acceptance
+remain open. The governing scopes are
 `docs/superpowers/specs/2026-09-13-m5-contract-remediation.md` and
 `docs/superpowers/specs/2026-09-13-m5-production-composition.md`, subordinate to
-the M5 contract revision declared by `contracts/version-manifest.json` and not
-overrides of `SPEC-0001`; the native-backend amendment is a separate candidate.
+the M5 contract revision declared by `contracts/version-manifest.json` (revision 25)
+and not overrides of `SPEC-0001`; the native-backend amendment is a separate
+candidate.
 **Addresses:** ADR-0006, ADR-0007, ADR-0016; `SPEC-0001` AC-V2..AC-V4, AC-V6, AC-V8, AC-V9, AC-V10, AC-V11, AC-O1..AC-O8
 
 ### M5/M6 acceptance ownership
@@ -919,7 +923,7 @@ volume-profile identity, and the ScientificFrame physical-input block.
 | DOM assertions: the taught quantity may be labelled plainly "pH"; model pH always carries its activity-model label; no view mixes the two | AC-V8 |
 | Inspection copy/DOM assertion never calls model pH true/thermodynamic and names the IUPAC notional convention plus activity model | AC-V10 |
 | Deterministic fixture/DOM assertion visibly qualifies results whose `withinProposedAccuracyEnvelope` is false | AC-V11 |
-| Candidate optical observation authority, refusal statuses, frozen dose/profile/path identity, and v0 strong-acid phenolphthalein boundary are defined and locally exercised | AC-O1..AC-O8 — the optical plan's evidence matrix; production `OPTICAL_MODEL_OK` remains blocked until a quantitative source packet is admitted |
+| Candidate optical observation authority, refusal statuses, frozen dose/profile/path identity, one bounded ordinary-aqueous production profile, and v0 strong-acid phenolphthalein boundary are defined and locally exercised | AC-O1..AC-O8 — the optical plan's evidence matrix; production `OPTICAL_MODEL_OK` is limited to the admitted profile coverage |
 
 ### Stop condition
 

@@ -11,7 +11,7 @@ describe("M5/M6 acceptance ownership", () => {
     const plan = read("docs/plans/PLAN-0001-world-foundation-acid-base-titration.md");
     const contractSpec = read("docs/superpowers/specs/2026-09-13-m5-contract-remediation.md");
 
-    expect(evidence).toMatch(/AC-V3[^\n]*\| PARTIAL/i);
+    expect(evidence).toMatch(/AC-V3[^\n]*\| PASS locally/i);
     expect(evidence).toMatch(/AC-V4[^\n]*\| PASS locally/i);
     expect(evidence).toMatch(/contract-level[\s\S]{0,240}M5 S3\s+does\s+not\s+require M6/i);
     expect(evidence).toMatch(/M6 consumes the downstream visual realization contract/i);

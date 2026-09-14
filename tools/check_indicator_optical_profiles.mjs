@@ -10,6 +10,7 @@ const expectedCandidates = new Set([
   "phenolphthalein-neutral-lactone",
   "phenolphthalein-quinoid-base",
   "phenolphthalein-strong-acid-cation",
+  "phenolphthalein-ordinary-aqueous",
   "methyl-orange-acid",
   "methyl-orange-base",
 ]);
@@ -128,6 +129,11 @@ async function checkQuantitativeEntry(entry, opticsRoot) {
 
   const profile = await readJson(path.join(opticsRoot, entry.profileArtifact));
   const review = await readText(path.join(opticsRoot, entry.reviewRecord));
+  const manifest = await readJson(path.join(root, "contracts", "version-manifest.json"));
+  must(
+    profile.profileVersion === manifest.representation.indicatorOpticalProfile,
+    `${entry.candidateId} profile version must come from the central version manifest`,
+  );
   must(profile.reviewStatus === "quantitative", `${entry.candidateId} profile must be quantitative`);
   must(Array.isArray(profile.formSpectra) && profile.formSpectra.length > 0, `${entry.candidateId} needs form spectra`);
   must(profile.transform === "sRGB-IEC-61966-2-1", `${entry.candidateId} needs the pinned colour transform`);
@@ -142,6 +148,21 @@ async function checkQuantitativeEntry(entry, opticsRoot) {
     !(/lambdaMax/i.test(review) && !/samples|spectrum|spectr/i.test(review)),
     `${entry.candidateId} cannot use lambdaMax as its only evidence`,
   );
+
+  if (entry.candidateId === "phenolphthalein-ordinary-aqueous") {
+    const runtimeProfile = await readJson(path.join(
+      root,
+      "packages",
+      "render",
+      "src",
+      "observable",
+      "phenolphthalein-ordinary-aqueous.profile.json",
+    ));
+    must(
+      canonicalJson(runtimeProfile) === canonicalJson(profile),
+      `${entry.candidateId} runtime profile must equal the reviewed evidence artifact`,
+    );
+  }
 }
 
 export async function checkIndicatorOpticalProfiles(registryRoot = opticsRoot) {
@@ -166,10 +187,10 @@ export async function checkIndicatorOpticalProfiles(registryRoot = opticsRoot) {
     const sourceText = await readText(sourcePath);
     must(sourceText.includes(entry.candidateId), `${entry.candidateId} source packet identity is missing`);
     must(/review status/i.test(sourceText), `${entry.candidateId} source packet has no review status`);
-    must(/quantitative profile:\s*\*\*NOT ADMITTED\*\*/i.test(sourceText), `${entry.candidateId} source packet must state quantitative non-admission`);
     checkSourceFields(entry);
 
     if (entry.reviewStatus === "qualitative-only") {
+      must(/quantitative profile:\s*\*\*NOT ADMITTED\*\*/i.test(sourceText), `${entry.candidateId} source packet must state quantitative non-admission`);
       must(entry.profileArtifact === null, `${entry.candidateId} qualitative entry cannot point to a profile`);
       must(entry.reviewRecord === null, `${entry.candidateId} qualitative entry cannot point to a review`);
       must(typeof entry.admissionReason === "string" && /qualitative|not admitted/i.test(entry.admissionReason), `${entry.candidateId} needs a refusal reason`);
@@ -181,6 +202,7 @@ export async function checkIndicatorOpticalProfiles(registryRoot = opticsRoot) {
         `${entry.candidateId} cannot invent quantitative precision for a qualitative source`,
       );
     } else if (entry.reviewStatus === "quantitative") {
+      must(/quantitative profile:\s*\*\*ADMITTED\*\*/i.test(sourceText), `${entry.candidateId} source packet must state quantitative admission`);
       await checkQuantitativeEntry(entry, registryRoot);
     } else {
       fail(`${entry.candidateId} has unknown review status ${entry.reviewStatus}`);

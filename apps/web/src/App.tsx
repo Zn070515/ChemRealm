@@ -115,6 +115,7 @@ export function App({ schemaVersion }: { schemaVersion: number }): ReactElement 
             <div><dt>World ID</dt><dd data-testid="world-id">{composition.worldId}</dd></div>
             <div><dt>Committed sequence</dt><dd data-testid="world-sequence">{composition.frame.sequence}</dd></div>
             <div><dt>Source replay hash</dt><dd data-testid="world-state-hash">{composition.frame.sourceStateHash}</dd></div>
+            <div><dt>Scientific backend</dt><dd data-testid="backend-id">{composition.frame.scientificState.provenance.modelId}</dd></div>
             <div><dt>Scientific backend version</dt><dd data-testid="backend-version">{composition.frame.scientificState.provenance.modelVersion}</dd></div>
           </dl>
 
@@ -170,18 +171,29 @@ export function App({ schemaVersion }: { schemaVersion: number }): ReactElement 
                   </span>
                 )}
                 {indicator.opticalObservation.status === "OPTICAL_MODEL_OK" ? (
-                  <span
-                    data-testid="indicator-swatch"
-                    aria-label={`${indicator.indicatorId} optical-model tint`}
-                    data-optical-model="true"
-                    data-profile-hash={indicator.opticalObservation.profileHash}
-                    style={{
-                      display: "inline-block",
-                      width: "1.5rem",
-                      height: "1.5rem",
-                      backgroundColor: srgbStyle(indicator.opticalObservation.tintSrgb),
-                    }}
-                  />
+                  <>
+                    <span data-testid="indicator-profile-hash">
+                      {indicator.opticalObservation.profileHash}
+                    </span>
+                    <span data-testid="indicator-tint-strength">
+                      {indicator.opticalObservation.tintStrength}
+                    </span>
+                    <span data-testid="indicator-transmittance-samples">
+                      {indicator.opticalObservation.transmittanceSamples.length}
+                    </span>
+                    <span
+                      data-testid="indicator-swatch"
+                      aria-label={`${indicator.indicatorId} optical-model tint`}
+                      data-optical-model="true"
+                      data-profile-hash={indicator.opticalObservation.profileHash}
+                      style={{
+                        display: "inline-block",
+                        width: "1.5rem",
+                        height: "1.5rem",
+                        backgroundColor: srgbStyle(indicator.opticalObservation.tintSrgb),
+                      }}
+                    />
+                  </>
                 ) : (
                   <p data-testid="indicator-optical-limitation">
                     {indicator.opticalObservation.reason}

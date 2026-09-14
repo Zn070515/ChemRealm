@@ -28,8 +28,8 @@ function mustNot(text, pattern, message) {
   if (pattern.test(text)) failures.push(`forbidden: ${message}`);
 }
 
-must(nativeEvidence, /^\*\*Status:\*\* \*\*S2[\s\S]*native[\s-]+supersession S3 remains open\*\*/m,
-  "native evidence stays at S2 with supersession S3 open");
+must(nativeEvidence, /^\*\*Status:\*\* \*\*S3[\s\S]*verified locally[\s\S]*owner\/hosted supersession acceptance[\s\S]*open\*\*/m,
+  "native evidence records local S3 verification while keeping owner/hosted acceptance open");
 must(nativeEvidence, /Native WASM ↔ PHREEQC oracle comparison/i,
   "native WASM-to-PHREEQC comparison evidence is recorded");
 must(nativeEvidence, /Language-neutral native model contract[^\n]*PASS locally/i,
@@ -38,8 +38,8 @@ must(nativeEvidence, /Native identity artifacts[^\n]*model contract payload `sha
   "native model, solver-config, and WASM identity digests are recorded");
 must(nativeEvidence, /bounded comparison[\s\S]*not a claim that the native model and PHREEQC are equivalent/i,
   "native PHREEQC comparison does not claim model equivalence");
-must(nativeEvidence, /native World → ScientificFrame → Observable → DOM/i,
-  "native browser composition remains pending");
+must(nativeEvidence, /native production composition[\s\S]{0,260}World → ScientificFrame → Observable → DOM/i,
+  "native browser composition evidence is recorded");
 must(nativeEvidence, /explicit v2 native WorldCreated creation and replay/i,
   "native supersession requires explicit v2 world creation and replay before rollout");
 must(nativeEvidence, /native-default rollout policy/i,
@@ -80,7 +80,7 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log("ok    native evidence stays S2 while legacy M4 S3 remains historical");
+console.log("ok    native evidence records local S3 verification while legacy M4 S3 remains historical");
 console.log("ok    native REF and bounded PHREEQC comparison evidence are recorded");
 console.log("ok    native specification and plan contain no premature S3 claim");
 console.log("\nRESULT: PASS");

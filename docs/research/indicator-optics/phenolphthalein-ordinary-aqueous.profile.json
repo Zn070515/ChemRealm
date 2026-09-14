@@ -1,0 +1,86 @@
+{
+  "profileId": "phenolphthalein-ordinary-aqueous",
+  "profileVersion": "1.0.0",
+  "profileHash": "sha256:5f9682e38f9b6608bf3c6dc6d58afa8c7b9becd83b7bd137a8b4833dc10d9975",
+  "indicatorId": "phenolphthalein",
+  "representation": "spectral-molar-absorptivity",
+  "formSpectra": [
+    {
+      "formId": "neutral-lactone",
+      "spectrumId": "phenolphthalein-neutral-lactone-visible-derived-v1",
+      "epsilonUnit": "L mol^-1 cm^-1",
+      "samples": [
+        { "wavelengthNanometres": 500, "epsilon": 0 },
+        { "wavelengthNanometres": 510, "epsilon": 0 },
+        { "wavelengthNanometres": 520, "epsilon": 0 }
+      ]
+    },
+    {
+      "formId": "intermediate-monoanion",
+      "spectrumId": "phenolphthalein-intermediate-monoanion-visible-derived-v1",
+      "epsilonUnit": "L mol^-1 cm^-1",
+      "samples": [
+        { "wavelengthNanometres": 500, "epsilon": 0 },
+        { "wavelengthNanometres": 510, "epsilon": 0 },
+        { "wavelengthNanometres": 520, "epsilon": 0 }
+      ]
+    },
+    {
+      "formId": "quinoid-base",
+      "spectrumId": "phenolphthalein-quinoid-base-visible-derived-v1",
+      "epsilonUnit": "L mol^-1 cm^-1",
+      "samples": [
+        { "wavelengthNanometres": 500, "epsilon": 4000 },
+        { "wavelengthNanometres": 510, "epsilon": 5500 },
+        { "wavelengthNanometres": 520, "epsilon": 8500 }
+      ]
+    }
+  ],
+  "conditions": {
+    "solvent": "water",
+    "temperature": {
+      "min": { "value": 293.15, "unit": "K" },
+      "max": { "value": 298.15, "unit": "K" }
+    },
+    "concentration": {
+      "min": { "value": 0.000049, "unit": "mol/L" },
+      "max": { "value": 0.000051, "unit": "mol/L" }
+    },
+    "pathLength": {
+      "min": { "value": 10, "unit": "mm" },
+      "max": { "value": 10, "unit": "mm" }
+    },
+    "ionicStrengthMolal": {
+      "min": { "value": 0, "unit": "mol/kg" },
+      "max": { "value": 0.12, "unit": "mol/kg" }
+    },
+    "ph": { "min": 9.5, "max": 10.5 }
+  },
+  "illuminant": "D65",
+  "observer": "CIE-1931-2deg",
+  "transform": "sRGB-IEC-61966-2-1",
+  "provenance": {
+    "source": "Alim et al. Figure 1 visible-spectrum shape with an independent UCRL-965470 epsilon-552 nm anchor",
+    "reference": "docs/research/indicator-optics/phenolphthalein-ordinary-aqueous.source.md",
+    "category": "pedagogicalApproximation",
+    "uncertainty": "Derived visible-grid values are approximately 20% relative; the ordinary 20–25 °C transfer and transparent non-quinoid forms are bounded approximations, not universal chemistry data."
+  },
+  "source": {
+    "citation": "Alim et al., Molecules 28 (2023) 1147, Figure 1; UCRL-965470, epsilon at 552 nm anchor",
+    "sourceUrl": "https://www.mdpi.com/1420-3049/28/3/1147",
+    "accessedOn": "2026-09-14",
+    "licenseOrPermission": "open",
+    "extractionMethod": "digitized",
+    "rawDataLocation": "Figure 1 grey 0 microlitre beta-cyclodextrin trace; derived samples are recorded directly in this profile",
+    "reportedPrecision": "Graphical source; samples are not source-tabulated. Approximately 20% relative digitisation/transfer uncertainty is retained. The epsilon-552 nm scale is anchored independently at 2.935e4 L mol^-1 cm^-1.",
+    "digitisationUncertainty": "approximately 20% relative for the derived 500/510/520 nm shape",
+    "conditions": {
+      "solvent": "aqueous solution",
+      "temperature": "20.00 ± 0.01 °C source measurement; 20–25 °C production transfer is bounded and labelled approximate",
+      "concentration": "5e-5 mol/L phenolphthalein source solution",
+      "pathLength": "1 cm quartz cell",
+      "acidityOrIonicStrength": "ordinary coloured form around pH 10; no strong-acid cation data admitted"
+    }
+  },
+  "reviewStatus": "quantitative"
+}

@@ -33,7 +33,7 @@ export const VERSION_MANIFEST = deepFreeze({
     "nativeBridge": 1
   },
   "spec": {
-    "currentRevision": 28,
+    "currentRevision": 29,
     "acceptedThroughRevision": 20,
     "m5ContractRevision": 25
   },

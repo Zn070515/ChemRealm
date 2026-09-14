@@ -45,7 +45,7 @@ describe("indicator optical source-review boundary", () => {
     const registry = await readJson("profile-registry.json");
     expect(registry.registryId).toBe("chemrealm-indicator-optical-profiles");
     expect(registry.policy).toBe("refusal-first");
-    expect(registry.entries).toHaveLength(5);
+    expect(registry.entries).toHaveLength(6);
 
     for (const entry of registry.entries) {
       expect(entry.profileId).toMatch(/^[a-z0-9-]+$/);
@@ -140,41 +140,18 @@ describe("indicator optical source-review boundary", () => {
 
     await withRegistryCopy(async (copiedRoot) => {
       const registry = await readCopiedRegistry(copiedRoot);
-      const entry = registry.entries[0];
-      entry.reviewStatus = "quantitative";
-      entry.profileArtifact = "synthetic.profile.json";
-      entry.reviewRecord = "synthetic.review.md";
-      entry.source.licenseOrPermission = "open";
-      entry.source.extractionMethod = "machine-readable";
-      const profile = {
-        profileId: entry.profileId,
-        profileVersion: "1.0.0",
-        indicatorId: entry.indicatorId,
-        representation: "spectral-molar-absorptivity",
-        formSpectra: [{
-          formId: entry.formId,
-          spectrumId: "synthetic-spectrum",
-          samples: [
-            { wavelengthNanometres: 500, epsilon: 10 },
-            { wavelengthNanometres: 510, epsilon: 20 },
-          ],
-        }],
-        transform: "sRGB-IEC-61966-2-1",
-        source: { licenseOrPermission: "open", extractionMethod: "machine-readable" },
-        reviewStatus: "quantitative",
-        profileHash: `sha256:${"0".repeat(64)}`,
-      };
+      const entry = registry.entries.find(
+        (candidate) => candidate.reviewStatus === "quantitative",
+      );
+      expect(entry).toBeDefined();
+      const profilePath = path.join(copiedRoot, entry.profileArtifact);
+      const profile = JSON.parse(await readFile(profilePath, "utf8"));
+      profile.formSpectra[0].samples[0].epsilon += 1;
       await writeFile(
-        path.join(copiedRoot, entry.profileArtifact),
+        profilePath,
         `${JSON.stringify(profile, null, 2)}\n`,
         "utf8",
       );
-      await writeFile(
-        path.join(copiedRoot, entry.reviewRecord),
-        "decision: quantitative\nprofile hash: sha256:0000000000000000000000000000000000000000000000000000000000000000\n",
-        "utf8",
-      );
-      await writeCopiedRegistry(copiedRoot, registry);
     }, /profile hash does not match payload/);
   });
 });

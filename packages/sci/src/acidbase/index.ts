@@ -4,6 +4,7 @@ import {
   mol,
   molPerKilogram,
   ph,
+  reducedMolality,
   reducedIonicStrength,
   type Activity,
   type ActivityCoefficient,
@@ -32,13 +33,27 @@ import {
   ACID_BASE_MAX_TOTAL_SOLUTE_MOLALITY,
   ACID_BASE_MIN_TOTAL_SOLUTE_MOLALITY,
   acidBaseConstantsFromSolverConfig,
+  DEFAULT_ACID_BASE_CONSTANTS,
   type AcidBaseConstants,
   buildAcidBaseModelDescriptor,
   buildAcidBaseSolverConfig,
 } from "./model.js";
-import { solveReduced, type ReducedSolveSuccess } from "./solve.js";
+import {
+  solveReduced,
+  type ReducedDiproticIndicatorInput,
+  type ReducedSolveSuccess,
+} from "./solve.js";
 import type { ReducedSpeciesMolalities } from "./species.js";
 import { daviesActivities } from "./activity.js";
+import {
+  buildPhenolphthaleinMultiformModelDescriptor,
+  buildPhenolphthaleinMultiformObservation,
+  buildPhenolphthaleinMultiformSolverConfig,
+  DEFAULT_PHENOLPHTHALEIN_MULTIFORM_CONSTANTS,
+  PHENOLPHTHALEIN_MULTIFORM_MODEL_ID,
+  PHENOLPHTHALEIN_MULTIFORM_MODEL_VERSION,
+  refuseMissingPhenolphthaleinFormData,
+} from "./multiform.js";
 export {
   ACID_BASE_COMPONENT_CATALOG,
   type AcidBaseComponentCatalogEntry,
@@ -212,6 +227,25 @@ function buildScientificState(
       ),
     })),
     indicatorObservations: request.indicators.flatMap((indicator) => {
+      if (model.id === PHENOLPHTHALEIN_MULTIFORM_MODEL_ID) {
+        if (
+          indicator.indicatorId === "phenolphthalein" &&
+          indicator.totalAmount !== undefined &&
+          solved.indicatorForms !== undefined
+        ) {
+          return [buildPhenolphthaleinMultiformObservation(
+            indicator.totalAmount,
+            solved.indicatorForms,
+            sourceReplayHash,
+          )];
+        }
+        if (indicator.indicatorId === "phenolphthalein") {
+          return [refuseMissingPhenolphthaleinFormData(
+            indicator.totalAmount,
+            sourceReplayHash,
+          )];
+        }
+      }
       const observation = chemicalFormObservation(
         indicator,
         model.id,
@@ -250,7 +284,10 @@ function solveRequest(
   if (reason !== undefined) return outOfDomain(model, reason);
 
   let totals: AcidBaseComponentTotals;
-  const constants = acidBaseConstantsFromSolverConfig(solverConfig);
+  const isMultiform = model.id === PHENOLPHTHALEIN_MULTIFORM_MODEL_ID;
+  const constants = isMultiform
+    ? DEFAULT_ACID_BASE_CONSTANTS
+    : acidBaseConstantsFromSolverConfig(solverConfig);
   try {
     totals = aggregateComponents(request, constants);
   } catch (error) {
@@ -260,9 +297,20 @@ function solveRequest(
     throw error;
   }
 
+  const indicator = isMultiform
+    ? request.indicators.find((candidate) => candidate.indicatorId === "phenolphthalein")
+    : undefined;
   const reducedResult = solveReduced({
     totals,
     constants,
+    ...(indicator?.totalAmount === undefined
+      ? {}
+      : {
+          indicator: {
+            totalMolality: reducedMolality(indicator.totalAmount / request.waterMass),
+            constants: DEFAULT_PHENOLPHTHALEIN_MULTIFORM_CONSTANTS,
+          } satisfies ReducedDiproticIndicatorInput,
+        }),
   });
   if ("kind" in reducedResult) {
     if (reducedResult.kind === "OUT_OF_DOMAIN") {
@@ -299,6 +347,49 @@ export function createAcidBaseAdapter(): ScientificExecutionAdapter {
   return freezeSolverAdapter({
     id: ACID_BASE_MODEL_ID,
     version: ACID_BASE_MODEL_VERSION,
+    model,
+    solverConfig,
+    solve: async (request) =>
+      solveRequest(request, model, solverConfig, UNBOUND_SOURCE_REPLAY_HASH),
+    solveWithScientificArtifacts: async (request, context) => {
+      const result = solveRequest(
+        request,
+        model,
+        solverConfig,
+        context.sourceStateHash,
+      );
+      if (result.status !== "OK") {
+        return {
+          result,
+          expressions: [],
+          sourceStateHash: context.sourceStateHash,
+        };
+      }
+      return {
+        result,
+        expressions: createScientificExpressionsFromState(
+          result.state,
+          context.sourceStateHash,
+        ),
+        sourceStateHash: context.sourceStateHash,
+      };
+    },
+  });
+}
+
+/**
+ * Create the ordinary-aqueous three-form phenolphthalein adapter.
+ *
+ * This adapter is deliberately a separate model identity from the accepted
+ * legacy monoprotic adapter. It is the only production path that may emit
+ * quantitative phenolphthalein form fractions for the optical boundary.
+ */
+export function createPhenolphthaleinMultiformAdapter(): ScientificExecutionAdapter {
+  const model = buildPhenolphthaleinMultiformModelDescriptor();
+  const solverConfig = buildPhenolphthaleinMultiformSolverConfig();
+  return freezeSolverAdapter({
+    id: PHENOLPHTHALEIN_MULTIFORM_MODEL_ID,
+    version: PHENOLPHTHALEIN_MULTIFORM_MODEL_VERSION,
     model,
     solverConfig,
     solve: async (request) =>

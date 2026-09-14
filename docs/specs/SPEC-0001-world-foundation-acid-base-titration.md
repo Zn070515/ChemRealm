@@ -3,15 +3,17 @@
 - **Status:** **Accepted through revision 20** — M4 S3 owner acceptance recorded
   on 2026-09-13 against the committed implementation baseline and CI attestation.
 - **Accepted baseline:** commit `8310c685`, `SPEC-0001` revision 6
-- **Current revision:** **28 Candidate** — indicator optical observation
-  authority and the candidate multi-form indicator scientific boundary.
-  Revisions 21–27 remain candidate amendments pending owner review; revision
-  28 is owner-accepted only for the ordinary-aqueous three-form scope and
-  retains the strong-acid cation/orange case as refusal-only. Revision 27 adds the
-  data-backed optical statuses, frozen optical inputs, and v0
-  strong-acid-phenolphthalein boundary; revision 28 adds the candidate
-  ordinary-aqueous multi-form model and explicit strong-acid refusal boundary
-  recorded in the amendment table below.
+- **Current revision:** **29 Candidate** — indicator optical observation
+  admission and native M4-B/M5 closure evidence. Revisions 21–27 remain
+  candidate amendments pending owner review; revision 28 is owner-accepted only
+  for the ordinary-aqueous three-form scope and retains the strong-acid
+  cation/orange case as refusal-only. Revision 29 records the bounded,
+  source-reviewed ordinary-aqueous phenolphthalein profile admission, the
+  production `OPTICAL_MODEL_OK` path, and the rule that visual swatches remain
+  qualitative QA material rather than tint authority. Revision 27 adds the
+  data-backed optical statuses and frozen optical inputs; revision 28 adds the
+  ordinary-aqueous multi-form model and explicit strong-acid refusal boundary;
+  both remain governed by the candidate/accepted status recorded below.
   Revisions 7–20 are accepted amendments; revisions 13–20 were accepted by
   the owner on 2026-09-13.
   See "Amendments since acceptance" below.
@@ -57,6 +59,7 @@
 | 26 | 2026-09-13 | Native Scientific Core/WASM backend supersession candidate: Rust becomes the next production implementation for new worlds after a dedicated differential/oracle gate; the exact TypeScript 1.0.0 adapter remains the legacy replay/reference backend; no silent cross-version fallback is allowed; Scientific Core expressions must include the ionic-strength fixed point, Davies activity relation, and `activity = γ · m̂` alongside existing equations; and the M4 scientific matrix plus M5 production composition must be rerun against the native backend before supersession. | Candidate — owner review pending |
 | 27 | 2026-09-14 | Indicator optical observation authority: the future data-backed optical boundary is refusal-first with `OPTICAL_MODEL_OK`, `OPTICAL_MODEL_OUT_OF_COVERAGE`, and `OPTICAL_MODEL_DATA_MISSING`; endpoint-RGB fallback is prohibited; genesis freezes indicator dose, optical profile, and optical path identity; chemical-form coverage remains distinct from optical coverage; and the v0 monoprotic model cannot emit strong-acid phenolphthalein orange. AC-O1–AC-O8 define the candidate optical contract. | Candidate — owner review pending |
 | 28 | 2026-09-14 | Candidate multi-form indicator scientific boundary: the initial ordinary-aqueous phenolphthalein model names `H₂In`, `HIn⁻`, and `In²⁻` with distinct `Ka_In_1`/`Ka_In_2`, coupled charge and ionic-strength treatment, complete fraction/balance evidence, and explicit refusal for the strong-acid cation and strong-base-altered forms. No numerical constants, solver implementation, or optical profile are admitted by this amendment; implementation still requires separate source-backed constants and independent reference evidence. | Owner accepted 2026-09-14 for ordinary-aqueous scope; strong-acid cation/orange remains refusal-only |
+| 29 | 2026-09-14 | M4-B/M5 closure candidate: the native v2 backend has criterion-specific World → WASM → ScientificFrame → Observable evidence; one source-reviewed ordinary-aqueous phenolphthalein profile is admitted only within its explicit quantitative conditions and content hash; production tint is produced by chemical forms + concentration + path + Beer–Lambert + D65/CIE/sRGB; visual swatches are qualitative QA only; and strong-acid phenolphthalein orange remains documented and refusal-only. | Candidate — owner review pending |
 
 A revision bump is recorded here rather than only in the body because the header
 is what a reader checks before deciding whether the file they are reading is the
@@ -1840,13 +1843,16 @@ Binary and verifiable. Every criterion maps to an evidence method.
 
 ### Optical observation
 
-The optical observation amendment is a candidate contract only. It does not
-claim that a quantitative spectrum, optical profile, or `OPTICAL_MODEL_OK`
-production fixture has been implemented. Optical output uses no endpoint-RGB
-fallback: missing data is refused, and the genesis snapshot freezes indicator
-dose, optical profile, and optical path identity. The v0 monoprotic model
-cannot emit strong-acid phenolphthalein orange; that case requires a separate
-chemical-form model and covered optical profile.
+The optical observation contract is refusal-first and source-bounded. One
+ordinary-aqueous phenolphthalein profile is admitted by the current candidate
+revision for its declared concentration, temperature, path, ionic-strength,
+and acidity envelope. Optical output uses no endpoint-RGB fallback: missing or
+out-of-coverage data is refused, and the genesis snapshot freezes indicator
+dose, optical profile, and optical path identity. The visual reference swatches
+remain qualitative QA/sanity material; they are not production tint authority.
+The v0 model cannot emit strong-acid phenolphthalein orange; that case requires
+a separate chemical-form model and covered optical profile and remains
+documented/refusal-only.
 
 | ID | Criterion | Evidence |
 |---|---|---|
@@ -1863,7 +1869,9 @@ chemical-form model and covered optical profile.
 
 Revision 28 is a candidate scientific extension, not an alteration of the
 accepted M4 v0 solver. The ordinary-aqueous scope was accepted by the owner on
-2026-09-14; implementation and evidence remain pending. The detailed contract is in
+2026-09-14; implementation and local evidence are recorded separately, while
+the amendment remains pending formal acceptance as part of the current
+candidate set. The detailed contract is in
 [`2026-09-14-indicator-multiform-scientific-model.md`](../superpowers/specs/2026-09-14-indicator-multiform-scientific-model.md)
 and its independent reference matrix. Until the owner accepts that contract
 and its evidence plan:
@@ -1874,8 +1882,9 @@ and its evidence plan:
   cases, so the system cannot manufacture an orange result from a generic
   acidic pH;
 - no existing monoprotic `Ka_in` may be reused as `Ka_In_1` or `Ka_In_2`;
-- no implementation may emit `CHEMICAL_FORMS_OK` for this candidate, and no
-  optical profile may be promoted from the Task 8 qualitative-only registry;
+- only the explicitly bounded ordinary-aqueous model may emit
+  `CHEMICAL_FORMS_OK`; the strong-acid cation and strong-base-altered cases
+  remain unavailable, and no qualitative-only profile may be promoted;
 - existing worlds retain their accepted solver identity and are not silently
   migrated to this candidate.
 

@@ -92,6 +92,34 @@
       }
     },
     {
+      "candidateId": "phenolphthalein-ordinary-aqueous",
+      "profileId": "phenolphthalein-ordinary-aqueous",
+      "indicatorId": "phenolphthalein",
+      "formId": "all-ordinary-forms",
+      "sourceRecord": "phenolphthalein-ordinary-aqueous.source.md",
+      "reviewStatus": "quantitative",
+      "profileArtifact": "phenolphthalein-ordinary-aqueous.profile.json",
+      "reviewRecord": "phenolphthalein-ordinary-aqueous.review.md",
+      "admissionReason": "ordinary-aqueous quantitative profile admitted for the explicitly bounded pedagogical optical path; strong-acid cation/orange remains refusal-only.",
+      "source": {
+        "citation": "Alim et al., The Effect of Alkali Iodide Salts in the Inclusion Process of Phenolphthalein in beta-Cyclodextrin: A Spectroscopic and Theoretical Study (2023), Molecules 28, 1147, Figure 1; with an independent epsilon-552 nm anchor from UCRL-965470.",
+        "sourceUrl": "https://www.mdpi.com/1420-3049/28/3/1147",
+        "accessedOn": "2026-09-14",
+        "licenseOrPermission": "open",
+        "extractionMethod": "digitized",
+        "rawDataLocation": "phenolphthalein-ordinary-aqueous.profile.json; Figure 1 grey 0 microlitre beta-cyclodextrin trace digitized at the checked-in 500/510/520 nm grid",
+        "reportedPrecision": "published spectrum is graphical; derived grid samples carry an explicit approximately 20% digitisation/transfer uncertainty; epsilon at 552 nm uses the independent 2.935e4 L mol^-1 cm^-1 anchor",
+        "digitisationUncertainty": "approximately 20% relative for the derived visible-grid shape; not a claim of source tabular precision",
+        "conditions": {
+          "solvent": "aqueous solution; ordinary non-strong-acid use only",
+          "temperature": "source spectrum measured at 20.00 ± 0.01 °C; production coverage is explicitly bounded to 20–25 °C as a pedagogical transfer approximation",
+          "concentration": "source phenolphthalein concentration 5e-5 mol/L; production coverage is pinned to approximately 5e-5 mol/L",
+          "pathLength": "1 cm quartz cell",
+          "acidityOrIonicStrength": "ordinary coloured-form region around pH 10; strong-acid cation regime is not covered"
+        }
+      }
+    },
+    {
       "candidateId": "methyl-orange-acid",
       "profileId": "methyl-orange-acid",
       "indicatorId": "methyl-orange",

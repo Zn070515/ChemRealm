@@ -8,7 +8,7 @@ import {
   buildPhenolphthaleinMultiformRequest,
   SolverRegistry,
   buildAcidBaseSolveRequest,
-  createAcidBaseAdapter,
+  createPhenolphthaleinMultiformAdapter,
   createNativeJsonAdapter,
   loadNativeWasmExecutor,
   projectScientificFrame,
@@ -41,7 +41,7 @@ import { productionTitrationScenario } from "./production-scenario.js";
 
 const TARGET_VESSEL_ID = "titration-flask";
 const SOURCE_VESSEL_ID = "titrant-burette";
-const DELIVERY_VOLUMES = [0.01, 0.01, 0.005] as const;
+const DELIVERY_VOLUMES = [0.01, 0.01, 0.0051] as const;
 
 export interface ProductionTitrationComposition {
   readonly worldId: string;
@@ -55,7 +55,7 @@ export interface ProductionTitrationComposition {
 export interface ProductionTitrationOptions {
   readonly scenario?: Scenario;
   readonly worldId?: string;
-  /** Explicit backend injection for native/browser validation; default is legacy TS. */
+  /** Explicit backend injection for native/browser validation; default is multiform TypeScript. */
   readonly adapter?: ScientificExecutionAdapter;
 }
 
@@ -259,7 +259,7 @@ function buretteInput(
 export async function composeProductionTitration(
   options: ProductionTitrationOptions = {},
 ): Promise<ProductionTitrationComposition> {
-  const adapter = options.adapter ?? createAcidBaseAdapter();
+  const adapter = options.adapter ?? createPhenolphthaleinMultiformAdapter();
   const registry = new SolverRegistry([adapter]);
   const scenario = options.scenario ?? productionTitrationScenario;
   const worldId = options.worldId ?? (

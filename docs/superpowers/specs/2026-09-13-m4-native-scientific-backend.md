@@ -1,7 +1,7 @@
 # M4 Native Scientific Backend Supersession Specification
 
-**Status:** S1 specified; owner-approved design direction, 2026-09-13  
-**Authority:** `SPEC-0001` revision 26 Candidate and ADR-0014  
+**Status:** S3 verified locally; hosted attestation and owner acceptance remain open
+**Authority:** the current candidate revision declared by `contracts/version-manifest.json` and ADR-0014
 **Scope:** Scientific Reality Core, `@chemrealm/sci`, browser WASM bridge, M4 evidence
 
 ## Context

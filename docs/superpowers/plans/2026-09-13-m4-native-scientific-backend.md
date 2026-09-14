@@ -1,17 +1,18 @@
 # M4 Native Scientific Backend Supersession Plan
 
-> **Status:** S2 implementation in progress; the Rust host core, raw WASM bridge,
-> schema-validated TypeScript facade, expression contract, and local toolchain
-> gates are implemented and verified. M4 S3 remains accepted for the TypeScript
-> 1.0.0 baseline. M5 remains S2 and M6 is not authorized. Native supersession,
-> full REF/ORACLE validation, default identity rollout, and final native M5
-> acceptance remain pending. An explicit opt-in native composition/browser
-> path is implemented and locally exercised; this plan does not promote either
-> stage.
+> **Status:** Native M4-B and the M5 native composition path are verified
+> locally as S3 candidates; hosted attestation, owner review, and the final M6
+> authorization decision remain open. The Rust host core, WASM bridge,
+> schema-validated facade, expression contract, REF/ORACLE validation, and
+> explicit native composition/browser path are implemented and locally
+> exercised. This plan does not silently make native the default or claim M6
+> S3.
 
 **Spec:** `docs/superpowers/specs/2026-09-13-m4-native-scientific-backend.md`  
 **ADR:** `docs/adr/0014-native-scientific-core-and-wasm-deployment.md`  
-**Canonical contract:** `docs/specs/SPEC-0001-world-foundation-acid-base-titration.md` revision 26 Candidate
+**Canonical contract:** the current candidate revision declared by
+`contracts/version-manifest.json`; the native backend amendment remains
+subordinate to the canonical SPEC.
 
 ## Problem and scope
 

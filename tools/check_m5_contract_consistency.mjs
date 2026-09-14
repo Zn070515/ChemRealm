@@ -157,7 +157,7 @@ mustNot(expressionSource, /solve charge balance and component balances self-cons
 
 must(evidence, /M5-FRAME[^\n]*\| PASS locally/i, "M5 frame evidence records the production composition boundary");
 must(evidence, /M5-OPTICAL-REFUSAL[^\n]*\| PASS locally/i, "M5 records local refusal-first optical evidence");
-must(evidence, /AC-V3[^\n]*\| PARTIAL/i, "AC-V3 is not overstated before quantitative optical admission");
+must(evidence, /AC-V3[^\n]*\| PASS locally/i, "AC-V3 records the admitted optical pipeline and declared QA palette boundary");
 must(evidence, /AC-V4[^\n]*\| PASS locally/i, "AC-V4 contract-level evidence is complete for M5");
 must(evidence, /contract-level[\s\S]{0,240}M5 S3\s+does\s+not\s+require M6/i, "M5 contract acceptance does not wait for M6 realization");
 must(evidence, /M6 consumes[\s\S]{0,180}visual[\s\S]{0,180}does not retroactively gate M5 S3/i, "M6 owns downstream visual realization");

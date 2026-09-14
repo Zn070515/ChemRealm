@@ -1,14 +1,15 @@
 # Indicator Optical Observation Design
 
-> **Status:** Candidate boundary implemented through refusal-first S2; no
-> quantitative production profile or `OPTICAL_MODEL_OK` acceptance claim
+> **Status:** Candidate boundary implemented through refusal-first and one
+> bounded ordinary-aqueous quantitative profile; local production evidence
+> includes `OPTICAL_MODEL_OK`, while M5 S3/owner acceptance remains open
 > 
 > **Scope:** A data-backed replacement for endpoint-RGB indicator presentation.
 > 
-> **Authority:** This design is subordinate to `GOAL.md`, `SPEC-0001`,
-> `ADR-0003`, `ADR-0006`, and `docs/visual/apparatus-standard.md`. Its future
-> implementation requires a canonical `SPEC-0001` candidate amendment before
-> it can change any accepted AC-* criterion.
+> **Authority:** This design is subordinate to `GOAL.md`, the current candidate
+> revision of `SPEC-0001`, `ADR-0003`, `ADR-0006`, `ADR-0016`, and
+> `docs/visual/apparatus-standard.md`. It does not override an accepted AC-*;
+> any change to a canonical criterion requires a new SPEC revision.
 
 ## Context
 

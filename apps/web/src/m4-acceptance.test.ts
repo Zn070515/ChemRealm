@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import {
   COMMAND_SCHEMA_VERSION,
@@ -11,6 +11,7 @@ import {
   kilogram,
   litre,
   mol,
+  VERSION_MANIFEST,
   type ModelDescriptor,
   type SolveRequest,
 } from "@chemrealm/schema";
@@ -21,6 +22,9 @@ import {
   ACID_BASE_MODEL_VERSION,
   SolverRegistry,
   createAcidBaseAdapter,
+  createNativeJsonAdapter,
+  loadNativeWasmExecutor,
+  type NativeExpressionSolverAdapter,
 } from "@chemrealm/sci";
 import {
   createWorldFromScenario,
@@ -307,6 +311,19 @@ function relativeError(actual: number, expected: number): number {
 }
 
 describe("M4 world/science acceptance evidence", () => {
+  let nativeAdapter: NativeExpressionSolverAdapter;
+
+  beforeAll(async () => {
+    const bytes = readFileSync(
+      new URL("../../../packages/sci/dist/wasm/chemrealm_sci_core.wasm", import.meta.url),
+    );
+    const arrayBuffer = bytes.buffer.slice(
+      bytes.byteOffset,
+      bytes.byteOffset + bytes.byteLength,
+    ) as ArrayBuffer;
+    nativeAdapter = createNativeJsonAdapter(await loadNativeWasmExecutor(arrayBuffer));
+  });
+
   it("uses the complete v0 family and equivalent-factor contract", () => {
     expect(v0Inputs.equivalentFactors).toEqual([0, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2]);
     expect(v0Inputs.families.map((family) => family.familyId).sort()).toEqual([
@@ -398,6 +415,53 @@ describe("M4 world/science acceptance evidence", () => {
       expect(measurements.filter((measurement) => measurement.familyId === family.familyId))
         .toHaveLength(v0Inputs.equivalentFactors.length);
     }
+    const maximumMeasurement = measurements.reduce((maximum, measurement) =>
+      measurement.ionicStrengthMolal > maximum.ionicStrengthMolal ? measurement : maximum,
+    );
+    expect(maximumMeasurement.ionicStrengthMolal)
+      .toBeLessThanOrEqual(v0Inputs.proposedEnvelopeIonicStrengthMolal);
+    expect(Math.abs(
+      maximumMeasurement.ionicStrengthMolal - v0EnvelopeReference.expectedMaximum.ionicStrengthMolal,
+    )).toBeLessThanOrEqual(v0EnvelopeReference.expectedMaximum.absoluteTolerance);
+    expect(maximumMeasurement.familyId).toBe(v0EnvelopeReference.expectedMaximum.familyId);
+    expect(maximumMeasurement.factor).toBe(v0EnvelopeReference.expectedMaximum.equivalentFactor);
+  });
+
+  it("checks the complete v0 scenario-to-world-to-native-WASM sweep", async () => {
+    const nativeRegistry = new SolverRegistry([nativeAdapter]);
+    const measurements: Array<{
+      readonly familyId: string;
+      readonly factor: number;
+      readonly ionicStrengthMolal: number;
+    }> = [];
+    for (const family of v0Inputs.families) {
+      for (const factor of v0Inputs.equivalentFactors) {
+        const created = createWorldFromScenario(nativeRegistry, {
+          worldId: `m4-native-envelope-world-${family.familyId}-${factor}`,
+          scenario: scenarioForEnvelopePoint(family, factor),
+          seed: null,
+          solverSelection: {
+            id: VERSION_MANIFEST.scientific.acidBase.id,
+            version: VERSION_MANIFEST.scientific.acidBase.nativeVersion,
+          },
+        });
+        expect(created.accepted).toBe(true);
+        if (!created.accepted) throw new Error(created.reason);
+        expect(created.state.solverConfig.version).toBe(
+          VERSION_MANIFEST.scientific.acidBase.nativeVersion,
+        );
+        const result = await nativeAdapter.solve(requestFromEnvelopeWorld(created.state, family));
+        expect(result.status).toBe("OK");
+        if (result.status !== "OK") throw new Error(result.status);
+        measurements.push({
+          familyId: family.familyId,
+          factor,
+          ionicStrengthMolal: result.state.ionicStrengthMolal.value,
+        });
+        expect(result.state.validity.withinProposedAccuracyEnvelope).toBe(true);
+      }
+    }
+    expect(measurements).toHaveLength(v0Inputs.families.length * v0Inputs.equivalentFactors.length);
     const maximumMeasurement = measurements.reduce((maximum, measurement) =>
       measurement.ionicStrengthMolal > maximum.ionicStrengthMolal ? measurement : maximum,
     );

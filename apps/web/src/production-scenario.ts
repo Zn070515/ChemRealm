@@ -1,10 +1,10 @@
 import {
   opticalPathHash,
-  opticalProfileHash,
   SCENARIO_SCHEMA_VERSION,
   VERSION_MANIFEST,
   type Scenario,
 } from "@chemrealm/schema";
+import { ORDINARY_PHENOLPHTHALEIN_OPTICAL_PROFILE } from "@chemrealm/render";
 
 const hclConcentrationProvenance = {
   source: "VWR Tightrant hydrochloric acid 0.100 N product record",
@@ -86,58 +86,7 @@ function profile(profileId: string, maxVolume: number, maxHeight: number) {
   };
 }
 
-const indicatorOpticalProfilePayload = {
-  profileId: "phenolphthalein-qualitative-m5",
-  profileVersion: VERSION_MANIFEST.representation.indicatorOpticalProfile,
-  indicatorId: "phenolphthalein",
-  representation: "spectral-molar-absorptivity" as const,
-  formSpectra: [],
-  conditions: {
-    solvent: "water",
-    temperature: {
-      min: { value: 298.15, unit: "K" as const },
-      max: { value: 298.15, unit: "K" as const },
-    },
-    concentration: {
-      min: { value: 0, unit: "mol/L" as const },
-      max: { value: 1e-3, unit: "mol/L" as const },
-    },
-    pathLength: {
-      min: { value: 1, unit: "mm" as const },
-      max: { value: 10, unit: "mm" as const },
-    },
-    ionicStrengthMolal: {
-      min: { value: 0, unit: "mol/kg" as const },
-      max: { value: 0.5, unit: "mol/kg" as const },
-    },
-  },
-  illuminant: "D65" as const,
-  observer: "CIE-1931-2deg" as const,
-  transform: "qualitative-reference" as const,
-  provenance: indicatorProvenance,
-  source: {
-    citation: "ChemRealm M5 qualitative phenolphthalein optical fixture",
-    sourceUrl: "https://example.com/chemrealm/phenolphthalein-optical-profile",
-    accessedOn: "2026-09-14",
-    licenseOrPermission: "permission-recorded" as const,
-    extractionMethod: "digitized" as const,
-    rawDataLocation: "fixtures/phenolphthalein-qualitative",
-    reportedPrecision: "qualitative only",
-    conditions: {
-      solvent: "water",
-      temperature: "298.15 K",
-      concentration: "qualitative",
-      pathLength: "1 mm",
-      acidityOrIonicStrength: "not stated",
-    },
-  },
-  reviewStatus: "qualitative-only" as const,
-};
-
-const indicatorOpticalProfile = {
-  ...indicatorOpticalProfilePayload,
-  profileHash: opticalProfileHash(indicatorOpticalProfilePayload),
-};
+const indicatorOpticalProfile = ORDINARY_PHENOLPHTHALEIN_OPTICAL_PROFILE;
 
 const targetOpticalPathPayload = {
   pathRuleId: "m5-conical-flask-fixed-optical-path",
@@ -228,7 +177,7 @@ export const productionTitrationScenario: Scenario = {
     },
     optical: {
       initialVesselId: "titration-flask",
-      totalAmount: { value: 5e-7, unit: "mol" },
+      totalAmount: { value: 2.505e-6, unit: "mol" },
       opticalProfile: indicatorOpticalProfile,
       provenance: indicatorProvenance,
     },

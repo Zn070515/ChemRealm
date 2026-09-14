@@ -1,0 +1,106 @@
+#!/usr/bin/env node
+/**
+ * Check the M6 entry packet's governance and evidence shape.
+ *
+ * This is deliberately not a visual-quality or scientific-acceptance proof.
+ * It prevents an M6 handoff from becoming true merely because a subordinate
+ * document says so, while keeping hosted CI and owner review as explicit gates.
+ */
+
+import { readFile } from "node:fs/promises";
+import { readVersionManifest } from "./version-manifest.mjs";
+
+const root = new URL("../", import.meta.url);
+const manifest = await readVersionManifest();
+
+async function document(relativePath) {
+  return readFile(new URL(relativePath, root), "utf8");
+}
+
+const [entry, plan, m4Native, m5, spec, opticalPlan, adr] = await Promise.all([
+  document("docs/evidence/M6-entry.md"),
+  document("docs/plans/PLAN-0001-world-foundation-acid-base-titration.md"),
+  document("docs/evidence/M4-native.md"),
+  document("docs/evidence/M5.md"),
+  document("docs/specs/SPEC-0001-world-foundation-acid-base-titration.md"),
+  document("docs/superpowers/plans/2026-09-14-indicator-optical-observation.md"),
+  document("docs/adr/0016-indicator-optical-observation-boundary.md"),
+]);
+
+const failures = [];
+function must(text, pattern, message) {
+  if (!pattern.test(text)) failures.push(`missing: ${message}`);
+}
+function mustNot(text, pattern, message) {
+  if (pattern.test(text)) failures.push(`forbidden: ${message}`);
+}
+
+must(entry, /^\*\*Status:\*\* \*\*Ready for owner authorization after hosted attestation\*\*/m,
+  "M6 entry remains an authorization gate, not an automatic authorization claim");
+must(entry, /M6 is the first milestone[\s\S]{0,260}PixiJS renderer/i,
+  "M6 scope includes final apparatus/rendering realization");
+must(entry, /hosted CI run for the exact committed baseline succeeds/i,
+  "M6 requires exact hosted-baseline attestation");
+must(entry, /owner accepts the applicable candidate amendments/i,
+  "M6 requires owner review of candidate amendments");
+must(entry, /strong-acid phenolphthalein orange[\s\S]{0,80}refusal-only/i,
+  "strong-acid orange remains refusal-only");
+must(entry, /M6 must retain[\s\S]{0,120}refusal-first optical boundary/i,
+  "M6 cannot replace optical refusal with a palette fallback");
+must(entry, /final apparatus asset package and semantic asset contract/i,
+  "M6 asset contract is explicitly unverified at entry");
+must(entry, /PixiJS\/renderer implementation and layer ownership/i,
+  "M6 renderer work is explicitly unverified at entry");
+must(entry, /The final evidence packet must append the actual hosted CI run/i,
+  "M6 packet requires post-push hosted evidence");
+
+must(plan, /M5 and M4-B S3 verified locally[\s\S]{0,180}hosted\/owner acceptance/i,
+  "canonical plan records local S3 candidates and open hosted/owner gates");
+must(plan, new RegExp(`\\| M6 \\|[^\\n]*\\|[^\\n]*M5 S3[^\\n]*M4-B S3[^\\n]*\\|`, "i"),
+  "canonical M6 dependency remains M5 S3 plus M4-B S3");
+must(plan, /M5 S3 does\s+not wait for M6/i,
+  "M5 contract acceptance is not circularly dependent on M6");
+
+must(m4Native, /S3[\s\S]{0,80}verified locally[\s\S]{0,100}owner\/hosted supersession acceptance/i,
+  "native evidence is locally verified but not silently owner-accepted");
+must(m4Native, /sha256:c03fc50d7fb8aa6bae79dd9638b14095f1cf919bdfb8e31c64bda93ce05c3887/i,
+  "native local artifact identity is recorded");
+must(m4Native, /Native WASM ↔ PHREEQC oracle comparison/i,
+  "native bounded oracle evidence is present");
+must(m4Native, /not a claim that the native model and PHREEQC are equivalent/i,
+  "native oracle disposition remains bounded and non-equivalence");
+mustNot(m4Native, /M4-B\s+S3\s*\/\s*Accepted/i,
+  "native packet does not claim owner acceptance without attestation");
+
+must(m5, /S3[\s\S]{0,80}verified locally[\s\S]{0,100}owner\/hosted acceptance/i,
+  "M5 evidence is locally verified but not silently owner-accepted");
+must(m5, /OPTICAL_MODEL_OK/i,
+  "M5 records positive bounded optical evidence");
+must(m5, /Strong-acid phenolphthalein orange\s+remains\s+documented\s+and\s+refusal-only/i,
+  "M5 records the orange refusal boundary");
+must(m5, /M5-COMPOSITION[^\n]*PASS locally/i,
+  "M5 production composition evidence is attached");
+must(m5, /AC-O8[^\n]*PASS locally/i,
+  "positive and refusal optical evidence is attached");
+must(m5, /hosted CI and owner acceptance remain separate gates/i,
+  "M5 does not turn local evidence into final acceptance");
+
+must(spec, new RegExp(`\\*\\*Current revision:\\*\\* \\*\\*${manifest.spec.currentRevision} Candidate`, "i"),
+  "canonical SPEC uses the manifest-distributed current candidate revision");
+must(opticalPlan, /one\s+source-reviewed ordinary-aqueous quantitative profile/i,
+  "optical plan records the admitted bounded profile");
+must(adr, /ordinary-aqueous phenolphthalein profile[\s\S]{0,220}locally admitted/i,
+  "optical ADR records the bounded local admission");
+mustNot(entry, /M6\s+S3\s+(?:verified|accepted|complete)/i,
+  "M6 entry packet does not claim M6 S3");
+
+if (failures.length > 0) {
+  for (const failure of failures) console.error(`FAIL  ${failure}`);
+  console.log("\nRESULT: FAIL");
+  process.exit(1);
+}
+
+console.log("ok    M6 entry prerequisites and dependency ownership are recorded");
+console.log("ok    local M4-B/M5 evidence is not silently promoted to hosted/owner acceptance");
+console.log("ok    M6 visual/asset work remains explicitly unverified and refusal-first optics are preserved");
+console.log("\nRESULT: PASS");

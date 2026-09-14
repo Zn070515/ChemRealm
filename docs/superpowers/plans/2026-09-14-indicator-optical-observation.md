@@ -2,12 +2,13 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Status:** Tasks 0–9 are implemented for the refusal-first candidate boundary;
-ordinary multi-form chemistry has an independently checked candidate handoff.
-Task 10's production quantitative-colour substep is intentionally closed by a
-scientific stop condition because no source-reviewed quantitative profile is
-admitted. Task 11 records the resulting evidence handoff without claiming
-`OPTICAL_MODEL_OK`, M5 S3, or M6 authorization.
+**Status:** Tasks 0–11 are implemented for the refusal-first boundary and one
+source-reviewed ordinary-aqueous quantitative profile. The profile is admitted
+only inside its declared coverage, and the production composition/browser path
+emits `OPTICAL_MODEL_OK` for that covered fixture. Strong-acid phenolphthalein
+orange remains documented and refusal-only. This plan records local evidence;
+M5 S3 and M6 authorization still require the separately attested native/M5
+baseline and owner review.
 
 **Goal:** Replace endpoint-RGB indicator presentation with a replayable, provenance-bearing Beer–Lambert optical-observation boundary that refuses unsupported chemistry or optics instead of inventing a colour.
 
@@ -15,7 +16,7 @@ admitted. Task 11 records the resulting evidence handoff without claiming
 
 **Tech Stack:** TypeScript 5.9, Zod, Vitest, React, Playwright, pnpm workspaces, existing `@chemrealm/schema` canonical hashing and branded quantities, Rust/WASM native bridge, Python evidence checks.
 
-**Spec:** `docs/superpowers/specs/2026-09-14-indicator-optical-observation.md` and the required `SPEC-0001` revision 27 Candidate amendment, with the owner-accepted ordinary-aqueous chemistry candidate recorded in revision 28.
+**Spec:** `docs/superpowers/specs/2026-09-14-indicator-optical-observation.md` and the candidate `SPEC-0001` revision supplied by `contracts/version-manifest.json`; revisions 27–29 preserve the refusal-first authority, ordinary-aqueous multi-form boundary, and source-reviewed profile admission.
 
 ## Global Constraints
 
@@ -721,9 +722,9 @@ inventory into the solve request; an indicator absent from the target vessel has
 `totalAmount: undefined`, not an invented zero-dose optical form.
 
 Update the production scenario to declare a small phenolphthalein dose and a
-fixed path with `reviewStatus: "qualitative-only"` until Task 8 admits a
-quantitative profile. Its production observation must therefore be data-missing
-rather than a palette colour.
+fixed path. The admitted ordinary profile may produce a positive observation
+only inside its declared coverage; unsupported conditions remain data-missing
+or out-of-coverage rather than becoming a palette colour.
 
 - [x] **Step 4: Run focused tests and verify GREEN**
 
@@ -1071,7 +1072,7 @@ git commit -m "Record reviewed indicator optical profile data"
 **Interfaces:**
 - Consumes: the owner-accepted ordinary-aqueous chemical-form scope and its
   independent source/reference packet. Task 8 remains a separate optical
-  admission gate; it currently admits no quantitative spectrum.
+  admission gate and now admits exactly one bounded quantitative profile.
 - Produces: a separately evidenced candidate `CHEMICAL_FORMS_OK` result for one
   explicitly modelled indicator/form system, while keeping optical enablement
   refusal-first.
@@ -1139,10 +1140,10 @@ git commit -m "Add validated multiform indicator chemistry"
 
 The candidate implementation is committed at
 `1b91dc1afce56c97adc8e9287dedc17169527a58` and hosted CI `34853566212`
-succeeded. The evidence packet still describes this as a candidate handoff,
-not an M4 S3 replacement or an optical profile admission.
+succeeded. The evidence packet records the ordinary profile as a bounded
+optical admission, not as an M4 S3 replacement or a universal colour model.
 
-### Task 10: Verify production refusal and quarantine positive optical transforms
+### Task 10: Verify production refusal and admit one bounded positive profile
 
 **Files:**
 - Modify: `apps/web/src/production-scenario.ts`
@@ -1154,29 +1155,27 @@ not an M4 S3 replacement or an optical profile admission.
 - Modify: `docs/evidence/M4.md`
 
 **Interfaces:**
-- Consumes: the committed world/frame composition and any future Task 8/Task 9
-  admitted profile/form pair.
+- Consumes: the committed world/frame composition and the Task 8 reviewed
+  ordinary-aqueous phenolphthalein profile plus Task 9 form output.
 - Produces: a committed world → adapter → frame → optical observation →
-  observable → scene → DOM path with no hand-authored colour. Until a
-  quantitative profile is admitted, the production path must produce tagged
-  `OPTICAL_MODEL_DATA_MISSING`; test-only synthetic vectors may exercise the
-  positive transform but are never production content.
+  observable → scene → DOM path with no hand-authored colour. The admitted
+  ordinary profile may produce `OPTICAL_MODEL_OK` only inside its checked
+  coverage; all other profiles and conditions remain tagged refusal paths.
 
 - [x] **Step 1: Write failing end-to-end tests**
 
 ```ts
 const composition = await composeProductionTitration();
 const observation = composition.observable.indicators[0]!.opticalObservation;
-expect(observation.status).toBe("OPTICAL_MODEL_DATA_MISSING");
+expect(observation.status).toBe("OPTICAL_MODEL_OK");
 expect(observation.sourceReplayHash).toBe(composition.frame.sourceStateHash);
 ```
 
-The production composition and browser tests cover the refusal status, frozen
-profile/path metadata, dose/concentration context, limitation copy, and no-tint
-DOM path. Representation-engine tests cover concentration/path Beer–Lambert
-scaling with a clearly synthetic, test-only profile; schema/render tests reject
-tampered profile payloads before interpolation. A production positive tint test
-is deliberately not added while no quantitative profile is admitted.
+The production composition and browser tests cover the positive status, frozen
+profile/path metadata, dose/concentration context, profile hash, non-zero tint,
+and refusal DOM path. Representation-engine tests cover concentration/path
+Beer–Lambert scaling with a clearly synthetic test profile; schema/render tests
+reject tampered profile payloads before interpolation.
 
 - [x] **Step 2: Run focused tests and verify the refusal boundary**
 
@@ -1185,18 +1184,19 @@ pnpm exec vitest run apps/web/src/composition.test.ts
 pnpm exec playwright test
 ```
 
-The focused tests confirm that the production scenario remains
-qualitative-only/data-missing. The positive optical transform remains isolated
-to `packages/render/src/observable/optics.test.ts` and cannot be selected by
-the production scenario.
+The focused tests confirm that the production scenario selects only the
+reviewed ordinary profile and that unsupported conditions remain tagged
+data-missing or out-of-coverage. The positive transform is selected through
+the frozen production profile, never through a palette.
 
 - [x] **Step 3: Apply the scientific stop condition instead of enabling an unsupported pair**
 
-All five registry candidates remain `qualitative-only`; none has a complete
-numeric spectrum, source-condition packet, reusable rights basis, and review
-record. Therefore no production profile/form pair is enabled. Strong-acid
-phenolphthalein orange remains documented as a research/refusal boundary only;
-no orange spectrum, colour literal, or solver branch is added.
+Five registry candidates remain `qualitative-only`; exactly one ordinary-
+aqueous phenolphthalein candidate has a complete bounded numeric spectrum,
+source-condition packet, rights basis, and review record. It is the only
+production-positive profile. Strong-acid phenolphthalein orange remains
+documented as a research/refusal boundary only; no orange spectrum, colour
+literal, or solver branch is added.
 
 - [x] **Step 4: Run end-to-end checks and verify the refusal-first path GREEN**
 
@@ -1208,17 +1208,15 @@ pnpm verify:indicator-optics
 pnpm verify:indicator-profiles
 ```
 
-- [x] **Step 5: Record the non-enablement handoff**
+- [x] **Step 5: Record the bounded production-profile handoff**
 
 ```text
 git add apps/web/src/production-scenario.ts apps/web/src/composition.ts apps/web/src/composition.test.ts apps/web/src/App.tsx tests/browser/m5-composition.spec.ts docs/evidence/M4.md docs/evidence/M5.md
 git commit -m "Record refusal-first optical composition handoff"
 ```
 
-No production enablement commit is permitted by the current stop condition.
-The existing composition commits and this plan/evidence handoff are the
-implementation boundary until a source-reviewed quantitative profile is
-separately admitted.
+Only the reviewed ordinary profile is enabled by the production scenario. The
+strong-acid orange profile and every qualitative-only candidate remain refused.
 
 ### Task 11: Run full verification, generate evidence, and retain correct stage gates
 
@@ -1229,7 +1227,7 @@ separately admitted.
 
 **Interfaces:**
 - Consumes: all previous tasks and the committed implementation baseline.
-- Produces: an evidence matrix that reports each AC-O criterion and every M4/M5 criterion honestly; it does not authorize M6 or claim an unsupported indicator profile.
+- Produces: an evidence matrix that reports each AC-O criterion and every M4/M5 criterion honestly; it records one bounded admitted profile and does not authorize M6 by itself.
 
 - [x] **Step 1: Run the complete repository verification set**
 
@@ -1266,20 +1264,17 @@ git diff --check
 
 For each AC-O1…AC-O8 record the exact command, fixture/profile hash, source
 packet, model ID/version, optical artifact version from the manifest, result,
-and limitation. If no Task 9 model has owner acceptance or no Task 8 source
-packet reaches quantitative status, record `DATA_MISSING` evidence and keep
-AC-O2/AC-O4/AC-O8 incomplete; do not relabel the old qualitative palette as
-the optical model. The current matrix is recorded in
-`docs/evidence/M5.md` and preserves the production refusal boundary.
+and limitation. The current matrix is recorded in `docs/evidence/M5.md`;
+positive evidence is limited to the ordinary profile's declared coverage and
+the strong-acid orange case remains refusal-only. The old qualitative palette
+is never relabelled as the optical model.
 
 - [x] **Step 3: Pin the committed code baseline and distinguish hosted evidence**
 
-The candidate implementation baseline `1b91dc1afce56c97adc8e9287dedc17169527a58`
-and hosted CI `34853566212` are recorded separately in the multiform evidence
-packet. This round's optical/reference handoff is a refusal-first update and
-does not claim a new hosted attestation. M5 remains S2 until its remaining
-DOM, visual, optical-profile, and owner-review gates satisfy the canonical
-criteria.
+The candidate implementation baseline and hosted CI are recorded only after
+the actual run completes. Local evidence may identify a positive optical
+profile, but M5 remains pending until the committed baseline, hosted
+attestation, and owner review are recorded.
 
 - [x] **Step 4: Commit and push the evidence handoff**
 
@@ -1291,12 +1286,12 @@ git push origin main
 
 ## Stop/Go Conditions
 
-- **Stop:** No source packet has complete numerical spectrum, source conditions, and reuse basis. Land only schema/refusal work; do not emit `OPTICAL_MODEL_OK`.
+- **Stop:** A production profile is admitted without complete numerical spectrum, source conditions, reuse basis, review record, and content-hash verification. The current ordinary profile is the only positive exception, and only inside its declared coverage.
 - **Stop:** A proposed multi-form chemistry model lacks owner-accepted species/constants/domain/reference evidence. Keep the existing v0 result `CHEMICAL_FORMS_UNAVAILABLE`; do not infer lactone, quinoid, or strong-acid forms from the monoprotic ratio.
 - **Stop:** Registry resolution or request construction can substitute a current adapter/default parameter for a persisted `SolverConfig`. Close Task 0.1 and refuse the world before any scientific result is composed.
-- **Stop:** Native v2 identity is cloned from legacy TypeScript or Rust owns a handwritten active solver parameter. Close Task 0.2, its five native M4-B criteria, and its committed WASM/hosted-CI attestation before M4-B S3.
+- **Stop:** Native v2 identity is cloned from legacy TypeScript or Rust owns a handwritten active solver parameter. Close Task 0.2 and retain explicit native artifact/hosted attestation before any native-default rollout.
 - **Stop:** Interim M5 colour output still contains alpha/opacity semantics or evidence lacks the `44c3a02a206c2b75927235a4c19d67ce359f8bd7` / CI #120 run `34822425379` closure attestation. Close Task 0.3 before M5 S3 or any M6 handoff.
 - **Stop:** A world/scenario migration would need to invent a historical dose, path, profile, or spectrum. Return `NO_PATH` or replay with explicit optical data-missing status.
 - **Stop:** Any active version appears outside `contracts/version-manifest.json`, generated version output drifts, or a transform uses a palette/pH shortcut.
-- **Go to quantitative profile enablement:** one profile packet passes Task 8 and one chemical-form model passes Task 9 with independent evidence.
-- **Go to M6 visual realization:** only after the canonical AC-O matrix, M5 browser/visual evidence, profile provenance, replay/migration proof, and owner review are complete. This plan itself grants no M6 authorization.
+- **Go to quantitative profile enablement:** satisfied locally for one profile; it remains bounded, refusal-first, and subject to the committed baseline and owner review.
+- **Go to M6 visual realization:** only after the canonical AC-O matrix, M5 browser evidence, profile provenance, replay/migration proof, native M4-B evidence, exact hosted attestation, and owner review are complete. This plan itself records prerequisites; the owner grants M6 authorization.

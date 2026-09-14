@@ -145,7 +145,7 @@ must(quantityBoundaryGuard, /FORBIDDEN_DIMENSION_LITERALS/, "scientific quantity
 must(quantityBoundaryGuard, /isNoSubstitutionTemplateLiteral/, "scientific quantity guard checks template-literal dimension values");
 must(adr0011, /\*\*Status:\*\* \*\*Accepted\*\*/i, "ADR-0011 is accepted");
 must(adr0012, /\*\*Status:\*\* \*\*Accepted\*\*/i, "ADR-0012 is accepted");
-must(plan, /\*\*Status:\*\* \*\*M0–M4 S3 Verified \/ Accepted; M5\b[\s\S]{0,180}\bS2\b/i, "PLAN records M5 S2 status after M4 S3");
+must(plan, /\*\*Status:\*\* \*\*M0–M4 S3 Verified \/ Accepted; M5\b[\s\S]{0,180}\bS3 verified locally\b/i, "PLAN records the locally verified M5 S3 candidate after M4 S3");
 must(v0Inputs, new RegExp(`"schemaVersion": ${versionManifest.oracle.v0Inputs}`), "v0 input manifest has the source-fidelity schema version");
 mustNot(v0Inputs, /expectedMaximum/, "v0 input manifest does not contain its own acceptance output");
 must(v0Inputs, /"sourceLiteral": "1 g\/cm³ \(25 °C\)"/, "NaOH source literal preserves reported precision");

@@ -1,23 +1,25 @@
 # ADR-0016 — Indicator Optical Observation Boundary
 
-- **Status:** Candidate — subordinate to `SPEC-0001` revision 27 Candidate
+- **Status:** Candidate — subordinate to the current `SPEC-0001` candidate revision
 - **Date:** 2026-09-14
 - **Decision owners:** Project owner; Scientific Reality and Representation
   maintainers for implementation review
-- **Scope:** The future data-backed indicator optical observation pipeline;
-  this ADR does not claim that a quantitative profile or `OPTICAL_MODEL_OK`
-  production fixture exists.
+- **Scope:** The data-backed indicator optical observation pipeline. One
+  ordinary-aqueous phenolphthalein profile is locally admitted inside its
+  bounded source conditions; M5 S3 and owner acceptance remain separate gates.
 - **Supersedes:** The implication that the M5 qualitative palette is a
   spectrophotometric model. It does not supersede the historical M5 palette
   evidence.
 
 ## Context
 
-The M5 indicator tint is an identity-keyed qualitative presentation contract.
-It is intentionally not a measurement model: it has no wavelength-dependent
-absorptivity, indicator dose, optical path, illuminant, observer convention, or
-coverage declaration. Treating an endpoint RGB token as chemistry would make a
-missing model look like a result.
+The original M5 indicator tint was an identity-keyed qualitative presentation
+contract. It was intentionally not a measurement model: it had no
+wavelength-dependent absorptivity, indicator dose, optical path, illuminant,
+observer convention, or coverage declaration. Treating an endpoint RGB token as
+chemistry would make a missing model look like a result. One ordinary-aqueous
+phenolphthalein profile is now locally admitted under this ADR's bounded
+production contract; the historical palettes remain qualitative QA material.
 
 The next optical work must therefore be admitted as a versioned, local,
 content-addressed contract. Its implementation is subordinate to the
@@ -36,9 +38,9 @@ tagged statuses:
 - `OPTICAL_MODEL_DATA_MISSING` means the chemical state or historical world is
   usable, but a required reviewed optical datum is absent.
 
-Neither refusal status may return an endpoint-RGB substitute. The current M5
-qualitative palette remains historical/interim evidence and is not a fallback
-for the optical model.
+Neither refusal status may return an endpoint-RGB substitute. The M5
+qualitative palettes and reference swatches remain historical/interim QA
+evidence and are not a fallback or production source for the optical model.
 
 ### Four-core ownership
 
@@ -109,8 +111,9 @@ Costs and limitations:
 
 - A quantitative `OPTICAL_MODEL_OK` result requires reviewed spectra and
   colourimetry data; a colour word or lone wavelength maximum is insufficient.
-- M5's qualitative palette may continue to support historical fixtures, but it
-  cannot support quantitative optical claims.
+- M5's qualitative palette and swatches may support visual QA and historical
+  fixtures, but they cannot supply production tint or quantitative optical
+  claims.
 - Quantitative profiles remain limited to their sourced solvent, temperature,
   concentration, path, acidity/ionic-strength, and linearity domains.
 
@@ -120,5 +123,8 @@ The canonical SPEC must define AC-O1 through AC-O8 before versioned optical
 artifacts are admitted. Evidence must include source/provenance review,
 profile and path hash checks, Beer–Lambert reference vectors, refusal cases,
 indicator-dose conservation, replay/cache independence, renderer boundary
-checks, and committed-baseline browser evidence. Until those exist, the
-optical work is S1/S2 only and does not authorize M6.
+checks, and committed-baseline browser evidence. The ordinary profile now has
+local source/review and production-path evidence, but M5 S3, hosted
+attestation, and owner acceptance remain separate gates; this ADR does not
+authorize M6 by itself. Strong-acid phenolphthalein orange remains
+documented and refusal-only.

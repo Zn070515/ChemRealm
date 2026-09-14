@@ -32,6 +32,9 @@ import {
   presentSymbolicLines,
   type PresentedScientificExpression,
 } from "./symbolic.js";
+export {
+  ORDINARY_PHENOLPHTHALEIN_OPTICAL_PROFILE,
+} from "./production-optical-profile.js";
 
 export const OBSERVABLE_MODEL_VERSION = VERSION_MANIFEST.representation.observableModel;
 

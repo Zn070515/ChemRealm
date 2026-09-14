@@ -1,4 +1,5 @@
 import {
+  thermodynamicConstant,
   type Kelvin,
   type Kilogram,
   type Litre,
@@ -12,7 +13,6 @@ import {
   ACID_BASE_COMPONENT_CATALOG,
   type AcidBaseComponentCatalogEntry,
 } from "./catalog.js";
-import { acidBaseConstantsFromSolverConfig } from "./model.js";
 
 /** Plain canonical contents supplied by World Runtime at the Sci boundary. */
 export interface AcidBaseSolveRequestInput {
@@ -54,7 +54,11 @@ function catalogEntry(componentId: string): AcidBaseComponentCatalogEntry {
 export function buildAcidBaseSolveRequest(
   input: AcidBaseSolveRequestInput,
 ): SolveRequest {
-  const constants = acidBaseConstantsFromSolverConfig(input.solverConfig);
+  const ka = input.solverConfig.parameters.Ka_HOAc;
+  if (typeof ka !== "number" || !Number.isFinite(ka) || ka <= 0) {
+    throw new RangeError("solver config must carry a finite positive Ka_HOAc");
+  }
+  const constants = thermodynamicConstant(ka);
   const indicatorAmounts = new Map(
     (input.indicatorAmounts ?? []).map((entry) => [entry.indicatorId, entry.amount] as const),
   );
@@ -79,7 +83,7 @@ export function buildAcidBaseSolveRequest(
         soluteId: component.componentId,
         amount: component.amount,
         mode: entry.mode,
-        ka: constants.Ka_HOAc,
+        ka: constants,
       } as const;
     }
     return {
