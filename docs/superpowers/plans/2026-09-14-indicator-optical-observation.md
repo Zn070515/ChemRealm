@@ -798,7 +798,7 @@ pnpm verify:native-differential
 cargo test --manifest-path native/sci-core/Cargo.toml
 ```
 
-- [ ] **Step 5: Commit scientific refusal parity**
+- [x] **Step 5: Commit scientific refusal parity**
 
 ```text
 git add packages/schema/src/scientific.ts packages/sci/src/acidbase/indicator.ts packages/sci/src/acidbase/indicator.test.ts packages/sci/src/acidbase/adapter.ts packages/sci/src/acidbase/adapter.test.ts packages/sci/src/result.ts packages/sci/src/native-backend.ts packages/sci/src/native-backend.test.ts native/sci-core/src/lib.rs native/sci-core/tests/contract.rs
@@ -819,7 +819,7 @@ git commit -m "Expose indicator chemical-form coverage"
 - Consumes: one `IndicatorChemicalObservation`, one parsed `OpticalProfileSnapshot`, one parsed `FrozenOpticalPathSnapshot`, committed vessel liquid volume, and source replay hash.
 - Produces: `observeIndicatorOptics(input): IndicatorOpticalObservation`.
 
-- [ ] **Step 1: Write failing optical/reference tests**
+- [x] **Step 1: Write failing optical/reference tests**
 
 ```ts
 expect(observeIndicatorOptics({ ...validInput, chemical })).toMatchObject({
@@ -848,7 +848,7 @@ synthetic test-only spectrum (`form-a`: epsilon 10 at
 as a production profile and its test file must assert `reviewStatus !==
 "quantitative"` for production registry entries.
 
-- [ ] **Step 2: Run focused tests and verify RED**
+- [x] **Step 2: Run focused tests and verify RED**
 
 ```text
 pnpm exec vitest run packages/render/src/observable/optics.test.ts
@@ -856,7 +856,7 @@ pnpm exec vitest run packages/render/src/observable/optics.test.ts
 
 Expected: module/import failures.
 
-- [ ] **Step 3: Implement deterministic transform and coverage gate**
+- [x] **Step 3: Implement deterministic transform and coverage gate**
 
 Implement wavelength-by-wavelength `A = pathLengthCm × Σ(epsilon ×
 concentration × fraction)` and `T = 10^-A` with a pinned deterministic
@@ -873,7 +873,7 @@ or observer range mismatch. Return `OK` only after all profile and form checks
 pass. Extend the guard to fail if `packages/render` imports `Ka`, pH, activity,
 or the legacy palette mapper in the optical path.
 
-- [ ] **Step 4: Run focused tests and verify GREEN**
+- [x] **Step 4: Run focused tests and verify GREEN**
 
 ```text
 pnpm exec vitest run packages/render/src/observable/optics.test.ts

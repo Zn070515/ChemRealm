@@ -2,6 +2,7 @@ export * from "./observable/burette.js";
 export * from "./observable/color.js";
 export * from "./observable/curve.js";
 export * from "./observable/format.js";
+export * from "./observable/optics.js";
 export * from "./observable/index.js";
 export * from "./observable/level.js";
 export * from "./observable/species.js";

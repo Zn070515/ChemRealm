@@ -4,9 +4,10 @@
     "composite": true,
     "rootDir": "src",
     "outDir": "dist",
+    "resolveJsonModule": true,
     "tsBuildInfoFile": "dist/.tsbuildinfo"
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "src/**/*.json"],
   "exclude": ["src/**/*.test.ts"],
   "references": [{ "path": "../schema" }]
 }

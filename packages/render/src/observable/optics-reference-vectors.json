@@ -1,0 +1,20 @@
+{
+  "artifact": "chemrealm-test-only-optical-reference-vectors",
+  "status": "test-only",
+  "source": "CIE 1931 2-degree colour matching functions and CIE D65 reference illuminant; reduced to the two wavelengths used by the synthetic arithmetic fixture",
+  "sourceHash": "sha256:cie-1931-2deg-d65-reference-reduced-grid",
+  "wavelengthNanometres": [500, 510],
+  "d65RelativePower": [107.689, 117.812],
+  "cie1931XBar": [0.0049, 0.0093],
+  "cie1931YBar": [0.323, 0.503],
+  "cie1931ZBar": [1.2725, 1.0],
+  "sRgbD65WhitePoint": [0.95047, 1, 1.08883],
+  "referenceVectors": [
+    {
+      "name": "form-a-1e-4-mol-per-litre-10-mm",
+      "concentrationMolPerLitre": 0.0001,
+      "pathLengthMillimetres": 10,
+      "epsilon": [10, 20]
+    }
+  ]
+}
