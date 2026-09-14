@@ -13,6 +13,7 @@
 ## Global Constraints
 
 - `contracts/version-manifest.json` is the sole manually maintained current-version source; run `pnpm generate:versions` after every active-version change and `pnpm verify:versions` before every commit.
+- A persisted solver is identified by its complete frozen `(id, version, parameters)` configuration. Adapter lookup and solve-request construction must consume that exact persisted configuration, never only an `id/version` pair or a current default constant.
 - Do not alter accepted M4 acid-base equations, constants, or validity domain to make a colour appear. The current Davies v0 model cannot emit phenolphthalein's extreme-acid orange form.
 - `OPTICAL_MODEL_OK` requires a checked-in quantitative spectrum, source/condition provenance, a reviewed profile, a covered chemical form, a conserved indicator amount, and a declared path length.
 - `OPTICAL_MODEL_DATA_MISSING` and `OPTICAL_MODEL_OUT_OF_COVERAGE` are valid, user-visible outcomes. They must never fall back to `INDICATOR_COLOUR_PALETTES`, endpoint RGB interpolation, or a generic acid/base colour.
@@ -29,6 +30,7 @@
 | File | Responsibility |
 |---|---|
 | `contracts/version-manifest.json` | Sole active versions for world/scenario/scientific/observable/optical-profile contracts. |
+| `contracts/scientific/acidbase-monoprotic-davies-2.0.0.json` | Language-neutral native v2 model descriptor, validity, numeric-policy ID, and solver-parameter source; its active identity derives only from the central version manifest. |
 | `packages/schema/src/indicator-optics.ts` | Serializable profile, path, form-observation and output DTO schemas, canonical hashes, and DTO-to-domain parsers. |
 | `packages/schema/src/scientific.ts` | Scientific-state and solve-request indicator contracts. |
 | `packages/schema/src/content.ts` / `world.ts` | Authored optical declaration and frozen genesis snapshot contracts. |
@@ -143,6 +145,264 @@ conditions/ranges, illuminant/observer/transform identity, source provenance,
 is defined in Task 2; its hash excludes the self-referential `profileHash`
 field, like `VolumeProfileSnapshot`.
 
+### Task 0.1: Close persisted SolverConfig replay identity before changing indicator science
+
+**Files:**
+- Modify: `packages/schema/src/scientific.ts`
+- Modify: `packages/schema/src/scientific.test.ts`
+- Modify: `packages/sci/src/registry.ts`
+- Modify: `packages/sci/src/registry.test.ts`
+- Modify: `packages/sci/src/acidbase/request.ts`
+- Modify: `packages/sci/src/acidbase/request.test.ts`
+- Modify: `apps/web/src/composition.ts`
+- Modify: `apps/web/src/composition.test.ts`
+- Modify: `tools/check_m4_contract_consistency.mjs`
+- Modify: `docs/evidence/M4-native.md`
+
+**Interfaces:**
+- Consumes: a persisted `SolverConfig` from `WorldState`.
+- Produces: `solverConfigIdentityHash(config)`, `registry.lookupBySolverConfig(config)`, `registry.lookupScientificExecutionBySolverConfig(config)`, and `buildAcidBaseSolveRequest({ ..., solverConfig })`.
+
+- [ ] **Step 1: Write the failing exact-config replay tests**
+
+```ts
+const modified = {
+  ...world.solverConfig,
+  parameters: { ...world.solverConfig.parameters, Kw: 1.0000000000001e-14 },
+};
+expect(registry.lookupBySolverConfig(modified)).toMatchObject({
+  status: "unavailable",
+});
+
+expect(registry.lookupScientificExecutionBySolverConfig(modified)).toMatchObject({
+  status: "unavailable",
+});
+
+const request = buildAcidBaseSolveRequest({
+  ...requestInput,
+  solverConfig: exactConfig,
+});
+expect(request.solutes.find((solute) => solute.soluteId === "HOAc")?.ka)
+  .toBe(exactConfig.parameters.Ka_HOAc);
+```
+
+Add the complementary assertion that an adapter whose config has identical
+id/version/parameters is found and that parameter-key order does not alter the
+canonical identity hash. Add a persisted-world test where only `Ka_HOAc` changes
+one bit and composition refuses before any pH is emitted.
+
+- [ ] **Step 2: Run focused tests and verify RED**
+
+```text
+pnpm exec vitest run packages/sci/src/registry.test.ts packages/sci/src/acidbase/request.test.ts apps/web/src/composition.test.ts
+```
+
+Expected: the current registry finds by id/version despite the changed parameter
+and the request builder reads the current default `Ka_HOAc`.
+
+- [ ] **Step 3: Implement full-config identity at both boundaries**
+
+In schema, canonicalize the parameter record by sorted key and finite numeric
+value, then hash `{ id, version, parameters }` with the existing canonical hash
+helper. Registry registration stores a frozen adapter under that full identity;
+genesis selection may still choose an id/version for a newly created world, but
+every persisted-world lookup uses `lookupBySolverConfig`. Composition passes
+`state.solverConfig` into registry lookup and request construction.
+
+`buildAcidBaseSolveRequest` obtains `Ka_HOAc` by calling
+`acidBaseConstantsFromSolverConfig(input.solverConfig)`. It rejects a config
+whose model identity or required parameter set does not belong to the adapter;
+it never reads `DEFAULT_ACID_BASE_CONSTANTS` on a replay path. Extend the M4
+guard so id/version-only lookup from `WorldState.solverConfig` fails CI.
+
+- [ ] **Step 4: Run focused tests and verify GREEN**
+
+```text
+pnpm exec vitest run packages/schema/src/scientific.test.ts packages/sci/src/registry.test.ts packages/sci/src/acidbase/request.test.ts apps/web/src/composition.test.ts
+pnpm verify:m4-contracts
+pnpm verify:world
+```
+
+- [ ] **Step 5: Commit replay-identity closure**
+
+```text
+git add packages/schema/src/scientific.ts packages/schema/src/scientific.test.ts packages/sci/src/registry.ts packages/sci/src/registry.test.ts packages/sci/src/acidbase/request.ts packages/sci/src/acidbase/request.test.ts apps/web/src/composition.ts apps/web/src/composition.test.ts tools/check_m4_contract_consistency.mjs docs/evidence/M4-native.md
+git commit -m "Bind persisted solver parameters to replay execution"
+```
+
+### Task 0.2: Make native v2 model identity language-neutral and close its remaining M4-B packet
+
+**Files:**
+- Create: `contracts/scientific/acidbase-monoprotic-davies-2.0.0.json`
+- Create: `contracts/scientific/acidbase-monoprotic-davies-2.0.0.test.json`
+- Modify: `contracts/version-manifest.json`
+- Modify: `tools/version-manifest.mjs`
+- Modify: `tools/check_versions.mjs`
+- Modify: `tools/check_native_schema_contract.mjs`
+- Modify: `packages/sci/src/acidbase/model.ts`
+- Modify: `packages/sci/src/native-backend.ts`
+- Modify: `packages/sci/src/native-backend.test.ts`
+- Modify: `native/sci-core/build.rs`
+- Modify: `native/sci-core/src/lib.rs`
+- Modify: `native/sci-core/tests/contract.rs`
+- Modify: `docs/evidence/M4-native.md`
+- Modify: `docs/evidence/native-toolchain-amendment.md`
+
+**Interfaces:**
+- Consumes: one checked-in native contract whose `model.id`, `model.version`, and `solverConfig.parameters` are read from the central-manifest-selected native version.
+- Produces: TypeScript native adapter and Rust/WASM constants generated from the same JSON artifact; an M4-B matrix for AC-S4, AC-S8, AC-S11, AC-S13, and AC-S14.
+
+- [ ] **Step 1: Write the failing contract-source and native-matrix tests**
+
+```ts
+expect(nativeAdapter.solverConfig).toEqual(parseNativeModelContract().solverConfig);
+expect(nativeAdapter.model).toEqual(parseNativeModelContract().model);
+expect(nativeAdapter.solverConfig.parameters.Kw).not.toBeUndefined();
+```
+
+```rust
+assert_eq!(generated::KW, contract["solverConfig"]["parameters"]["Kw"]);
+assert_eq!(generated::KA_HOAC, contract["solverConfig"]["parameters"]["Ka_HOAc"]);
+```
+
+Add independent evidence tests for: native solver component/temperature refusal
+(AC-S4); molality-only thermodynamic inputs and separate projection boundary
+(AC-S8); native outer-residual/domain-edge monotonicity sweep (AC-S11); native
+`I_m≈0.15` and `I_m≈0.30` accuracy-envelope flags (AC-S13); and the complete
+strong/weak v0 Scenario → WorldCreated → WorldState → SolveRequest → WASM
+family sweep (AC-S14).
+
+- [ ] **Step 2: Run focused tests and verify RED**
+
+```text
+pnpm exec vitest run packages/sci/src/native-backend.test.ts
+cargo test --manifest-path native/sci-core/Cargo.toml --test contract
+pnpm verify:native-schema
+```
+
+Expected: native v2 descriptor/config is cloned from legacy TypeScript builders
+and Rust constants are independently handwritten; the five M4-B matrix rows do
+not have completed evidence.
+
+- [ ] **Step 3: Establish the shared native contract and derive both implementations**
+
+The contract JSON contains model descriptor, exact solver parameters, validity
+domain, component/species set, water-activity convention, and numeric-policy
+ID. Its model/version values must match `VERSION_MANIFEST.scientific.acidBase`;
+the active contract filename/version is selected from that manifest, not copied
+as a literal into TS or Rust. TypeScript parses the JSON for `nativeModel()` and
+`nativeSolverConfig()`; Rust `build.rs` reads the same JSON and emits its
+constants into `OUT_DIR`. Remove native v2 cloning from legacy v1 builders and
+remove handwritten v2 physical constants from Rust source.
+
+Complete the five native evidence rows with dedicated fixtures and write their
+exact artifact/model/config hashes into M4-native evidence. Build the WASM
+artifact from the committed baseline; record its SHA-256 and hosted CI run only
+after that run succeeds. Do not call M4-B S3 until all five criteria, exact
+artifact identity, and hosted attestation pass.
+
+- [ ] **Step 4: Run native and cross-system verification GREEN**
+
+```text
+pnpm generate:versions
+pnpm verify:versions
+pnpm native:fmt
+pnpm native:test
+pnpm native:clippy
+pnpm native:check-wasm
+pnpm verify:native-governance
+pnpm verify:native-evidence
+pnpm verify:native-schema
+pnpm verify:native-differential
+pnpm verify:native-ts-differential
+pnpm exec vitest run packages/sci/src/native-backend.test.ts apps/web/src/composition.test.ts
+```
+
+- [ ] **Step 5: Commit native identity and evidence as one closure unit**
+
+```text
+git add contracts/scientific/acidbase-monoprotic-davies-2.0.0.json contracts/scientific/acidbase-monoprotic-davies-2.0.0.test.json contracts/version-manifest.json tools/version-manifest.mjs tools/check_versions.mjs tools/check_native_schema_contract.mjs packages/sci/src/acidbase/model.ts packages/sci/src/native-backend.ts packages/sci/src/native-backend.test.ts native/sci-core/build.rs native/sci-core/src/lib.rs native/sci-core/tests/contract.rs docs/evidence/M4-native.md docs/evidence/native-toolchain-amendment.md
+git commit -m "Close native solver identity and M4-B evidence"
+```
+
+### Task 0.3: Freeze interim M5 tint semantics and attest the current palette baseline
+
+**Files:**
+- Modify: `packages/render/src/observable/tokens.ts`
+- Modify: `packages/render/src/observable/color.ts`
+- Modify: `packages/render/src/observable/color.test.ts`
+- Modify: `packages/render/src/observable/observable.test.ts`
+- Modify: `packages/render/src/state/scene.ts`
+- Modify: `packages/render/src/state/scene.test.ts`
+- Modify: `apps/web/src/App.tsx`
+- Modify: `tests/browser/m5-composition.spec.ts`
+- Modify: `tools/check_m5_contract_consistency.mjs`
+- Modify: `docs/evidence/M5.md`
+
+**Interfaces:**
+- Consumes: the existing qualitative empirical palette record.
+- Produces: `IndicatorTint { readonly srgb: readonly [number, number, number]; readonly strength: number; readonly interpolation: "qualitative-srgb" }`, with no RGBA/opacity claim, and an M5 evidence attestation for `44c3a02a206c2b75927235a4c19d67ce359f8bd7` / CI #120 run `34822425379`.
+
+- [ ] **Step 1: Write failing tint and attestation tests**
+
+```ts
+const colourless = mapIndicatorRatioToTint("phenolphthalein", 0);
+expect(colourless).toEqual({
+  srgb: [245, 245, 245],
+  strength: 0,
+  interpolation: "qualitative-srgb",
+});
+expect("alpha" in colourless).toBe(false);
+
+expect(scene.nodes.find((node) => node.id === "indicator-0")?.data)
+  .toMatchObject({ tintStrength: 0 });
+```
+
+Add document checks that reject an M5 implementation baseline older than the
+palette provenance closure and require the exact commit plus CI #120/run
+`34822425379` in the current attestation section. Add a DOM assertion that the
+swatch is named a qualitative presentation tint, never liquid opacity or a
+spectrophotometric result.
+
+- [ ] **Step 2: Run focused checks and verify RED**
+
+```text
+pnpm exec vitest run packages/render/src/observable/color.test.ts packages/render/src/observable/observable.test.ts packages/render/src/state/scene.test.ts
+pnpm exec playwright test tests/browser/m5-composition.spec.ts
+pnpm verify:m5-contracts
+```
+
+Expected: the current type carries `alpha`, scene/App can present that alpha as
+an RGBA liquid fill, and M5 evidence lacks the #120 palette closure attestation.
+
+- [ ] **Step 3: Implement only the interim semantic correction**
+
+Rename the public output to `IndicatorTint`, remove alpha from palette and
+mapper contracts, and add `strength`. Map the colourless phenolphthalein acid
+endpoint to zero strength; map coloured endpoints to a bounded qualitative
+strength that is documented as presentation interpolation, not Beer–Lambert.
+Scene nodes carry `tintSrgb`, `tintStrength`, and `interpolation`; `App.tsx`
+may render a swatch for inspection but must compose it over an explicit neutral
+swatch background rather than using tint strength as liquid opacity. Record the
+exact #120 baseline in M5 evidence while preserving M5 S2 and all incomplete
+criteria.
+
+- [ ] **Step 4: Run focused checks and verify GREEN**
+
+```text
+pnpm exec vitest run packages/render/src/observable/color.test.ts packages/render/src/observable/observable.test.ts packages/render/src/state/scene.test.ts
+pnpm exec playwright test tests/browser/m5-composition.spec.ts
+pnpm verify:m5-contracts
+git diff --check
+```
+
+- [ ] **Step 5: Commit the M5 handoff correction**
+
+```text
+git add packages/render/src/observable/tokens.ts packages/render/src/observable/color.ts packages/render/src/observable/color.test.ts packages/render/src/observable/observable.test.ts packages/render/src/state/scene.ts packages/render/src/state/scene.test.ts apps/web/src/App.tsx tests/browser/m5-composition.spec.ts tools/check_m5_contract_consistency.mjs docs/evidence/M5.md
+git commit -m "Clarify indicator tint semantics and M5 baseline"
+```
+
 ### Task 1: Establish canonical authority, explicit versions, and admission gates
 
 **Files:**
@@ -195,9 +455,7 @@ SPEC revision 27 Candidate with AC-O1 through AC-O8 verbatim from the approved
 design. ADR-0016 records the four-core ownership, status/refusal rule, fixed
 path v1 scope, and the distinction between chemical-form coverage and optical
 coverage. Add the package scripts `verify:indicator-optics` for
-`node tools/check_indicator_optics_contract.mjs` and
-`verify:indicator-profiles` for `node tools/check_indicator_optical_profiles.mjs`;
-the latter command may fail until Task 8 creates its checker.
+`node tools/check_indicator_optics_contract.mjs`.
 
 - [ ] **Step 4: Run focused checks and verify GREEN**
 
@@ -705,6 +963,7 @@ git commit -m "Present indicators through optical observation status"
 - Create: `docs/research/indicator-optics/methyl-orange-base.source.md`
 - Create only after its source packet passes review: `docs/research/indicator-optics/phenolphthalein-neutral-lactone.profile.json`, `docs/research/indicator-optics/phenolphthalein-neutral-lactone.review.md`, `docs/research/indicator-optics/phenolphthalein-quinoid-base.profile.json`, `docs/research/indicator-optics/phenolphthalein-quinoid-base.review.md`, `docs/research/indicator-optics/phenolphthalein-strong-acid-cation.profile.json`, `docs/research/indicator-optics/phenolphthalein-strong-acid-cation.review.md`, `docs/research/indicator-optics/methyl-orange-acid.profile.json`, `docs/research/indicator-optics/methyl-orange-acid.review.md`, `docs/research/indicator-optics/methyl-orange-base.profile.json`, and `docs/research/indicator-optics/methyl-orange-base.review.md`
 - Create: `tools/check_indicator_optical_profiles.mjs`
+- Modify: `package.json`
 - Test: `tests/indicator-optical-profiles.test.mjs`
 
 **Interfaces:**
@@ -757,6 +1016,11 @@ For phenolphthalein, retain the strong-acid orange literature as a
 Task 9 is accepted. Do not convert its reported extreme-acid observation into
 an ordinary-acid endpoint profile. For methyl orange, retain acid/base spectra
 as separate form candidates; do not reuse phenolphthalein samples.
+
+After `tools/check_indicator_optical_profiles.mjs` exists, add
+`verify:indicator-profiles` to `package.json` for that checker. It becomes a
+required command in Task 11; no package script may reference a file that has
+not yet been created.
 
 - [ ] **Step 4: Run source/evidence checks and verify GREEN**
 
@@ -981,6 +1245,9 @@ git push origin main
 
 - **Stop:** No source packet has complete numerical spectrum, source conditions, and reuse basis. Land only schema/refusal work; do not emit `OPTICAL_MODEL_OK`.
 - **Stop:** A proposed multi-form chemistry model lacks owner-accepted species/constants/domain/reference evidence. Keep the existing v0 result `CHEMICAL_FORMS_UNAVAILABLE`; do not infer lactone, quinoid, or strong-acid forms from the monoprotic ratio.
+- **Stop:** Registry resolution or request construction can substitute a current adapter/default parameter for a persisted `SolverConfig`. Close Task 0.1 and refuse the world before any scientific result is composed.
+- **Stop:** Native v2 identity is cloned from legacy TypeScript or Rust owns a handwritten active solver parameter. Close Task 0.2, its five native M4-B criteria, and its committed WASM/hosted-CI attestation before M4-B S3.
+- **Stop:** Interim M5 colour output still contains alpha/opacity semantics or evidence lacks the `44c3a02a206c2b75927235a4c19d67ce359f8bd7` / CI #120 run `34822425379` closure attestation. Close Task 0.3 before M5 S3 or any M6 handoff.
 - **Stop:** A world/scenario migration would need to invent a historical dose, path, profile, or spectrum. Return `NO_PATH` or replay with explicit optical data-missing status.
 - **Stop:** Any active version appears outside `contracts/version-manifest.json`, generated version output drifts, or a transform uses a palette/pH shortcut.
 - **Go to quantitative profile enablement:** one profile packet passes Task 8 and one chemical-form model passes Task 9 with independent evidence.
