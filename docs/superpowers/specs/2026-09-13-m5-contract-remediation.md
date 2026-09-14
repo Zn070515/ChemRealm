@@ -42,6 +42,16 @@ label alone is never sufficient.
 6. Prevent symbolic lines and projection data from becoming untraceable or
    cross-frame inputs.
 
+M5 owns the contract-level portions of AC-V3 and AC-V4: the declared
+identity-keyed palette, replayable profile snapshot, both profile directions,
+round-trip tolerance, and Observable transformations. M6 owns concrete asset
+realization, final visual tuning, screenshots, and visual review; those
+downstream deliverables do not gate M5 S3.
+
+Within this scope, AC-V3 is a M5 contract-level palette criterion and AC-V4 is
+a M5 contract-level volume-profile criterion. The canonical criterion text is
+unchanged; only the evidence ownership boundary is made explicit here.
+
 ## Non-goals
 
 - No PixiJS, DOM screen, final apparatus art, animation clock, or M6 work.
@@ -211,8 +221,8 @@ never guessed from `geometryRef`.
 | Criterion | Binary requirement | Evidence |
 |---|---|---|
 | AC-V2 | Colour remains continuous within the selected indicator's palette | palette/colour tests |
-| AC-V3 | Palette is declarative, empirically labelled, and contains no equilibrium decision | render boundary tests/review |
-| AC-V4 | `h(V)` is called and `V(h)` round-trips within stated tolerance | level tests |
+| AC-V3 | M5 contract-level palette is declarative, empirically labelled, identity-keyed, and contains no equilibrium decision | render boundary tests/review; M6 supplies final visual realization |
+| AC-V4 | M5 contract-level `h(V)` is called and `V(h)` round-trips within stated tolerance | level/profile-integrity tests; M6 supplies concrete asset realization |
 | AC-V6 | pH formatting is at most two decimals; burette scale readout is `mL` at `0.01 mL` | formatter tests; DOM remains future evidence |
 | AC-V8 | A replaceable policy selects exactly one hydrogen-ion convention per view | scene policy tests |
 | AC-V9 | Render receives ratio/expression outputs and computes no chemistry | package and source guards |
@@ -228,5 +238,7 @@ is still explicit and non-destructive.
 
 ## Open questions
 
-None for this remediation. DOM inspection and final visual evidence remain M5
-S3/M6 work and are not silently claimed here.
+None for this remediation. DOM inspection remains an M5 S3 criterion where
+required by the canonical matrix. Final visual evidence and concrete asset
+realization are M6-owned and do not gate M5 S3; neither is silently claimed
+here.

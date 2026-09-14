@@ -232,8 +232,8 @@ never mutated.
 | Criterion | Binary requirement | Evidence |
 |---|---|---|
 | AC-V2 | Colour output is continuous within the declared indicator-specific palette and has no threshold branch | `packages/render/src/observable/color.test.ts` |
-| AC-V3 | No chemical colour decision/literal is embedded in render transforms | token/module review and render guard |
-| AC-V4 | Liquid height is obtained from the declared `h(V)` profile and its `V(h)` inverse agrees within tolerance | `level.test.ts`; full asset evidence remains open |
+| AC-V3 | No chemical colour decision/literal is embedded in render transforms; empirical palette tokens are declared, identity-keyed, and provenance-bearing | token/module review and render guard; final visual realization is M6 evidence |
+| AC-V4 | Liquid height is obtained from the declared `h(V)` profile and its `V(h)` inverse agrees within tolerance | `level.test.ts` and profile-integrity tests; concrete asset realization is M6 evidence |
 | AC-V6 | pH is at most two decimals and a burette scale reading is displayed in `mL` at `0.01 mL` | `format.test.ts`; DOM evidence remains open |
 | AC-V8 | A replaceable presentation policy emits one hydrogen-ion convention per view | `state/scene.test.ts`; DOM evidence remains open |
 | AC-V9 | Render receives only scientific outputs/expressions and performs no equilibrium computation | dependency/type/source checks |
@@ -243,7 +243,9 @@ never mutated.
 AC-V10 and AC-V11 require inspection DOM copy and therefore remain M5 S3
 criteria after the inspection surface exists. This S2 implementation exposes
 the exact model-pH provenance and accuracy flag needed by that later surface;
-it does not claim their browser evidence yet.
+it does not claim their browser evidence yet. M5 S3 does not require M6 final
+assets or visual review; M6 owns the visual realization of the already-frozen
+AC-V3/AC-V4 contracts.
 
 ## Rollout/migration
 

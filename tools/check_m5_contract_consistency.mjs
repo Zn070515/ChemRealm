@@ -131,8 +131,14 @@ must(expressionSource, /equationId[\s\S]{0,500}substitutions/i, "Scientific Core
 mustNot(expressionSource, /solve charge balance and component balances self-consistently/i, "natural-language placeholder is not emitted as an exact expression");
 
 must(evidence, /M5-FRAME[^\n]*\| PASS locally/i, "M5 frame evidence records the production composition boundary");
-must(evidence, /AC-V3[^\n]*PARTIAL/i, "AC-V3 remains partial without final visual/source review");
-must(evidence, /AC-V4[^\n]*PARTIAL/i, "AC-V4 remains partial without final apparatus evidence");
+must(evidence, /AC-V3[^\n]*\| PASS locally/i, "AC-V3 contract-level evidence is complete for M5");
+must(evidence, /AC-V4[^\n]*\| PASS locally/i, "AC-V4 contract-level evidence is complete for M5");
+must(evidence, /contract-level[\s\S]{0,240}M5 S3 does not require M6/i, "M5 contract acceptance does not wait for M6 realization");
+must(evidence, /M6 consumes[\s\S]{0,180}visual[\s\S]{0,180}does not retroactively gate M5 S3/i, "M6 owns downstream visual realization");
+must(plan, /M5\/M6 acceptance ownership/i, "canonical PLAN declares the M5/M6 acceptance boundary");
+must(plan, /M5 S3 does\s+not wait for M6/i, "canonical PLAN breaks the M5/M6 acceptance cycle");
+must(plan, /M6\/M5 boundary/i, "canonical PLAN declares the M6/M5 realization boundary");
+must(plan, /M6\/M5 boundary[\s\S]{0,450}M6 is downstream[\s\S]{0,220}consumes the already-verified M5/i, "canonical PLAN assigns realization to M6 after M5");
 must(evidence, /AC-V6[^\n]*PASS locally/i, "AC-V6 records built DOM evidence");
 must(evidence, /AC-V8[^\n]*PASS locally/i, "AC-V8 records built DOM evidence");
 must(evidence, /AC-V10[^\n]*PASS locally/i, "AC-V10 records inspection copy and DOM evidence");

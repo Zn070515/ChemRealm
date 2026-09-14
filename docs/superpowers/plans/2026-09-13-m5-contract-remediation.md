@@ -19,7 +19,8 @@
 - A burette scale reading is `initialScaleReading + deliveredVolume`; contained volume is a separate value.
 - Burette readouts use `mL` and `0.01 mL`; conversion code lives in `@chemrealm/schema`.
 - A RenderState contains one selected pH convention; the policy is replaceable without changing science or observable transforms.
-- M5 remains S2 until DOM, screenshot, and final visual evidence exist.
+- M5 remains S2 until its scoped contract/DOM evidence and owner review exist;
+  M6 screenshots and final visual evidence are downstream realization work.
 
 ### Task 1: Canonical revision-21 and remediation documents
 
@@ -43,8 +44,9 @@ projection/burette/representation text without marking M5 S3.
 
 - [ ] **Step 2: Narrow M5 evidence claims**
 
-Change M5 AC-V4 and AC-V6 from PASS locally to PARTIAL until their complete
-inverse/DOM evidence exists; document the new policy and burette contract.
+Keep AC-V4 at the M5 contract level once its complete inverse/profile evidence
+exists; AC-V6 requires the scoped DOM evidence. M6 screenshots and final visual
+evidence are not prerequisites for either M5 contract acceptance.
 
 - [ ] **Step 3: Run document consistency search**
 
@@ -241,8 +243,9 @@ Run the same focused command.
 
 - [ ] **Step 1: Update evidence without overstating S3**
 
-Record AC-V4 and AC-V6 as partial for missing inverse/DOM evidence, record the
-new pure policy/palette/burette evidence, and keep AC-V5/V10/V11 open.
+Record AC-V4 and AC-V6 according to their scoped inverse/DOM evidence, record
+the new pure policy/palette/burette evidence, and keep AC-V5 as M6-owned visual
+evidence. Do not treat M6 visual work as an M5 S3 prerequisite.
 
 - [ ] **Step 2: Run the full verification set**
 
@@ -263,5 +266,6 @@ list all remaining S3 evidence.
 
 Stop if a render module imports a forbidden core, if a test requires a browser,
 if any transform computes chemistry, or if a canonical acceptance criterion is
-quietly weakened. Go to M6 only after a separate visual/asset specification and
-owner acceptance of M5's remaining S3 evidence.
+quietly weakened. Go to M6 only after its separate visual/asset specification,
+M5 S3 owner acceptance, and the canonical M4-B prerequisite are complete; M6
+visual evidence is not required to produce that M5 acceptance.

@@ -1,8 +1,10 @@
 # M5 Production Composition Vertical Path
 
-> **Status:** implementation plan; M5 remains S2 until the browser evidence is
-> complete. This plan is subordinate to `SPEC-0001` and the current M5
-> observable-state specification; it does not redefine an `AC-*` criterion.
+> **Status:** implementation plan; M5 remains S2 until its scoped contract,
+> browser, and owner-review evidence is complete. Final visual realization is
+> M6 scope and is not an M5 S3 prerequisite. This plan is subordinate to
+> `SPEC-0001` and the current M5 observable-state specification; it does not
+> redefine an `AC-*` criterion.
 
 **Canonical contract:** the M5 contract revision declared by
 `contracts/version-manifest.json` (revision 25); the native-backend amendment
@@ -172,7 +174,7 @@ heading and committed world markers, verifies DOM values against the composition
 contract, switches policy, and confirms no second pH readout appears. The
 existing network-boundary test remains green.
 
-### Step 4 — Record evidence without claiming M6 or prematurely claiming M5 S3
+### Step 4 — Record scoped M5 evidence without claiming M6
 
 **Files:** `docs/superpowers/specs/2026-09-13-m5-production-composition.md`,
 `docs/evidence/M5.md`, the canonical PLAN, and any focused M5 guard.
@@ -185,10 +187,12 @@ of AC-V3/V4/V6/V8. Update the M5 matrix only with evidence actually produced:
   from PARTIAL only if the tests prove producer identity and shared sequence;
 - AC-V6, AC-V8, AC-V10, AC-V11: move only when the browser assertions cover
   their complete wording;
-- AC-V5 and M6 visual evidence remain open.
+- AC-V5 and M6 visual evidence remain open and are downstream realization
+  evidence, not prerequisites for M5 contract acceptance.
 
-Do not accept SPEC rev24 or authorize M6 in this round merely because the
-deterministic DOM exists.
+Do not authorize M6 from this implementation plan merely because the
+deterministic DOM exists; M6 still requires its own authorization and the
+canonical milestone prerequisites.
 
 ### Step 5 — Verify, inspect, commit, and hand off
 
@@ -243,6 +247,6 @@ met.
   visual apparatus baseline.
 - M6 still owns PixiJS, asset semantic contracts beyond the frozen profile,
   pointer/snap/port interaction, animation, screenshots, and performance.
-- M5 S3 can be considered only after the owner reviews the complete evidence
-  matrix and current SPEC candidate amendments; this plan does not perform that
-  acceptance.
+- M5 S3 can be considered after the owner reviews its complete scoped evidence
+  matrix and current SPEC candidate amendments. It does not wait for M6's final
+  assets or visual review; this plan does not perform that acceptance.

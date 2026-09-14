@@ -13,7 +13,8 @@
 ## Global Constraints
 
 - M4 S3 remains accepted; no M4 equation, solver, World Runtime, replay, or persisted-world change.
-- M5 remains S2 until DOM, visual, and owner evidence exist.
+- M5 remains S2 until its scoped DOM/contract and owner evidence exist; M6
+  visual realization evidence is downstream and is not an M5 prerequisite.
 - `packages/render` may not import `packages/sci`; composition uses structural data from the Scientific Core.
 - Scientific identity is supplied by the authoritative world-state hash and is produced once at the composition boundary.
 - Burette scale reading is `initialScaleReading + deliveredVolume`; contained volume is separate.
@@ -203,9 +204,10 @@ git diff --check
 
 - [ ] **Step 2: Pin evidence after the implementation commit**
 
-Record the implementation commit and hosted CI separately. Keep AC-V4, AC-V6,
-AC-V8, AC-V10, and AC-V11 partial/not-run where their DOM or visual evidence is
-not present. Do not authorize M6 from this S2 round.
+Record the implementation commit and hosted CI separately. Keep criteria
+partial/not-run where their scoped DOM or contract evidence is not present;
+AC-V3/AC-V4 contract evidence is owned by M5, while M6 visual realization is
+downstream. Do not authorize M6 from this S2 round.
 
 - [ ] **Step 3: Commit and push**
 

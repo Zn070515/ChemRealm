@@ -17,8 +17,10 @@
 - **M5 composition handoff:** the committed local DOM composition baseline is
   `cad8461bb5654d489234a968bbcfd9aaa99b315c` with hosted CI
   `34761601096` — **success**. M5 remains S2; final visual, interaction, and
-  owner acceptance evidence remain open. Native backend work is governed by
-  `docs/superpowers/plans/2026-09-13-m4-native-scientific-backend.md`.
+  owner acceptance evidence remain open. Contract-level AC-V3/AC-V4 evidence
+  is an M5 responsibility; M6 final assets and visual review are downstream
+  realization evidence and do not gate M5 S3. Native backend work is governed
+  by `docs/superpowers/plans/2026-09-13-m4-native-scientific-backend.md`.
 - **Coverage check:** `uv run python tools/check_acceptance_coverage.py` — every `AC-*` in
   `SPEC-0001` is required to appear in at least one milestone here. Run it after
   editing either document. This is a mapping/evidence-attachment check only;
@@ -91,7 +93,7 @@ Additionally, the owner must resolve before their milestones:
 | M4 | Acid-base engine and oracle validation | M3 | PHREEQC install; the equivalence-region gap |
 | M5 | Observable state | M1, M4 | Observable layer catching chemistry it shouldn't |
 | M4-B | Native Scientific Core/WASM backend supersession | M4, M5 S2 | Native/legacy identity, deterministic differential validation, and no silent fallback |
-| M6 | First final-quality apparatus slice | M5 S3, M4-B S3 | Hitting the visual bar with PixiJS after native backend closure |
+| M6 | First final-quality apparatus slice | M5 S3, M4-B S3 | Realizing the frozen M5 representation contracts and hitting the visual bar with PixiJS after native backend closure |
 | M7 | Interactive titration end to end | M6 | Integration; the first real product moment |
 | M8 | Branch, replay, persistence | M2, M7 | Parent immutability; IndexedDB quota |
 | M9 | Minimal ACE | M7 | Inferring too much from too little |
@@ -779,6 +781,14 @@ the M5 contract revision declared by `contracts/version-manifest.json` and not
 overrides of `SPEC-0001`; the native-backend amendment is a separate candidate.
 **Addresses:** ADR-0006, ADR-0007; `SPEC-0001` AC-V2..AC-V4, AC-V6, AC-V8, AC-V9, AC-V10, AC-V11
 
+### M5/M6 acceptance ownership
+
+M5 S3 owns the observable and composition contracts, including the
+contract-level AC-V3 palette and AC-V4 volume-profile guarantees. M5 S3 does
+not wait for M6 final assets, screenshots, PixiJS, or visual review. M6 consumes
+the frozen M5 representation contract and supplies concrete asset, renderer,
+interaction, performance, and visual-review evidence.
+
 `AC-V1` (`packages/render` has no import path to `packages/sci`) is **not**
 claimed here. It was inside the `AC-V1..AC-V4` range; the rule is created and
 first evidenced at M0, and re-verified at M6 once real render code lands. M5
@@ -822,7 +832,9 @@ geometry-only persisted worlds require the explicit v3→v4 resolver boundary.
 
 **No PixiJS import anywhere in this milestone.** Everything here runs in Node.
 The production composition adds a deterministic local DOM inspection surface;
-it does not claim the final M6 renderer or visual acceptance.
+it does not claim the final M6 renderer or visual acceptance. M5 S3 evaluates
+the representation and composition contracts without waiting for M6 final
+assets, screenshots, or visual review.
 
 ### Contracts changed
 
@@ -893,8 +905,8 @@ volume-profile identity, and the ScientificFrame physical-input block.
 | Test | Proves |
 |---|---|
 | Colour varies continuously with the ratio; no discontinuity at any threshold | AC-V2 |
-| Palette-boundary fixture: empirical colour literals are confined to the declared identity-keyed catalogue | AC-V3 |
-| Liquid level calls `h(V)` and its `V(h)` inverse round-trips within the declared tolerance | AC-V4 |
+| M5 contract-level palette fixture: empirical colour literals are confined to the declared identity-keyed catalogue | AC-V3 |
+| M5 contract-level liquid level calls `h(V)` and its `V(h)` inverse round-trips within the declared tolerance | AC-V4 |
 | `currentScaleReading == initialScaleReading + Σ delivered`, while `containedVolume` remains separate; compensated full-draw boundary does not false-overdraw | Burette semantics / failure mode 14 |
 | pH is formatted to exactly 2 dp and a scale reading such as 0.025 L is `25.00 mL` | AC-V6 |
 | Observable output is a pure function: same input → deep-equal output, no DOM, no PixiJS | Testability of the whole layer |
@@ -917,6 +929,13 @@ decision is made in the web adapter.
 
 **Target stage:** S3
 **Addresses:** `GOAL.md` §5.7, §15; ADR-0006; `SPEC-0001` AC-V5, AC-F1, AC-X1, AC-X2
+
+### M6/M5 boundary
+
+M6 is downstream of M5 S3 and M4-B S3. It consumes the already-verified M5
+palette/profile contracts and provides their concrete asset, renderer, and
+visual-review realization; it does not supply a prerequisite needed to close
+the M5 contract milestone.
 
 ### Purpose
 
@@ -950,7 +969,8 @@ is expected and is why M6 exists as a gate.
 2. **Every volumetric asset publishes `V(h)` and its inverse `h(V)`.** Assets
    without a profile are marked `non_volumetric` and accept approximate liquid
    level. `ObservableModel` obtains the level by calling `h(V)` — never by
-   scaling a volume into a geometry axis.
+   scaling a volume into a geometry axis. The M5 profile contract is already
+   verified before this concrete asset realization begins.
 3. Renderer consumes `RenderState` only. Verify by inspection that no chemistry
    value (a `Ka`, a `pH` used as logic) crosses the boundary.
 4. Capture at `desktop-primary`, `desktop-compact`, `tablet`, `narrow`.

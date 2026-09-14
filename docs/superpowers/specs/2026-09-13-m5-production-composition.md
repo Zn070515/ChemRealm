@@ -11,6 +11,11 @@ does not redefine or weaken them.
 `contracts/version-manifest.json` (revision 25); the native-backend amendment
 is a separate current candidate revision.
 
+M5 S3 evaluates the observable and composition contracts that this document
+defines. It does not wait for M6 final assets or visual review. M6 consumes
+the resulting palette/profile contracts and provides their concrete visual
+realization evidence.
+
 ## Context
 
 The scientific, world, frame, profile, symbolic, curve, and ObservableModel
@@ -162,6 +167,7 @@ changing the core boundaries.
 
 ## Open questions
 
-M5 owner acceptance still determines the final status of the DOM evidence;
-visual quality, apparatus interaction semantics, and final asset contracts
-remain M6 decisions.
+M5 owner acceptance still determines the final status of the DOM and
+representation-contract evidence. Visual quality, apparatus interaction
+semantics, concrete final assets, screenshots, and final visual review remain
+M6 decisions and are downstream of M5 S3 rather than prerequisites for it.
