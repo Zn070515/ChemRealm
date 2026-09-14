@@ -1,8 +1,8 @@
 # Indicator multiform scientific model implementation plan
 
-> **Status:** Step 1 complete; Step 2 is an owner-acceptance stop. No solver
-> implementation is authorized until the owner accepts the candidate scientific
-> scope and evidence contract.
+> **Status:** Step 2 accepted on 2026-09-14 for the ordinary-aqueous
+> three-form scope. Strong-acid cation/orange remains refusal-only and is not
+> authorized for implementation.
 
 ## Objective
 
@@ -64,7 +64,7 @@ are accepted.
 - **Stop:** any unresolved choice about species, constants, strong-acid scope,
   or coupled/decoupled treatment is hidden in implementation code.
 
-## Step 2 — owner acceptance stop
+## Step 2 — owner acceptance
 
 **Files:** no solver files may change.
 
@@ -77,10 +77,15 @@ pnpm verify:versions
 git diff --check
 ```
 
-The owner must accept or reject the candidate species/network, domain,
-constant-source requirements, strong-acid refusal, and evidence matrix. A
-verbal “looks reasonable” is not implementation authorization. Until accepted,
-the current production result remains the existing refusal/monoprotic path.
+- **Accepted:** ordinary-aqueous H₂In/HIn⁻/In²⁻ scope, source-backed
+  `Ka_In_1`/`Ka_In_2` requirements, coupled charge treatment, refusal-first
+  failure semantics, and MF-1…MF-10 evidence matrix.
+- **Explicitly not accepted for implementation:** strong-acid cation/orange
+  chemistry, strong-base-altered chemistry, and any quantitative optical
+  profile. Those remain documented refusal/research cases.
+
+The current production result remains the existing refusal/monoprotic path
+until Step 3–6 implementation and independent evidence are complete.
 
 ## Step 3 — write failing schema and scientific refusal tests after approval
 

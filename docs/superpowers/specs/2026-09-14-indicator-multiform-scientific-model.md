@@ -1,12 +1,16 @@
 # Indicator multiform scientific model — candidate specification
 
-> **Status:** Candidate scientific sub-specification — implementation is not
-> authorized until owner acceptance.
+> **Status:** Owner accepted on 2026-09-14 for the ordinary-aqueous
+> three-form implementation scope. The strong-acid cation/orange case is
+> documented as a scientific research boundary and explicit refusal only; its
+> implementation is not authorized by this acceptance.
 >
 > **Authority:** This document is subordinate to `GOAL.md`, `AGENTS.md`, and
 > `SPEC-0001`. It is referenced by `SPEC-0001` revision 28 Candidate and does
 > not alter the accepted M4 monoprotic model until the owner accepts the
-> candidate and its evidence.
+> candidate and its evidence. The owner acceptance recorded above authorizes
+> only the ordinary-aqueous scope stated in this document; it does not accept
+> strong-acid orange implementation or any quantitative optical profile.
 
 ## Context
 
@@ -368,10 +372,14 @@ If persisted scientific observation schema changes, it must use a new schema
 version and a loud migration path. A migration may add an explicit refusal, but
 may not invent form fractions or optical data.
 
-## Open questions
+## Decision recorded
 
-There are no implementation questions hidden here. The owner acceptance gate
-must decide whether this exact ordinary-aqueous three-form scope, the explicit
-strong-acid refusal, and the full coupled indicator charge treatment are the
-candidate to implement. Until that decision, all implementation steps after
-the specification/reference packet remain stopped.
+The owner accepted the ordinary-aqueous three-form scope, explicit
+strong-acid/strong-base refusal, and full coupled indicator charge treatment on
+2026-09-14. Implementation may proceed only for that accepted scope after the
+failing tests and source-backed constants are prepared.
+
+The strong-acid cation/orange behaviour remains documented for future
+scientific work and must remain `CHEMICAL_FORMS_UNAVAILABLE` in the current
+implementation. This acceptance does not authorize its species constants,
+solver branch, optical profile, or rendered orange output.

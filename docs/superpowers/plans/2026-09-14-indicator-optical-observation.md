@@ -1075,7 +1075,7 @@ cases, and native/TypeScript differential cases. It must explicitly state
 whether phenolphthalein's strong-acid cation is in scope. If it is not, the
 sub-spec must require its output to remain unavailable.
 
-- [ ] **Step 2: Stop for owner acceptance of the scientific sub-spec**
+- [x] **Step 2: Owner acceptance of the scientific sub-spec**
 
 ```text
 pnpm verify:m4-contracts
@@ -1083,8 +1083,10 @@ pnpm verify:scientific-math
 git diff --check
 ```
 
-Expected: no chemical-form solver implementation proceeds until the owner
-accepts the new M4 candidate criteria and source constants.
+At the time of this stop, no chemical-form solver implementation proceeded
+until the owner accepted the candidate criteria and source boundary. The owner
+acceptance is now recorded for the ordinary-aqueous scope only; implementation
+remains subject to Steps 3–6 and the strong-acid refusal remains mandatory.
 
 - [ ] **Step 3: Write failing scientific reference and refusal tests after acceptance**
 
