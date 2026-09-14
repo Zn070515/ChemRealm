@@ -23,19 +23,44 @@ TypeScript `1.0.0` M4 S3 baseline.
 | Native WASM canonical REF matrix | PASS locally | `packages/sci/src/native-reference.test.ts` runs REF-1…REF-10 through the real release WASM and checks independent values, analytic identities, charge conservation, scale bound, projection, and the complete native expression set |
 | Native adversarial semantic fixture | PASS locally | `packages/sci/src/native-reference.test.ts` verifies the dilute HOAc water-equilibrium result and rejects the recorded Henderson–Hasselbalch shortcut |
 | Native host ↔ WASM differential matrix | PASS locally | `pnpm verify:native-differential` compares the complete host/WASM payload for 42 requests across REF, ORACLE, and adversarial fixture groups |
-| Native WASM ↔ accepted TypeScript differential matrix | PASS locally | `pnpm verify:native-ts-differential` compares status, species, activities, projections, and indicators across every REF, ORACLE, and adversarial request; backend identities remain distinct |
+| Native WASM ↔ accepted TypeScript differential matrix | PASS locally | `pnpm verify:native-ts-differential` compares all shared scientific semantics across every REF, ORACLE, and adversarial request, including species quantities, validity, provenance parameters, diagnostics, projections, indicators, and expression substitutions; backend identities and human-readable numeric formatting remain intentionally distinct |
 | Native deterministic math / numeric-policy corpus | PASS locally | `pnpm native:test` checks the Rust implementation against the shared pinned arbitrary-precision ULP corpus used by the TypeScript tests |
 | Native WASM ↔ PHREEQC oracle comparison | PASS locally | `M4-oracle-sweep-report.json` records 10/10 native-WASM-to-pinned-PHREEQC comparisons, signed differences, model identity, toolchain identity, and the bounded-offset/no-equivalence disposition |
+| Explicit v2 native WorldCreated creation and replay with v1 exact lookup | PASS locally | `apps/web/src/composition.test.ts` creates legacy v1 and native v2 worlds, replays both logs without changing solver identity, resolves both exact versions, and confirms a v1 lookup is unavailable when only v2 is registered |
 | Native governance boundary | PASS locally | `pnpm verify:native-governance` |
+
+## Native supersession criterion matrix
+
+This is a native-specific handoff matrix, not a second definition of the
+canonical M4 criteria. `SHARED` means the accepted legacy evidence is
+backend-independent but is not silently counted as a native rerun. `PENDING`
+rows remain native S3 blockers.
+
+| Criterion | Native handoff status | Evidence / remaining work |
+|---|---|---|
+| AC-S1 | PASS locally | Native REF-1…REF-10 matrix checks independent expected results |
+| AC-S2 | PASS locally | Native REF matrix checks unquantized charge residuals |
+| AC-S3 | SHARED | World conservation is backend-independent; native supersession packet still needs its explicit v2 path attachment |
+| AC-S4 | PARTIAL | Native request/domain checks exist; complete criterion-by-criterion native domain packet remains pending |
+| AC-S5 | PASS locally | Native adversarial dilute weak-acid fixture rejects the Henderson–Hasselbalch shortcut |
+| AC-S6 | PASS locally | Native WASM ↔ pinned PHREEQC bounded comparison with no equivalence claim |
+| AC-S7 | SHARED | Provenance is schema/model-owned and carried through native identity; source records remain common evidence |
+| AC-S8 | PARTIAL | Canonical native wire units and TS projection boundary are checked; native-specific molality-core packet remains pending |
+| AC-S9 | PASS locally | Native projection and model-pH identity are exercised by the native REF matrix |
+| AC-S10 | PASS locally | Rust and TypeScript use the shared pinned arbitrary-precision ULP corpus |
+| AC-S11 | PENDING | Native monotonicity/boundary sweep must be attached explicitly |
+| AC-S12 | PASS locally | Native result expressions and provenance carry the activity-based model identity |
+| AC-S13 | PENDING | Native adapter domain-matrix evidence at `I_m = 0.15` and `0.30 mol/kg` must be attached explicitly |
+| AC-S14 | PENDING | Native run must traverse the complete v0 Scenario → WorldCreated → WorldState → SolveRequest sweep |
+| AC-S15 | SHARED | Required-density schema refusal is backend-independent; native packet must cite the shared contract test |
+| AC-S16 | SHARED | Constant provenance and precision evidence is backend-independent; native packet must cite the shared provenance test |
 
 ## Still required for native supersession S3
 
-The following prerequisites must be evidenced before any separate rollout
-decision. They are not satisfied merely by saying that native will become the
-default after the gate:
+The following final-packet prerequisites must be evidenced before any separate
+rollout decision. The paired v1/v2 WorldCreated test above is a local closure
+of the identity/replay behavior; it is not by itself a hosted S3 attestation:
 
-- explicit v2 native WorldCreated creation and replay, with v1 exact lookup
-  still preserved;
 - a criterion-by-criterion native rerun/acceptance packet for the applicable
   M4 scientific criteria, including the already-local REF, differential,
   oracle, and numeric-policy checks;

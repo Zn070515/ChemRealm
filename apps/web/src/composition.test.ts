@@ -4,11 +4,13 @@ import { readFile } from "node:fs/promises";
 import { buildObservableModel, toRenderState } from "@chemrealm/render";
 import {
   createNativeJsonAdapter,
+  createAcidBaseAdapter,
   loadNativeWasmExecutor,
+  SolverRegistry,
   type NativeExpressionSolverAdapter,
 } from "@chemrealm/sci";
 import { VERSION_MANIFEST } from "@chemrealm/schema";
-import { stateHash } from "@chemrealm/world";
+import { replay, stateHash } from "@chemrealm/world";
 
 import {
   composeProductionTitration,
@@ -171,5 +173,52 @@ describe("production composition vertical path", () => {
     expect(composition.observable.symbolicLines[0]?.modelVersion).toBe(
       VERSION_MANIFEST.scientific.acidBase.nativeVersion,
     );
+  });
+
+  it("preserves legacy v1 and native v2 solver identity across WorldCreated replay", async () => {
+    const legacy = await composeProductionTitration();
+    const native = await composeProductionTitration({ adapter: nativeAdapter });
+    const legacyGenesis = legacy.eventLog[0];
+    const nativeGenesis = native.eventLog[0];
+
+    expect(legacyGenesis?.type).toBe("WorldCreated");
+    expect(nativeGenesis?.type).toBe("WorldCreated");
+    if (legacyGenesis?.type !== "WorldCreated" || nativeGenesis?.type !== "WorldCreated") {
+      throw new Error("expected both compositions to start with WorldCreated");
+    }
+    expect(legacyGenesis.payload.solverConfig.version).toBe(
+      VERSION_MANIFEST.scientific.acidBase.legacyVersion,
+    );
+    expect(nativeGenesis.payload.solverConfig.version).toBe(
+      VERSION_MANIFEST.scientific.acidBase.nativeVersion,
+    );
+
+    const replayedLegacy = replay(legacy.eventLog).state;
+    const replayedNative = replay(native.eventLog).state;
+    expect(replayedLegacy.solverConfig.version).toBe(
+      VERSION_MANIFEST.scientific.acidBase.legacyVersion,
+    );
+    expect(replayedNative.solverConfig.version).toBe(
+      VERSION_MANIFEST.scientific.acidBase.nativeVersion,
+    );
+
+    const bothVersions = new SolverRegistry([
+      createAcidBaseAdapter(),
+      nativeAdapter,
+    ]);
+    expect(bothVersions.lookup(
+      replayedLegacy.solverConfig.id,
+      replayedLegacy.solverConfig.version,
+    ).status).toBe("found");
+    expect(bothVersions.lookup(
+      replayedNative.solverConfig.id,
+      replayedNative.solverConfig.version,
+    ).status).toBe("found");
+
+    const nativeOnly = new SolverRegistry([nativeAdapter]);
+    expect(nativeOnly.lookup(
+      replayedLegacy.solverConfig.id,
+      replayedLegacy.solverConfig.version,
+    ).status).toBe("unavailable");
   });
 });

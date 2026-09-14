@@ -30,8 +30,10 @@ circular statement about becoming the default backend.
   literals.
 
 **Implementation status:** Steps 1–3 are implemented and locally verified;
-the next required evidence is the hosted CI attestation for the pushed
-baseline. No milestone is promoted by this plan.
+hosted CI #117 / run `34815999663` attests the `afe0f97` baseline. The
+remaining native supersession work is the explicit v2 WorldCreated/replay
+packet, criterion-by-criterion native acceptance, and final hosted artifact /
+browser attestation. No milestone is promoted by this plan.
 
 ## Architecture
 

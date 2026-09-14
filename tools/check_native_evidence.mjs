@@ -12,11 +12,12 @@ async function document(relativePath) {
   return readFile(new URL(relativePath, root), "utf8");
 }
 
-const [nativeEvidence, legacyEvidence, nativeSpec, nativePlan] = await Promise.all([
+const [nativeEvidence, legacyEvidence, nativeSpec, nativePlan, nativeAmendment] = await Promise.all([
   document("docs/evidence/M4-native.md"),
   document("docs/evidence/M4.md"),
   document("docs/superpowers/specs/2026-09-13-m4-native-scientific-backend.md"),
   document("docs/superpowers/plans/2026-09-13-m4-native-scientific-backend.md"),
+  document("docs/evidence/native-toolchain-amendment.md"),
 ]);
 
 const failures = [];
@@ -51,6 +52,16 @@ mustNot(nativeSpec, /new worlds bind v2 only after explicit registration/i,
   "native specification does not use default-like wording as the supersession gate");
 must(legacyEvidence, /^\*\*Status:\*\* \*\*S3 — Verified \/ Accepted\*\*/m,
   "legacy M4 S3 evidence remains preserved");
+must(nativeAmendment, /Implementation commit:\*{0,2}\s*`[0-9a-f]{40}`/i,
+  "native amendment names the exact implementation commit");
+must(nativeAmendment, /Hosted CI:\*{0,2}\s*#\d+ \/ run `\d+` for that commit/i,
+  "native amendment binds a hosted CI run to the implementation commit");
+must(nativeAmendment, /Local release artifact SHA-256:\*{0,2}\s*`sha256:[0-9a-f]{64}`/i,
+  "native amendment records the local release artifact digest");
+must(nativeAmendment, /Final native artifact identity:\*{0,2}[^\n]*pending/i,
+  "native amendment does not promote a local digest to final hosted S3 evidence");
+mustNot(nativeAmendment, /34761350435/i,
+  "native amendment does not attribute native work to the pre-native CI run");
 
 for (const [name, text] of [["native spec", nativeSpec], ["native plan", nativePlan]]) {
   mustNot(text, /M4-B\s+S3\s+(?:verified|accepted|complete)/i,
