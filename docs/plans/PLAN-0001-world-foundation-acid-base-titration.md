@@ -1,10 +1,12 @@
 # PLAN-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** **M0–M4 S3 Verified / Accepted; M5 and M4-B S3 verified locally; hosted/owner acceptance and M6 authorization remain open** — the original plan was approved
+- **Status:** **M0–M4 S3 Verified / Accepted; M5 and M4-B S3 verified locally and by hosted CI; owner acceptance and M6 authorization remain open** — the original plan was approved
   on 2026-09-11 at `SPEC-0001` revision 6; revisions 13–20 were accepted
   on 2026-09-13. The current optical candidate revision and native-backend
   candidate are declared only by `contracts/version-manifest.json`; they remain
-  subject to owner review and hosted attestation.
+  subject to owner review. The exact local/hosted baseline is commit
+  `66b488a3e7483b776711d0e9d6ab723698dc3a35`, CI run #140
+  (`34868257380`).
 - **Completed:** `M0 — Repository foundation` reached **S3 — Verified** on
   2026-09-11. Evidence: `docs/evidence/M0.md`, commits `1f3dfee`/`565a2e8`,
   CI run `34595967023` (13/13 gate steps on a clean `ubuntu-latest` checkout).
@@ -17,8 +19,8 @@
   `778fadbd` with CI `34677042056` and evidence in `docs/evidence/M2.md`.
 - **M5 composition handoff:** the current local DOM composition and bounded
   ordinary-aqueous optical-profile path are verified in `docs/evidence/M5.md`.
-  M5 is a local S3 candidate; final committed-baseline hosted attestation and
-  owner acceptance remain open. Contract-level AC-V3/AC-V4 evidence is an M5
+  M5 is a local/hosted S3 candidate; owner acceptance remains open.
+  Contract-level AC-V3/AC-V4 evidence is an M5
   responsibility; M6 final assets and visual review are downstream realization
   evidence and do not gate M5 S3. Native backend work is governed by
   `docs/superpowers/plans/2026-09-13-m4-native-scientific-backend.md` and

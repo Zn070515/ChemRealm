@@ -1,7 +1,8 @@
 # M6 Entry Closure Plan
 
-> Status: M6 entry gate — M4-B and M5 are locally verified candidates; this
-> plan records the final hosted/owner gate and does not implement M6 itself.
+> Status: M6 entry gate — M4-B and M5 are locally and hosted verified
+> candidates; owner acceptance remains open and this plan does not implement
+> M6 itself.
 
 ## Context
 
@@ -10,8 +11,8 @@ native M4-B candidate, and a locally verified M5 World → Scientific Core →
 ScientificFrame → Observable → DOM composition. One source-reviewed
 ordinary-aqueous phenolphthalein profile is admitted only inside its bounded
 coverage; all unsupported optical cases remain refusal-first. M6 is explicitly
-downstream of both M5 S3 and M4-B S3, with hosted attestation and owner review
-still required before authorization.
+downstream of both M5 S3 and M4-B S3. The exact committed baseline has passed
+hosted CI; owner review remains required before authorization.
 
 The current review also identified an authority conflict: visual reference
 swatches are useful qualitative QA material, but they must not be treated as

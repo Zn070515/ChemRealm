@@ -35,7 +35,7 @@ function mustNot(text, pattern, message) {
   if (pattern.test(text)) failures.push(`forbidden: ${message}`);
 }
 
-must(entry, /^\*\*Status:\*\* \*\*Ready for owner authorization after hosted attestation\*\*/m,
+must(entry, /^\*\*Status:\*\* \*\*Ready for owner authorization\*\*/m,
   "M6 entry remains an authorization gate, not an automatic authorization claim");
 must(entry, /M6 is the first milestone[\s\S]{0,260}PixiJS renderer/i,
   "M6 scope includes final apparatus/rendering realization");
@@ -51,18 +51,20 @@ must(entry, /final apparatus asset package and semantic asset contract/i,
   "M6 asset contract is explicitly unverified at entry");
 must(entry, /PixiJS\/renderer implementation and layer ownership/i,
   "M6 renderer work is explicitly unverified at entry");
-must(entry, /The final evidence packet must append the actual hosted CI run/i,
-  "M6 packet requires post-push hosted evidence");
+must(entry, /Hosted attestation is now recorded for the exact committed baseline/i,
+  "M6 packet records the post-push hosted evidence");
 
-must(plan, /M5 and M4-B S3 verified locally[\s\S]{0,180}hosted\/owner acceptance/i,
-  "canonical plan records local S3 candidates and open hosted/owner gates");
+must(plan, /M5 and M4-B S3 verified locally and by hosted CI[\s\S]{0,180}owner acceptance/i,
+  "canonical plan records hosted-verified local S3 candidates and the open owner gate");
 must(plan, new RegExp(`\\| M6 \\|[^\\n]*\\|[^\\n]*M5 S3[^\\n]*M4-B S3[^\\n]*\\|`, "i"),
   "canonical M6 dependency remains M5 S3 plus M4-B S3");
 must(plan, /M5 S3 does\s+not wait for M6/i,
   "M5 contract acceptance is not circularly dependent on M6");
 
-must(m4Native, /S3[\s\S]{0,80}verified locally[\s\S]{0,100}owner\/hosted supersession acceptance/i,
-  "native evidence is locally verified but not silently owner-accepted");
+must(m4Native, /S3[\s\S]{0,100}verified locally and by hosted CI[\s\S]{0,100}owner supersession\s+acceptance/i,
+  "native evidence is hosted-verified but not silently owner-accepted");
+must(m4Native, /hosted CI run #140[\s\S]{0,180}66b488a3e7483b776711d0e9d6ab723698dc3a35/i,
+  "native evidence binds hosted CI to the exact committed baseline");
 must(m4Native, /sha256:c03fc50d7fb8aa6bae79dd9638b14095f1cf919bdfb8e31c64bda93ce05c3887/i,
   "native local artifact identity is recorded");
 must(m4Native, /Native WASM ↔ PHREEQC oracle comparison/i,
@@ -72,8 +74,10 @@ must(m4Native, /not a claim that the native model and PHREEQC are equivalent/i,
 mustNot(m4Native, /M4-B\s+S3\s*\/\s*Accepted/i,
   "native packet does not claim owner acceptance without attestation");
 
-must(m5, /S3[\s\S]{0,80}verified locally[\s\S]{0,100}owner\/hosted acceptance/i,
-  "M5 evidence is locally verified but not silently owner-accepted");
+must(m5, /S3[\s\S]{0,100}verified locally and by hosted CI[\s\S]{0,100}owner acceptance/i,
+  "M5 evidence is hosted-verified but not silently owner-accepted");
+must(m5, /66b488a3e7483b776711d0e9d6ab723698dc3a35[\s\S]{0,180}hosted CI run #140/i,
+  "M5 evidence binds hosted CI to the exact committed baseline");
 must(m5, /OPTICAL_MODEL_OK/i,
   "M5 records positive bounded optical evidence");
 must(m5, /Strong-acid phenolphthalein orange\s+remains\s+documented\s+and\s+refusal-only/i,
@@ -82,7 +86,7 @@ must(m5, /M5-COMPOSITION[^\n]*PASS locally/i,
   "M5 production composition evidence is attached");
 must(m5, /AC-O8[^\n]*PASS locally/i,
   "positive and refusal optical evidence is attached");
-must(m5, /hosted CI and owner acceptance remain separate gates/i,
+must(m5, /hosted CI run #140[\s\S]{0,220}Owner acceptance remains a separate gate/i,
   "M5 does not turn local evidence into final acceptance");
 
 must(spec, new RegExp(`\\*\\*Current revision:\\*\\* \\*\\*${manifest.spec.currentRevision} Candidate`, "i"),

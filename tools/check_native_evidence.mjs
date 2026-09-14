@@ -28,8 +28,8 @@ function mustNot(text, pattern, message) {
   if (pattern.test(text)) failures.push(`forbidden: ${message}`);
 }
 
-must(nativeEvidence, /^\*\*Status:\*\* \*\*S3[\s\S]*verified locally[\s\S]*owner\/hosted supersession acceptance[\s\S]*open\*\*/m,
-  "native evidence records local S3 verification while keeping owner/hosted acceptance open");
+must(nativeEvidence, /^\*\*Status:\*\* \*\*S3[\s\S]*verified locally and by hosted CI[\s\S]*owner supersession\s+acceptance[\s\S]*open\*\*/m,
+  "native evidence records hosted S3 verification while keeping owner acceptance open");
 must(nativeEvidence, /Native WASM ↔ PHREEQC oracle comparison/i,
   "native WASM-to-PHREEQC comparison evidence is recorded");
 must(nativeEvidence, /Language-neutral native model contract[^\n]*PASS locally/i,
@@ -80,7 +80,7 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log("ok    native evidence records local S3 verification while legacy M4 S3 remains historical");
+console.log("ok    native evidence records hosted S3 verification while legacy M4 S3 remains historical");
 console.log("ok    native REF and bounded PHREEQC comparison evidence are recorded");
 console.log("ok    native specification and plan contain no premature S3 claim");
 console.log("\nRESULT: PASS");

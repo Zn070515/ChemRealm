@@ -1,7 +1,7 @@
 # M4-B — Native Scientific Core / WASM Evidence
 
-**Status:** **S3 — verified locally; owner/hosted supersession acceptance
-remains open**
+**Status:** **S3 — verified locally and by hosted CI; owner supersession
+acceptance remains open**
 
 **Authority:** `SPEC-0001` current candidate revision and ADR-0014. This packet
 is separate from [`M4.md`](M4.md), which records the accepted historical
@@ -58,14 +58,16 @@ rows remain native S3 blockers.
 | AC-S15 | SHARED | Required-density schema refusal is backend-independent; native packet must cite the shared contract test |
 | AC-S16 | SHARED | Constant provenance and precision evidence is backend-independent; native packet must cite the shared provenance test |
 
-## Still required for hosted/owner supersession acceptance
+## Still required for owner supersession acceptance
 
-The following final-packet prerequisites must be evidenced before any separate
-rollout decision. The paired v1/v2 WorldCreated test above is a local closure
-of the identity/replay behavior; it is not by itself a hosted attestation:
+The following final-packet prerequisite remains before any separate rollout
+decision. The paired v1/v2 WorldCreated test above is a local closure of the
+identity/replay behavior; the exact committed baseline has also passed hosted
+CI:
 
-- hosted CI rerun for the exact committed baseline, with the final native
-  artifact identity recorded by that run;
+- hosted CI run #140 (`34868257380`) for commit
+  `66b488a3e7483b776711d0e9d6ab723698dc3a35` passed all required gates,
+  including the final native artifact identity;
 - owner review of this packet and the current canonical SPEC candidate;
 - an explicit rollout decision before changing the default backend for new
   worlds.
