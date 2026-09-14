@@ -31,6 +31,7 @@ import {
   NativeBackendPayloadSchema,
   NativeSolveEnvelopeSchema,
   NATIVE_BRIDGE_SCHEMA_VERSION,
+  solverConfigIdentityHash,
 } from "./scientific.js";
 import {
   CURRENT_SCHEMA_VERSION,
@@ -841,6 +842,31 @@ describe("scientific contract carries the model's identity and validity", () => 
     expect(json).toContain("MODEL_OUT_OF_DOMAIN");
     expect(json).toContain("NOT_CONVERGED");
     expect(json).not.toContain('"ph"');
+  });
+});
+
+describe("solver config identity", () => {
+  it("is stable across parameter insertion order and changes when identity changes", () => {
+    const first = {
+      id: "acidbase-monoprotic-davies",
+      version: "1.0.0",
+      parameters: { Kw: 1e-14, Ka_HOAc: 1.7539e-5 },
+    };
+    const reordered = {
+      id: first.id,
+      version: first.version,
+      parameters: { Ka_HOAc: 1.7539e-5, Kw: 1e-14 },
+    };
+    const changed = {
+      ...first,
+      parameters: { ...first.parameters, Kw: 1.0000000000001e-14 },
+    };
+
+    expect(solverConfigIdentityHash(first)).toBe(solverConfigIdentityHash(reordered));
+    expect(solverConfigIdentityHash(first)).not.toBe(solverConfigIdentityHash(changed));
+    expect(solverConfigIdentityHash(first)).not.toBe(
+      solverConfigIdentityHash({ ...first, version: "2.0.0" }),
+    );
   });
 });
 

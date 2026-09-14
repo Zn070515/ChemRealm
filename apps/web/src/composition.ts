@@ -79,17 +79,15 @@ function solveRequestFromState(state: WorldState) {
     temperature: state.scenarioSnapshot.modelRequirements.temperature,
     componentAmounts: contents.componentAmounts,
     indicators: state.scenarioSnapshot.indicators,
+    solverConfig: state.solverConfig,
   });
 }
 
-function exactAdapterForState(
+export function exactScientificAdapterForState(
   registry: SolverRegistry,
   state: WorldState,
 ): ScientificExecutionAdapter {
-  const lookup = registry.lookupScientificExecution(
-    state.solverConfig.id,
-    state.solverConfig.version,
-  );
+  const lookup = registry.lookupScientificExecutionBySolverConfig(state.solverConfig);
   if (lookup.status !== "found") {
     throw new Error(`production composition: ${lookup.reason}`);
   }
@@ -258,7 +256,7 @@ export async function composeProductionTitration(
   }
   const replayed = replay(eventLog);
   state = replayed.state;
-  const exactAdapter = exactAdapterForState(registry, state);
+  const exactAdapter = exactScientificAdapterForState(registry, state);
   const prefixStates = statesAtCommittedTargetPrefixes(eventLog);
   const frames: ScientificFrame[] = [];
   let finalExpressions: ScientificExecution["expressions"] = [];

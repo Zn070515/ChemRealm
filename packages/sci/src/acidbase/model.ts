@@ -62,7 +62,11 @@ function parameter(config: SolverConfig, name: string): number {
 export function acidBaseConstantsFromSolverConfig(
   config: SolverConfig,
 ): AcidBaseConstants {
-  if (config.id !== ACID_BASE_MODEL_ID || config.version !== ACID_BASE_MODEL_VERSION) {
+  if (
+    config.id !== ACID_BASE_MODEL_ID ||
+    (config.version !== VERSION_MANIFEST.scientific.acidBase.legacyVersion &&
+      config.version !== VERSION_MANIFEST.scientific.acidBase.nativeVersion)
+  ) {
     throw new RangeError("solver config identity does not belong to the acid-base model");
   }
   const waterActivity = parameter(config, "waterActivity");

@@ -15,6 +15,7 @@ import { replay, stateHash } from "@chemrealm/world";
 import {
   composeProductionTitration,
   composeNativeProductionTitration,
+  exactScientificAdapterForState,
   selectCommittedTitrantTransfers,
   statesAtCommittedTargetPrefixes,
 } from "./composition.js";
@@ -220,5 +221,24 @@ describe("production composition vertical path", () => {
       replayedLegacy.solverConfig.id,
       replayedLegacy.solverConfig.version,
     ).status).toBe("unavailable");
+  });
+
+  it("refuses a replayed world whose persisted solver parameter identity changed", async () => {
+    const composition = await composeProductionTitration();
+    const registry = new SolverRegistry([createAcidBaseAdapter()]);
+    const tamperedState = {
+      ...composition.state,
+      solverConfig: {
+        ...composition.state.solverConfig,
+        parameters: {
+          ...composition.state.solverConfig.parameters,
+          Ka_HOAc: composition.state.solverConfig.parameters.Ka_HOAc * 1.0000000001,
+        },
+      },
+    };
+
+    expect(() => exactScientificAdapterForState(registry, tamperedState)).toThrow(
+      /identity mismatch|parameters do not match/i,
+    );
   });
 });

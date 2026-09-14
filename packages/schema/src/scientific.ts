@@ -44,6 +44,7 @@
 import { z } from "zod";
 
 import { VERSION_MANIFEST } from "./generated/versions.js";
+import { hashCanonical } from "./canonical-hash.js";
 import {
   canonicalQuantityOfDimension,
   quantityOfDimension,
@@ -830,4 +831,31 @@ export interface SolverConfig {
   readonly id: string;
   readonly version: string;
   readonly parameters: Readonly<Record<string, number>>;
+}
+
+/**
+ * Stable identity for the complete persisted solver configuration.
+ *
+ * Object keys are canonicalized by `hashCanonical`, so parameter insertion
+ * order is not identity. Every parameter value is encoded as its canonical
+ * numeric spelling, with signed zero preserved because solver identity uses
+ * `Object.is` semantics at the adapter boundary.
+ */
+export function solverConfigIdentityHash(config: SolverConfig): string {
+  const parameters = Object.fromEntries(
+    Object.keys(config.parameters)
+      .sort()
+      .map((key) => {
+        const value = config.parameters[key];
+        if (!Number.isFinite(value)) {
+          throw new RangeError(`solver config parameter ${key} must be finite`);
+        }
+        return [key, Object.is(value, -0) ? "-0" : String(value)];
+      }),
+  );
+  return `sha256:${hashCanonical({
+    id: config.id,
+    version: config.version,
+    parameters,
+  })}`;
 }

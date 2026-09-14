@@ -4,6 +4,7 @@ import {
   type Litre,
   type Mol,
   type SolveRequest,
+  type SolverConfig,
   type ThermodynamicConstant,
 } from "@chemrealm/schema";
 
@@ -11,7 +12,7 @@ import {
   ACID_BASE_COMPONENT_CATALOG,
   type AcidBaseComponentCatalogEntry,
 } from "./catalog.js";
-import { DEFAULT_ACID_BASE_CONSTANTS } from "./model.js";
+import { acidBaseConstantsFromSolverConfig } from "./model.js";
 
 /** Plain canonical contents supplied by World Runtime at the Sci boundary. */
 export interface AcidBaseSolveRequestInput {
@@ -26,6 +27,8 @@ export interface AcidBaseSolveRequestInput {
     readonly indicatorId: string;
     readonly kaIn: ThermodynamicConstant;
   }[];
+  /** The frozen config persisted in WorldCreated; no process default is used. */
+  readonly solverConfig: SolverConfig;
 }
 
 function catalogEntry(componentId: string): AcidBaseComponentCatalogEntry {
@@ -46,6 +49,7 @@ function catalogEntry(componentId: string): AcidBaseComponentCatalogEntry {
 export function buildAcidBaseSolveRequest(
   input: AcidBaseSolveRequestInput,
 ): SolveRequest {
+  const constants = acidBaseConstantsFromSolverConfig(input.solverConfig);
   const solutes = input.componentAmounts.map((component) => {
     const entry = catalogEntry(component.componentId);
     if (entry.mode === "monoprotic-equilibrium") {
@@ -53,7 +57,7 @@ export function buildAcidBaseSolveRequest(
         soluteId: component.componentId,
         amount: component.amount,
         mode: entry.mode,
-        ka: DEFAULT_ACID_BASE_CONSTANTS.Ka_HOAc,
+        ka: constants.Ka_HOAc,
       } as const;
     }
     return {

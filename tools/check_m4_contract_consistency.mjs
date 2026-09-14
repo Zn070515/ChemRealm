@@ -7,7 +7,7 @@ async function document(relativePath) {
   return readFile(new URL(relativePath, root), "utf8");
 }
 
-const [spec, design, adr0011, adr0012, content, world, worldCreation, solve, activity, migrate, scenarioMigrate, plan, evidence, integrity, oraclePlan, enginePlan, v0Inputs, envelopeReference, acceptanceTest] = await Promise.all([
+const [spec, design, adr0011, adr0012, content, world, worldCreation, solve, activity, migrate, scenarioMigrate, plan, evidence, integrity, oraclePlan, enginePlan, v0Inputs, envelopeReference, acceptanceTest, composition] = await Promise.all([
   document("docs/specs/SPEC-0001-world-foundation-acid-base-titration.md"),
   document("docs/superpowers/specs/2026-09-12-m4-acid-base-engine-design.md"),
   document("docs/adr/0011-scenario-scientific-input-freezing.md"),
@@ -27,6 +27,7 @@ const [spec, design, adr0011, adr0012, content, world, worldCreation, solve, act
   document("docs/research/v0-scientific-inputs.json"),
   document("docs/research/v0-envelope-reference.json"),
   document("apps/web/src/m4-acceptance.test.ts"),
+  document("apps/web/src/composition.ts"),
 ]);
 const quantityBoundaryGuard = await document("tools/check_scientific_quantity_boundary.mjs");
 const versionManifest = await readVersionManifest();
@@ -154,6 +155,9 @@ must(envelopeReference, /"ionicStrengthMolal": 0\.09996461252716539/, "envelope 
 must(acceptanceTest, /v0-envelope-reference\.json/, "AC-S14 reads the separate envelope reference");
 must(acceptanceTest, /createWorldFromScenario/, "AC-S14 enters through scenario/world creation");
 mustNot(acceptanceTest, /densityKgPerL -/, "AC-S14 does not duplicate world-resolution water-mass arithmetic");
+must(composition, /lookupScientificExecutionBySolverConfig\(state\.solverConfig\)/, "production composition resolves persisted solver identity including parameters");
+must(composition, /solverConfig:\s*state\.solverConfig/, "production request construction receives the persisted solver config");
+mustNot(composition, /lookupScientificExecution\(\s*state\.solverConfig\.id/, "production composition does not resolve a persisted solver by id/version only");
 mustNot(integrity, /AC-S3、AC-S7、AC-S10…AC-S16/, "evidence-integrity note has no stale merged M4 status");
 mustNot(oraclePlan, /AC-S3, AC-S7, and AC-S10…AC-S16/, "oracle plan has no stale merged M4 status");
 mustNot(enginePlan, /AC-S3, AC-S7, and AC-S10…AC-S16/, "engine plan has no stale merged M4 status");

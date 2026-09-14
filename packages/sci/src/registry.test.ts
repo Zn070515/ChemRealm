@@ -142,6 +142,33 @@ describe("exact solver registry", () => {
     expect(unavailable.reason).toContain(`${TEST_SOLVER_VERSION.slice(0, 4)}1.0`);
   });
 
+  it("requires the complete frozen solver config identity for persisted lookup", () => {
+    const adapter = new StubSolverAdapter({
+      descriptor: makeDescriptor(),
+      parameters: { Kw: 1e-14 },
+      outcome: notConverged(),
+    });
+    const registry = new SolverRegistry([adapter]);
+
+    expect(registry.lookupBySolverConfig(adapter.solverConfig).status).toBe("found");
+    expect(
+      registry.lookupScientificExecutionBySolverConfig(adapter.solverConfig).status,
+    ).toBe("unavailable");
+
+    const modified = {
+      ...adapter.solverConfig,
+      parameters: { ...adapter.solverConfig.parameters, Kw: 1.0000000000001e-14 },
+    };
+    const modifiedLookup = registry.lookupBySolverConfig(modified);
+    expect(modifiedLookup.status).toBe("unavailable");
+    if (modifiedLookup.status !== "unavailable") throw new Error("expected identity mismatch");
+    expect(modifiedLookup.reason).toMatch(/identity|parameter/i);
+    const modifiedScientificLookup = registry.lookupScientificExecutionBySolverConfig(modified);
+    expect(modifiedScientificLookup.status).toBe("unavailable");
+    if (modifiedScientificLookup.status !== "unavailable") throw new Error("expected identity mismatch");
+    expect(modifiedScientificLookup.reason).toMatch(/identity|parameter/i);
+  });
+
   it("exposes an expression capability through a typed registry lookup", () => {
     const registry = new SolverRegistry([createAcidBaseAdapter()]);
 

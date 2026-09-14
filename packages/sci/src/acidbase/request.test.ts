@@ -7,7 +7,10 @@ import {
   thermodynamicConstant,
 } from "@chemrealm/schema";
 import { buildAcidBaseSolveRequest } from "./request.js";
-import { DEFAULT_ACID_BASE_CONSTANTS } from "./model.js";
+import {
+  buildAcidBaseSolverConfig,
+  DEFAULT_ACID_BASE_CONSTANTS,
+} from "./model.js";
 
 describe("acid-base solve request builder", () => {
   it("owns component mode and model Ka selection in Scientific Core", () => {
@@ -22,6 +25,7 @@ describe("acid-base solve request builder", () => {
         { componentId: "NaOAc", amount: mol(0.04) },
       ],
       indicators: [{ indicatorId: "phenolphthalein", kaIn: thermodynamicConstant(3.98e-10) }],
+      solverConfig: buildAcidBaseSolverConfig(),
     });
 
     expect(request.solutes).toMatchObject([
@@ -46,7 +50,35 @@ describe("acid-base solve request builder", () => {
         temperature: kelvin(298.15),
         componentAmounts: [{ componentId: "HNO3", amount: mol(0.01) }],
         indicators: [],
+        solverConfig: buildAcidBaseSolverConfig(),
       }),
     ).toThrow(/outside the v0 model/);
+  });
+
+  it("uses the persisted solver config for equilibrium constants", () => {
+    const solverConfig = {
+      ...buildAcidBaseSolverConfig(),
+      parameters: {
+        ...buildAcidBaseSolverConfig().parameters,
+        Ka_HOAc: 2.1e-5,
+      },
+    };
+
+    const request = buildAcidBaseSolveRequest({
+      waterMass: kilogram(1),
+      liquidVolume: litre(0.1),
+      temperature: kelvin(298.15),
+      componentAmounts: [{ componentId: "HOAc", amount: mol(0.03) }],
+      indicators: [],
+      solverConfig,
+    });
+
+    expect(request.solutes).toMatchObject([
+      {
+        soluteId: "HOAc",
+        mode: "monoprotic-equilibrium",
+        ka: thermodynamicConstant(2.1e-5),
+      },
+    ]);
   });
 });

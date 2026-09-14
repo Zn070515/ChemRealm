@@ -19,6 +19,7 @@ TypeScript `1.0.0` M4 S3 baseline.
 | Scientific execution capability | PASS locally | adapter/registry tests preserve and safely narrow the expression-producing capability |
 | Refusal identity | PASS locally | adapter and registry tests reject mismatched `nearestSupported` model identity |
 | Explicit solver selection | PASS locally | reversed registry-order tests preserve the explicitly selected identity |
+| Persisted solver-config identity | PASS locally | `packages/sci/src/registry.test.ts` rejects changed parameters through both exact lookup capabilities; production composition passes the frozen `WorldState.solverConfig` into adapter lookup and request construction |
 | Explicit native production composition | PASS locally | `apps/web/src/composition.test.ts` and `tests/browser/m5-composition.spec.ts?backend=native` prove a registered WASM adapter drives World → ScientificFrame → Observable → DOM without TS expression substitution |
 | Native WASM canonical REF matrix | PASS locally | `packages/sci/src/native-reference.test.ts` runs REF-1…REF-10 through the real release WASM and checks independent values, analytic identities, charge conservation, scale bound, projection, and the complete native expression set |
 | Native adversarial semantic fixture | PASS locally | `packages/sci/src/native-reference.test.ts` verifies the dilute HOAc water-equilibrium result and rejects the recorded Henderson–Hasselbalch shortcut |

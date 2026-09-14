@@ -2,6 +2,7 @@
 
 import {
   SolverConfigSchema,
+  solverConfigIdentityHash,
   type ModelDescriptor,
   type SolverConfig,
 } from "@chemrealm/schema";
@@ -165,6 +166,38 @@ export class SolverRegistry {
     };
   }
 
+  /**
+   * Look up a persisted adapter only when its complete solver identity
+   * matches, including every frozen parameter value.
+   */
+  lookupBySolverConfig(config: SolverConfig): ExactSolverLookup {
+    const result = this.lookup(config.id, config.version);
+    if (result.status === "unavailable") return result;
+
+    let requestedHash: string;
+    let registeredHash: string;
+    try {
+      requestedHash = solverConfigIdentityHash(config);
+      registeredHash = solverConfigIdentityHash(result.adapter.solverConfig);
+    } catch (error) {
+      return {
+        status: "unavailable",
+        id: config.id,
+        version: config.version,
+        reason: `solver config identity is invalid: ${error instanceof Error ? error.message : String(error)}`,
+      };
+    }
+    if (requestedHash !== registeredHash) {
+      return {
+        status: "unavailable",
+        id: config.id,
+        version: config.version,
+        reason: `solver config identity mismatch for ${config.id}@${config.version}; persisted parameters do not match the registered snapshot`,
+      };
+    }
+    return result;
+  }
+
   lookupScientificExecution(
     id: string,
     version: string,
@@ -177,6 +210,22 @@ export class SolverRegistry {
         id,
         version,
         reason: `solver adapter ${id}@${version} does not expose scientific execution artifacts`,
+      };
+    }
+    return { status: "found", adapter: result.adapter };
+  }
+
+  lookupScientificExecutionBySolverConfig(
+    config: SolverConfig,
+  ): ScientificExecutionLookup {
+    const result = this.lookupBySolverConfig(config);
+    if (result.status === "unavailable") return result;
+    if (!isScientificExecutionAdapter(result.adapter)) {
+      return {
+        status: "unavailable",
+        id: config.id,
+        version: config.version,
+        reason: `solver adapter ${config.id}@${config.version} does not expose scientific execution artifacts`,
       };
     }
     return { status: "found", adapter: result.adapter };

@@ -13,6 +13,7 @@ import {
   type SolveRequest,
 } from "@chemrealm/schema";
 import { buildAcidBaseSolveRequest } from "./acidbase/request.js";
+import { buildAcidBaseSolverConfig } from "./acidbase/model.js";
 import { createAcidBaseAdapter } from "./acidbase/index.js";
 import {
   createNativeJsonAdapter,
@@ -40,6 +41,7 @@ const request = buildAcidBaseSolveRequest({
   temperature: kelvin(298.15),
   componentAmounts: [{ componentId: "HCl", amount: mol(0.1) }],
   indicators: [],
+  solverConfig: buildAcidBaseSolverConfig(),
 });
 
 function payload(overrides: Partial<NativeBackendPayload> = {}): NativeBackendPayload {
@@ -353,6 +355,7 @@ describe("native scientific backend facade", () => {
         indicatorId: "phenolphthalein",
         kaIn: thermodynamicConstant(3.98e-10),
       }],
+      solverConfig: buildAcidBaseSolverConfig(),
     });
     const [legacy, native] = await Promise.all([
       createAcidBaseAdapter().solve(candidate),
