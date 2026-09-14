@@ -76,6 +76,8 @@ impl<'de> Deserialize<'de> for RawSolute {
 struct RawIndicator {
     indicator_id: String,
     ka_in: Quantity,
+    #[serde(default)]
+    total_amount: Option<Quantity>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -534,6 +536,23 @@ fn validate_request(request: &RawRequest) -> Result<ValidatedRequest<'_>, Box<Na
                 field: format!("indicators[{index}].kaIn"),
                 message,
             }),
+        }
+        if let Some(total_amount) = &indicator.total_amount {
+            match require_unit(
+                total_amount,
+                "mol",
+                &format!("indicators[{index}].totalAmount"),
+            ) {
+                Ok(value) if value >= 0.0 => {}
+                Ok(_) => violations.push(InputViolationDto {
+                    field: format!("indicators[{index}].totalAmount"),
+                    message: "indicator amount must be non-negative".to_string(),
+                }),
+                Err(message) => violations.push(InputViolationDto {
+                    field: format!("indicators[{index}].totalAmount"),
+                    message,
+                }),
+            }
         }
     }
     if !violations.is_empty() {

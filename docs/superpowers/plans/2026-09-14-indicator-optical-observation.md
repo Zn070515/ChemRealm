@@ -659,17 +659,21 @@ git commit -m "Freeze and conserve indicator optical inputs"
 **Files:**
 - Modify: `apps/web/src/world-creation.ts`
 - Modify: `apps/web/src/world-creation.test.ts`
+- Modify: `apps/web/src/composition.ts`
+- Modify: `contracts/version-manifest.json`
+- Modify: `packages/schema/src/scientific.ts`
 - Modify: `packages/sci/src/request.ts`
 - Modify: `packages/sci/src/request.test.ts`
 - Modify: `packages/sci/src/acidbase/request.ts`
 - Modify: `packages/sci/src/acidbase/request.test.ts`
 - Modify: `apps/web/src/production-scenario.ts`
+- Modify: `native/sci-core/src/lib.rs`
 
 **Interfaces:**
 - Consumes: Task 3 frozen snapshot and `CanonicalContents.indicatorAmounts`.
-- Produces: `buildAcidBaseSolveRequest({ ..., indicators: [{ indicatorId, kaIn, totalAmount? }] })`; no solver request reads an authored indicator catalog.
+- Produces: `buildAcidBaseSolveRequest({ ..., indicators: [{ indicatorId, kaIn }], indicatorAmounts })`, with optional `totalAmount` emitted only for dose present in the current vessel; no solver request reads an authored indicator catalog.
 
-- [ ] **Step 1: Write failing resolution/request tests**
+- [x] **Step 1: Write failing resolution/request tests**
 
 ```ts
 const snapshot = resolveScenario(opticalScenario);
@@ -690,7 +694,7 @@ optical input, a dose assigned to an unknown vessel, or a profile whose
 indicator ID differs from its indicator input causes `createWorld` to reject
 before `WorldCreated` exists.
 
-- [ ] **Step 2: Run focused tests and verify RED**
+- [x] **Step 2: Run focused tests and verify RED**
 
 ```text
 pnpm exec vitest run apps/web/src/world-creation.test.ts packages/sci/src/request.test.ts packages/sci/src/acidbase/request.test.ts
@@ -699,11 +703,11 @@ pnpm exec vitest run apps/web/src/world-creation.test.ts packages/sci/src/reques
 Expected: the resolver does not freeze optical artifacts and solve requests
 cannot carry a conserved indicator amount.
 
-- [ ] **Step 3: Implement resolver-only authoring conversion**
+- [x] **Step 3: Implement resolver-only authoring conversion**
 
-In `resolveScenario`, parse the authored profile/path registry record, verify
-its payload hash, canonicalize dose/path quantities, enforce one optical input
-per indicator, and attach the complete resolved artifact to the snapshot. In
+In `resolveScenario`, parse the authored profile/path snapshots, verify their
+payload hashes, canonicalize dose/path quantities, enforce one optical input
+per indicator, and attach the complete resolved artifacts to the snapshot. In
 the request builder, map only the persisted snapshot input and committed vessel
 inventory into the solve request; an indicator absent from the target vessel has
 `totalAmount: undefined`, not an invented zero-dose optical form.
@@ -713,14 +717,14 @@ fixed path with `reviewStatus: "qualitative-only"` until Task 8 admits a
 quantitative profile. Its production observation must therefore be data-missing
 rather than a palette colour.
 
-- [ ] **Step 4: Run focused tests and verify GREEN**
+- [x] **Step 4: Run focused tests and verify GREEN**
 
 ```text
 pnpm exec vitest run apps/web/src/world-creation.test.ts packages/sci/src/request.test.ts packages/sci/src/acidbase/request.test.ts
 pnpm typecheck:tests
 ```
 
-- [ ] **Step 5: Commit resolution and request wiring**
+- [x] **Step 5: Commit resolution and request wiring**
 
 ```text
 git add apps/web/src/world-creation.ts apps/web/src/world-creation.test.ts packages/sci/src/request.ts packages/sci/src/request.test.ts packages/sci/src/acidbase/request.ts packages/sci/src/acidbase/request.test.ts apps/web/src/production-scenario.ts

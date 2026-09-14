@@ -20,6 +20,8 @@ import {
   kelvin,
   litre,
   mol,
+  parseFrozenOpticalPathSnapshot,
+  parseOpticalProfileSnapshot,
   toCanonical,
   volumeProfileHash,
   type Scenario,
@@ -59,6 +61,10 @@ export type CompatibleSolverResolution = Extract<
   SolverResolution,
   { readonly status: "compatible" }
 >;
+
+type FrozenIndicatorOpticalInput = NonNullable<
+  ScenarioSnapshot["indicatorOpticalInputs"]
+>[number];
 
 export type WorldCreationResult =
   | {
@@ -170,6 +176,46 @@ function resolveVolumeProfile(
   };
   const snapshot = { ...profilePayload, profileHash: "" };
   return { ...snapshot, profileHash: volumeProfileHash(snapshot) };
+}
+
+function resolveIndicatorOpticalInput(
+  indicator: Scenario["indicators"][number],
+  vesselIds: ReadonlySet<string>,
+): FrozenIndicatorOpticalInput | undefined {
+  if (indicator.optical === undefined) return undefined;
+  if (!vesselIds.has(indicator.optical.initialVesselId)) {
+    throw new Error(
+      `SCENARIO_RESOLUTION_INVALID: indicator ${indicator.indicatorId} names unknown initial vessel ${indicator.optical.initialVesselId}`,
+    );
+  }
+  const opticalProfile = parseOpticalProfileSnapshot(indicator.optical.opticalProfile);
+  if (opticalProfile.indicatorId !== indicator.indicatorId) {
+    throw new Error(
+      `SCENARIO_RESOLUTION_INVALID: indicator ${indicator.indicatorId} optical profile belongs to ${opticalProfile.indicatorId}`,
+    );
+  }
+  const totalAmount = toCanonical(indicator.optical.totalAmount);
+  if (!Number.isFinite(totalAmount.value) || totalAmount.value < 0) {
+    throw new Error(
+      `SCENARIO_RESOLUTION_INVALID: indicator ${indicator.indicatorId} optical dose must be finite and non-negative`,
+    );
+  }
+  return {
+    indicatorId: indicator.indicatorId,
+    initialVesselId: indicator.optical.initialVesselId,
+    totalAmount: {
+      value: canonicalNumber(
+        mol(totalAmount.value),
+        `indicator ${indicator.indicatorId} optical dose`,
+      ),
+      unit: "mol",
+    },
+    opticalProfile,
+    provenance: requiredProvenance(
+      indicator.optical.provenance,
+      `indicator ${indicator.indicatorId} optical input`,
+    ),
+  };
 }
 
 function resolveMaterial(material: Scenario["materials"][number]): ScenarioSnapshot["materials"][number] {
@@ -332,13 +378,26 @@ export function resolveScenario(input: unknown): ScenarioSnapshot {
           `SCENARIO_RESOLUTION_INVALID: vessel ${vessel.vesselId} capacity must equal its volume profile maximum`,
         );
       }
+      const opticalPath = vessel.opticalPath === undefined
+        ? undefined
+        : parseFrozenOpticalPathSnapshot(vessel.opticalPath);
+      if (
+        opticalPath !== undefined &&
+        (opticalPath.minLiquidVolume.value > capacity ||
+          opticalPath.maxLiquidVolume.value > capacity)
+      ) {
+        throw new Error(
+          `SCENARIO_RESOLUTION_INVALID: vessel ${vessel.vesselId} optical path volume bounds exceed capacity`,
+        );
+      }
       return {
-      vesselId: vessel.vesselId,
-      kind: vessel.kind,
-      capacity: { value: litre(capacity), unit: "L" },
-      geometryRef: vessel.geometryRef,
-      volumeProfile,
-      position: vessel.position,
+        vesselId: vessel.vesselId,
+        kind: vessel.kind,
+        capacity: { value: litre(capacity), unit: "L" },
+        geometryRef: vessel.geometryRef,
+        volumeProfile,
+        ...(opticalPath === undefined ? {} : { opticalPath }),
+        position: vessel.position,
       };
     }),
     apparatusDefaults: scenario.apparatus.map((entry) => ({
@@ -353,6 +412,10 @@ export function resolveScenario(input: unknown): ScenarioSnapshot {
         `indicator ${indicator.indicatorId} Ka_in`,
       ),
     })),
+    indicatorOpticalInputs: scenario.indicators.flatMap((indicator) => {
+      const resolved = resolveIndicatorOpticalInput(indicator, new Set(vesselIds));
+      return resolved === undefined ? [] : [resolved];
+    }),
     modelRequirements: {
       temperature: {
         value: kelvin(

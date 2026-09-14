@@ -79,6 +79,7 @@ function solveRequestFromState(state: WorldState) {
     temperature: state.scenarioSnapshot.modelRequirements.temperature,
     componentAmounts: contents.componentAmounts,
     indicators: state.scenarioSnapshot.indicators,
+    indicatorAmounts: contents.indicatorAmounts,
     solverConfig: state.solverConfig,
   });
 }

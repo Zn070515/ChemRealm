@@ -27,6 +27,11 @@ export interface AcidBaseSolveRequestInput {
     readonly indicatorId: string;
     readonly kaIn: ThermodynamicConstant;
   }[];
+  /** Conserved dose currently present in the solved vessel, when declared. */
+  readonly indicatorAmounts?: readonly {
+    readonly indicatorId: string;
+    readonly amount: Mol;
+  }[];
   /** The frozen config persisted in WorldCreated; no process default is used. */
   readonly solverConfig: SolverConfig;
 }
@@ -50,6 +55,23 @@ export function buildAcidBaseSolveRequest(
   input: AcidBaseSolveRequestInput,
 ): SolveRequest {
   const constants = acidBaseConstantsFromSolverConfig(input.solverConfig);
+  const indicatorAmounts = new Map(
+    (input.indicatorAmounts ?? []).map((entry) => [entry.indicatorId, entry.amount] as const),
+  );
+  if (indicatorAmounts.size !== (input.indicatorAmounts ?? []).length) {
+    throw new RangeError("acid-base indicator inventory contains duplicate IDs");
+  }
+  const declaredIndicatorIds = new Set(
+    input.indicators.map((indicator) => indicator.indicatorId),
+  );
+  const undeclared = [...indicatorAmounts.keys()].find(
+    (indicatorId) => !declaredIndicatorIds.has(indicatorId),
+  );
+  if (undeclared !== undefined) {
+    throw new RangeError(
+      `acid-base indicator inventory is not declared by the scenario: ${undeclared}`,
+    );
+  }
   const solutes = input.componentAmounts.map((component) => {
     const entry = catalogEntry(component.componentId);
     if (entry.mode === "monoprotic-equilibrium") {
@@ -72,9 +94,13 @@ export function buildAcidBaseSolveRequest(
     liquidVolume: input.liquidVolume,
     temperature: input.temperature,
     solutes: Object.freeze(solutes),
-    indicators: Object.freeze(input.indicators.map((indicator) => ({
-      indicatorId: indicator.indicatorId,
-      kaIn: indicator.kaIn,
-    }))),
+    indicators: Object.freeze(input.indicators.map((indicator) => {
+      const amount = indicatorAmounts.get(indicator.indicatorId);
+      return {
+        indicatorId: indicator.indicatorId,
+        kaIn: indicator.kaIn,
+        ...(amount === undefined ? {} : { totalAmount: amount }),
+      };
+    })),
   });
 }

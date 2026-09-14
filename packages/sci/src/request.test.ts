@@ -92,6 +92,7 @@ describe("scenario-frozen scientific input bridge", () => {
 
     expect(inputs[0]?.indicatorId).toBe("phenolphthalein");
     expect(inputs[0]?.kaIn.value).toBe(3.98e-10);
+    expect(inputs[0]?.totalAmount).toBeUndefined();
     expect(Object.isFrozen(inputs)).toBe(false);
   });
 

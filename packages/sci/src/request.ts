@@ -201,6 +201,15 @@ export function validateSolveRequest(
           message: "thermodynamic constant must be finite and positive",
         });
       }
+      if (
+        "totalAmount" in rawIndicator &&
+        (!isFiniteNumber(rawIndicator.totalAmount) || rawIndicator.totalAmount < 0)
+      ) {
+        violations.push({
+          field: `indicators[${index}].totalAmount`,
+          message: "indicator amount must be finite and non-negative",
+        });
+      }
     }
   }
 

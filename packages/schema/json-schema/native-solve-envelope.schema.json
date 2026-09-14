@@ -46,6 +46,23 @@
                   "unit"
                 ],
                 "type": "object"
+              },
+              "totalAmount": {
+                "additionalProperties": false,
+                "properties": {
+                  "unit": {
+                    "const": "mol",
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "value",
+                  "unit"
+                ],
+                "type": "object"
               }
             },
             "required": [

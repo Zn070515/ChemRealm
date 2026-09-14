@@ -139,6 +139,26 @@ describe("native scientific bridge contracts", () => {
     }).success).toBe(false);
   });
 
+  it("carries an optional canonical conserved indicator dose", () => {
+    const withDose = {
+      ...request,
+      indicators: [{
+        indicatorId: "phenolphthalein",
+        kaIn: { value: 3.98e-10, unit: "1" as const },
+        totalAmount: { value: 5e-7, unit: "mol" as const },
+      }],
+    };
+
+    expect(NativeSolveEnvelopeSchema.parse({
+      bridgeSchemaVersion: NATIVE_BRIDGE_SCHEMA_VERSION,
+      request: withDose,
+      context: { sourceStateHash: "sha256:world-state" },
+    }).request.indicators[0]?.totalAmount).toEqual({
+      value: 5e-7,
+      unit: "mol",
+    });
+  });
+
   it.each([
     ["bridge version", { bridgeSchemaVersion: NATIVE_BRIDGE_SCHEMA_VERSION + 1 }],
     ["source identity", { context: { sourceStateHash: "" } }],

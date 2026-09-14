@@ -491,6 +491,8 @@ export const SolveRequestSchema = z.strictObject({
     z.strictObject({
       indicatorId: z.string().min(1),
       kaIn: quantityOfDimension("dimensionless"),
+      /** Optional conserved dose present in the target vessel. */
+      totalAmount: quantityOfDimension("amount").optional(),
     }),
   ),
 });
@@ -501,7 +503,11 @@ export interface SolveRequest {
   liquidVolume: Litre;
   solutes: readonly SolveRequestSolute[];
   temperature: Kelvin;
-  indicators: readonly { indicatorId: string; kaIn: ThermodynamicConstant }[];
+  indicators: readonly {
+    indicatorId: string;
+    kaIn: ThermodynamicConstant;
+    totalAmount?: Mol;
+  }[];
 }
 
 export function parseSolveRequest(dto: SolveRequestDto): SolveRequest {
@@ -524,6 +530,9 @@ export function parseSolveRequest(dto: SolveRequestDto): SolveRequest {
     indicators: dto.indicators.map((i) => ({
       indicatorId: i.indicatorId,
       kaIn: thermodynamicConstant(toCanonical(i.kaIn).value),
+      ...(i.totalAmount === undefined
+        ? {}
+        : { totalAmount: mol(toCanonical(i.totalAmount).value) }),
     })),
   };
 }
@@ -546,6 +555,9 @@ export function serializeSolveRequest(request: SolveRequest): SolveRequestDto {
     indicators: request.indicators.map((indicator) => ({
       indicatorId: indicator.indicatorId,
       kaIn: { value: indicator.kaIn.value, unit: "1" },
+      ...(indicator.totalAmount === undefined
+        ? {}
+        : { totalAmount: { value: indicator.totalAmount, unit: "mol" } }),
     })),
   });
 }
@@ -581,6 +593,7 @@ export const NativeSolveRequestSchema = z.strictObject({
   indicators: z.array(z.strictObject({
     indicatorId: z.string().min(1),
     kaIn: canonicalQuantityOfDimension("dimensionless"),
+    totalAmount: canonicalQuantityOfDimension("amount").optional(),
   })),
 });
 export type NativeSolveRequestDto = z.infer<typeof NativeSolveRequestSchema>;

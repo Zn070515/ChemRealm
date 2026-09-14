@@ -28,7 +28,7 @@ export const VERSION_MANIFEST = deepFreeze({
     "scenario": 5,
     "command": 1,
     "exportFormat": 1,
-    "scientific": 4,
+    "scientific": 5,
     "scientificExpression": 4,
     "nativeBridge": 1
   },

@@ -1,8 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  INDICATOR_OPTICAL_PROFILE_VERSION,
   ionicStrengthMolal,
   kelvin,
+  opticalPathHash,
+  opticalProfileHash,
+  OPTICAL_PATH_VERSION,
   SCENARIO_CONTENT_VERSION,
   SCENARIO_SCHEMA_VERSION,
   TEST_SOLVER_VERSION,
@@ -49,6 +53,74 @@ const volumeProfile = {
   provenance,
 };
 
+const opticalProfilePayload = {
+  profileId: "phenolphthalein-qualitative",
+  profileVersion: INDICATOR_OPTICAL_PROFILE_VERSION,
+  indicatorId: "phenolphthalein",
+  representation: "spectral-molar-absorptivity" as const,
+  formSpectra: [],
+  conditions: {
+    solvent: "water",
+    temperature: {
+      min: { value: 298.15, unit: "K" as const },
+      max: { value: 298.15, unit: "K" as const },
+    },
+    concentration: {
+      min: { value: 0, unit: "mol/L" as const },
+      max: { value: 1e-3, unit: "mol/L" as const },
+    },
+    pathLength: {
+      min: { value: 1, unit: "mm" as const },
+      max: { value: 10, unit: "mm" as const },
+    },
+    ionicStrengthMolal: {
+      min: { value: 0, unit: "mol/kg" as const },
+      max: { value: 0.5, unit: "mol/kg" as const },
+    },
+  },
+  illuminant: "D65" as const,
+  observer: "CIE-1931-2deg" as const,
+  transform: "qualitative-reference" as const,
+  provenance,
+  source: {
+    citation: "Authoring resolver optical fixture",
+    sourceUrl: "https://example.com/chemrealm/optical-profile",
+    accessedOn: "2026-09-14",
+    licenseOrPermission: "permission-recorded" as const,
+    extractionMethod: "digitized" as const,
+    rawDataLocation: "test/optical-profile",
+    reportedPrecision: "qualitative only",
+    conditions: {
+      solvent: "water",
+      temperature: "298.15 K",
+      concentration: "qualitative",
+      pathLength: "1 mm",
+      acidityOrIonicStrength: "not stated",
+    },
+  },
+  reviewStatus: "qualitative-only" as const,
+};
+
+const opticalProfile = {
+  ...opticalProfilePayload,
+  profileHash: opticalProfileHash(opticalProfilePayload),
+};
+
+const opticalPathPayload = {
+  pathRuleId: "flask-fixed-optical-path",
+  pathRuleVersion: OPTICAL_PATH_VERSION,
+  representation: "fixed-path" as const,
+  pathLength: { value: 10, unit: "mm" as const },
+  minLiquidVolume: { value: 0, unit: "L" as const },
+  maxLiquidVolume: { value: 0.25, unit: "L" as const },
+  provenance,
+};
+
+const opticalPath = {
+  ...opticalPathPayload,
+  pathRuleHash: opticalPathHash(opticalPathPayload),
+};
+
 const authoringScenario = {
   schemaVersion: SCENARIO_SCHEMA_VERSION,
   contentVersion: SCENARIO_CONTENT_VERSION,
@@ -90,6 +162,26 @@ const authoringScenario = {
     phase: "aqueous" as const,
     activityCorrected: true,
   },
+};
+
+const opticalAuthoringScenario = {
+  ...authoringScenario,
+  scenarioRef: "phenolphthalein-optical-authoring",
+  vessels: [{ ...authoringScenario.vessels[0]!, opticalPath }],
+  indicators: [{
+    indicatorId: "phenolphthalein",
+    kaIn: {
+      value: 3.98e-10,
+      unit: "1" as const,
+      provenance,
+    },
+    optical: {
+      initialVesselId: "flask",
+      totalAmount: { value: 5e-7, unit: "mol" as const },
+      opticalProfile,
+      provenance,
+    },
+  }],
 };
 
 function registry(): SolverRegistry {
@@ -268,6 +360,44 @@ describe("composition-level world creation", () => {
       0.1 * expectedWaterMass,
       14,
     );
+  });
+
+  it("freezes authored indicator optical inputs and vessel optical paths", () => {
+    const snapshot = resolveScenario(opticalAuthoringScenario);
+
+    expect(snapshot.indicatorOpticalInputs?.[0]).toMatchObject({
+      indicatorId: "phenolphthalein",
+      initialVesselId: "flask",
+      totalAmount: { value: 5e-7, unit: "mol" },
+      opticalProfile: { profileHash: opticalProfile.profileHash },
+    });
+    expect(snapshot.vessels[0]?.opticalPath).toMatchObject({
+      pathRuleHash: opticalPath.pathRuleHash,
+    });
+  });
+
+  it("rejects an authored optical profile with a stale content hash", () => {
+    const invalid = structuredClone(opticalAuthoringScenario);
+    invalid.indicators[0]!.optical!.opticalProfile.profileHash = "sha256:stale";
+
+    expect(createWorld(registry(), {
+      worldId: "world-stale-optical-profile",
+      scenario: invalid,
+      seed: null,
+      solverSelection: { id: "test-solver", version: TEST_SOLVER_VERSION },
+    })).toMatchObject({ accepted: false, status: "invalid" });
+  });
+
+  it("rejects an optical dose assigned to an unknown vessel", () => {
+    const invalid = structuredClone(opticalAuthoringScenario);
+    invalid.indicators[0]!.optical!.initialVesselId = "missing-vessel";
+
+    expect(createWorld(registry(), {
+      worldId: "world-unknown-optical-vessel",
+      scenario: invalid,
+      seed: null,
+      solverSelection: { id: "test-solver", version: TEST_SOLVER_VERSION },
+    })).toMatchObject({ accepted: false, status: "invalid" });
   });
 
   it("creates initial contents as events after resolving genesis", () => {

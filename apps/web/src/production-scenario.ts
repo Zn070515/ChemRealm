@@ -1,4 +1,6 @@
 import {
+  opticalPathHash,
+  opticalProfileHash,
   SCENARIO_SCHEMA_VERSION,
   VERSION_MANIFEST,
   type Scenario,
@@ -84,6 +86,74 @@ function profile(profileId: string, maxVolume: number, maxHeight: number) {
   };
 }
 
+const indicatorOpticalProfilePayload = {
+  profileId: "phenolphthalein-qualitative-m5",
+  profileVersion: VERSION_MANIFEST.representation.indicatorOpticalProfile,
+  indicatorId: "phenolphthalein",
+  representation: "spectral-molar-absorptivity" as const,
+  formSpectra: [],
+  conditions: {
+    solvent: "water",
+    temperature: {
+      min: { value: 298.15, unit: "K" as const },
+      max: { value: 298.15, unit: "K" as const },
+    },
+    concentration: {
+      min: { value: 0, unit: "mol/L" as const },
+      max: { value: 1e-3, unit: "mol/L" as const },
+    },
+    pathLength: {
+      min: { value: 1, unit: "mm" as const },
+      max: { value: 10, unit: "mm" as const },
+    },
+    ionicStrengthMolal: {
+      min: { value: 0, unit: "mol/kg" as const },
+      max: { value: 0.5, unit: "mol/kg" as const },
+    },
+  },
+  illuminant: "D65" as const,
+  observer: "CIE-1931-2deg" as const,
+  transform: "qualitative-reference" as const,
+  provenance: indicatorProvenance,
+  source: {
+    citation: "ChemRealm M5 qualitative phenolphthalein optical fixture",
+    sourceUrl: "https://example.com/chemrealm/phenolphthalein-optical-profile",
+    accessedOn: "2026-09-14",
+    licenseOrPermission: "permission-recorded" as const,
+    extractionMethod: "digitized" as const,
+    rawDataLocation: "fixtures/phenolphthalein-qualitative",
+    reportedPrecision: "qualitative only",
+    conditions: {
+      solvent: "water",
+      temperature: "298.15 K",
+      concentration: "qualitative",
+      pathLength: "1 mm",
+      acidityOrIonicStrength: "not stated",
+    },
+  },
+  reviewStatus: "qualitative-only" as const,
+};
+
+const indicatorOpticalProfile = {
+  ...indicatorOpticalProfilePayload,
+  profileHash: opticalProfileHash(indicatorOpticalProfilePayload),
+};
+
+const targetOpticalPathPayload = {
+  pathRuleId: "m5-conical-flask-fixed-optical-path",
+  pathRuleVersion: VERSION_MANIFEST.representation.opticalPath,
+  representation: "fixed-path" as const,
+  pathLength: { value: 10, unit: "mm" as const },
+  minLiquidVolume: { value: 0, unit: "L" as const },
+  maxLiquidVolume: { value: 0.25, unit: "L" as const },
+  provenance: profileProvenance,
+};
+
+const targetOpticalPath = {
+  ...targetOpticalPathPayload,
+  pathRuleHash: opticalPathHash(targetOpticalPathPayload),
+};
+
 /**
  * The smallest real authored scenario that exercises the M5 production path:
  * a committed acid solution, a committed burette stock, an indicator, and a
@@ -140,6 +210,7 @@ export const productionTitrationScenario: Scenario = {
       capacity: { value: 0.25, unit: "L" },
       geometryRef: "m5-conical-flask-250ml",
       volumeProfile: profile("m5-conical-flask-250ml-profile", 0.25, 100),
+      opticalPath: targetOpticalPath,
       position: { unit: "mm", x: 120, y: 100 },
       initialContents: [{
         materialId: "production-hcl-0.1",
@@ -153,6 +224,12 @@ export const productionTitrationScenario: Scenario = {
     kaIn: {
       value: 3.98e-10,
       unit: "1",
+      provenance: indicatorProvenance,
+    },
+    optical: {
+      initialVesselId: "titration-flask",
+      totalAmount: { value: 5e-7, unit: "mol" },
+      opticalProfile: indicatorOpticalProfile,
       provenance: indicatorProvenance,
     },
   }],
