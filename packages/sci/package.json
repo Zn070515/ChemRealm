@@ -16,7 +16,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc -b && node ../../tools/build_native_wasm.mjs"
+    "build": "node ../../tools/generate_native_contract_source.mjs && tsc -b && node ../../tools/build_native_wasm.mjs"
   },
   "dependencies": {
     "@chemrealm/schema": "workspace:*"

@@ -128,6 +128,36 @@ fn host_bridge_returns_schema_shaped_state_and_complete_base_equations() {
 }
 
 #[test]
+fn native_identity_is_backed_by_the_checked_in_model_contract() {
+    let contract: Value =
+        serde_json::from_str(include_str!(env!("CHEMREALM_NATIVE_MODEL_CONTRACT_PATH")))
+            .expect("native model contract is valid JSON");
+    let response = solve(hcl_request(0.1));
+
+    assert_eq!(response["backend"]["id"], contract["model"]["id"]);
+    assert_eq!(response["backend"]["version"], contract["model"]["version"]);
+    for parameter in [
+        "Kw",
+        "Ka_HOAc",
+        "Davies_A",
+        "Davies_b",
+        "standardMolality",
+        "neutralAcidActivityCoefficient",
+        "waterActivity",
+    ] {
+        assert_eq!(
+            response["result"]["state"]["provenance"]["parameters"][parameter]
+                .as_f64()
+                .expect("native parameter is numeric"),
+            contract["solverConfig"]["parameters"][parameter]
+                .as_f64()
+                .expect("contract parameter is numeric"),
+            "native parameter {parameter} drifted from the checked-in contract"
+        );
+    }
+}
+
+#[test]
 fn host_bridge_echoes_context_identity_not_request_hash() {
     let request = hcl_request(0.1);
     let envelope = json!({

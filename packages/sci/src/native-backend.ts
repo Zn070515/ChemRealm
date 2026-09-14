@@ -30,8 +30,7 @@ import {
   cloneAndFreezeSolverConfig,
 } from "./identity.js";
 import {
-  buildAcidBaseModelDescriptor,
-  buildAcidBaseSolverConfig,
+  parseNativeModelContract,
 } from "./acidbase/model.js";
 import { assertScientificExpressionSet } from "./expressions.js";
 
@@ -59,13 +58,11 @@ export interface NativeExpressionSolverAdapter extends ScientificExecutionAdapte
 export const NATIVE_UNBOUND_SOURCE_STATE_HASH = "native-unbound-source";
 
 function nativeModel(): ModelDescriptor {
-  const legacy = buildAcidBaseModelDescriptor();
-  return cloneAndFreezeModelDescriptor({ ...legacy, version: NATIVE_SCIENTIFIC_MODEL_VERSION });
+  return cloneAndFreezeModelDescriptor(parseNativeModelContract().model);
 }
 
 function nativeSolverConfig(): SolverConfig {
-  const legacy = buildAcidBaseSolverConfig();
-  return cloneAndFreezeSolverConfig({ ...legacy, version: NATIVE_SCIENTIFIC_MODEL_VERSION });
+  return cloneAndFreezeSolverConfig(parseNativeModelContract().solverConfig);
 }
 
 function assertSourceStateHash(context: ScientificExecutionContext): string {

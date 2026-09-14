@@ -18,6 +18,19 @@ export const GENERATED_VERSION_SOURCE_PATH = join(
   "generated",
   "versions.ts",
 );
+export const GENERATED_NATIVE_CONTRACT_SOURCE_PATH = join(
+  REPOSITORY_ROOT,
+  "packages",
+  "sci",
+  "src",
+  "generated",
+  "native-model-contract.ts",
+);
+
+export function nativeContractRelativePath(manifest) {
+  const acidBase = manifest.scientific.acidBase;
+  return `contracts/scientific/${acidBase.id}-${acidBase.nativeVersion}.json`;
+}
 
 export async function readVersionManifest() {
   const value = JSON.parse(await readFile(VERSION_MANIFEST_PATH, "utf8"));
@@ -137,6 +150,12 @@ export const TEST_SOLVER_VERSION = VERSION_MANIFEST.fixtures.testSolverVersion;
 export const TEST_MODEL_VERSION = VERSION_MANIFEST.fixtures.testModelVersion;
 export const VOLUME_PROFILE_VERSION = VERSION_MANIFEST.representation.volumeProfile;
 export const SCENARIO_CONTENT_VERSION = VERSION_MANIFEST.content.current;
+`;
+}
+
+export function renderNativeContractSource(contract) {
+  return `/** GENERATED FILE — edit contracts/scientific/*.json instead. */
+export const NATIVE_MODEL_CONTRACT = ${JSON.stringify(contract, null, 2)} as const;
 `;
 }
 

@@ -11,19 +11,8 @@ use std::collections::BTreeMap;
 
 include!(concat!(env!("OUT_DIR"), "/version_constants.rs"));
 include!(concat!(env!("OUT_DIR"), "/native_schema_contract.rs"));
+include!(concat!(env!("OUT_DIR"), "/native_model_contract.rs"));
 
-const KW: f64 = 1.0e-14;
-const KA_HOAC: f64 = 1.7539e-5;
-const DAVIES_A: f64 = 0.509;
-const DAVIES_B: f64 = 0.3;
-const STANDARD_MOLALITY: f64 = 1.0;
-const NEUTRAL_ACID_GAMMA: f64 = 1.0;
-const WATER_ACTIVITY: f64 = 1.0;
-const TEMPERATURE_K: f64 = 298.15;
-const MIN_TOTAL_SOLUTE: f64 = 1.0e-9;
-const MAX_TOTAL_SOLUTE: f64 = 0.5;
-const MAX_IONIC_STRENGTH: f64 = 0.5;
-const PROPOSED_ENVELOPE: f64 = 0.12;
 const INNER_TOLERANCE: f64 = 1.0e-15;
 const OUTER_TOLERANCE: f64 = 1.0e-15;
 const INNER_ITERATION_LIMIT: usize = 100;
@@ -336,12 +325,12 @@ fn model_descriptor() -> ModelDescriptorDto {
         description: "Self-consistent monoprotic aqueous acid-base equilibrium with Davies activity coefficients at 25 °C.",
         validity: ModelValidityDto {
             temperature: TemperatureRangeDto {
-                min: quantity(TEMPERATURE_K, "K"),
-                max: quantity(TEMPERATURE_K, "K"),
+                min: quantity(TEMPERATURE_MIN_K, "K"),
+                max: quantity(TEMPERATURE_MAX_K, "K"),
             },
             ionic_strength_molal_max: quantity(MAX_IONIC_STRENGTH, "mol/kg"),
-            species: ["H2O", "H+", "OH-", "HOAc", "OAc-", "Na+", "Cl-"],
-            components: ["HCl", "NaOH", "HOAc", "NaOAc"],
+            species: MODEL_SPECIES,
+            components: MODEL_COMPONENTS,
             solvent: "water",
             phase: "aqueous",
             activity_corrected: true,

@@ -17,6 +17,7 @@ The third toolchain is now separately governed and checked:
 | Rust/Cargo source and lockfile | `native/sci-core/Cargo.toml`, `Cargo.lock`, `pnpm native:fmt`, `pnpm native:test`, `pnpm native:clippy` |
 | WASM artifact | Local `pnpm native:check-wasm` + `pnpm build`; release artifact SHA-256 is recorded below as a local build observation |
 | Schema/version relationship | `pnpm verify:versions`, `pnpm verify:native-schema` |
+| Language-neutral scientific identity | `contracts/scientific/acidbase-monoprotic-davies-2.0.0.json`; the active artifact path is derived from `contracts/version-manifest.json`, and generated TS/Rust consumers are checked against it |
 | Hosted clean-checkout integration | Implementation commit and hosted CI attestation recorded below; the native supersession packet still requires a final hosted artifact identity |
 
 **Implementation commit:** `afe0f97ac889757e00300452a4bfa72bd971f5a2`<br>

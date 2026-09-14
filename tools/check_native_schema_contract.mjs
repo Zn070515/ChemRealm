@@ -92,15 +92,47 @@ function missingFields(schemaProperties, source, structName, variant = false) {
   return missing;
 }
 
-const [envelopeText, payloadText, rustSource, buildSource] = await Promise.all([
+const nativeContractRelativePath = `contracts/scientific/${manifest.scientific.acidBase.id}-${manifest.scientific.acidBase.nativeVersion}.json`;
+const nativeContractTestRelativePath = nativeContractRelativePath.replace(/\.json$/, ".test.json");
+const [envelopeText, payloadText, rustSource, buildSource, nativeContractText, nativeContractTestText] = await Promise.all([
   file("packages/schema/json-schema/native-solve-envelope.schema.json"),
   file("packages/schema/json-schema/native-backend-payload.schema.json"),
   file("native/sci-core/src/lib.rs"),
   file("native/sci-core/build.rs"),
+  file(nativeContractRelativePath),
+  file(nativeContractTestRelativePath),
 ]);
 const envelope = JSON.parse(envelopeText);
 const payload = JSON.parse(payloadText);
+const nativeContract = JSON.parse(nativeContractText);
+const nativeContractTest = JSON.parse(nativeContractTestText);
 const failures = [];
+
+if (nativeContract.model?.id !== manifest.scientific.acidBase.id ||
+    nativeContract.model?.version !== manifest.scientific.acidBase.nativeVersion ||
+    nativeContract.solverConfig?.id !== manifest.scientific.acidBase.id ||
+    nativeContract.solverConfig?.version !== manifest.scientific.acidBase.nativeVersion) {
+  failures.push("native model contract identity does not match the central version manifest");
+}
+if (nativeContractTest.contract !== nativeContractRelativePath.split("/").pop()) {
+  failures.push("native model contract test fixture does not name the active contract");
+}
+for (const parameter of [
+  "Kw",
+  "Ka_HOAc",
+  "Davies_A",
+  "Davies_b",
+  "standardMolality",
+  "neutralAcidActivityCoefficient",
+  "waterActivity",
+  "numericPrecisionSignificantDigits",
+  "numericPolicyVersion",
+]) {
+  if (typeof nativeContract.solverConfig?.parameters?.[parameter] !== "number" ||
+      !Number.isFinite(nativeContract.solverConfig.parameters[parameter])) {
+    failures.push(`native model contract parameter ${parameter} must be finite`);
+  }
+}
 
 const envelopeVersion = envelope.properties?.bridgeSchemaVersion?.const;
 const payloadVersion = payload.properties?.bridgeSchemaVersion?.const;
@@ -213,8 +245,17 @@ for (const [name, schemaVariant, rustVariant] of [
 }
 
 if (!buildSource.includes("native-solve-envelope.schema.json") ||
-    !buildSource.includes("native-backend-payload.schema.json")) {
-  failures.push("native build.rs does not read both schema-owned bridge artifacts");
+    !buildSource.includes("native-backend-payload.schema.json") ||
+    !buildSource.includes("native_model_contract.rs") ||
+    !buildSource.includes("CHEMREALM_NATIVE_MODEL_CONTRACT_PATH")) {
+  failures.push("native build.rs does not read the schema and scientific contract artifacts");
+}
+if (!rustSource.includes("native_model_contract.rs")) {
+  failures.push("native Rust library does not consume generated native model contract constants");
+}
+const nativeContractTestSource = await file("native/sci-core/tests/contract.rs");
+if (!nativeContractTestSource.includes("CHEMREALM_NATIVE_MODEL_CONTRACT_PATH")) {
+  failures.push("native contract tests must resolve the checked-in contract through the manifest-derived build path");
 }
 
 // Negative self-test: the guard must notice a removed required root field.

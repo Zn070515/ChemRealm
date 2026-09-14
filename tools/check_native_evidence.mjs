@@ -32,6 +32,10 @@ must(nativeEvidence, /^\*\*Status:\*\* \*\*S2[\s\S]*native[\s-]+supersession S3 
   "native evidence stays at S2 with supersession S3 open");
 must(nativeEvidence, /Native WASM ↔ PHREEQC oracle comparison/i,
   "native WASM-to-PHREEQC comparison evidence is recorded");
+must(nativeEvidence, /Language-neutral native model contract[^\n]*PASS locally/i,
+  "language-neutral native model contract evidence is recorded");
+must(nativeEvidence, /Native identity artifacts[^\n]*model contract payload `sha256:[0-9a-f]{64}`[^\n]*solver-config identity `sha256:[0-9a-f]{64}`[^\n]*WASM `sha256:[0-9a-f]{64}`/i,
+  "native model, solver-config, and WASM identity digests are recorded");
 must(nativeEvidence, /bounded comparison[\s\S]*not a claim that the native model and PHREEQC are equivalent/i,
   "native PHREEQC comparison does not claim model equivalence");
 must(nativeEvidence, /native World → ScientificFrame → Observable → DOM/i,

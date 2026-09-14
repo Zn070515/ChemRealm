@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "contractVersion": 1,
+  "contract": "acidbase-monoprotic-davies-2.0.0.json",
+  "negativeCases": [
+    "model.id must match the central manifest",
+    "model.version must match the central manifest nativeVersion",
+    "solverConfig.id and solverConfig.version must match model identity",
+    "solverConfig.parameters must contain finite numeric values",
+    "model.validity species and components must remain explicit"
+  ]
+}

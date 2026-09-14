@@ -2,10 +2,13 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
   GENERATED_VERSION_SOURCE_PATH,
+  GENERATED_NATIVE_CONTRACT_SOURCE_PATH,
   REPOSITORY_ROOT,
   activeVersionLiterals,
   derivedVersionMetadata,
+  nativeContractRelativePath,
   readVersionManifest,
+  renderNativeContractSource,
   renderTypeScriptVersionSource,
 } from "./version-manifest.mjs";
 
@@ -16,6 +19,17 @@ const generated = await readFile(GENERATED_VERSION_SOURCE_PATH, "utf8").catch(()
 if (generated !== expectedGenerated) {
   throw new Error(
     "generated version source is stale; run `node tools/generate_version_sources.mjs`",
+  );
+}
+const nativeContract = await readJson(nativeContractRelativePath(manifest));
+const expectedGeneratedNativeContract = renderNativeContractSource(nativeContract);
+const generatedNativeContract = await readFile(
+  GENERATED_NATIVE_CONTRACT_SOURCE_PATH,
+  "utf8",
+).catch(() => null);
+if (generatedNativeContract !== expectedGeneratedNativeContract) {
+  throw new Error(
+    "generated native model contract source is stale; run `node tools/generate_native_contract_source.mjs`",
   );
 }
 
@@ -85,6 +99,18 @@ function requireVersion(actual, expected, description) {
 }
 
 const acidBase = manifest.scientific.acidBase;
+requireVersion(nativeContract.model?.id, acidBase.id, "native model contract model id");
+requireVersion(
+  nativeContract.model?.version,
+  acidBase.nativeVersion,
+  "native model contract model version",
+);
+requireVersion(nativeContract.solverConfig?.id, acidBase.id, "native solver config id");
+requireVersion(
+  nativeContract.solverConfig?.version,
+  acidBase.nativeVersion,
+  "native solver config version",
+);
 const provenance = await readJson("docs/research/constants-provenance.json");
 requireVersion(
   provenance.schemaVersion,
@@ -183,6 +209,7 @@ for (const relative of sourceFiles) {
   const normalizedRelative = relative.replaceAll("\\", "/");
   if (
     normalizedRelative === "packages/schema/src/generated/versions.ts" ||
+    normalizedRelative === "packages/sci/src/generated/native-model-contract.ts" ||
     relative.endsWith(".test.ts") ||
     relative.endsWith(".test.tsx") ||
     relative.endsWith(".guarantees.ts")

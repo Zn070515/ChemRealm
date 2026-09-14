@@ -13,7 +13,10 @@ import {
   type SolveRequest,
 } from "@chemrealm/schema";
 import { buildAcidBaseSolveRequest } from "./acidbase/request.js";
-import { buildAcidBaseSolverConfig } from "./acidbase/model.js";
+import {
+  buildAcidBaseSolverConfig,
+  parseNativeModelContract,
+} from "./acidbase/model.js";
 import { createAcidBaseAdapter } from "./acidbase/index.js";
 import {
   createNativeJsonAdapter,
@@ -143,6 +146,12 @@ describe("native scientific backend facade", () => {
       bytes.byteOffset + bytes.byteLength,
     ) as ArrayBuffer;
     nativeAdapter = createNativeJsonAdapter(await loadNativeWasmExecutor(arrayBuffer));
+  });
+
+  it("uses the checked-in language-neutral native model contract", () => {
+    const contract = parseNativeModelContract();
+    expect(nativeAdapter.model).toEqual(contract.model);
+    expect(nativeAdapter.solverConfig).toEqual(contract.solverConfig);
   });
 
   it("serializes a canonical request and validates the native payload identity", async () => {

@@ -3,8 +3,11 @@ import { join } from "node:path";
 import {
   REPOSITORY_ROOT,
   GENERATED_VERSION_SOURCE_PATH,
+  GENERATED_NATIVE_CONTRACT_SOURCE_PATH,
   derivedVersionMetadata,
+  nativeContractRelativePath,
   readVersionManifest,
+  renderNativeContractSource,
   renderTypeScriptVersionSource,
 } from "./version-manifest.mjs";
 
@@ -16,6 +19,17 @@ await mkdir(new URL("../packages/schema/src/generated/", import.meta.url), {
 await writeFile(
   GENERATED_VERSION_SOURCE_PATH,
   renderTypeScriptVersionSource(manifest),
+  "utf8",
+);
+const nativeContract = JSON.parse(
+  await readFile(join(REPOSITORY_ROOT, nativeContractRelativePath(manifest)), "utf8"),
+);
+await mkdir(new URL("../packages/sci/src/generated/", import.meta.url), {
+  recursive: true,
+});
+await writeFile(
+  GENERATED_NATIVE_CONTRACT_SOURCE_PATH,
+  renderNativeContractSource(nativeContract),
   "utf8",
 );
 

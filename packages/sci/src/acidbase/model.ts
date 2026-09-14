@@ -3,6 +3,7 @@ import {
   activityCoefficient,
   fromCelsius,
   ionicStrengthMolal,
+  kelvin,
   molPerKilogram,
   thermodynamicConstant,
   type ActivityCoefficient,
@@ -13,6 +14,7 @@ import {
   type ThermodynamicConstant,
   VERSION_MANIFEST,
 } from "@chemrealm/schema";
+import { NATIVE_MODEL_CONTRACT } from "../generated/native-model-contract.js";
 
 const ACID_BASE_VERSION = VERSION_MANIFEST.scientific.acidBase;
 export const ACID_BASE_MODEL_ID = ACID_BASE_VERSION.id;
@@ -33,6 +35,65 @@ export interface AcidBaseConstants {
   /** Explicit v0 unit-water-activity convention carried in model identity. */
   readonly waterActivity: Activity;
   readonly waterActivityConvention: "unit";
+}
+
+export interface NativeModelContract {
+  readonly model: ModelDescriptor;
+  readonly solverConfig: SolverConfig;
+}
+
+function finiteContractNumber(value: number, field: string): number {
+  if (!Number.isFinite(value)) {
+    throw new RangeError(`native model contract ${field} must be finite`);
+  }
+  return value;
+}
+
+/** Parse the generated view of the language-neutral native model contract. */
+export function parseNativeModelContract(): NativeModelContract {
+  const contract = NATIVE_MODEL_CONTRACT;
+  const expectedId = VERSION_MANIFEST.scientific.acidBase.id;
+  const expectedVersion = VERSION_MANIFEST.scientific.acidBase.nativeVersion;
+  if (
+    contract.model.id !== expectedId ||
+    contract.model.version !== expectedVersion ||
+    contract.solverConfig.id !== expectedId ||
+    contract.solverConfig.version !== expectedVersion
+  ) {
+    throw new RangeError("native model contract identity does not match the central version manifest");
+  }
+
+  const model: ModelDescriptor = Object.freeze({
+    id: contract.model.id,
+    version: contract.model.version,
+    description: contract.model.description,
+    validity: Object.freeze({
+      temperature: Object.freeze({
+        min: kelvin(finiteContractNumber(contract.model.validity.temperature.min.value, "model.validity.temperature.min")),
+        max: kelvin(finiteContractNumber(contract.model.validity.temperature.max.value, "model.validity.temperature.max")),
+      }),
+      ionicStrengthMolalMax: ionicStrengthMolal(
+        finiteContractNumber(contract.model.validity.ionicStrengthMolalMax.value, "model.validity.ionicStrengthMolalMax"),
+      ),
+      species: Object.freeze([...contract.model.validity.species]),
+      components: Object.freeze([...contract.model.validity.components]),
+      solvent: contract.model.validity.solvent,
+      phase: contract.model.validity.phase,
+      activityCorrected: contract.model.validity.activityCorrected,
+    }),
+  });
+  const parameters = Object.fromEntries(
+    Object.entries(contract.solverConfig.parameters).map(([key, value]) => [
+      key,
+      finiteContractNumber(value, `solverConfig.parameters.${key}`),
+    ]),
+  );
+  const solverConfig: SolverConfig = Object.freeze({
+    id: contract.solverConfig.id,
+    version: contract.solverConfig.version,
+    parameters: Object.freeze(parameters),
+  });
+  return Object.freeze({ model, solverConfig });
 }
 
 function freezeQuantity<T>(value: T): T {

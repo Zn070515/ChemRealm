@@ -226,13 +226,17 @@ describe("production composition vertical path", () => {
   it("refuses a replayed world whose persisted solver parameter identity changed", async () => {
     const composition = await composeProductionTitration();
     const registry = new SolverRegistry([createAcidBaseAdapter()]);
+    const persistedKa = composition.state.solverConfig.parameters.Ka_HOAc;
+    if (persistedKa === undefined) {
+      throw new Error("the production world must persist Ka_HOAc");
+    }
     const tamperedState = {
       ...composition.state,
       solverConfig: {
         ...composition.state.solverConfig,
         parameters: {
           ...composition.state.solverConfig.parameters,
-          Ka_HOAc: composition.state.solverConfig.parameters.Ka_HOAc * 1.0000000001,
+          Ka_HOAc: persistedKa * 1.0000000001,
         },
       },
     };

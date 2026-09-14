@@ -13,6 +13,8 @@ TypeScript `1.0.0` M4 S3 baseline.
 |---|---|---|
 | Central version distribution | PASS locally | `pnpm verify:versions`; active versions originate in `contracts/version-manifest.json` |
 | Native bridge schema boundary | PASS locally | `pnpm verify:native-schema`; committed schema artifacts, Rust bridge roots, and `build.rs` are mechanically checked together |
+| Language-neutral native model contract | PASS locally | `contracts/scientific/acidbase-monoprotic-davies-2.0.0.json` is selected from `contracts/version-manifest.json`; generated TS and Rust derive identity, domain, species/components, and solver parameters from that artifact |
+| Native identity artifacts | PASS locally | Model contract payload `sha256:eaeecd4104f2c14bab55be8158ddb105f68367df15d5b677e0b37604093207a5`; persisted solver-config identity `sha256:deb6fcfff06ea915adee034789e7d74535fef5f920ff95997d311f9c02665c6b`; local release WASM `sha256:42be296b67cd710cd7a52d4ba59a1f356eda489439bcef6b99d8c4c88b6937eb` |
 | Rust host bridge | PASS locally | `pnpm native:fmt`, `pnpm native:test`, `pnpm native:clippy` |
 | WASM compilation | PASS locally | `pnpm native:check-wasm` and the release artifact build |
 | Source/request identity separation | PASS locally | native host and facade tests require distinct `sourceStateHash` and `requestHash` |
