@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "MF-6",
+  "kind": "missing-constants",
+  "description": "Missing source-backed form constants must refuse before fractions are emitted",
+  "request": {
+    "sourceReplayHash": "sha256:mf-6-missing-ka",
+    "totalAmountMol": "5e-8",
+    "totalMolality": "5e-8",
+    "hydrogenActivity": "1e-10",
+    "monovalentAnionActivityCoefficient": "1",
+    "divalentAnionActivityCoefficient": "1",
+    "regime": "ordinary-aqueous"
+  },
+  "missingConstants": ["Ka_In_1", "Ka_In_2"],
+  "expectedStatus": "FORM_DATA_MISSING"
+}

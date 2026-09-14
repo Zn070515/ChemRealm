@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "MF-5",
+  "kind": "invalid-dose",
+  "description": "Zero indicator dose cannot be presented as an ordinary form distribution",
+  "request": {
+    "sourceReplayHash": "sha256:mf-5-zero-dose",
+    "totalAmountMol": "0",
+    "totalMolality": "0",
+    "hydrogenActivity": "1e-10",
+    "monovalentAnionActivityCoefficient": "1",
+    "divalentAnionActivityCoefficient": "1",
+    "regime": "ordinary-aqueous"
+  },
+  "expectedStatus": "INVALID_INPUT"
+}

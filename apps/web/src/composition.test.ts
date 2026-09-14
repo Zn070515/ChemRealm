@@ -5,7 +5,11 @@ import { buildObservableModel, toRenderState } from "@chemrealm/render";
 import {
   createNativeJsonAdapter,
   createAcidBaseAdapter,
+  buildPhenolphthaleinMultiformObservation,
+  DEFAULT_ACID_BASE_CONSTANTS,
+  DEFAULT_PHENOLPHTHALEIN_MULTIFORM_CONSTANTS,
   loadNativeWasmExecutor,
+  solveReducedWithDiproticIndicator,
   SolverRegistry,
   type NativeExpressionSolverAdapter,
 } from "@chemrealm/sci";
@@ -15,6 +19,7 @@ import { replay, stateHash } from "@chemrealm/world";
 import {
   composeProductionTitration,
   composeNativeProductionTitration,
+  buildPhenolphthaleinMultiformRequestFromState,
   exactScientificAdapterForState,
   selectCommittedTitrantTransfers,
   statesAtCommittedTargetPrefixes,
@@ -62,6 +67,40 @@ describe("production composition vertical path", () => {
       opticalStatus: "OPTICAL_MODEL_DATA_MISSING",
       tint: undefined,
     });
+  });
+
+  it("rebuilds the candidate indicator request from the replayed world without content", async () => {
+    const composition = await composeProductionTitration();
+    const serializedLog = JSON.parse(JSON.stringify(composition.eventLog));
+    const replayed = replay(serializedLog);
+
+    const liveRequest = buildPhenolphthaleinMultiformRequestFromState(composition.state);
+    const replayedRequest = buildPhenolphthaleinMultiformRequestFromState(replayed.state);
+    expect(replayedRequest.sourceReplayHash).toBe(stateHash(replayed.state));
+    expect(replayedRequest.sourceReplayHash).toBe(liveRequest.sourceReplayHash);
+    expect(replayedRequest.totalAmount).toBe(liveRequest.totalAmount);
+    expect(replayedRequest.totals).toEqual(liveRequest.totals);
+    expect(replayedRequest.indicatorTotalMolality).toEqual(liveRequest.indicatorTotalMolality);
+
+    const solve = (request: typeof liveRequest) => {
+      const result = solveReducedWithDiproticIndicator({
+        totals: request.totals,
+        constants: DEFAULT_ACID_BASE_CONSTANTS,
+        indicator: {
+          totalMolality: request.indicatorTotalMolality,
+          constants: DEFAULT_PHENOLPHTHALEIN_MULTIFORM_CONSTANTS,
+        },
+      });
+      expect("kind" in result).toBe(false);
+      if ("kind" in result) throw new Error(result.reason);
+      return buildPhenolphthaleinMultiformObservation(
+        request.totalAmount,
+        result.indicatorForms!,
+        request.sourceReplayHash,
+      );
+    };
+
+    expect(solve(replayedRequest)).toEqual(solve(liveRequest));
   });
 
   it("does not hand-author the curve, symbolic line, or burette state", async () => {

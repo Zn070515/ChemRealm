@@ -12,6 +12,10 @@ use std::collections::BTreeMap;
 include!(concat!(env!("OUT_DIR"), "/version_constants.rs"));
 include!(concat!(env!("OUT_DIR"), "/native_schema_contract.rs"));
 include!(concat!(env!("OUT_DIR"), "/native_model_contract.rs"));
+include!(concat!(env!("OUT_DIR"), "/indicator_multiform_contract.rs"));
+
+pub mod indicator_multiform;
+pub use indicator_multiform::{solve_multiform_coupled_json, solve_multiform_indicator_json};
 
 const INNER_TOLERANCE: f64 = 1.0e-15;
 const OUTER_TOLERANCE: f64 = 1.0e-15;
@@ -1710,6 +1714,51 @@ pub unsafe extern "C" fn chemrealm_solve_json(pointer: *const u8, length: usize)
         Err(_) => return 0,
     };
     let output = match solve_canonical_json(input) {
+        Ok(value) => value,
+        Err(_) => return 0,
+    };
+    let bytes: Box<[u8]> = output.into_bytes().into_boxed_slice();
+    let output_length = bytes.len();
+    let output_pointer = Box::leak(bytes).as_mut_ptr();
+    ((output_length as u64) << 32) | output_pointer as u32 as u64
+}
+
+#[cfg(target_arch = "wasm32")]
+#[no_mangle]
+pub unsafe extern "C" fn chemrealm_solve_multiform_json(pointer: *const u8, length: usize) -> u64 {
+    if pointer.is_null() {
+        return 0;
+    }
+    let input = std::slice::from_raw_parts(pointer, length);
+    let input = match std::str::from_utf8(input) {
+        Ok(value) => value,
+        Err(_) => return 0,
+    };
+    let output = match solve_multiform_indicator_json(input) {
+        Ok(value) => value,
+        Err(_) => return 0,
+    };
+    let bytes: Box<[u8]> = output.into_bytes().into_boxed_slice();
+    let output_length = bytes.len();
+    let output_pointer = Box::leak(bytes).as_mut_ptr();
+    ((output_length as u64) << 32) | output_pointer as u32 as u64
+}
+
+#[cfg(target_arch = "wasm32")]
+#[no_mangle]
+pub unsafe extern "C" fn chemrealm_solve_multiform_coupled_json(
+    pointer: *const u8,
+    length: usize,
+) -> u64 {
+    if pointer.is_null() {
+        return 0;
+    }
+    let input = std::slice::from_raw_parts(pointer, length);
+    let input = match std::str::from_utf8(input) {
+        Ok(value) => value,
+        Err(_) => return 0,
+    };
+    let output = match solve_multiform_coupled_json(input) {
         Ok(value) => value,
         Err(_) => return 0,
     };

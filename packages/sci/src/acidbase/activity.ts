@@ -23,6 +23,8 @@ export interface DaviesActivities {
   readonly hydrogen: ActivityCoefficient;
   readonly hydroxide: ActivityCoefficient;
   readonly monovalentAnion: ActivityCoefficient;
+  /** z=2 Davies coefficient derived by the same fixed-order z² rule. */
+  readonly divalentAnion: ActivityCoefficient;
   readonly neutralAcid: ActivityCoefficient;
 }
 
@@ -53,6 +55,10 @@ export function daviesActivities(
     constants.daviesB * ionicStrength.value;
   const log10Gamma = -constants.daviesA * daviesTerm;
   const monovalent = activityCoefficient(detExp10(log10Gamma));
+  const monovalentValue = monovalent.value;
+  const divalent = activityCoefficient(
+    ((monovalentValue * monovalentValue) * monovalentValue) * monovalentValue,
+  );
   const neutralAcid = activityCoefficient(
     constants.neutralAcidActivityCoefficient.value,
   );
@@ -61,6 +67,7 @@ export function daviesActivities(
     hydrogen: monovalent,
     hydroxide: monovalent,
     monovalentAnion: monovalent,
+    divalentAnion: divalent,
     neutralAcid,
   });
 }

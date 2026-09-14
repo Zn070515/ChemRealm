@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "MF-7",
+  "kind": "strong-acid-refusal",
+  "description": "Strong-acid cation regime remains an explicit refusal, not orange chemistry",
+  "request": {
+    "sourceReplayHash": "sha256:mf-7-strong-acid",
+    "totalAmountMol": "5e-8",
+    "totalMolality": "5e-8",
+    "hydrogenActivity": "1e-8",
+    "monovalentAnionActivityCoefficient": "1",
+    "divalentAnionActivityCoefficient": "1",
+    "regime": "strong-acid-cation"
+  },
+  "expectedStatus": "FORM_OUT_OF_DOMAIN",
+  "forbiddenOutputs": ["strong-acid-cation", "orange"]
+}

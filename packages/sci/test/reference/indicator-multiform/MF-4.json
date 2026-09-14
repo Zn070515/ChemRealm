@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "MF-4",
+  "kind": "ordinary-alkaline",
+  "description": "Alkaline ordinary aqueous point inside the declared activity domain",
+  "request": {
+    "sourceReplayHash": "sha256:mf-4-alkaline",
+    "totalAmountMol": "5e-8",
+    "totalMolality": "5e-8",
+    "hydrogenActivity": "1e-12",
+    "monovalentAnionActivityCoefficient": "0.75",
+    "divalentAnionActivityCoefficient": "0.5",
+    "regime": "ordinary-aqueous"
+  },
+  "assertions": {
+    "quinoidFractionGreaterThanIntermediate": true,
+    "fractionsFiniteAndNonNegative": true
+  }
+}

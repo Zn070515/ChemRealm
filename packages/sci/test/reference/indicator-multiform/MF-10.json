@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "MF-10",
+  "kind": "optical-boundary",
+  "description": "Ordinary chemical forms may be valid while quantitative optical data remain unavailable",
+  "request": {
+    "sourceReplayHash": "sha256:mf-10-optical-boundary",
+    "totalAmountMol": "5e-8",
+    "totalMolality": "5e-8",
+    "hydrogenActivity": "1e-10",
+    "monovalentAnionActivityCoefficient": "1",
+    "divalentAnionActivityCoefficient": "1",
+    "regime": "ordinary-aqueous"
+  },
+  "optical": {
+    "profileStatus": "OPTICAL_MODEL_DATA_MISSING",
+    "quantitativeProfileAdmitted": false,
+    "rgbDecisionFromChemicalForms": false
+  }
+}

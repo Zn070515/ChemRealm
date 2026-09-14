@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "id": "MF-9",
+  "kind": "replay-identity",
+  "description": "A committed scientific request remains unchanged when mutable content is unavailable",
+  "request": {
+    "sourceReplayHash": "sha256:mf-9-committed-world",
+    "totalAmountMol": "5e-8",
+    "totalMolality": "5e-8",
+    "hydrogenActivity": "1e-10",
+    "monovalentAnionActivityCoefficient": "1",
+    "divalentAnionActivityCoefficient": "1",
+    "regime": "ordinary-aqueous"
+  },
+  "replay": {
+    "authoritativeInput": "request",
+    "mutableContentRemoved": true,
+    "sourceReplayHashMustRemain": "sha256:mf-9-committed-world",
+    "worldRuntimeEvidence": {
+      "test": "apps/web/src/composition.test.ts",
+      "requestBuilder": "buildPhenolphthaleinMultiformRequestFromState",
+      "sourceReplayHash": "derived from World Runtime stateHash",
+      "authoredScenarioRequiredForReplay": false
+    }
+  }
+}

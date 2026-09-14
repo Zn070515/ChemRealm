@@ -1,8 +1,11 @@
 # Indicator multiform scientific model implementation plan
 
-> **Status:** Step 2 accepted on 2026-09-14 for the ordinary-aqueous
-> three-form scope. Strong-acid cation/orange remains refusal-only and is not
-> authorized for implementation.
+> **Status:** Steps 1–7 are implemented locally for the owner-accepted ordinary-aqueous
+> three-form candidate. MF-1…MF-10 fixtures, independent checks, coupled
+> TypeScript↔WASM differential evidence, and a real World Runtime replay test
+> are present, and the candidate evidence packet records the reproducible local
+> artifact ledger. Final owner-facing closure is not complete. Strong-acid
+> cation/orange remains refusal-only and is not authorized for implementation.
 
 ## Objective
 
@@ -94,7 +97,9 @@ until Step 3–6 implementation and independent evidence are complete.
 
 Write tests first for complete fractions, missing forms, missing constants,
 strong-acid refusal, balance/charge invariants, and model identity. Verify RED
-against the pre-extension implementation.
+against the pre-extension implementation. **Complete:** schema, TypeScript,
+Rust, and WASM boundary tests now cover the accepted ordinary form set and
+refusal-first paths.
 
 ## Step 4 — implement exactly the accepted ordinary network
 
@@ -104,7 +109,9 @@ against the pre-extension implementation.
 Implement the accepted reactions with existing deterministic math and quantity
 boundaries. Include indicator charged forms in the coupled solve. Return tagged
 refusals for unmodelled forms and numerical failures. Do not add optical RGB
-logic.
+logic. **Complete for the candidate slice:** the TypeScript reduced solve now
+couples indicator charge and ionic strength; the existing production adapter is
+not silently switched to this candidate model.
 
 ## Step 5 — implement the native/WASM counterpart
 
@@ -113,7 +120,11 @@ tests.
 
 Derive the same accepted model/config identity from the central contract. Do
 not hand-write a second set of constants. Match result/refusal serialization
-and diagnostics.
+and diagnostics. **Complete for the candidate fraction bridge:** native host
+and dedicated WASM exports derive constants from the shared contract and are
+covered by Rust tests, ordinary and coupled TypeScript↔WASM differential
+commands. A full production adapter replacement remains out of scope until
+Step 7 evidence is accepted.
 
 ## Step 6 — independent reference and differential validation
 
@@ -123,7 +134,11 @@ and diagnostics.
 Run MF-1…MF-10, including the extreme-acid refusal, full balance/conservation
 checks, replay with mutable content removed, and TypeScript↔WASM differential
 comparison. Quantitative optical enablement remains blocked until Task 8 has an
-admitted profile.
+admitted profile. **Current progress:** the independent Decimal MF matrix,
+fixture-driven 11-point ordinary differential, one-point coupled TS↔WASM
+differential, and the real World Runtime request-builder replay test pass
+locally. Final committed evidence packaging is recorded in the candidate
+packet; owner-facing closure remains separate from implementation.
 
 ## Step 7 — evidence and migration closure
 
@@ -131,23 +146,44 @@ Update canonical SPEC revision and central versions only when the accepted
 implementation contract actually changes. Record model/config/reference hashes,
 source provenance, command output, and limitations. Existing worlds retain
 their persisted model identity; no migration invents historic form fractions or
-optical data.
+optical data. **Complete locally:** the candidate evidence packet records the
+contract, reference-manifest, and WASM hashes plus the reproducible commands.
+Owner-facing closure and any production-adapter rollout remain pending.
 
 ## Final acceptance matrix
 
 | Criterion | Evidence required | Current status |
 |---|---|---|
 | Species/reactions explicit | candidate spec + source packets | Step 1 complete |
-| Constants/provenance complete | reviewed machine-readable records | not yet accepted |
-| Ordinary form balances | independent MF matrix + solver tests | not run |
-| Strong-acid refusal | adversarial MF-7 + DOM/refusal evidence | not run |
-| Numerical/domain distinction | tagged failure matrix | not run |
-| TypeScript/WASM differential | native differential report | not run |
-| Replay identity | committed-world replay fixture | not run |
+| Constants/provenance complete | reviewed machine-readable records | candidate contract + source checks pass locally; final owner evidence pending |
+| Ordinary form balances | independent MF matrix + solver tests | Decimal MF-1…MF-4/MF-8…MF-10 and coupled TypeScript tests pass locally |
+| Strong-acid refusal | adversarial MF-7 + DOM/refusal evidence | MF-7 refusal checks pass locally; no DOM is in this science-only candidate |
+| Numerical/domain distinction | tagged failure matrix | ordinary invalid/missing-data/refusal paths are covered; production matrix pending |
+| TypeScript/WASM differential | native differential report | fixture-driven ordinary and coupled differentials pass locally |
+| Replay identity | committed-world replay fixture | MF-9 plus real World Runtime request-builder replay test |
 | Optical profile separation | Task 8 registry + optical refusal | qualitative-only; no quantitative profile |
 
-## Stop condition
+## Local artifact ledger
 
-Stop after Step 2 until the owner explicitly accepts the candidate scientific
-sub-specification. Do not implement or enable a multi-form solver merely
-because the current schema can carry a list of forms.
+The following hashes were recorded after a clean local package build. They are
+implementation evidence, not a hosted-CI attestation and not a claim that the
+candidate is S3:
+
+| Artifact | SHA-256 |
+|---|---|
+| `contracts/scientific/indicator-multiform.json` | `sha256:0d5873c449fc01e7232043d8321bbbdcf40698c5c7a09894f74aa1e84ca18498` |
+| `packages/sci/test/reference/indicator-multiform/manifest.json` | `sha256:90d08e5ca6a8f97b01f15fbe37735c886d4e87b989929570eafcc0209d62af8f` |
+| `packages/sci/dist/wasm/chemrealm_sci_core.wasm` | `sha256:c03fc50d7fb8aa6bae79dd9638b14095f1cf919bdfb8e31c64bda93ce05c3887` |
+
+The central version source remains `contracts/version-manifest.json`; generated
+TypeScript/Rust sources are checked by `pnpm verify:versions`. Strong-acid
+orange/yellow is documented as a refusal boundary only and has no RGB,
+spectrum, or production solver path in this candidate.
+
+## Current stop condition
+
+The owner has accepted the ordinary-aqueous candidate scope, so implementation
+may proceed for that scope. Do not claim this candidate as S3, switch the
+existing production adapter, or enable an optical tint until the final
+committed evidence packet and owner-facing closure are complete. Strong-acid
+cation/orange remains refusal-only.

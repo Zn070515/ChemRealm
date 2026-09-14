@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "MF-8",
+  "kind": "native-differential",
+  "description": "Ordinary accepted request used by the TypeScript/WASM differential bridge",
+  "request": {
+    "sourceReplayHash": "sha256:mf-8-differential",
+    "totalAmountMol": "5e-8",
+    "totalMolality": "5e-8",
+    "hydrogenActivity": "1e-9",
+    "monovalentAnionActivityCoefficient": "0.8",
+    "divalentAnionActivityCoefficient": "0.6",
+    "regime": "ordinary-aqueous"
+  },
+  "coupledRequest": {
+    "sourceReplayHash": "sha256:mf-8-coupled-differential",
+    "totalAmountMol": "0.05",
+    "strongAcidChlorideMolality": "0",
+    "strongBaseSodiumMolality": "0.1",
+    "totalAcidFamilyMolality": "0",
+    "indicatorTotalMolality": "0.05",
+    "regime": "ordinary-aqueous"
+  },
+  "assertions": {
+    "requiresNativeDifferential": true,
+    "fractionAbsoluteTolerance": "1e-14"
+  }
+}

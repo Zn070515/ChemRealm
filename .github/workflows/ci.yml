@@ -42,6 +42,8 @@ jobs:
       # supersede the accepted TypeScript backend.
       - run: pnpm verify:native-differential
       - run: pnpm verify:native-ts-differential
+      - run: pnpm verify:native-indicator-differential
+      - run: pnpm verify:native-indicator-coupled-differential
       - run: pnpm test
 
       # Type-level guarantees (AC-U1..AC-U5). These CANNOT be runtime tests:
@@ -102,6 +104,7 @@ jobs:
 
       - run: uv sync
       - run: uv run pytest
+      - run: pnpm verify:indicator-multiform-reference
 
       # M4's scientific oracle is a hard gate: the pinned PHREEQC source is
       # built from the checked-in manifest before the cross-engine sweep.

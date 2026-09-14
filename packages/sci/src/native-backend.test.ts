@@ -20,6 +20,8 @@ import {
 import { createAcidBaseAdapter } from "./acidbase/index.js";
 import {
   createNativeJsonAdapter,
+  createWasmMultiformJsonExecutor,
+  createWasmMultiformCoupledJsonExecutor,
   createWasmJsonExecutor,
   loadNativeWasmExecutor,
   NATIVE_BRIDGE_SCHEMA_VERSION,
@@ -327,6 +329,65 @@ describe("native scientific backend facade", () => {
       [8, 1],
       [outputPointer, 1],
     ]);
+  });
+
+  it("uses the dedicated multiform JSON export instead of the legacy bridge export", () => {
+    const memory = new ArrayBuffer(128);
+    const encoder = new TextEncoder();
+    const outputPointer = 64;
+    const output = encoder.encode('{"status":"CHEMICAL_FORMS_OK"}');
+    new Uint8Array(memory, outputPointer, output.length).set(output);
+    let multiformCalls = 0;
+
+    const execute = createWasmMultiformJsonExecutor({
+      exports: {
+        memory: { buffer: memory },
+        chemrealm_alloc: () => 8,
+        chemrealm_dealloc: () => undefined,
+        chemrealm_solve_json: () => {
+          throw new Error("legacy export must not be used");
+        },
+        chemrealm_solve_multiform_json: () => {
+          multiformCalls += 1;
+          return (BigInt(output.length) << 32n) | BigInt(outputPointer);
+        },
+      },
+    } as never);
+
+    expect(execute("candidate-request")).toBe('{"status":"CHEMICAL_FORMS_OK"}');
+    expect(multiformCalls).toBe(1);
+  });
+
+  it("uses the dedicated coupled multiform JSON export", () => {
+    const memory = new ArrayBuffer(128);
+    const encoder = new TextEncoder();
+    const outputPointer = 64;
+    const output = encoder.encode('{"observation":{"status":"CHEMICAL_FORMS_OK"}}');
+    new Uint8Array(memory, outputPointer, output.length).set(output);
+    let coupledCalls = 0;
+
+    const execute = createWasmMultiformCoupledJsonExecutor({
+      exports: {
+        memory: { buffer: memory },
+        chemrealm_alloc: () => 8,
+        chemrealm_dealloc: () => undefined,
+        chemrealm_solve_json: () => {
+          throw new Error("legacy export must not be used");
+        },
+        chemrealm_solve_multiform_json: () => {
+          throw new Error("fraction export must not be used");
+        },
+        chemrealm_solve_multiform_coupled_json: () => {
+          coupledCalls += 1;
+          return (BigInt(output.length) << 32n) | BigInt(outputPointer);
+        },
+      },
+    } as never);
+
+    expect(execute("candidate-coupled-request")).toBe(
+      '{"observation":{"status":"CHEMICAL_FORMS_OK"}}',
+    );
+    expect(coupledCalls).toBe(1);
   });
 
   it("returns INVALID_INPUT at the facade boundary without invoking native code", async () => {

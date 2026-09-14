@@ -1,7 +1,9 @@
 import {
+  activity,
   reducedIonicStrength,
   reducedMolality,
   type ReducedIonicStrength,
+  type ReducedMolality,
   type SolveFailureCode,
 } from "@chemrealm/schema";
 import {
@@ -19,10 +21,22 @@ import {
   ionicStrengthFromSpecies,
   type ReducedSpeciesMolalities,
 } from "./species.js";
+import {
+  calculateDiproticIndicatorForms,
+  type DiproticIndicatorConstants,
+  type DiproticIndicatorReducedForms,
+} from "./multiform.js";
+
+export interface ReducedDiproticIndicatorInput {
+  readonly totalMolality: ReducedMolality;
+  readonly constants: DiproticIndicatorConstants;
+}
 
 export interface ReducedSolveInput {
   readonly totals: AcidBaseComponentTotals;
   readonly constants: AcidBaseConstants;
+  /** Optional ordinary three-form indicator coupled into charge and I. */
+  readonly indicator?: ReducedDiproticIndicatorInput;
 }
 
 export interface ReducedSolveSuccess {
@@ -31,6 +45,7 @@ export interface ReducedSolveSuccess {
   /** Charge residual in mol/kg after the explicit reduced-to-physical boundary. */
   readonly chargeResidual: number;
   readonly iterations: { readonly outer: number; readonly inner: number };
+  readonly indicatorForms?: DiproticIndicatorReducedForms;
 }
 
 export type ReducedSolveFailure =
@@ -48,6 +63,7 @@ type Candidate = {
   readonly ionicStrength: ReducedIonicStrength;
   readonly reducedChargeResidual: number;
   readonly innerIterations: number;
+  readonly indicatorForms?: DiproticIndicatorReducedForms;
 };
 
 type DomainEdge = {
@@ -164,11 +180,17 @@ function idealHydrogenRoot(input: ReducedSolveInput): number {
  * `m̂_A/m̂_HA = Ka_c / m̂_H` are legal ratios. Physical molality is formed only
  * after the solver returns, by multiplying a reduced value by m°.
  */
+type SpeciesEvaluation = {
+  readonly species: ReducedSpeciesMolalities;
+  readonly activities: DaviesActivities;
+  readonly indicatorForms?: DiproticIndicatorReducedForms;
+};
+
 function speciesAt(
   hydrogen: number,
   ionicStrength: ReducedIonicStrength,
   input: ReducedSolveInput,
-): { readonly species: ReducedSpeciesMolalities; readonly activities: DaviesActivities } {
+): SpeciesEvaluation {
   if (!Number.isFinite(hydrogen) || hydrogen <= 0) {
     throw new RangeError("reduced hydrogen molality must be finite and positive");
   }
@@ -189,6 +211,14 @@ function speciesAt(
   );
   const neutralAcid = reducedMolality(acidFamily.value - dissociatedAcid.value);
   const conjugateBase = dissociatedAcid;
+  const indicatorForms = input.indicator === undefined
+    ? undefined
+    : calculateDiproticIndicatorForms(input.indicator.totalMolality, {
+        constants: input.indicator.constants,
+        hydrogenActivity: activity(hydrogenGamma * hydrogen),
+        monovalentAnionActivityCoefficient: activities.monovalentAnion,
+        divalentAnionActivityCoefficient: activities.divalentAnion,
+      });
 
   return {
     species: Object.freeze({
@@ -200,7 +230,33 @@ function speciesAt(
       chloride: input.totals.strongAcidChlorideMolality,
     }),
     activities,
+    ...(indicatorForms === undefined ? {} : { indicatorForms }),
   };
+}
+
+function ionicStrengthFromEvaluation(
+  evaluated: Pick<SpeciesEvaluation, "species" | "indicatorForms">,
+): ReducedIonicStrength {
+  const base = ionicStrengthFromSpecies(evaluated.species).value;
+  const indicator = evaluated.indicatorForms;
+  if (indicator === undefined) return reducedIonicStrength(base);
+  return reducedIonicStrength(
+    base +
+      0.5 *
+        (indicator.intermediateMonoanionMolality.value +
+          4 * indicator.quinoidBaseMolality.value),
+  );
+}
+
+function chargeResidualFromEvaluation(
+  evaluated: Pick<SpeciesEvaluation, "species" | "indicatorForms">,
+): number {
+  const base = chargeResidualFromSpecies(evaluated.species);
+  const indicator = evaluated.indicatorForms;
+  if (indicator === undefined) return base;
+  return base -
+    indicator.intermediateMonoanionMolality.value -
+    2 * indicator.quinoidBaseMolality.value;
 }
 
 function candidateAt(
@@ -213,8 +269,11 @@ function candidateAt(
   return {
     species: evaluated.species,
     ionicStrength,
-    reducedChargeResidual: chargeResidualFromSpecies(evaluated.species),
+    reducedChargeResidual: chargeResidualFromEvaluation(evaluated),
     innerIterations,
+    ...(evaluated.indicatorForms === undefined
+      ? {}
+      : { indicatorForms: evaluated.indicatorForms }),
   };
 }
 
@@ -250,7 +309,7 @@ function ionicStrengthResidual(
   input: ReducedSolveInput,
 ): number {
   const evaluated = speciesAt(hydrogen, ionicStrength, input);
-  return ionicStrengthFromSpecies(evaluated.species).value - ionicStrength.value;
+  return ionicStrengthFromEvaluation(evaluated).value - ionicStrength.value;
 }
 
 function solveInner(
@@ -541,7 +600,7 @@ export function solveReduced(
       );
     }
 
-    const recomputedIonicStrength = ionicStrengthFromSpecies(finalCandidate.species);
+    const recomputedIonicStrength = ionicStrengthFromEvaluation(finalCandidate);
     if (recomputedIonicStrength.value > IONIC_STRENGTH_UPPER + INNER_TOLERANCE) {
       return failOutOfDomain(
         `converged ionic strength ${recomputedIonicStrength.value} mol/kg ` +
@@ -558,6 +617,9 @@ export function solveReduced(
         outer: outerIterations,
         inner: finalCandidate.innerIterations,
       }),
+      ...(finalCandidate.indicatorForms === undefined
+        ? {}
+        : { indicatorForms: finalCandidate.indicatorForms }),
     });
   } catch (error) {
     if (error instanceof DaviesDomainError) {
@@ -572,4 +634,11 @@ export function solveReduced(
     }
     throw error;
   }
+}
+
+/** Solve the accepted ordinary three-form indicator network as a coupled system. */
+export function solveReducedWithDiproticIndicator(
+  input: ReducedSolveInput & { readonly indicator: ReducedDiproticIndicatorInput },
+): ReturnType<typeof solveReduced> {
+  return solveReduced(input);
 }

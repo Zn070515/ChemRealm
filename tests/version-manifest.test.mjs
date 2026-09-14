@@ -33,6 +33,8 @@ describe("central version manifest", () => {
     expect(manifest.scientific.acidBase.id).toBeTypeOf("string");
     expect(manifest.scientific.acidBase.legacyVersion).toBeTypeOf("string");
     expect(manifest.scientific.acidBase.nativeVersion).toBeTypeOf("string");
+    expect(manifest.scientific.indicatorMultiform.id).toBeTypeOf("string");
+    expect(manifest.scientific.indicatorMultiform.version).toBeTypeOf("string");
     expect(manifest.oracle.phreeqc).toBeTypeOf("string");
   });
 
@@ -56,6 +58,7 @@ describe("central version manifest", () => {
     expect(Object.isFrozen(VERSION_MANIFEST)).toBe(true);
     expect(Object.isFrozen(VERSION_MANIFEST.schema)).toBe(true);
     expect(Object.isFrozen(VERSION_MANIFEST.scientific.acidBase)).toBe(true);
+    expect(Object.isFrozen(VERSION_MANIFEST.scientific.indicatorMultiform)).toBe(true);
     expect(Object.isFrozen(VERSION_MANIFEST.oracle)).toBe(true);
   });
 
@@ -77,5 +80,21 @@ describe("central version manifest", () => {
     expect(() =>
       validateVersionManifest({ ...manifest, representation }),
     ).toThrow(/opticalPath.*non-empty string/);
+  });
+
+  it("keeps the indicator multiform reference namespace on the central oracle versions", async () => {
+    const manifest = await readVersionManifest();
+    const reference = JSON.parse(await readFile(
+      "packages/sci/test/reference/indicator-multiform/manifest.json",
+      "utf8",
+    ));
+    expect(reference.schemaVersion).toBe(manifest.oracle.referenceManifest);
+    for (const fixtureId of reference.fixtures) {
+      const fixture = JSON.parse(await readFile(
+        `packages/sci/test/reference/indicator-multiform/${fixtureId}.json`,
+        "utf8",
+      ));
+      expect(fixture.schemaVersion).toBe(manifest.oracle.referenceFixture);
+    }
   });
 });

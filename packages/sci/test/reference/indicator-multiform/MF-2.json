@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "id": "MF-2",
+  "kind": "first-transition",
+  "description": "Neighbourhood around the H2In/HIn- activity transition",
+  "points": [
+    {
+      "id": "more-acidic",
+      "sourceReplayHash": "sha256:mf-2-acidic",
+      "totalAmountMol": "5e-8",
+      "totalMolality": "5e-8",
+      "hydrogenActivity": "1.1e-9",
+      "monovalentAnionActivityCoefficient": "1",
+      "divalentAnionActivityCoefficient": "1",
+      "regime": "ordinary-aqueous"
+    },
+    {
+      "id": "transition",
+      "sourceReplayHash": "sha256:mf-2-transition",
+      "totalAmountMol": "5e-8",
+      "totalMolality": "5e-8",
+      "hydrogenActivity": "8.912509381337459e-10",
+      "monovalentAnionActivityCoefficient": "1",
+      "divalentAnionActivityCoefficient": "1",
+      "regime": "ordinary-aqueous"
+    },
+    {
+      "id": "more-basic",
+      "sourceReplayHash": "sha256:mf-2-basic",
+      "totalAmountMol": "5e-8",
+      "totalMolality": "5e-8",
+      "hydrogenActivity": "7.5e-10",
+      "monovalentAnionActivityCoefficient": "1",
+      "divalentAnionActivityCoefficient": "1",
+      "regime": "ordinary-aqueous"
+    }
+  ],
+  "assertions": {
+    "monotoneIntermediateFraction": true,
+    "noThresholdBranch": true
+  }
+}

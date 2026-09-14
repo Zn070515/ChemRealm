@@ -5,6 +5,7 @@ import {
   type Scenario,
 } from "@chemrealm/schema";
 import {
+  buildPhenolphthaleinMultiformRequest,
   SolverRegistry,
   buildAcidBaseSolveRequest,
   createAcidBaseAdapter,
@@ -62,6 +63,26 @@ function targetContents(state: WorldState) {
   const contents = state.canonical.byVessel[TARGET_VESSEL_ID];
   if (contents === undefined) throw new Error("production composition: target contents are missing");
   return contents;
+}
+
+/**
+ * Build the candidate ordinary-indicator input from authoritative world
+ * contents. This is a composition-root helper, not a second chemistry model:
+ * the component catalog owns contribution semantics and the candidate solver
+ * owns the equilibrium calculation.
+ */
+export function buildPhenolphthaleinMultiformRequestFromState(
+  state: WorldState,
+): ReturnType<typeof buildPhenolphthaleinMultiformRequest> {
+  const contents = targetContents(state);
+  return buildPhenolphthaleinMultiformRequest(
+    {
+      waterMass: contents.waterMass,
+      componentAmounts: contents.componentAmounts,
+      indicatorAmounts: contents.indicatorAmounts,
+    },
+    stateHash(state),
+  );
 }
 
 function targetProfile(state: WorldState) {

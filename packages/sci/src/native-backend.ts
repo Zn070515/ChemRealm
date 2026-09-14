@@ -231,25 +231,39 @@ interface RawWasmExports {
   readonly memory: RawWasmMemory;
   readonly chemrealm_alloc: (length: number) => number;
   readonly chemrealm_dealloc: (pointer: number, length: number) => void;
-  readonly chemrealm_solve_json: (pointer: number, length: number) => bigint | number;
+  readonly chemrealm_solve_json?: (pointer: number, length: number) => bigint | number;
+  readonly chemrealm_solve_multiform_json?: (pointer: number, length: number) => bigint | number;
+  readonly chemrealm_solve_multiform_coupled_json?: (pointer: number, length: number) => bigint | number;
 }
 
-function wasmExports(instance: RawWasmInstance): RawWasmExports {
+type WasmSolveExport =
+  | "chemrealm_solve_json"
+  | "chemrealm_solve_multiform_json"
+  | "chemrealm_solve_multiform_coupled_json";
+
+function wasmExports(instance: RawWasmInstance, solveExport: WasmSolveExport): RawWasmExports {
   const exports = instance.exports as Partial<RawWasmExports>;
   if (
     exports.memory === undefined ||
     exports.chemrealm_alloc === undefined ||
     exports.chemrealm_dealloc === undefined ||
-    exports.chemrealm_solve_json === undefined
+    typeof exports[solveExport] !== "function"
   ) {
-    throw new TypeError("native WASM module is missing the strict JSON ABI");
+    throw new TypeError(`native WASM module is missing the ${solveExport} JSON ABI`);
   }
   return exports as RawWasmExports;
 }
 
 /** Adapt the raw pointer/length WASM ABI to the strict JSON executor. */
-export function createWasmJsonExecutor(instance: RawWasmInstance): NativeJsonExecutor {
-  const exports = wasmExports(instance);
+function createWasmExecutor(
+  instance: RawWasmInstance,
+  solveExport: WasmSolveExport,
+): NativeJsonExecutor {
+  const exports = wasmExports(instance, solveExport);
+  const solve = exports[solveExport];
+  if (typeof solve !== "function") {
+    throw new TypeError(`native WASM module is missing the ${solveExport} JSON ABI`);
+  }
   const encoder = new TextEncoder();
   const decoder = new TextDecoder("utf-8", { fatal: true });
   return (requestJson: string): string => {
@@ -261,7 +275,7 @@ export function createWasmJsonExecutor(instance: RawWasmInstance): NativeJsonExe
     new Uint8Array(exports.memory.buffer, pointer, input.length).set(input);
     let packed: bigint | number;
     try {
-      packed = exports.chemrealm_solve_json(pointer, input.length);
+      packed = solve(pointer, input.length);
     } finally {
       exports.chemrealm_dealloc(pointer, input.length);
     }
@@ -279,6 +293,24 @@ export function createWasmJsonExecutor(instance: RawWasmInstance): NativeJsonExe
       exports.chemrealm_dealloc(outputPointer, outputLength);
     }
   };
+}
+
+export function createWasmJsonExecutor(instance: RawWasmInstance): NativeJsonExecutor {
+  return createWasmExecutor(instance, "chemrealm_solve_json");
+}
+
+/** Adapt the candidate ordinary multiform ABI without touching the legacy bridge. */
+export function createWasmMultiformJsonExecutor(
+  instance: RawWasmInstance,
+): NativeJsonExecutor {
+  return createWasmExecutor(instance, "chemrealm_solve_multiform_json");
+}
+
+/** Adapt the candidate coupled ordinary multiform JSON export. */
+export function createWasmMultiformCoupledJsonExecutor(
+  instance: RawWasmInstance,
+): NativeJsonExecutor {
+  return createWasmExecutor(instance, "chemrealm_solve_multiform_coupled_json");
 }
 
 /** Load a self-hosted WASM module. Failure is explicit and never falls back. */
@@ -299,4 +331,48 @@ export async function loadNativeWasmExecutor(
   if (wasmApi === undefined) throw new Error("WebAssembly is unavailable in this runtime");
   const instantiated = await wasmApi.instantiate(bytes, {});
   return createWasmJsonExecutor("instance" in instantiated ? instantiated.instance : instantiated);
+}
+
+/** Load the candidate ordinary multiform JSON export from self-hosted WASM. */
+export async function loadNativeMultiformWasmExecutor(
+  source: string | URL | ArrayBuffer,
+): Promise<NativeJsonExecutor> {
+  const bytes = source instanceof ArrayBuffer
+    ? source
+    : await (await fetch(source)).arrayBuffer();
+  const wasmApi = (globalThis as unknown as {
+    WebAssembly?: {
+      instantiate(
+        module: ArrayBuffer,
+        imports: Record<string, unknown>,
+      ): Promise<RawWasmInstance | { readonly instance: RawWasmInstance }>;
+    };
+  }).WebAssembly;
+  if (wasmApi === undefined) throw new Error("WebAssembly is unavailable in this runtime");
+  const instantiated = await wasmApi.instantiate(bytes, {});
+  return createWasmMultiformJsonExecutor(
+    "instance" in instantiated ? instantiated.instance : instantiated,
+  );
+}
+
+/** Load the candidate coupled ordinary multiform JSON export from WASM. */
+export async function loadNativeMultiformCoupledWasmExecutor(
+  source: string | URL | ArrayBuffer,
+): Promise<NativeJsonExecutor> {
+  const bytes = source instanceof ArrayBuffer
+    ? source
+    : await (await fetch(source)).arrayBuffer();
+  const wasmApi = (globalThis as unknown as {
+    WebAssembly?: {
+      instantiate(
+        module: ArrayBuffer,
+        imports: Record<string, unknown>,
+      ): Promise<RawWasmInstance | { readonly instance: RawWasmInstance }>;
+    };
+  }).WebAssembly;
+  if (wasmApi === undefined) throw new Error("WebAssembly is unavailable in this runtime");
+  const instantiated = await wasmApi.instantiate(bytes, {});
+  return createWasmMultiformCoupledJsonExecutor(
+    "instance" in instantiated ? instantiated.instance : instantiated,
+  );
 }

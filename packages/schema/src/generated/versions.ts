@@ -53,6 +53,10 @@ export const VERSION_MANIFEST = deepFreeze({
       "legacyVersion": "1.0.0",
       "nativeVersion": "2.0.0",
       "expressionProducerVersion": "3.0.0"
+    },
+    "indicatorMultiform": {
+      "id": "acidbase-phenolphthalein-diprotic-davies",
+      "version": "1.0.0"
     }
   },
   "fixtures": {

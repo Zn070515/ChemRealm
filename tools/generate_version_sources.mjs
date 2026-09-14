@@ -4,10 +4,13 @@ import {
   REPOSITORY_ROOT,
   GENERATED_VERSION_SOURCE_PATH,
   GENERATED_NATIVE_CONTRACT_SOURCE_PATH,
+  INDICATOR_MULTIFORM_CONTRACT_SOURCE_PATH,
   derivedVersionMetadata,
   nativeContractRelativePath,
+  indicatorMultiformContractRelativePath,
   readVersionManifest,
   renderNativeContractSource,
+  renderIndicatorMultiformContractSource,
   renderTypeScriptVersionSource,
 } from "./version-manifest.mjs";
 
@@ -30,6 +33,14 @@ await mkdir(new URL("../packages/sci/src/generated/", import.meta.url), {
 await writeFile(
   GENERATED_NATIVE_CONTRACT_SOURCE_PATH,
   renderNativeContractSource(nativeContract),
+  "utf8",
+);
+const indicatorMultiformContract = JSON.parse(
+  await readFile(join(REPOSITORY_ROOT, indicatorMultiformContractRelativePath()), "utf8"),
+);
+await writeFile(
+  INDICATOR_MULTIFORM_CONTRACT_SOURCE_PATH,
+  renderIndicatorMultiformContractSource(indicatorMultiformContract),
   "utf8",
 );
 

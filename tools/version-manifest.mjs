@@ -26,10 +26,22 @@ export const GENERATED_NATIVE_CONTRACT_SOURCE_PATH = join(
   "generated",
   "native-model-contract.ts",
 );
+export const INDICATOR_MULTIFORM_CONTRACT_SOURCE_PATH = join(
+  REPOSITORY_ROOT,
+  "packages",
+  "sci",
+  "src",
+  "generated",
+  "indicator-multiform-contract.ts",
+);
 
 export function nativeContractRelativePath(manifest) {
   const acidBase = manifest.scientific.acidBase;
   return `contracts/scientific/${acidBase.id}-${acidBase.nativeVersion}.json`;
+}
+
+export function indicatorMultiformContractRelativePath() {
+  return "contracts/scientific/indicator-multiform.json";
 }
 
 export async function readVersionManifest() {
@@ -114,6 +126,10 @@ export function validateVersionManifest(value) {
   for (const key of ["id", "legacyVersion", "nativeVersion", "expressionProducerVersion"]) {
     requireString(acidBase, key);
   }
+  const indicatorMultiform = requireObject(scientific, "indicatorMultiform");
+  for (const key of ["id", "version"]) {
+    requireString(indicatorMultiform, key);
+  }
 
   const fixtures = requireObject(value, "fixtures");
   requireString(fixtures, "testSolverVersion");
@@ -163,6 +179,12 @@ export const NATIVE_MODEL_CONTRACT = ${JSON.stringify(contract, null, 2)} as con
 `;
 }
 
+export function renderIndicatorMultiformContractSource(contract) {
+  return `/** GENERATED FILE — edit contracts/scientific/indicator-multiform.json instead. */
+export const INDICATOR_MULTIFORM_CONTRACT = ${JSON.stringify(contract, null, 2)} as const;
+`;
+}
+
 export function derivedVersionMetadata(manifest) {
   return {
     packageJson: {
@@ -181,6 +203,7 @@ export function derivedVersionMetadata(manifest) {
 
 export function activeVersionLiterals(manifest) {
   const acidBase = manifest.scientific.acidBase;
+  const indicatorMultiform = manifest.scientific.indicatorMultiform;
   return [
     String(manifest.schema.world),
     String(manifest.schema.scenario),
@@ -214,6 +237,7 @@ export function activeVersionLiterals(manifest) {
     acidBase.legacyVersion,
     acidBase.nativeVersion,
     acidBase.expressionProducerVersion,
+    indicatorMultiform.version,
     manifest.fixtures.testSolverVersion,
     manifest.fixtures.testModelVersion,
     manifest.oracle.phreeqc,

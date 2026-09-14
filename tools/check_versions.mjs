@@ -3,12 +3,14 @@ import { join } from "node:path";
 import {
   GENERATED_VERSION_SOURCE_PATH,
   GENERATED_NATIVE_CONTRACT_SOURCE_PATH,
+  INDICATOR_MULTIFORM_CONTRACT_SOURCE_PATH,
   REPOSITORY_ROOT,
   activeVersionLiterals,
   derivedVersionMetadata,
   nativeContractRelativePath,
   readVersionManifest,
   renderNativeContractSource,
+  renderIndicatorMultiformContractSource,
   renderTypeScriptVersionSource,
 } from "./version-manifest.mjs";
 
@@ -30,6 +32,19 @@ const generatedNativeContract = await readFile(
 if (generatedNativeContract !== expectedGeneratedNativeContract) {
   throw new Error(
     "generated native model contract source is stale; run `node tools/generate_native_contract_source.mjs`",
+  );
+}
+const indicatorMultiformContract = await readJson("contracts/scientific/indicator-multiform.json");
+const expectedGeneratedIndicatorMultiform = renderIndicatorMultiformContractSource(
+  indicatorMultiformContract,
+);
+const generatedIndicatorMultiform = await readFile(
+  INDICATOR_MULTIFORM_CONTRACT_SOURCE_PATH,
+  "utf8",
+).catch(() => null);
+if (generatedIndicatorMultiform !== expectedGeneratedIndicatorMultiform) {
+  throw new Error(
+    "generated indicator multiform contract source is stale; run `pnpm generate:versions`",
   );
 }
 
@@ -99,6 +114,11 @@ function requireVersion(actual, expected, description) {
 }
 
 const acidBase = manifest.scientific.acidBase;
+if (indicatorMultiformContract.modelId !== manifest.scientific.indicatorMultiform.id) {
+  throw new Error(
+    "indicator multiform contract model id is not aligned with the central version manifest",
+  );
+}
 requireVersion(nativeContract.model?.id, acidBase.id, "native model contract model id");
 requireVersion(
   nativeContract.model?.version,
@@ -155,6 +175,24 @@ for (const fixtureId of [
     fixture.schemaVersion,
     manifest.oracle.referenceFixture,
     `${fixtureId} schema version`,
+  );
+}
+const indicatorMultiformReferenceManifest = await readJson(
+  "packages/sci/test/reference/indicator-multiform/manifest.json",
+);
+requireVersion(
+  indicatorMultiformReferenceManifest.schemaVersion,
+  manifest.oracle.referenceManifest,
+  "indicator multiform reference manifest schema version",
+);
+for (const fixtureId of indicatorMultiformReferenceManifest.fixtures) {
+  const fixture = await readJson(
+    `packages/sci/test/reference/indicator-multiform/${fixtureId}.json`,
+  );
+  requireVersion(
+    fixture.schemaVersion,
+    manifest.oracle.referenceFixture,
+    `${fixtureId} indicator multiform fixture schema version`,
   );
 }
 

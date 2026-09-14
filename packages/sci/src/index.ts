@@ -6,6 +6,7 @@ export * from "./registry.js";
 export * from "./stub.js";
 export * from "./acidbase/indicator.js";
 export * from "./acidbase/index.js";
+export * from "./acidbase/multiform.js";
 export * from "./projection.js";
 export * from "./frame.js";
 export * from "./expressions.js";

@@ -42,6 +42,19 @@ describe("Davies activity coefficients", () => {
     expect(activities.neutralAcid.value).toBe(1);
   });
 
+  it("derives the Davies z=2 coefficient for the ordinary diprotic indicator", () => {
+    const activities = daviesActivities(
+      reducedIonicStrength(0.1),
+      DEFAULT_ACID_BASE_CONSTANTS,
+    );
+
+    expect(activities.divalentAnion.value).toBeCloseTo(
+      activities.monovalentAnion.value ** 4,
+      15,
+    );
+    expect(activities.divalentAnion.value).toBeGreaterThan(0);
+  });
+
   it.each([
     ["negative", -1],
     ["NaN", Number.NaN],

@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 2,
+  "kind": "indicator-multiform-reference-manifest",
+  "derivation": {
+    "method": "independent Decimal fraction and balance calculation",
+    "script": "tools/oracle/reference/derive_indicator_multiform.py",
+    "notGeneratedBy": "packages/sci",
+    "constants": "contracts/scientific/indicator-multiform.json",
+    "opticalProfile": "not admitted"
+  },
+  "fixtures": [
+    "MF-1",
+    "MF-2",
+    "MF-3",
+    "MF-4",
+    "MF-5",
+    "MF-6",
+    "MF-7",
+    "MF-8",
+    "MF-9",
+    "MF-10"
+  ]
+}

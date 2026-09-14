@@ -60,6 +60,10 @@ fn main() {
         .get("scientific")
         .and_then(|value| value.get("acidBase"))
         .expect("version manifest acid-base section");
+    let indicator_multiform_identity = manifest
+        .get("scientific")
+        .and_then(|value| value.get("indicatorMultiform"))
+        .expect("version manifest indicator multiform section");
 
     let u32_value = |parent: &serde_json::Value, key: &str| {
         parent
@@ -216,6 +220,47 @@ pub const MODEL_COMPONENTS: [&str; 4] = [{}];\n",
         rust_strings(&contract_components),
     );
 
+    let indicator_multiform_path = repository_root
+        .join("contracts")
+        .join("scientific")
+        .join("indicator-multiform.json");
+    println!(
+        "cargo:rerun-if-changed={}",
+        indicator_multiform_path.display()
+    );
+    let indicator_multiform_contract = read_schema(&indicator_multiform_path);
+    let indicator_model_id = string_value(indicator_multiform_identity, "id");
+    let indicator_model_version = string_value(indicator_multiform_identity, "version");
+    if indicator_multiform_contract
+        .get("modelId")
+        .and_then(serde_json::Value::as_str)
+        != Some(indicator_model_id.as_str())
+    {
+        panic!("indicator multiform contract model id disagrees with the version manifest");
+    }
+    let indicator_constants = indicator_multiform_contract
+        .get("constants")
+        .expect("indicator multiform constants section");
+    let indicator_ka_1 = number_value(indicator_constants, "Ka_In_1");
+    let indicator_ka_2 = number_value(indicator_constants, "Ka_In_2");
+    let indicator_neutral_gamma =
+        number_value(indicator_constants, "neutralIndicatorActivityCoefficient");
+    if indicator_ka_1 <= 0.0 || indicator_ka_2 <= 0.0 || indicator_neutral_gamma <= 0.0 {
+        panic!("indicator multiform constants must be finite and positive");
+    }
+    let indicator_multiform_generated = format!(
+        "pub const MULTIFORM_MODEL_ID: &str = {:?};\n\
+pub const MULTIFORM_MODEL_VERSION: &str = {:?};\n\
+pub const MULTIFORM_KA_IN_1: f64 = {:?};\n\
+pub const MULTIFORM_KA_IN_2: f64 = {:?};\n\
+pub const MULTIFORM_NEUTRAL_GAMMA: f64 = {:?};\n",
+        indicator_model_id,
+        indicator_model_version,
+        indicator_ka_1,
+        indicator_ka_2,
+        indicator_neutral_gamma,
+    );
+
     let native_bridge_version = u32_value(schema, "nativeBridge");
     if envelope_bridge_version != native_bridge_version
         || payload_bridge_version != native_bridge_version
@@ -263,4 +308,11 @@ pub const NATIVE_PAYLOAD_SCHEMA_ARTIFACT: &str = \"native-backend-payload.schema
         ),
     )
     .unwrap_or_else(|error| panic!("failed to write native schema contract constants: {error}"));
+    fs::write(
+        out_dir.join("indicator_multiform_contract.rs"),
+        indicator_multiform_generated,
+    )
+    .unwrap_or_else(|error| {
+        panic!("failed to write indicator multiform contract constants: {error}")
+    });
 }

@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "id": "MF-3",
+  "kind": "second-transition",
+  "description": "Neighbourhood around the HIn-/In2- activity transition",
+  "points": [
+    {
+      "id": "more-acidic",
+      "sourceReplayHash": "sha256:mf-3-acidic",
+      "totalAmountMol": "5e-8",
+      "totalMolality": "5e-8",
+      "hydrogenActivity": "4e-10",
+      "monovalentAnionActivityCoefficient": "1",
+      "divalentAnionActivityCoefficient": "1",
+      "regime": "ordinary-aqueous"
+    },
+    {
+      "id": "transition",
+      "sourceReplayHash": "sha256:mf-3-transition",
+      "totalAmountMol": "5e-8",
+      "totalMolality": "5e-8",
+      "hydrogenActivity": "3.1622776601683795e-10",
+      "monovalentAnionActivityCoefficient": "1",
+      "divalentAnionActivityCoefficient": "1",
+      "regime": "ordinary-aqueous"
+    },
+    {
+      "id": "more-basic",
+      "sourceReplayHash": "sha256:mf-3-basic",
+      "totalAmountMol": "2e-10",
+      "totalMolality": "2e-10",
+      "hydrogenActivity": "2e-10",
+      "monovalentAnionActivityCoefficient": "1",
+      "divalentAnionActivityCoefficient": "1",
+      "regime": "ordinary-aqueous"
+    }
+  ],
+  "assertions": {
+    "monotoneQuinoidFraction": true,
+    "colourTokenNotUsed": true
+  }
+}

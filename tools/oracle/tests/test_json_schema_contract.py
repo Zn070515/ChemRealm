@@ -89,6 +89,7 @@ EXPECTED_ARTIFACTS = [
     "indicator-optical-observation",
     "optical-path",
     "optical-profile",
+    "indicator-multiform-observation",
 ]
 
 

@@ -54,6 +54,13 @@ export {
   buildAcidBaseSolveRequest,
   type AcidBaseSolveRequestInput,
 } from "./request.js";
+export {
+  solveReducedWithDiproticIndicator,
+  type ReducedDiproticIndicatorInput,
+  type ReducedSolveInput,
+  type ReducedSolveSuccess,
+  type ReducedSolveFailure,
+} from "./solve.js";
 
 /** The proposed validation envelope is narrower than the Davies compute domain. */
 export const PROPOSED_ACCURACY_ENVELOPE_IONIC_STRENGTH = 0.12;

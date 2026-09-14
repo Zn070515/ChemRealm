@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "MF-1",
+  "kind": "ordinary",
+  "description": "Ordinary aqueous acidic point with a finite indicator dose",
+  "request": {
+    "sourceReplayHash": "sha256:mf-1-acidic",
+    "totalAmountMol": "5e-8",
+    "totalMolality": "5e-8",
+    "hydrogenActivity": "1e-6",
+    "monovalentAnionActivityCoefficient": "0.9",
+    "divalentAnionActivityCoefficient": "0.7",
+    "regime": "ordinary-aqueous"
+  },
+  "assertions": {
+    "forms": ["neutral-lactone", "intermediate-monoanion", "quinoid-base"],
+    "fractionSumAbsoluteTolerance": "1e-12",
+    "indicatorMassBalanceAbsoluteTolerance": "1e-70"
+  }
+}
