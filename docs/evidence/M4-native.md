@@ -24,6 +24,7 @@ TypeScript `1.0.0` M4 S3 baseline.
 | Native adversarial semantic fixture | PASS locally | `packages/sci/src/native-reference.test.ts` verifies the dilute HOAc water-equilibrium result and rejects the recorded Henderson–Hasselbalch shortcut |
 | Native host ↔ WASM differential matrix | PASS locally | `pnpm verify:native-differential` compares the complete host/WASM payload for 42 requests across REF, ORACLE, and adversarial fixture groups |
 | Native WASM ↔ accepted TypeScript differential matrix | PASS locally | `pnpm verify:native-ts-differential` compares status, species, activities, projections, and indicators across every REF, ORACLE, and adversarial request; backend identities remain distinct |
+| Native deterministic math / numeric-policy corpus | PASS locally | `pnpm native:test` checks the Rust implementation against the shared pinned arbitrary-precision ULP corpus used by the TypeScript tests |
 | Native WASM ↔ PHREEQC oracle comparison | PASS locally | `M4-oracle-sweep-report.json` records 10/10 native-WASM-to-pinned-PHREEQC comparisons, signed differences, model identity, toolchain identity, and the bounded-offset/no-equivalence disposition |
 | Native governance boundary | PASS locally | `pnpm verify:native-governance` |
 
@@ -35,7 +36,11 @@ default after the gate:
 
 - explicit v2 native WorldCreated creation and replay, with v1 exact lookup
   still preserved;
-- complete native World → ScientificFrame → Observable → DOM/browser acceptance packet;
+- a criterion-by-criterion native rerun/acceptance packet for the applicable
+  M4 scientific criteria, including the already-local REF, differential,
+  oracle, and numeric-policy checks;
+- explicit v2 native World → ScientificFrame → Observable → DOM/browser
+  acceptance on that path;
 - final native artifact identity and hosted-CI attestation for that exact
   committed baseline.
 

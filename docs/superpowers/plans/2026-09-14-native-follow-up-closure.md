@@ -165,7 +165,13 @@ Run the focused evidence guard. If the current evidence is already truthful, ret
 
 - [x] **Step 3: Align native evidence wording**
 
-State clearly that Rust host/WASM, schema bridge, differential smoke cases, and CI toolchain checks are complete slices; full REF-1…REF-10, PHREEQC native sweep, and registered-native production World → Science → Observable → DOM composition are still required for M4-B/M5 closure.
+The original handoff recorded the REF/oracle/browser slices as pending. Later
+semantic-closure commits now attest the native REF matrix, host/WASM and
+TS/native differentials, pinned PHREEQC comparison, shared numeric-policy
+corpus, and explicit opt-in composition as completed local slices. The
+remaining M4-B gate is narrower: explicit v2 WorldCreated creation/replay,
+criterion-by-criterion native acceptance on that path, and final hosted
+artifact/browser attestation. This plan does not promote native S3.
 
 - [x] **Step 4: Commit**
 
