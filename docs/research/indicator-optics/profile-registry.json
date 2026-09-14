@@ -1,0 +1,151 @@
+{
+  "registryId": "chemrealm-indicator-optical-profiles",
+  "policy": "refusal-first",
+  "colourimetry": {
+    "sourceRecord": "colourimetry-d65-cie-srgb.source.md",
+    "referenceData": "colourimetry-d65-cie-srgb.reference.json",
+    "status": "reference-only"
+  },
+  "entries": [
+    {
+      "candidateId": "phenolphthalein-neutral-lactone",
+      "profileId": "phenolphthalein-neutral-lactone",
+      "indicatorId": "phenolphthalein",
+      "formId": "neutral-lactone",
+      "sourceRecord": "phenolphthalein-neutral-lactone.source.md",
+      "reviewStatus": "qualitative-only",
+      "profileArtifact": null,
+      "reviewRecord": null,
+      "admissionReason": "qualitative-only: the source establishes the neutral lactone form but no fully extracted multi-point molar-absorptivity dataset with reusable rights and frozen conditions has been admitted.",
+      "source": {
+        "citation": "Kunimoto et al., Molecular structure and vibrational spectra of phenolphthalein and its dianion (2001), Spectrochimica Acta Part A, DOI 10.1016/S1386-1425(00)00371-1.",
+        "sourceUrl": "https://pubmed.ncbi.nlm.nih.gov/11206560/",
+        "accessedOn": "2026-09-14",
+        "licenseOrPermission": "not-admitted",
+        "extractionMethod": "literature-review",
+        "rawDataLocation": "no numeric spectrum copied; source remains externally hosted",
+        "reportedPrecision": "not promoted; no profile precision claimed",
+        "digitisationUncertainty": "not applicable; no data digitised",
+        "conditions": {
+          "solvent": "source discusses phenolphthalein molecular forms; no production optical solvent condition admitted",
+          "temperature": "not admitted as a frozen quantitative profile condition",
+          "concentration": "not reported as an admitted quantitative profile",
+          "pathLength": "not reported as an admitted quantitative profile",
+          "acidityOrIonicStrength": "neutral lactone form evidence; no production range admitted"
+        }
+      }
+    },
+    {
+      "candidateId": "phenolphthalein-quinoid-base",
+      "profileId": "phenolphthalein-quinoid-base",
+      "indicatorId": "phenolphthalein",
+      "formId": "quinoid-base",
+      "sourceRecord": "phenolphthalein-quinoid-base.source.md",
+      "reviewStatus": "qualitative-only",
+      "profileArtifact": null,
+      "reviewRecord": null,
+      "admissionReason": "qualitative-only: the source distinguishes the coloured dianion/form behaviour, but no rights-cleared multi-point quantitative spectrum has been admitted.",
+      "source": {
+        "citation": "Tamura et al., Spectrophotometric Analysis of the Relationship between Dissociation and Coloration, and of the Structural Formulas of Phenolphthalein in Aqueous Solution (1996), Analytical Sciences 12, 927–931, DOI 10.2116/analsci.12.927.",
+        "sourceUrl": "https://www.jstage.jst.go.jp/article/analsci1985/12/6/12_6_927/_article",
+        "accessedOn": "2026-09-14",
+        "licenseOrPermission": "not-admitted",
+        "extractionMethod": "literature-review",
+        "rawDataLocation": "no numeric spectrum copied; source remains externally hosted",
+        "reportedPrecision": "not promoted; no profile precision claimed",
+        "digitisationUncertainty": "not applicable; no data digitised",
+        "conditions": {
+          "solvent": "aqueous solution context; no production optical solvent condition admitted",
+          "temperature": "not admitted as a frozen quantitative profile condition",
+          "concentration": "not reported as an admitted quantitative profile",
+          "pathLength": "not reported as an admitted quantitative profile",
+          "acidityOrIonicStrength": "source discusses pH-dependent H2PP/HPP-/PP2- behaviour; no production range admitted"
+        }
+      }
+    },
+    {
+      "candidateId": "phenolphthalein-strong-acid-cation",
+      "profileId": "phenolphthalein-strong-acid-cation",
+      "indicatorId": "phenolphthalein",
+      "formId": "strong-acid-cation",
+      "sourceRecord": "phenolphthalein-strong-acid-cation.source.md",
+      "reviewStatus": "qualitative-only",
+      "profileArtifact": null,
+      "reviewRecord": null,
+      "admissionReason": "qualitative-only research candidate: strong-acid cation behaviour is not an ordinary aqueous endpoint and has no admitted quantitative profile; it must not be rendered as the ordinary phenolphthalein pink transition.",
+      "source": {
+        "citation": "Kabalka et al., Synthesis of 18F-labeled phenolphthalein and naphtholphthalein (2014), Molecules 19, 17263–17276, DOI 10.3390/molecules191117263.",
+        "sourceUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC4234061/",
+        "accessedOn": "2026-09-14",
+        "licenseOrPermission": "not-admitted",
+        "extractionMethod": "literature-review",
+        "rawDataLocation": "no numeric spectrum copied; source remains externally hosted",
+        "reportedPrecision": "not promoted; no profile precision claimed",
+        "digitisationUncertainty": "not applicable; no data digitised",
+        "conditions": {
+          "solvent": "strongly acidic sulfuric-acid context; not the ordinary aqueous endpoint solvent",
+          "temperature": "not admitted as a frozen quantitative profile condition",
+          "concentration": "not reported as an admitted quantitative profile",
+          "pathLength": "not reported as an admitted quantitative profile",
+          "acidityOrIonicStrength": "strong-acid cation research context; no production range admitted"
+        }
+      }
+    },
+    {
+      "candidateId": "methyl-orange-acid",
+      "profileId": "methyl-orange-acid",
+      "indicatorId": "methyl-orange",
+      "formId": "acid",
+      "sourceRecord": "methyl-orange-acid.source.md",
+      "reviewStatus": "qualitative-only",
+      "profileArtifact": null,
+      "reviewRecord": null,
+      "admissionReason": "qualitative-only: the source supports separate acidic-form behaviour, but no rights-cleared, condition-complete, multi-point molar-absorptivity profile has been admitted.",
+      "source": {
+        "citation": "Tawarah and Abu-Shamleh, A spectrophotometric study of the tautomeric and acid-base equilibria of methyl orange and methyl yellow in aqueous acidic solutions (1991), Dyes and Pigments, DOI 10.1016/0143-7208(91)85014-Y.",
+        "sourceUrl": "https://www.sciencedirect.com/science/article/pii/014372089185014Y",
+        "accessedOn": "2026-09-14",
+        "licenseOrPermission": "not-admitted",
+        "extractionMethod": "literature-review",
+        "rawDataLocation": "no numeric spectrum copied; source remains externally hosted",
+        "reportedPrecision": "not promoted; no profile precision claimed",
+        "digitisationUncertainty": "not applicable; no data digitised",
+        "conditions": {
+          "solvent": "aqueous acidic solution context; no production optical solvent condition admitted",
+          "temperature": "source reports a 25 degC study context; no quantitative profile admitted",
+          "concentration": "not reported as an admitted quantitative profile",
+          "pathLength": "not reported as an admitted quantitative profile",
+          "acidityOrIonicStrength": "acidic/strongly acidic solution regimes discussed; no production range admitted"
+        }
+      }
+    },
+    {
+      "candidateId": "methyl-orange-base",
+      "profileId": "methyl-orange-base",
+      "indicatorId": "methyl-orange",
+      "formId": "base",
+      "sourceRecord": "methyl-orange-base.source.md",
+      "reviewStatus": "qualitative-only",
+      "profileArtifact": null,
+      "reviewRecord": null,
+      "admissionReason": "qualitative-only: the source supports separate alkaline-form behaviour, but no rights-cleared, condition-complete, multi-point molar-absorptivity profile has been admitted.",
+      "source": {
+        "citation": "Tawarah and Abu-Shamleh, A spectrophotometric study of the tautomeric and acid-base equilibria of methyl orange and methyl yellow in aqueous acidic solutions (1991), Dyes and Pigments, DOI 10.1016/0143-7208(91)85014-Y.",
+        "sourceUrl": "https://www.sciencedirect.com/science/article/pii/014372089185014Y",
+        "accessedOn": "2026-09-14",
+        "licenseOrPermission": "not-admitted",
+        "extractionMethod": "literature-review",
+        "rawDataLocation": "no numeric spectrum copied; source remains externally hosted",
+        "reportedPrecision": "not promoted; no profile precision claimed",
+        "digitisationUncertainty": "not applicable; no data digitised",
+        "conditions": {
+          "solvent": "aqueous solution context; no production optical solvent condition admitted",
+          "temperature": "source reports a 25 degC study context; no quantitative profile admitted",
+          "concentration": "not reported as an admitted quantitative profile",
+          "pathLength": "not reported as an admitted quantitative profile",
+          "acidityOrIonicStrength": "alkaline-form comparison is not copied into a production profile"
+        }
+      }
+    }
+  ]
+}

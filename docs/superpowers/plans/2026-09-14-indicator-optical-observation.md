@@ -44,6 +44,7 @@
 | `apps/web/src/composition.ts` / `App.tsx` | Only production path from committed world to scientific frame, optical observation, and DOM. |
 | `docs/research/indicator-optics/` | Source packets, extraction records, profile review records, and accepted numeric artifacts. |
 | `tools/check_indicator_optics_contract.mjs` | Static cross-core boundary and source-artifact checks. |
+| `tools/check_indicator_optical_profiles.mjs` | Refusal-first source packet and quantitative-profile admission checks. |
 | `tools/check_versions.mjs` | Extended manifest-only version verification. |
 
 ## Contracts Introduced by This Plan
@@ -976,13 +977,14 @@ git commit -m "Present indicators through optical observation status"
 - Create only after its source packet passes review: `docs/research/indicator-optics/phenolphthalein-neutral-lactone.profile.json`, `docs/research/indicator-optics/phenolphthalein-neutral-lactone.review.md`, `docs/research/indicator-optics/phenolphthalein-quinoid-base.profile.json`, `docs/research/indicator-optics/phenolphthalein-quinoid-base.review.md`, `docs/research/indicator-optics/phenolphthalein-strong-acid-cation.profile.json`, `docs/research/indicator-optics/phenolphthalein-strong-acid-cation.review.md`, `docs/research/indicator-optics/methyl-orange-acid.profile.json`, `docs/research/indicator-optics/methyl-orange-acid.review.md`, `docs/research/indicator-optics/methyl-orange-base.profile.json`, and `docs/research/indicator-optics/methyl-orange-base.review.md`
 - Create: `tools/check_indicator_optical_profiles.mjs`
 - Modify: `package.json`
+- Modify: `.github/workflows/ci.yml`
 - Test: `tests/indicator-optical-profiles.test.mjs`
 
 **Interfaces:**
 - Consumes: Task 2 profile schema and sources named in the approved design.
 - Produces: a profile registry where every entry is either `qualitative-only` or a hash-verified quantitative artifact; no source record is promoted by a colour word or lone λmax.
 
-- [ ] **Step 1: Write failing source-fidelity tests**
+- [x] **Step 1: Write failing source-fidelity tests**
 
 ```js
 expect(profile.reviewStatus).toBe("quantitative");
@@ -997,7 +999,7 @@ without a stated concentration/path condition, a source with unknown reuse
 rights, copied source digits with invented precision, and a profile whose data
 hash differs from its source-review record.
 
-- [ ] **Step 2: Run checks and verify RED**
+- [x] **Step 2: Run checks and verify RED**
 
 ```text
 node tools/check_indicator_optical_profiles.mjs
@@ -1006,7 +1008,7 @@ pnpm exec vitest run tests/indicator-optical-profiles.test.mjs
 
 Expected: no profile registry or source-review artifacts exist.
 
-- [ ] **Step 3: Curate only admissible data**
+- [x] **Step 3: Curate only admissible data**
 
 Create one source packet per candidate form. It records full citation, access
 date, license/permission basis, solvent/composition, temperature, acidity or
@@ -1034,7 +1036,7 @@ After `tools/check_indicator_optical_profiles.mjs` exists, add
 required command in Task 11; no package script may reference a file that has
 not yet been created.
 
-- [ ] **Step 4: Run source/evidence checks and verify GREEN**
+- [x] **Step 4: Run source/evidence checks and verify GREEN**
 
 ```text
 node tools/check_indicator_optical_profiles.mjs
@@ -1042,7 +1044,7 @@ pnpm exec vitest run tests/indicator-optical-profiles.test.mjs
 pnpm verify:versions
 ```
 
-- [ ] **Step 5: Commit reviewed profile data separately**
+- [x] **Step 5: Commit reviewed profile data separately**
 
 ```text
 git add docs/research/indicator-optics tools/check_indicator_optical_profiles.mjs tests/indicator-optical-profiles.test.mjs

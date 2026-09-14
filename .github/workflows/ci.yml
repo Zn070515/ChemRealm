@@ -74,6 +74,10 @@ jobs:
       - run: pnpm verify:m4-contracts
       - run: pnpm verify:m5-contracts
       - run: pnpm verify:world
+      # Indicator optical source admission is a refusal-first evidence gate;
+      # no quantitative profile may enter production without source fidelity,
+      # rights, condition, multi-point, and content-hash checks.
+      - run: pnpm verify:indicator-profiles
 
       # Product properties asserted against the shipped artifact: no
       # third-party origin (AC-P5), no server API route (AC-P1).

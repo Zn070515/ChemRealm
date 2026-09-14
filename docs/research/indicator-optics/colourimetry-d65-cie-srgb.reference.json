@@ -1,0 +1,17 @@
+{
+  "referenceId": "colourimetry-d65-cie-srgb",
+  "status": "reference-only",
+  "wavelengthIntervalNanometres": 1,
+  "wavelengthRangeNanometres": {
+    "min": 380,
+    "max": 780
+  },
+  "illuminant": "CIE D65",
+  "observer": "CIE 1931 2-degree",
+  "transform": "sRGB IEC 61966-2-1",
+  "normalisation": "relative spectral integration; no indicator spectrum admitted",
+  "dataUrl": "https://registry.color.org/colorimetry-data/",
+  "sourceRecord": "colourimetry-d65-cie-srgb.source.md",
+  "sourcePrecision": "reference metadata only; source arrays are not copied into a production indicator profile",
+  "admissionReason": "colourimetry transform/reference packet only; it cannot substitute for indicator-specific spectra"
+}
