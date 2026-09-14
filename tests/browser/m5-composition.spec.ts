@@ -13,23 +13,20 @@ test.describe("M5 production composition", () => {
     await expect(page.getByTestId("ph-readout")).toHaveText(/^pH \d+\.\d{2}$/);
     await expect(page.getByTestId("burette-reading")).toHaveText(/mL$/);
     await expect(page.getByTestId("indicator-id")).toHaveText("phenolphthalein");
-    await expect(page.getByTestId("indicator-swatch")).toHaveAttribute(
-      "aria-label",
-      "phenolphthalein qualitative presentation tint",
+    await expect(page.getByTestId("indicator-optical-status")).toHaveText(
+      "OPTICAL_MODEL_DATA_MISSING",
     );
-    await expect(page.getByTestId("indicator-swatch")).toHaveAttribute(
-      "data-interpolation",
-      "qualitative-srgb",
+    await expect(page.getByTestId("indicator-amount")).toHaveText("5e-7 mol");
+    await expect(page.getByTestId("indicator-concentration")).toHaveText("0.00001 mol/L");
+    await expect(page.getByTestId("indicator-path-length")).toHaveText("10 mm");
+    await expect(page.getByTestId("indicator-profile-id")).toHaveText(
+      "phenolphthalein-qualitative-m5",
     );
-    await expect(page.getByTestId("indicator-swatch")).toHaveCSS(
-      "background-color",
-      "rgb(245, 245, 245)",
+    await expect(page.getByTestId("indicator-optical-limitation")).toContainText(
+      "v0 acid-base model does not resolve",
     );
-    await expect(page.getByTestId("indicator-tint")).toHaveCSS(
-      "background-color",
-      /^rgb\(/,
-    );
-    await expect(page.getByTestId("indicator-swatch")).not.toHaveAttribute("data-optical-model");
+    await expect(page.getByTestId("indicator-swatch")).toHaveCount(0);
+    await expect(page.getByTestId("indicator-tint")).toHaveCount(0);
     await expect(page.getByTestId("symbolic-expression")).toContainText("Scientific Core");
     await expect(page.getByTestId("symbolic-expression")).toContainText("m(H+)");
     expect(await page.getByTestId("curve-point").count()).toBeGreaterThanOrEqual(4);

@@ -1,5 +1,9 @@
 import {
   type Litre,
+  type IndicatorOpticalObservation,
+  type FrozenOpticalPathSnapshot,
+  type Kelvin,
+  type OpticalProfileSnapshot,
   type ScientificExpression,
   type ScientificState,
   type TeachingHydrogenIonExponent,
@@ -11,14 +15,18 @@ import {
   type BuretteInput,
   type BuretteState,
 } from "./burette.js";
-import { mapIndicatorRatioToTint, type IndicatorTint } from "./color.js";
 import { buildCurve, type CurveFrame, type CurvePoint } from "./curve.js";
-import { formatModelPh, formatTaughtPh } from "./format.js";
+import {
+  formatMolarConcentration,
+  formatModelPh,
+  formatTaughtPh,
+} from "./format.js";
 import {
   deriveLiquidLevel,
   volumeProfileFromSnapshot,
   type LiquidLevel,
 } from "./level.js";
+import { observeIndicatorOptics } from "./optics.js";
 import { speciesRows, type SpeciesRow } from "./species.js";
 import {
   presentSymbolicLines,
@@ -39,6 +47,12 @@ export interface ScientificFrame {
   readonly physical: {
     readonly liquidVolume: Litre;
     readonly volumeProfileHash: string;
+    readonly temperature: Kelvin;
+    readonly solvent: string;
+    readonly optical: {
+      readonly path: FrozenOpticalPathSnapshot | undefined;
+      readonly profiles: readonly OpticalProfileSnapshot[];
+    };
   };
   readonly projection: ScientificProjectionReadout;
 }
@@ -54,8 +68,15 @@ export interface ObservableInput {
 
 export interface ObservableIndicator {
   readonly indicatorId: string;
-  readonly protonationRatio: number;
-  readonly tint: IndicatorTint;
+  readonly opticalObservation: IndicatorOpticalObservation;
+  readonly opticalContext: {
+    readonly totalAmountMol: number | undefined;
+    readonly concentrationMolPerLitre: number | undefined;
+    readonly concentrationMolPerLitreText: string | undefined;
+    readonly pathLengthMillimetres: number | undefined;
+    readonly profileId: string | undefined;
+    readonly profileHash: string | undefined;
+  };
 }
 
 export interface ObservableReadouts {
@@ -75,6 +96,20 @@ export interface ObservableModel {
   readonly species: readonly SpeciesRow[];
   readonly symbolicLines: readonly PresentedScientificExpression[];
   readonly readouts: ObservableReadouts;
+}
+
+function opticalDataMissing(
+  indicatorId: string,
+  sourceReplayHash: string,
+  reason: string,
+): IndicatorOpticalObservation {
+  return {
+    status: "OPTICAL_MODEL_DATA_MISSING",
+    indicatorId,
+    reason,
+    sourceReplayHash,
+    missingOrOutOfRange: [reason],
+  };
 }
 
 /**
@@ -115,16 +150,62 @@ export function buildObservableModel(input: ObservableInput): ObservableModel {
   }
 
   const scientificState = input.frame.scientificState;
+  const chemicalObservations = new Map(
+    scientificState.indicatorObservations.map((observation) => [
+      observation.indicatorId,
+      observation,
+    ] as const),
+  );
+  const opticalProfiles = new Map(
+    input.frame.physical.optical.profiles.map((profile) => [
+      profile.indicatorId,
+      profile,
+    ] as const),
+  );
   const indicatorIds = new Set<string>();
   const indicators = scientificState.indicators.map((indicator) => {
     if (indicator.indicatorId.trim().length === 0 || indicatorIds.has(indicator.indicatorId)) {
       throw new RangeError(`duplicate or empty indicator id: ${indicator.indicatorId}`);
     }
     indicatorIds.add(indicator.indicatorId);
+    const chemical = chemicalObservations.get(indicator.indicatorId);
+    const opticalProfile = opticalProfiles.get(indicator.indicatorId);
+    const opticalObservation = chemical === undefined
+      ? opticalDataMissing(
+        indicator.indicatorId,
+        input.frame.sourceStateHash,
+        "Scientific Core did not supply an indicator chemical observation",
+      )
+      : observeIndicatorOptics({
+        chemical,
+        opticalProfile,
+        opticalPath: input.frame.physical.optical.path,
+        liquidVolume: input.frame.physical.liquidVolume,
+        temperature: input.frame.physical.temperature,
+        ionicStrengthMolal: scientificState.ionicStrengthMolal,
+        modelPh: scientificState.modelPh,
+        solvent: input.frame.physical.solvent,
+        sourceReplayHash: input.frame.sourceStateHash,
+      });
     return Object.freeze({
       indicatorId: indicator.indicatorId,
-      protonationRatio: indicator.protonationRatio,
-      tint: mapIndicatorRatioToTint(indicator.indicatorId, indicator.protonationRatio),
+      opticalObservation,
+      opticalContext: Object.freeze({
+        totalAmountMol: chemical?.totalAmount,
+        concentrationMolPerLitre:
+          chemical?.totalAmount === undefined
+            ? undefined
+            : chemical.totalAmount / input.frame.physical.liquidVolume,
+        concentrationMolPerLitreText:
+          chemical?.totalAmount === undefined
+            ? undefined
+            : formatMolarConcentration(
+                chemical.totalAmount / input.frame.physical.liquidVolume,
+              ),
+        pathLengthMillimetres: input.frame.physical.optical.path?.pathLength.value,
+        profileId: opticalProfile?.profileId,
+        profileHash: opticalProfile?.profileHash,
+      }),
     });
   });
 

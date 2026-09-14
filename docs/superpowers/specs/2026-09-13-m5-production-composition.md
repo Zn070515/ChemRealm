@@ -12,9 +12,10 @@ does not redefine or weaken them.
 is a separate current candidate revision.
 
 M5 S3 evaluates the observable and composition contracts that this document
-defines. It does not wait for M6 final assets or visual review. M6 consumes
-the resulting palette/profile contracts and provides their concrete visual
-realization evidence.
+defines. It does not wait for M6 final assets or visual review. The
+refusal-first optical boundary is specified separately by
+`2026-09-14-indicator-optical-observation.md`; M6 consumes its tagged output
+and provides concrete visual realization evidence.
 
 ## Context
 
@@ -31,8 +32,8 @@ Provide one deterministic composition path that:
 2. resolves and invokes the exact persisted Scientific Core adapter;
 3. creates source-bound frames, expressions, curve points, and burette data;
 4. builds ObservableModel and renderer-neutral RenderState; and
-5. presents those outputs in a local DOM inspection surface suitable for
-   reproducible Playwright evidence.
+5. presents those outputs, including optical status and diagnostics, in a
+   local DOM inspection surface suitable for reproducible Playwright evidence.
 
 ## Non-goals
 
@@ -47,7 +48,7 @@ Provide one deterministic composition path that:
 
 The built local page shows a committed-world inspection surface with world
 identity, committed sequence, replay hash, one selected hydrogen-ion readout,
-liquid level, burette scale reading in mL, indicator identity/swatch, species,
+liquid level, burette scale reading in mL, indicator identity/optical status, species,
 Scientific Core expression, and source-identified curve points. A local policy
 control switches between the existing taught and scientific-model conventions;
 each view emits exactly one hydrogen-ion readout.
@@ -73,8 +74,11 @@ choose chemistry.
 The fixture uses the existing v0 acid-base Davies adapter at 25 °C. Solute
 mode and the HOAc constant are selected by the model-owned Scientific Core
 request builder and fixed model identity. Indicator constants are copied from
-the resolved genesis snapshot. A non-OK solver result is surfaced as a
-composition error; no fallback number is substituted. The optional accuracy
+the resolved genesis snapshot. The Representation Engine consumes only the
+frame-owned optical path/profile and Scientific Core chemical observation. A
+missing chemical form or quantitative profile is surfaced as a tagged optical
+refusal with no endpoint-colour fallback. A non-OK solver result is surfaced as
+a composition error; no fallback number is substituted. The optional accuracy
 probe changes only the authored concentration fixture and remains inside the
 solver domain while deliberately outside the proposed accuracy envelope.
 
@@ -96,8 +100,8 @@ flask's final liquid volume. Acid-base request construction and expressions are
 produced by Scientific Core (`buildAcidBaseSolveRequest` and
 `createScientificExpressions`), and `buildObservableModel` is the only render
 observable composition entry. The DOM adapter consumes generic RenderState and
-approved observable outputs. It is an inspection/evidence surface, not the M6
-visual renderer.
+  approved observable outputs, including optical status/context. It is an
+  inspection/evidence surface, not the M6 visual renderer.
 
 ## Learning design
 
@@ -123,6 +127,8 @@ source identity.
 `@chemrealm/render`'s `BuretteInput` and `BuretteState` carry the committed
 `sourceStateHash` and `sequence` so the Observable boundary can reject a
 delivery prefix from another frame. No persisted World/Event schema changes.
+`ObservableIndicator` carries a tagged `IndicatorOpticalObservation` and
+diagnostic context; it does not expose a ratio-to-colour palette API.
 
 ## Failure modes
 
@@ -156,6 +162,7 @@ delivery prefix from another frame. No persisted World/Event schema changes.
 | AC-V6 | built page displays pH at two decimals and the burette scale in mL | Playwright DOM assertion |
 | AC-V8 | switching policy changes the one selected convention and never emits two pH readouts | Playwright DOM assertion |
 | M5-FRAME / M5-SYMBOLIC / M5-CURVE | production composition uses the Scientific Core frame/expression producer, committed frame sequence, and cumulative titrant-delivery x-axis | composition tests + browser markers |
+| M5-OPTICAL-REFUSAL | missing chemical-form/profile data produces a tagged no-tint observation and the DOM exposes its context/diagnostic | render tests + Playwright DOM assertion |
 | Privacy | no third-party request is introduced | existing network-boundary browser test |
 | M6 boundary | no Pixi/final-art/gesture/animation/persistence change is required | diff and dependency review |
 

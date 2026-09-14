@@ -35,7 +35,15 @@ export function scientificState(): ScientificState {
     ionicStrengthReduced: reducedIonicStrength(0.01),
     modelPh: ph(2.0969),
     indicators: [{ indicatorId: "phenolphthalein", protonationRatio: 0.5 }],
-    indicatorObservations: [],
+    indicatorObservations: [{
+      status: "CHEMICAL_FORMS_UNAVAILABLE",
+      indicatorId: "phenolphthalein",
+      totalAmount: mol(5e-7),
+      reason: "the test model does not resolve indicator chemical forms",
+      modelId: "acidbase-monoprotic-davies",
+      modelVersion: TEST_MODEL_VERSION,
+      sourceReplayHash: "state-hash",
+    }],
     validity: {
       inDomain: true,
       withinProposedAccuracyEnvelope: true,

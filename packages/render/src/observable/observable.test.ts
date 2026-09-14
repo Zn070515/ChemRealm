@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  kelvin,
   litre,
   taughtHydrogenIonExponent,
   volumeProfileHash,
@@ -38,6 +39,9 @@ function input(): ObservableInput {
       physical: {
         liquidVolume: litre(0.5),
         volumeProfileHash: volumeProfileSnapshot.profileHash,
+        temperature: kelvin(298.15),
+        solvent: "water",
+        optical: { path: undefined, profiles: [] },
       },
       projection: {
         sourceStateHash: "state-hash",
@@ -63,6 +67,9 @@ describe("observable model", () => {
     expect(model.readouts.taughtPh).toBe("pH 2.00");
     expect(model.readouts.modelPh).toContain("model pH (Davies)");
     expect(model.readouts.withinProposedAccuracyEnvelope).toBe(true);
+    expect(model.indicators[0]?.opticalObservation.status).toBe(
+      "OPTICAL_MODEL_DATA_MISSING",
+    );
     expect(model.burette?.currentScaleReading).toBe(0.01);
     expect(model.burette?.containedVolume).toBe(0.04);
   });
@@ -198,7 +205,7 @@ describe("observable model", () => {
     expect(invalidInput).toBeDefined();
   });
 
-  it("uses the declared identity when presenting multiple indicator palettes", () => {
+  it("does not derive an optical colour from a protonation ratio", () => {
     const source = input();
     const withMethylOrange: ObservableInput = {
       ...source,
@@ -210,12 +217,25 @@ describe("observable model", () => {
             ...source.frame.scientificState.indicators,
             { indicatorId: "methyl-orange", protonationRatio: 0.5 },
           ],
+          indicatorObservations: [
+            ...source.frame.scientificState.indicatorObservations,
+            {
+              status: "CHEMICAL_FORMS_UNAVAILABLE",
+              indicatorId: "methyl-orange",
+              reason: "test chemical coverage unavailable",
+              modelId: "test-model",
+              modelVersion: "test-version",
+              sourceReplayHash: "state-hash",
+            },
+          ],
         },
       },
     };
 
     const model = buildObservableModel(withMethylOrange);
     expect(model.indicators).toHaveLength(2);
-    expect(model.indicators[0]?.tint).not.toEqual(model.indicators[1]?.tint);
+    expect(model.indicators.every((indicator) =>
+      indicator.opticalObservation.status === "OPTICAL_MODEL_DATA_MISSING"
+    )).toBe(true);
   });
 });

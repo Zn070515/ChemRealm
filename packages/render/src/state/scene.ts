@@ -1,4 +1,4 @@
-import { type IndicatorTint } from "../observable/color.js";
+import { type IndicatorOpticalObservation } from "@chemrealm/schema";
 import { formatBuretteScaleReading } from "../observable/format.js";
 import { type ObservableModel, type ObservableReadouts } from "../observable/index.js";
 
@@ -44,16 +44,33 @@ function frozenData(data: Record<string, unknown>): Readonly<Record<string, unkn
   return Object.freeze(data);
 }
 
-function indicatorShape(id: string, tint: IndicatorTint, zIndex: number): RenderNode {
+function indicatorShape(
+  id: string,
+  observation: IndicatorOpticalObservation,
+  zIndex: number,
+): RenderNode {
+  const data: Record<string, unknown> = {
+    indicatorId: observation.indicatorId,
+    opticalStatus: observation.status,
+    sourceReplayHash: observation.sourceReplayHash,
+  };
+  if (observation.status === "OPTICAL_MODEL_OK") {
+    data.tint = Object.freeze({
+      srgb: Object.freeze([...observation.tintSrgb]),
+      strength: observation.tintStrength,
+    });
+    data.profileId = observation.profileId;
+    data.profileHash = observation.profileHash;
+  } else {
+    data.tint = undefined;
+    data.opticalReason = observation.reason;
+    data.missingOrOutOfRange = Object.freeze([...observation.missingOrOutOfRange]);
+  }
   return Object.freeze({
     id,
     kind: "shape" as const,
     zIndex,
-    data: frozenData({
-      tintSrgb: tint.srgb,
-      tintStrength: tint.strength,
-      interpolation: tint.interpolation,
-    }),
+    data: frozenData(data),
   });
 }
 
@@ -115,7 +132,7 @@ export function toRenderState(
   }
 
   model.indicators.forEach((indicator, index) => {
-    nodes.push(indicatorShape(`indicator-${index}`, indicator.tint, 15));
+    nodes.push(indicatorShape(`indicator-${index}`, indicator.opticalObservation, 15));
   });
 
   return Object.freeze({ version: model.version, nodes: Object.freeze(nodes) });

@@ -55,6 +55,13 @@ describe("production composition vertical path", () => {
     );
     expect(composition.renderState.nodes.some((node) => node.id === "liquid-level")).toBe(true);
     expect(composition.renderState.nodes.some((node) => node.id === "taught-ph-readout")).toBe(true);
+    expect(composition.observable.indicators[0]?.opticalObservation.status).toBe(
+      "OPTICAL_MODEL_DATA_MISSING",
+    );
+    expect(composition.renderState.nodes.find((node) => node.id === "indicator-0")?.data).toMatchObject({
+      opticalStatus: "OPTICAL_MODEL_DATA_MISSING",
+      tint: undefined,
+    });
   });
 
   it("does not hand-author the curve, symbolic line, or burette state", async () => {

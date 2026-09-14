@@ -27,6 +27,12 @@ seam: the shared schema parser recomputes the hash over the hash-excluded
 payload before any executable adapter is constructed, so a matching frame
 label alone is never sufficient.
 
+The later indicator-optical plan supersedes the interim endpoint-RGB palette
+as the active production path. Task 7 consumes a tagged, refusal-first
+`IndicatorOpticalObservation`; the former palette artifacts are historical
+contract evidence and must not be used as a fallback when chemical forms or
+quantitative spectra are unavailable.
+
 ## Goal
 
 1. Restore the accepted representation contracts without changing M4 science
@@ -35,8 +41,8 @@ label alone is never sufficient.
    within a declared tolerance.
 3. Represent a burette's contained volume, delivered volume, and scale reading
    as different named values; display the scale reading in `mL` to `0.01 mL`.
-4. Select an empirical indicator palette by `indicatorId`, while keeping
-   equilibrium entirely in Scientific Reality Core.
+4. Expose an indicator optical observation by `indicatorId`, refusing missing
+   chemical forms or quantitative profile data instead of inventing a colour.
 5. Make a RenderState contain exactly one hydrogen-ion convention selected by a
    replaceable presentation policy.
 6. Prevent symbolic lines and projection data from becoming untraceable or
@@ -70,9 +76,11 @@ unchanged; only the evidence ownership boundary is made explicit here.
 The pure model prepares later UI to show the selected pH convention rather than
 both conventions in one view. A burette readout such as `25.00 mL` means the
 graduated scale reading, while its contained and delivered volumes remain
-available as separate data. Phenolphthalein and methyl orange transition through
-different declared empirical palettes. A vessel level is accepted only when its
-forward and inverse volume profile agree within the profile's tolerance.
+available as separate data. Phenolphthalein and methyl orange are represented by
+identity-bearing optical observations when the required chemical forms and
+reviewed spectra are available; otherwise the user sees a diagnostic refusal
+without a fallback colour. A vessel level is accepted only when its forward and
+inverse volume profile agree within the profile's tolerance.
 
 ## Architecture
 
@@ -101,15 +109,15 @@ runtime geometry is restored.
 
 ## Scientific design
 
-Indicator palette selection is an empirical observable transform, not an
-equilibrium calculation. The palette is keyed by the declared indicator
-identity and contains named acid/base endpoint tokens plus an explicit
-observable provenance note. Each token reference must resolve to the checked-in
-`docs/visual/reference/indicator-palettes.json` registry, its source claims,
-review record, and labelled SVG swatches. Provenance-bearing empirical colour
-literals are allowed only in this declared palette catalogue; render components
-may not embed ad-hoc chemical colours. The ratio remains the only scientific
-numeric input to interpolation.
+The active indicator representation is the refusal-first optical observation
+boundary defined by the optical plan. The Scientific Core supplies either
+identity-bearing chemical-form fractions or a tagged chemical-coverage refusal.
+The Representation Engine then requires a frozen, reviewed spectral profile,
+optical path, conserved amount, and covered conditions before applying the
+Beer–Lambert/colourimetry transform. Missing or out-of-coverage data produces
+an explicit status and no tint; the former endpoint-RGB palette is not a
+fallback. Render components do not receive `Ka`, pH, activity, or raw
+protonation inputs.
 
 Scientific expressions are schema-owned, equation-bearing records with current
 numeric substitutions, expression classification, model identity, and
@@ -132,7 +140,10 @@ contained volume, and committed deliveries.
   `containedVolume`; no field is named ambiguously `buretteReading`.
 - `formatBuretteScaleReading` converts through the schema conversion module and
   emits `mL` with exactly two decimal places.
-- `IndicatorPalette` is a declarative catalog keyed by indicator ID.
+- `IndicatorOpticalObservation` is a tagged, refusal-first result keyed by
+  indicator ID. The active production path has no endpoint-RGB fallback;
+  quantitative colour requires the optical plan's reviewed profile and
+  chemical-form coverage.
 - `HydrogenIonPresentationPolicy` is a data policy selecting either taught pH
   or activity-model pH. `toRenderState` emits one selected readout only.
 
@@ -165,6 +176,12 @@ interface ScientificFrame {
   readonly physical: {
     readonly liquidVolume: Litre;
     readonly volumeProfileHash: string;
+    readonly temperature: Kelvin;
+    readonly solvent: string;
+    readonly optical: {
+      readonly path: FrozenOpticalPathSnapshot | undefined;
+      readonly profiles: readonly OpticalProfileSnapshot[];
+    };
   };
   readonly projection: ScientificProjectionReadout;
 }
@@ -193,7 +210,9 @@ never guessed from `geometryRef`.
 - A burette delivery beyond contained volume is rejected; a negative reading is
   never clamped into a plausible value.
 - An unknown indicator ID is rejected rather than shown with another
-  indicator's palette.
+  indicator's optical profile.
+- Missing chemical forms, spectra, or path data produce a tagged optical
+  refusal and never a generic acid/base colour.
 - A policy never produces both pH conventions in one RenderState.
 - A symbolic line with missing or mismatched model/source identity is rejected.
 - A frame with an empty source identity is rejected.
@@ -212,7 +231,8 @@ never guessed from `geometryRef`.
   missing inverse rejection.
 - Add burette tests for contained/delivered/current scale values, full draw,
   overdraw, and `25.00 mL` formatting.
-- Add both phenolphthalein and methyl-orange endpoint/continuity tests.
+- Add tagged optical refusal/coverage tests and keep quantitative optical
+  profile admission behind the separate source-review plan.
 - Add default taught-policy and scientific-model-policy scene tests proving
   exactly one pH convention is emitted.
 - Add frame and symbolic source-identity tests.
@@ -224,8 +244,8 @@ never guessed from `geometryRef`.
 
 | Criterion | Binary requirement | Evidence |
 |---|---|---|
-| AC-V2 | Colour remains continuous within the selected indicator's palette | palette/colour tests |
-| AC-V3 | M5 contract-level palette is declarative, empirically labelled, identity-keyed, and contains no equilibrium decision | render boundary tests/review; M6 supplies final visual realization |
+| AC-V2 | Active indicator presentation is continuous only within an admitted optical model; unsupported data is refused | optical observation tests; quantitative profile admission remains in the optical plan |
+| AC-V3 | Active indicator presentation is a tagged, provenance-bearing optical observation; no endpoint-RGB fallback or render-side equilibrium decision exists | optical boundary tests and source-review plan |
 | AC-V4 | M5 contract-level `h(V)` is called and `V(h)` round-trips within stated tolerance | level/profile-integrity tests; M6 supplies concrete asset realization |
 | AC-V6 | pH formatting is at most two decimals; burette scale readout is `mL` at `0.01 mL` | formatter tests; DOM remains future evidence |
 | AC-V8 | A replaceable policy selects exactly one hydrogen-ion convention per view | scene policy tests |

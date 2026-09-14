@@ -85,6 +85,10 @@ EXPECTED_ARTIFACTS = [
     "export-bundle",
     "native-backend-payload",
     "native-solve-envelope",
+    "indicator-chemical-observation",
+    "indicator-optical-observation",
+    "optical-path",
+    "optical-profile",
 ]
 
 

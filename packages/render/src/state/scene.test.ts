@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  type IndicatorOpticalObservation,
+  kelvin,
   litre,
   taughtHydrogenIonExponent,
   volumeProfileHash,
@@ -44,6 +46,9 @@ function model() {
       physical: {
         liquidVolume: litre(0.5),
         volumeProfileHash: volumeProfileSnapshot.profileHash,
+        temperature: kelvin(298.15),
+        solvent: "water",
+        optical: { path: undefined, profiles: [] },
       },
       projection: {
         sourceStateHash: "state-hash",
@@ -76,15 +81,47 @@ describe("renderer-neutral scene state", () => {
     expect(scene.nodes.some((node) => node.id === "taught-ph-readout")).toBe(true);
     const indicator = scene.nodes.find((node) => node.id === "indicator-0");
     expect(indicator?.data).toMatchObject({
-      tintSrgb: [
-        expect.any(Number),
-        expect.any(Number),
-        expect.any(Number),
-      ],
-      tintStrength: expect.any(Number),
-      interpolation: "qualitative-srgb",
+      opticalStatus: "OPTICAL_MODEL_DATA_MISSING",
+      tint: undefined,
     });
-    expect(indicator?.data).not.toHaveProperty("alpha");
+    expect(indicator?.data).not.toHaveProperty("tintSrgb");
+  });
+
+  it("carries a tint and profile identity only for an optical success", () => {
+    const successful: IndicatorOpticalObservation = {
+      status: "OPTICAL_MODEL_OK",
+      indicatorId: "phenolphthalein",
+      tintSrgb: [0.9, 0.2, 0.5],
+      tintStrength: 0.8,
+      transmittanceSamples: [{ wavelengthNanometres: 500, transmittance: 0.5 }],
+      profileId: "synthetic-profile",
+      profileHash: "sha256:synthetic-profile",
+      sourceReplayHash: "state-hash",
+      conditions: { pathLengthMillimetres: 10 },
+    };
+    const source = model();
+    const successModel = {
+      ...source,
+      indicators: [{
+        indicatorId: "phenolphthalein",
+        opticalObservation: successful,
+        opticalContext: {
+          totalAmountMol: 0.000001,
+          concentrationMolPerLitre: 0.00001,
+          concentrationMolPerLitreText: "0.00001 mol/L",
+          pathLengthMillimetres: 10,
+          profileId: "synthetic-profile",
+          profileHash: "sha256:synthetic-profile",
+        },
+      }],
+    };
+
+    const scene = toRenderState(successModel);
+    expect(scene.nodes.find((node) => node.id === "indicator-0")?.data).toMatchObject({
+      opticalStatus: "OPTICAL_MODEL_OK",
+      profileHash: "sha256:synthetic-profile",
+      tint: { srgb: [0.9, 0.2, 0.5], strength: 0.8 },
+    });
   });
 
   it("swaps to a scientific model pH policy without emitting taught pH", () => {

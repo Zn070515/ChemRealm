@@ -17,7 +17,7 @@ async function document(relativePath) {
   return readFile(new URL(relativePath, root), "utf8");
 }
 
-const [spec, childSpec, productionSpec, evidence, plan, adr, visualStandard, compositionSource, appSource, expressionSource] = await Promise.all([
+const [spec, childSpec, productionSpec, evidence, plan, adr, visualStandard, compositionSource, appSource, expressionSource, opticsSource] = await Promise.all([
   document("docs/specs/SPEC-0001-world-foundation-acid-base-titration.md"),
   document("docs/superpowers/specs/2026-09-13-m5-contract-remediation.md"),
   document("docs/superpowers/specs/2026-09-13-m5-production-composition.md"),
@@ -28,21 +28,11 @@ const [spec, childSpec, productionSpec, evidence, plan, adr, visualStandard, com
   document("apps/web/src/composition.ts"),
   document("apps/web/src/App.tsx"),
   document("packages/sci/src/expressions.ts"),
+  document("packages/render/src/observable/optics.ts"),
 ]);
 const observableSource = await document("packages/render/src/observable/index.ts");
 const levelSource = await document("packages/render/src/observable/level.ts");
 const frameSource = await document("packages/sci/src/frame.ts");
-const tokenSource = await document("packages/render/src/observable/tokens.ts");
-const colorSource = await document("packages/render/src/observable/color.ts");
-const indicatorPaletteManifest = JSON.parse(
-  await document("docs/visual/reference/indicator-palettes.json"),
-);
-const indicatorSwatches = await document(
-  "docs/visual/reference/indicator-reference-swatches.svg",
-);
-const indicatorPaletteReview = await document(
-  "docs/visual/reference/indicator-palette-review.md",
-);
 
 const failures = [];
 const versionManifest = await readVersionManifest();
@@ -52,13 +42,6 @@ function must(text, pattern, message) {
 function mustNot(text, pattern, message) {
   if (pattern.test(text)) failures.push(`stale: ${message}`);
 }
-function requirePalette(condition, message) {
-  if (!condition) failures.push(`missing: ${message}`);
-}
-function escapeRegExp(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
 must(
   spec,
   new RegExp(
@@ -92,7 +75,8 @@ must(
 
 must(childSpec, /does not override[\s\S]{0,40}`SPEC-0001`/i, "M5 child specification remains subordinate");
 must(childSpec, /projectScientificFrame|sourceStateHash/i, "M5 child specification names the bound frame factory");
-must(childSpec, /palette[\s\S]{0,200}provenance|provenance[\s\S]{0,200}palette/i, "M5 child specification preserves palette provenance");
+must(childSpec, /refusal-first[\s\S]{0,220}IndicatorOpticalObservation/i, "M5 child specification preserves the active refusal-first optical boundary");
+mustNot(childSpec, /IndicatorPalette` is a declarative catalog/i, "M5 child specification does not present the retired palette as the active contract");
 must(childSpec, /(?:format(?:ting)?|readout strings)[^\n]*Observable|Observable[^\n]*(?:format(?:ting)?|readout strings)/i, "M5 child specification assigns formatting to the observable boundary");
 must(
   childSpec,
@@ -149,10 +133,11 @@ must(
 );
 must(observableSource, /interface ScientificFrame[\s\S]{0,500}physical[\s\S]{0,180}liquidVolume/i, "Observable frame includes the bound physical volume");
 must(observableSource, /interface ObservableInput[\s\S]{0,350}volumeProfileSnapshot/i, "Observable input consumes the replay-frozen profile snapshot");
-must(observableSource, /interface ObservableIndicator[\s\S]{0,180}tint:\s*IndicatorTint/i, "Observable indicator exposes a semantic tint rather than an RGBA colour");
+must(observableSource, /interface ObservableIndicator[\s\S]{0,220}opticalObservation:\s*IndicatorOpticalObservation/i, "Observable indicator exposes a tagged optical observation");
 mustNot(observableSource, /interface ObservableIndicator[\s\S]{0,180}color:/i, "Observable indicator does not expose the deprecated colour shape");
-must(colorSource, /export interface IndicatorTint|mapIndicatorRatioToTint/i, "colour mapper exposes the interim IndicatorTint contract");
-mustNot(colorSource, /alpha|rgba\(|mapIndicatorRatioToColor|IndicatorColour/i, "interim tint mapper does not carry opacity or the deprecated colour API");
+must(opticsSource, /export function observeIndicatorOptics/i, "Observable uses the refusal-first optical observation boundary");
+must(opticsSource, /OPTICAL_MODEL_DATA_MISSING|OPTICAL_MODEL_OUT_OF_COVERAGE/i, "optical observation exposes tagged refusal statuses");
+mustNot(opticsSource, /from ["']@chemrealm\/sci["']/i, "optical observation does not import the Scientific Core implementation");
 must(observableSource, /volumeProfileFromSnapshot\(input\.volumeProfileSnapshot\)/i, "Observable reconstructs the executable profile internally");
 must(levelSource, /parseVolumeProfileSnapshot/i, "profile adapter validates the snapshot content hash before interpolation");
 mustNot(observableSource, /interface ObservableInput[\s\S]{0,350}readonly volumeProfile:\s*VolumeProfile/i, "Observable input does not accept an executable profile adapter");
@@ -164,17 +149,17 @@ must(compositionSource, /deliveredTitrantVolume[\s\S]{0,120}prefixStates/i, "com
 must(compositionSource, /fromVesselId === SOURCE_VESSEL_ID[\s\S]{0,180}toVesselId === TARGET_VESSEL_ID/i, "composition filters burette facts by exact source and target");
 mustNot(appSource, /activity model:\s*Davies/i, "DOM adapter does not hard-code the activity model");
 must(appSource, /activity model:\s*\{composition\.observable\.readouts\.activityModel\}/i, "DOM adapter renders the ObservableModel activity model");
-must(appSource, /qualitative presentation tint/i, "DOM adapter labels the interim indicator output as a qualitative presentation tint");
-mustNot(appSource, /rgba\(/i, "DOM adapter does not present the interim tint as alpha or liquid opacity");
-must(appSource, /backgroundColor:\s*["']rgb\(245, 245, 245\)["']/i, "DOM adapter composes the tint over an explicit neutral swatch background");
+must(appSource, /data-testid=["']indicator-optical-status["']/i, "DOM adapter exposes the optical observation status");
+must(appSource, /data-testid=["']indicator-optical-limitation["']/i, "DOM adapter exposes optical refusal diagnostics");
+mustNot(appSource, /rgba\(/i, "DOM adapter does not present the optical result as alpha or liquid opacity");
 must(expressionSource, /equationId[\s\S]{0,500}substitutions/i, "Scientific Core expressions carry structured equations and substitutions");
 mustNot(expressionSource, /solve charge balance and component balances self-consistently/i, "natural-language placeholder is not emitted as an exact expression");
 
 must(evidence, /M5-FRAME[^\n]*\| PASS locally/i, "M5 frame evidence records the production composition boundary");
-must(evidence, /Interim palette baseline attestation[\s\S]{0,500}44c3a02a206c2b75927235a4c19d67ce359f8bd7[\s\S]{0,260}(?:#120|34822425379)/i, "M5 records the exact pre-optical palette closure baseline and hosted CI attestation");
-must(evidence, /AC-V3[^\n]*\| PASS locally/i, "AC-V3 contract-level evidence is complete for M5");
+must(evidence, /M5-OPTICAL-REFUSAL[^\n]*\| PASS locally/i, "M5 records local refusal-first optical evidence");
+must(evidence, /AC-V3[^\n]*\| PARTIAL/i, "AC-V3 is not overstated before quantitative optical admission");
 must(evidence, /AC-V4[^\n]*\| PASS locally/i, "AC-V4 contract-level evidence is complete for M5");
-must(evidence, /contract-level[\s\S]{0,240}M5 S3 does not require M6/i, "M5 contract acceptance does not wait for M6 realization");
+must(evidence, /contract-level[\s\S]{0,240}M5 S3\s+does\s+not\s+require M6/i, "M5 contract acceptance does not wait for M6 realization");
 must(evidence, /M6 consumes[\s\S]{0,180}visual[\s\S]{0,180}does not retroactively gate M5 S3/i, "M6 owns downstream visual realization");
 must(plan, /M5\/M6 acceptance ownership/i, "canonical PLAN declares the M5/M6 acceptance boundary");
 must(plan, /M5 S3 does\s+not wait for M6/i, "canonical PLAN breaks the M5/M6 acceptance cycle");
@@ -193,79 +178,6 @@ must(adr, /DOM\/Pixi[^\n]*Renderer|actual drawing[^\n]*Renderer/i, "ADR-0006 rec
 must(adr, /projectScientificFrame|sourceStateHash/i, "ADR-0006 records frame identity at the composition boundary");
 must(visualStandard, /provenance-bearing[^\n]*identity-keyed[^\n]*palette|identity-keyed[^\n]*palette[^\n]*provenance-bearing/i, "apparatus standard confines empirical colour literals to the declared palette");
 mustNot(visualStandard, /No hard-coded chemical colour literal anywhere in the render path/i, "apparatus standard does not prohibit the declared empirical palette");
-
-mustNot(tokenSource, /owner-approved-v0-indicator-reference-swatch/i, "palette references do not point to an unresolvable placeholder");
-requirePalette(
-  indicatorPaletteManifest.catalogId === "indicator-palette",
-  "indicator palette reference artifact has the declared catalog identity",
-);
-requirePalette(
-  indicatorPaletteManifest.swatchArtifact ===
-    "docs/visual/reference/indicator-reference-swatches.svg",
-  "indicator palette manifest names the checked-in swatch artifact",
-);
-requirePalette(
-  indicatorPaletteManifest.reviewRecord ===
-    "docs/visual/reference/indicator-palette-review.md",
-  "indicator palette manifest names the checked-in contract review record",
-);
-requirePalette(
-  Array.isArray(indicatorPaletteManifest.entries) &&
-    indicatorPaletteManifest.entries.length > 0,
-  "indicator palette manifest contains entries",
-);
-for (const entry of indicatorPaletteManifest.entries ?? []) {
-  const referenceId = `indicator-palette/${entry.indicatorId}`;
-  requirePalette(
-    entry.referenceId === referenceId,
-    `${referenceId} has a stable reference identity`,
-  );
-  must(
-    tokenSource,
-    new RegExp(`reference: \\"${escapeRegExp(entry.referenceId)}\\"`),
-    `${referenceId} is used by the render palette token`,
-  );
-  requirePalette(
-    entry.review?.status === "m5-contract-reviewed" &&
-      entry.review?.record === indicatorPaletteManifest.reviewRecord,
-    `${referenceId} has an M5 contract review record`,
-  );
-  requirePalette(
-    indicatorPaletteReview.includes(entry.referenceId),
-    `${referenceId} is named by the checked-in review record`,
-  );
-  requirePalette(
-    Array.isArray(entry.sources) &&
-      entry.sources.length > 0 &&
-      entry.sources.every(
-        (source) =>
-          typeof source.url === "string" && source.url.startsWith("https://") &&
-          typeof source.claim === "string" && source.claim.length > 0,
-      ),
-    `${referenceId} has source claims with stable HTTPS references`,
-  );
-  for (const [formName, form] of [
-    ["acid", entry.acidForm],
-    ["base", entry.baseForm],
-  ]) {
-    const escapedSwatchId = escapeRegExp(form?.swatchId ?? "");
-    const escapedLabel = escapeRegExp(form?.label ?? "");
-    requirePalette(
-      new RegExp(
-        `<g[^>]*id=["']${escapedSwatchId}["'][^>]*data-indicator-id=["']${escapeRegExp(entry.indicatorId)}["'][^>]*data-form=["']${formName}["']`,
-        "i",
-      ).test(indicatorSwatches),
-      `${referenceId} ${formName} swatch identity is labelled in the SVG artifact`,
-    );
-    requirePalette(
-      new RegExp(
-        `<g[^>]*id=["']${escapedSwatchId}["'][\\s\\S]*?<text[^>]*>${escapedLabel}</text>`,
-        "i",
-      ).test(indicatorSwatches),
-      `${referenceId} ${formName} swatch has a human-readable label`,
-    );
-  }
-}
 
 if (failures.length > 0) {
   console.error("M5 contract consistency check failed:");

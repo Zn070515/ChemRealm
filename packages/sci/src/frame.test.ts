@@ -3,6 +3,7 @@ import {
   activity,
   activityCoefficient,
   ionicStrengthMolal,
+  kelvin,
   litre,
   mol,
   molPerKilogram,
@@ -55,6 +56,9 @@ describe("scientific projection frame", () => {
       sequence: 7,
       liquidVolume: litre(0.5),
       volumeProfileHash: "sha256:profile-42",
+      temperature: kelvin(298.15),
+      solvent: "water",
+      opticalProfiles: [],
     });
 
     expect(frame.scientificState).not.toBe(state);
@@ -73,6 +77,9 @@ describe("scientific projection frame", () => {
       sequence: 10,
       liquidVolume: litre(0.25),
       volumeProfileHash: "sha256:profile-volume",
+      temperature: kelvin(298.15),
+      solvent: "water",
+      opticalProfiles: [],
     });
 
     expect(frame.projection.taughtHydrogenIonExponent.value).toBeCloseTo(
@@ -88,6 +95,9 @@ describe("scientific projection frame", () => {
       sequence: 8,
       liquidVolume: litre(0.5),
       volumeProfileHash: "sha256:profile-43",
+      temperature: kelvin(298.15),
+      solvent: "water",
+      opticalProfiles: [],
     });
 
     expect(Object.isFrozen(frame.scientificState)).toBe(true);
@@ -113,6 +123,24 @@ describe("scientific projection frame", () => {
       sequence: 11,
       liquidVolume: litre(0.5),
       volumeProfileHash: undefined as never,
+      temperature: kelvin(298.15),
+      solvent: "water",
+      opticalProfiles: [],
     })).toThrow(RangeError);
+  });
+
+  it("freezes the optical profile/path context at the frame boundary", () => {
+    const frame = projectScientificFrame(scientificState(), {
+      sourceStateHash: "world-state-optics",
+      sequence: 12,
+      liquidVolume: litre(0.5),
+      volumeProfileHash: "sha256:profile-optics",
+      temperature: kelvin(298.15),
+      solvent: "water",
+      opticalProfiles: [],
+    });
+
+    expect(frame.physical.optical).toEqual({ path: undefined, profiles: [] });
+    expect(Object.isFrozen(frame.physical.optical)).toBe(true);
   });
 });

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { litre, ph, taughtHydrogenIonExponent } from "@chemrealm/schema";
 import {
   formatBuretteScaleReading,
+  formatMolarConcentration,
   formatModelPh,
   formatTaughtPh,
 } from "./format.js";
@@ -20,5 +21,9 @@ describe("observable readout formatting", () => {
 
   it("formats the graduated burette scale in millilitres to 0.01 mL", () => {
     expect(formatBuretteScaleReading(litre(0.025))).toBe("25.00 mL");
+  });
+
+  it("does not expose binary floating-point noise in molar concentration", () => {
+    expect(formatMolarConcentration(0.000009999999999999999)).toBe("0.00001 mol/L");
   });
 });

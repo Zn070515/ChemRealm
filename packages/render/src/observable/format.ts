@@ -30,3 +30,7 @@ export function formatBuretteScaleReading(value: Litre): string {
   );
   return `${millilitres.toFixed(2)} mL`;
 }
+
+export function formatMolarConcentration(value: number): string {
+  return `${Number(finite(value, "molar concentration").toPrecision(12))} mol/L`;
+}

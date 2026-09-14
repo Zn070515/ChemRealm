@@ -44,7 +44,7 @@ ScientificState        packages/sci
       ▼
 ObservableModel        packages/render/observable
       │  (pure TypeScript, no DOM, no PixiJS, fully unit-testable)
-      │  computes: indicator protonation ratio, solution colour, liquid level,
+      │  computes: tagged indicator optical observation, liquid level,
       │            pH-curve points, precipitate/bubble presence, species table
       ▼
 RenderState            packages/render/state
@@ -63,7 +63,7 @@ Renderer               packages/render/pixi
 | Liquid level in a vessel | ObservableModel | Derived by calling the vessel's declared `h(V)`; never by scaling a volume into a geometry axis |
 | Liquid fill geometry | Renderer | Consumes level from RenderState |
 | Indicator **protonation ratio** | **Scientific Core** | Equilibrium — `Ka_in`, `γ`, `a_H`. Not the renderer's business. |
-| Indicator **colour** | ObservableModel | Empirical perceptual mapping: `(indicatorId, ratio)` → colour via a declared palette |
+| Indicator **optical observation** | ObservableModel / Representation Engine | Refusal-first Beer–Lambert/colourimetry transform from covered chemical forms and frozen optical inputs; no endpoint-RGB fallback |
 | Model pH value | Scientific Core | `−log₁₀ a(H⁺)` |
 | `c(H⁺)` / `−lg c(H⁺)` | **ScientificProjection** | Needs scientific state **and** world volume |
 | Readout text and precision policy | ObservableModel | Pure formatting/presentation policy; precision rule from `ADR-0004` §5 |
@@ -187,6 +187,18 @@ Three properties make the colour half compliant:
   endpoint/continuity properties for both named indicator palettes. The
   phenolphthalein transition ratio itself is supplied by the Scientific Core;
   render never computes or infers it.
+
+### Active optical-observation boundary
+
+The interim ratio-to-palette path described above is historical contract
+context, not the active production colour path. The current Representation
+Engine consumes `IndicatorChemicalObservation` plus frozen optical profile/path,
+dose, volume, solvent, temperature, and source identity. It returns a tagged
+`IndicatorOpticalObservation`. Missing chemical forms, reviewed spectrum data,
+or covered conditions produce a visible refusal without a swatch or endpoint
+RGB fallback. Quantitative admission remains governed by the indicator-optical
+source-review plan and does not turn empirical colour into first-principles
+chemistry.
 
 ### Assets and the visual bar
 

@@ -3,6 +3,7 @@ import {
   activity,
   activityCoefficient,
   ionicStrengthMolal,
+  kelvin,
   litre,
   mol,
   molPerKilogram,
@@ -58,6 +59,9 @@ function frame(withAcidFamily = false) {
     sequence: 9,
     liquidVolume: litre(0.5),
     volumeProfileHash: "sha256:profile-44",
+    temperature: kelvin(298.15),
+    solvent: "water",
+    opticalProfiles: [],
   });
 }
 

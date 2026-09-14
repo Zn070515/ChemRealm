@@ -1,5 +1,6 @@
 import {
   COMMAND_SCHEMA_VERSION,
+  kelvin,
   litre,
   type Scenario,
 } from "@chemrealm/schema";
@@ -69,6 +70,19 @@ function targetProfile(state: WorldState) {
   );
   if (vessel === undefined) throw new Error("production composition: target profile is missing");
   return vessel.volumeProfile;
+}
+
+function targetOpticalContext(state: WorldState) {
+  const vessel = state.scenarioSnapshot.vessels.find(
+    (candidate) => candidate.vesselId === TARGET_VESSEL_ID,
+  );
+  if (vessel === undefined) throw new Error("production composition: target optical context is missing");
+  return {
+    opticalPath: vessel.opticalPath,
+    opticalProfiles: state.scenarioSnapshot.indicatorOpticalInputs
+      .filter((input) => input.initialVesselId === TARGET_VESSEL_ID)
+      .map((input) => input.opticalProfile),
+  };
 }
 
 function solveRequestFromState(state: WorldState) {
@@ -167,12 +181,17 @@ async function frameForState(
     );
   }
   const profile = targetProfile(state);
+  const optical = targetOpticalContext(state);
   return {
     frame: projectScientificFrame(execution.result.state, {
       sourceStateHash,
       sequence: state.sequence,
       liquidVolume: litre(targetContents(state).liquidVolume),
       volumeProfileHash: profile.profileHash,
+      temperature: kelvin(state.scenarioSnapshot.modelRequirements.temperature),
+      solvent: state.scenarioSnapshot.modelRequirements.solvent,
+      opticalPath: optical.opticalPath,
+      opticalProfiles: optical.opticalProfiles,
     }),
     expressions: execution.expressions,
   };

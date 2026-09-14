@@ -2,7 +2,6 @@ import {
   SCIENTIFIC_MODEL_HYDROGEN_ION_POLICY,
   TAUGHT_HYDROGEN_ION_POLICY,
   toRenderState,
-  type IndicatorTint,
   type RenderNode,
 } from "@chemrealm/render";
 import { useEffect, useState, type ReactElement } from "react";
@@ -55,8 +54,8 @@ function numberFromNode(node: RenderNode | undefined, key: string): string {
   return typeof value === "number" ? String(value) : "";
 }
 
-function tintStyle(tint: IndicatorTint): string {
-  return `rgb(${tint.srgb.join(", ")})`;
+function srgbStyle(srgb: readonly number[]): string {
+  return `rgb(${srgb.join(", ")})`;
 }
 
 function selectedPolicy(id: PolicyId) {
@@ -145,31 +144,49 @@ export function App({ schemaVersion }: { schemaVersion: number }): ReactElement 
               <p data-testid="accuracy-qualification">{textFromNode(qualificationNode)}</p>
             )}
             {composition.observable.indicators.map((indicator) => (
-              <div key={indicator.indicatorId}>
+              <div key={indicator.indicatorId} data-testid="indicator-observation">
                 <span data-testid="indicator-id">{indicator.indicatorId}</span>
-                <span
-                  data-testid="indicator-swatch"
-                  aria-label={`${indicator.indicatorId} qualitative presentation tint`}
-                  data-tint-strength={indicator.tint.strength}
-                  data-interpolation={indicator.tint.interpolation}
-                  style={{
-                    display: "inline-block",
-                    width: "1.5rem",
-                    height: "1.5rem",
-                    backgroundColor: "rgb(245, 245, 245)",
-                  }}
-                >
+                <span data-testid="indicator-optical-status">
+                  {indicator.opticalObservation.status}
+                </span>
+                {indicator.opticalContext.totalAmountMol === undefined ? undefined : (
+                  <span data-testid="indicator-amount">
+                    {String(indicator.opticalContext.totalAmountMol)} mol
+                  </span>
+                )}
+                {indicator.opticalContext.concentrationMolPerLitreText === undefined ? undefined : (
+                  <span data-testid="indicator-concentration">
+                    {indicator.opticalContext.concentrationMolPerLitreText}
+                  </span>
+                )}
+                {indicator.opticalContext.pathLengthMillimetres === undefined ? undefined : (
+                  <span data-testid="indicator-path-length">
+                    {String(indicator.opticalContext.pathLengthMillimetres)} mm
+                  </span>
+                )}
+                {indicator.opticalContext.profileId === undefined ? undefined : (
+                  <span data-testid="indicator-profile-id">
+                    {indicator.opticalContext.profileId}
+                  </span>
+                )}
+                {indicator.opticalObservation.status === "OPTICAL_MODEL_OK" ? (
                   <span
-                    data-testid="indicator-tint"
-                    aria-hidden="true"
+                    data-testid="indicator-swatch"
+                    aria-label={`${indicator.indicatorId} optical-model tint`}
+                    data-optical-model="true"
+                    data-profile-hash={indicator.opticalObservation.profileHash}
                     style={{
-                      display: "block",
-                      width: "100%",
-                      height: "100%",
-                      backgroundColor: tintStyle(indicator.tint),
+                      display: "inline-block",
+                      width: "1.5rem",
+                      height: "1.5rem",
+                      backgroundColor: srgbStyle(indicator.opticalObservation.tintSrgb),
                     }}
                   />
-                </span>
+                ) : (
+                  <p data-testid="indicator-optical-limitation">
+                    {indicator.opticalObservation.reason}
+                  </p>
+                )}
               </div>
             ))}
           </section>

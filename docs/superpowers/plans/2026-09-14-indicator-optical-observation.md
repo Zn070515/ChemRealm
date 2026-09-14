@@ -881,7 +881,7 @@ pnpm verify:scientific-math
 node tools/check_indicator_optics_contract.mjs
 ```
 
-- [ ] **Step 5: Commit the refusal-first optical engine**
+- [x] **Step 5: Commit the refusal-first optical engine**
 
 ```text
 git add packages/render/src/observable/optics.ts packages/render/src/observable/optics.test.ts packages/render/src/observable/optics-reference-vectors.json packages/render/src/observable/index.ts packages/render/src/index.ts tools/check_indicator_optics_contract.mjs
@@ -907,7 +907,7 @@ git commit -m "Add deterministic indicator optical observations"
 - Consumes: `IndicatorOpticalObservation` from Task 6 through the `ScientificFrame` composition boundary.
 - Produces: `ObservableIndicator.opticalObservation`; scene nodes either carry a tint with explicit status/provenance or a no-tint refusal state.
 
-- [ ] **Step 1: Write failing observable, scene, and DOM tests**
+- [x] **Step 1: Write failing observable, scene, and DOM tests**
 
 ```ts
 expect(composition.observable.indicators[0]!.opticalObservation.status)
@@ -925,7 +925,7 @@ profile hash; do not expose that fixture as production content.
 Run `tests/browser/network-boundary.spec.ts` in the same task and assert the
 profile, colourimetry, and diagnostic path performs no network request.
 
-- [ ] **Step 2: Run focused tests and verify RED**
+- [x] **Step 2: Run focused tests and verify RED**
 
 ```text
 pnpm exec vitest run packages/render/src/observable/observable.test.ts packages/render/src/state/scene.test.ts apps/web/src/composition.test.ts
@@ -935,7 +935,7 @@ pnpm exec playwright test
 Expected: current observable maps `protonationRatio` through RGB endpoint
 tokens and the page labels the swatch as an empirical colour.
 
-- [ ] **Step 3: Remove the false colour path**
+- [x] **Step 3: Remove the false colour path**
 
 Delete `mapIndicatorRatioToColor`, `IndicatorColour`, and
 `INDICATOR_COLOUR_PALETTES` from production exports. `buildObservableModel`
@@ -945,7 +945,7 @@ indicator observation. `toRenderState` emits no indicator shape tint for a
 refusal. `App.tsx` shows the exact status and diagnostic, and renders a tint
 only for `OPTICAL_MODEL_OK`; it no longer calls `rgba(...)` on a palette token.
 
-- [ ] **Step 4: Run focused tests and verify GREEN**
+- [x] **Step 4: Run focused tests and verify GREEN**
 
 ```text
 pnpm exec vitest run packages/render/src/observable/observable.test.ts packages/render/src/state/scene.test.ts apps/web/src/composition.test.ts
@@ -953,7 +953,7 @@ pnpm exec playwright test
 pnpm depcruise
 ```
 
-- [ ] **Step 5: Commit presentation replacement**
+- [x] **Step 5: Commit presentation replacement**
 
 ```text
 git add packages/render/src/observable packages/render/src/state/scene.ts packages/render/src/state/scene.test.ts packages/render/src/index.ts apps/web/src/App.tsx apps/web/src/composition.ts apps/web/src/composition.test.ts tests/m5-indicator-provenance.test.mjs
