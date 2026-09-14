@@ -133,9 +133,11 @@ matrix, deterministic math, provenance/diagnostics, and PHREEQC ORACLE sweep
 against native host and WASM where applicable. Report signed differences and
 offsets; never average or relabel disagreement as equivalence.
 
-**Tests/evidence:** Fixture hashes, TS↔Rust report, Rust↔WASM report, PHREEQC
-identity attestation, invariants, and all M4 criteria rerun on native. Keep the
-original TS M4 packet unchanged.
+**Tests/evidence:** The real release WASM now runs the canonical REF-1…REF-10
+matrix and checks the independent values, identities, projections, invariants,
+and native expression set. Remaining evidence is the Rust-host ↔ WASM
+differential report, adversarial matrix, PHREEQC identity attestation, and all
+M4 criteria rerun on native. Keep the original TS M4 packet unchanged.
 
 **Stop/go:** Stop on unexplained disagreement, missing reference input, or
 unclassified failure.

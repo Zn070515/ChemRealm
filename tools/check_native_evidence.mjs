@@ -29,8 +29,8 @@ function mustNot(text, pattern, message) {
 
 must(nativeEvidence, /^\*\*Status:\*\* \*\*S2[\s\S]*native[\s-]+supersession S3 remains open\*\*/m,
   "native evidence stays at S2 with supersession S3 open");
-must(nativeEvidence, /native REF-1…REF-10[\s\S]*not claimed|native REF-1…REF-10 and adversarial matrix/i,
-  "native REF evidence remains pending");
+must(nativeEvidence, /native adversarial semantic matrix/i,
+  "native adversarial semantic evidence remains pending");
 must(nativeEvidence, /native PHREEQC oracle execution/i,
   "native PHREEQC evidence remains pending");
 must(nativeEvidence, /native World → ScientificFrame → Observable → DOM/i,

@@ -37,6 +37,10 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm typecheck:tests
       - run: pnpm build
+      # Host and release-WASM executions must agree byte-for-byte over the
+      # canonical reference/adversarial request matrix before native can ever
+      # supersede the accepted TypeScript backend.
+      - run: pnpm verify:native-differential
       - run: pnpm test
 
       # Type-level guarantees (AC-U1..AC-U5). These CANNOT be runtime tests:
