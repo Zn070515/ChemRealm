@@ -248,7 +248,8 @@ it does not claim their browser evidence yet.
 ## Rollout/migration
 
 This M5 closure includes the persisted vessel-profile contract introduced by
-`SPEC-0001` revision 25: World/Event schema v4 is the current persisted
+the current M5 contract amendment in `SPEC-0001`, whose revision is declared by
+`contracts/version-manifest.json` (revision 25); World/Event schema v4 is the current persisted
 version, with an explicit v3→v4 migration that requires a reviewable profile
 resolver for legacy geometry-only records. The observable model itself is not
 persisted. Future RenderState changes require an explicit

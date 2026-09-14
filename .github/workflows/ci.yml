@@ -53,6 +53,12 @@ jobs:
       # versions are distributed from contracts/version-manifest.json. This is
       # a drift gate, not a convention.
       - run: pnpm verify:versions
+      # Native bridge DTOs are mechanically checked against the committed
+      # schema artifacts, and native/governance docs are checked against the
+      # same centralized version manifest.
+      - run: pnpm verify:native-schema
+      - run: pnpm verify:native-governance
+      - run: pnpm verify:native-evidence
 
       # Architectural rules, plus the guard that proves they bite. The guard is
       # what makes M0's stop condition machine-checked rather than a claim.

@@ -88,9 +88,12 @@ The first subsystem is deliberately focused; the platform foundation is not.
 
 ## Setup
 
-Two toolchains. Both are required for a full local verification.
+Three toolchains with explicit boundaries. Full native verification uses
+TypeScript/pnpm, Python/uv, and Rust/Cargo; renderer-only changes need not invoke
+all three.
 
-**Prerequisites:** Node ≥ 22, pnpm 11, and [`uv`](https://docs.astral.sh/uv/).
+**Prerequisites:** Node ≥ 22, pnpm 11, [`uv`](https://docs.astral.sh/uv/), and
+the pinned Rust toolchain from [`rust-toolchain.toml`](rust-toolchain.toml).
 
 ### TypeScript
 

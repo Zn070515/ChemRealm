@@ -73,14 +73,14 @@ must(
   "M5 canonical revision records semantic composition closure",
 );
 
-must(childSpec, /does not override `SPEC-0001`/i, "M5 child specification remains subordinate");
+must(childSpec, /does not override[\s\S]{0,40}`SPEC-0001`/i, "M5 child specification remains subordinate");
 must(childSpec, /projectScientificFrame|sourceStateHash/i, "M5 child specification names the bound frame factory");
 must(childSpec, /palette[\s\S]{0,200}provenance|provenance[\s\S]{0,200}palette/i, "M5 child specification preserves palette provenance");
 must(childSpec, /(?:format(?:ting)?|readout strings)[^\n]*Observable|Observable[^\n]*(?:format(?:ting)?|readout strings)/i, "M5 child specification assigns formatting to the observable boundary");
 must(
   childSpec,
   new RegExp(
-    "SPEC-0001`? revision " + versionManifest.spec.m5ContractRevision,
+    "M5 contract revision[\\s\\S]{0,160}\\b" + versionManifest.spec.m5ContractRevision + "\\b",
     "i",
   ),
   "M5 child specification names the current canonical amendment",

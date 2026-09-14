@@ -2,8 +2,8 @@
 
 - **Status:** **M0–M4 S3 Verified / Accepted; M5 S2 production composition locally verified; native backend supersession S2 implementation in progress** — the original plan was approved
   on 2026-09-11 at `SPEC-0001` revision 6; revisions 13–20 were accepted
-  on 2026-09-13 and revisions 25–26 are candidate amendments for the current
-  M5/native-backend closure.
+  on 2026-09-13, M5 contract revision 25 and native-backend revision 26 remain
+  candidate amendments for the current M5/native-backend closure.
 - **Completed:** `M0 — Repository foundation` reached **S3 — Verified** on
   2026-09-11. Evidence: `docs/evidence/M0.md`, commits `1f3dfee`/`565a2e8`,
   CI run `34595967023` (13/13 gate steps on a clean `ubuntu-latest` checkout).
@@ -84,14 +84,14 @@ Additionally, the owner must resolve before their milestones:
 
 | M | Title | Depends on | Primary risk |
 |---|---|---|---|
-| M0 | Repository foundation | — | Two toolchains in one CI |
+| M0 | Repository foundation | — | Three toolchains with explicit CI boundaries |
 | M1 | Schema and units | M0 | Getting the contract wrong early |
 | M2 | Event runtime and replay | M1 | Determinism |
 | M3 | Solver adapter contract | M1 | Over- or under-designing the envelope |
 | M4 | Acid-base engine and oracle validation | M3 | PHREEQC install; the equivalence-region gap |
 | M5 | Observable state | M1, M4 | Observable layer catching chemistry it shouldn't |
 | M4-B | Native Scientific Core/WASM backend supersession | M4, M5 S2 | Native/legacy identity, deterministic differential validation, and no silent fallback |
-| M6 | First final-quality apparatus slice | M5 | Hitting the visual bar with PixiJS |
+| M6 | First final-quality apparatus slice | M5 S3, M4-B S3 | Hitting the visual bar with PixiJS after native backend closure |
 | M7 | Interactive titration end to end | M6 | Integration; the first real product moment |
 | M8 | Branch, replay, persistence | M2, M7 | Parent immutability; IndexedDB quota |
 | M9 | Minimal ACE | M7 | Inferring too much from too little |
@@ -111,11 +111,12 @@ adapter → observable → renderer → ACE → persistence → end-to-end → d
 ### Purpose
 
 Establish a workspace where the four cores can exist without importing each
-other, where the two-language contract from ADR-0001 actually works, and where
+other, where the cross-language contract from ADR-0001 actually works, and where
 the architectural rules are enforced by the build rather than by review.
 
 The most important thing M0 proves is **not** that packages exist. It is that
-**two toolchains coexist in one CI run and a forbidden import fails the build.**
+**the repository's three toolchains coexist in one CI run and a forbidden
+import fails the build.**
 Both are load-bearing assumptions of ADR-0001 and ADR-0006.
 
 ### Files and modules
@@ -772,7 +773,8 @@ closure and a deterministic DOM composition slice are locally verified, while
 M5 S3 evidence remains open. The governing scopes are
 `docs/superpowers/specs/2026-09-13-m5-contract-remediation.md` and
 `docs/superpowers/specs/2026-09-13-m5-production-composition.md`, subordinate to
-`SPEC-0001` revision 25 Candidate and not overrides of it.
+the M5 contract revision declared by `contracts/version-manifest.json` and not
+overrides of `SPEC-0001`; the native-backend amendment is a separate candidate.
 **Addresses:** ADR-0006, ADR-0007; `SPEC-0001` AC-V2..AC-V4, AC-V6, AC-V8, AC-V9, AC-V10, AC-V11
 
 `AC-V1` (`packages/render` has no import path to `packages/sci`) is **not**

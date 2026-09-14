@@ -6,12 +6,25 @@ import {
   type SolverConfig,
 } from "@chemrealm/schema";
 
-import type { SolverAdapter } from "./adapter.js";
+import {
+  isScientificExecutionAdapter,
+  type ScientificExecutionAdapter,
+  type SolverAdapter,
+} from "./adapter.js";
 import { freezeSolverAdapter } from "./identity.js";
 import type { SolverRequirements } from "./request.js";
 
 export type ExactSolverLookup =
   | { readonly status: "found"; readonly adapter: SolverAdapter }
+  | {
+      readonly status: "unavailable";
+      readonly reason: string;
+      readonly id: string;
+      readonly version: string;
+  };
+
+export type ScientificExecutionLookup =
+  | { readonly status: "found"; readonly adapter: ScientificExecutionAdapter }
   | {
       readonly status: "unavailable";
       readonly reason: string;
@@ -150,6 +163,23 @@ export class SolverRegistry {
       version,
       reason: `solver adapter ${id}@${version} is unavailable; registry lookup is exact and does not fall back to another version`,
     };
+  }
+
+  lookupScientificExecution(
+    id: string,
+    version: string,
+  ): ScientificExecutionLookup {
+    const result = this.lookup(id, version);
+    if (result.status === "unavailable") return result;
+    if (!isScientificExecutionAdapter(result.adapter)) {
+      return {
+        status: "unavailable",
+        id,
+        version,
+        reason: `solver adapter ${id}@${version} does not expose scientific execution artifacts`,
+      };
+    }
+    return { status: "found", adapter: result.adapter };
   }
 
   get(id: string, version: string): SolverAdapter | undefined {

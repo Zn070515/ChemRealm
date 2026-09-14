@@ -1,0 +1,49 @@
+# M4-B — Native Scientific Core / WASM Evidence
+
+**Status:** **S2 — implementation and local contract checks verified; native
+supersession S3 remains open**
+
+**Authority:** `SPEC-0001` current candidate revision and ADR-0014. This packet
+is separate from [`M4.md`](M4.md), which records the accepted historical
+TypeScript `1.0.0` M4 S3 baseline.
+
+## Verified in this handoff
+
+| Criterion | Result | Evidence |
+|---|---|---|
+| Central version distribution | PASS locally | `pnpm verify:versions`; active versions originate in `contracts/version-manifest.json` |
+| Native bridge schema boundary | PASS locally | `pnpm verify:native-schema`; committed schema artifacts, Rust bridge roots, and `build.rs` are mechanically checked together |
+| Rust host bridge | PASS locally | `pnpm native:fmt`, `pnpm native:test`, `pnpm native:clippy` |
+| WASM compilation | PASS locally | `pnpm native:check-wasm` and the release artifact build |
+| Source/request identity separation | PASS locally | native host and facade tests require distinct `sourceStateHash` and `requestHash` |
+| Scientific execution capability | PASS locally | adapter/registry tests preserve and safely narrow the expression-producing capability |
+| Refusal identity | PASS locally | adapter and registry tests reject mismatched `nearestSupported` model identity |
+| Explicit solver selection | PASS locally | reversed registry-order tests preserve the explicitly selected identity |
+| Native governance boundary | PASS locally | `pnpm verify:native-governance` |
+
+## Still required for native supersession S3
+
+The following evidence is intentionally not claimed by this packet:
+
+- native REF-1…REF-10 and adversarial matrix;
+- Rust host ↔ WASM differential report over the complete reference set;
+- native PHREEQC oracle execution and disagreement disposition;
+- registered native backend used by the production new-world path;
+- native World → ScientificFrame → Observable → DOM/browser composition;
+- final native artifact and hosted-CI attestation for the supersession gate.
+
+Native initialization and solve failures remain explicit. There is no silent
+fallback to the accepted TypeScript backend. M4 legacy S3 is preserved; this
+packet does not promote M4-B, M5, or M6.
+
+## Reproduction
+
+```text
+pnpm verify:versions
+pnpm verify:native-schema
+pnpm verify:native-governance
+pnpm native:fmt
+pnpm native:test
+pnpm native:clippy
+pnpm native:check-wasm
+```

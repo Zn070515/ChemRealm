@@ -142,6 +142,34 @@ describe("exact solver registry", () => {
     expect(unavailable.reason).toContain(`${TEST_SOLVER_VERSION.slice(0, 4)}1.0`);
   });
 
+  it("exposes an expression capability through a typed registry lookup", () => {
+    const registry = new SolverRegistry([createAcidBaseAdapter()]);
+
+    const result = registry.lookupScientificExecution(
+      VERSION_MANIFEST.scientific.acidBase.id,
+      VERSION_MANIFEST.scientific.acidBase.legacyVersion,
+    );
+
+    expect(result.status).toBe("found");
+    if (result.status !== "found") throw new Error("expected scientific adapter");
+    expect(result.adapter.solveWithScientificArtifacts).toBeTypeOf("function");
+  });
+
+  it("does not pretend a plain adapter can produce scientific artifacts", () => {
+    const adapter = new StubSolverAdapter({
+      descriptor: makeDescriptor(),
+      outcome: notConverged(),
+    });
+    const result = new SolverRegistry([adapter]).lookupScientificExecution(
+      adapter.id,
+      adapter.version,
+    );
+
+    expect(result.status).toBe("unavailable");
+    if (result.status !== "unavailable") throw new Error("expected unavailable capability");
+    expect(result.reason).toMatch(/scientific execution artifacts/i);
+  });
+
   it("rejects duplicate exact registrations", () => {
     const first = new StubSolverAdapter({
       descriptor: makeDescriptor(),
@@ -214,6 +242,32 @@ describe("exact solver registry", () => {
 
     await expect(found.adapter.solve({} as SolveRequest)).rejects.toThrow(
       /provenance.*identity/i,
+    );
+  });
+
+  it("checks nearestSupported identity for adapters registered through the wrapper", async () => {
+    const model = makeDescriptor();
+    const adapter: SolverAdapter = {
+      id: model.id,
+      version: model.version,
+      model,
+      solverConfig: {
+        id: model.id,
+        version: model.version,
+        parameters: { Kw: 1e-14 },
+      },
+      solve: async (_request: SolveRequest) => ({
+        status: "MODEL_OUT_OF_DOMAIN",
+        reason: "registry-test domain refusal",
+        nearestSupported: { ...model, version: VERSION_MANIFEST.scientific.acidBase.nativeVersion },
+      }),
+    };
+    const registry = new SolverRegistry([adapter]);
+    const found = registry.lookup(model.id, model.version);
+    if (found.status !== "found") throw new Error("expected registered adapter");
+
+    await expect(found.adapter.solve({} as SolveRequest)).rejects.toThrow(
+      /nearestSupported.*identity/i,
     );
   });
 

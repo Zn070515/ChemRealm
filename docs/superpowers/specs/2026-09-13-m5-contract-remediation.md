@@ -2,8 +2,10 @@
 
 **Status:** S1 specified; owner-approved remediation direction, 2026-09-13
 
-**Canonical amendment:** `SPEC-0001` revision 25 Candidate. This document
-does not override `SPEC-0001`; it describes the implementation needed to bring
+**Canonical amendment:** the M5 contract revision declared by
+`contracts/version-manifest.json` (revision 25); the native-backend amendment
+is a separate current candidate revision. This document does not override
+`SPEC-0001`; it describes the implementation needed to bring
 the M5 slice back into alignment with that amendment.
 
 ## Context

@@ -12,13 +12,17 @@
 
 ## Context
 
-ChemRealm has two language ecosystems with a mandatory boundary between them:
+ChemRealm has three language ecosystems with mandatory boundaries between them:
 
-- **TypeScript** for the World Runtime, Representation Engine, ACE, and (per
+- **TypeScript/pnpm** for the World Runtime, Representation Engine, ACE, and (per
   owner decision on 2026-09-11) the v0 runtime scientific solver.
-- **Python** for the test-time scientific oracle, and later for the PHREEQC
+- **Python/uv** for the test-time scientific oracle, and later for the PHREEQC
   adapter that the Al(III) and Fe(III)–SCN stress cases will require
   (`GOAL.md` §17).
+- **Rust/Cargo** for the candidate native Scientific Reality Core and its
+  WebAssembly/native-host artifacts. Rust is not a pnpm workspace member and
+  consumes the schema-owned bridge contract through generated or mechanically
+  checked artifacts.
 
 The repository currently contains three documents and no source. There is no
 version control, no package manager configuration, and no schema of any kind.
@@ -35,8 +39,8 @@ rejected introducing every candidate scientific dependency at once.
 
 ## Decision
 
-**A single repository. A pnpm workspace for TypeScript. A separate `uv`-managed
-Python tree that is not a workspace member.**
+**A single repository. A pnpm workspace for TypeScript, a separate `uv`-managed
+Python tree, and a separate Cargo crate for native scientific code.**
 
 ```
 ChemRealm/
@@ -52,6 +56,8 @@ ChemRealm/
   packages/render/           # Representation Engine: observable model + PixiJS renderer
   packages/ace/              # Adaptive Chemistry Cognition Engine
   apps/web/                  # Composition root. The only place the four cores meet.
+  native/sci-core/           # Rust native/WASM Scientific Reality Core candidate
+  rust-toolchain.toml        # pinned Rust toolchain for native verification
   content/                   # Data-driven scenario definitions (GOAL.md §11)
   tests/e2e/                 # Playwright
   tools/                     # Python source: the acceptance-coverage checker
@@ -89,8 +95,10 @@ Rules that make this more than a directory listing:
    service, has no HTTP surface, and is not on any production path. The owner's
    2026-09-11 decision selected a hybrid model: TypeScript solves at runtime,
    Python only produces oracle values for tests.
-4. **Python is not a pnpm workspace member.** One workspace per language. A
-   cross-language root workspace buys nothing and complicates CI.
+4. **Python is not a pnpm workspace member. Rust is not a pnpm workspace
+   member either.** The pnpm, uv, and Cargo toolchains remain separately
+   invocable; CI orders schema generation before Python and native contract
+   verification.
 4a. **One Python project, one environment, one command set.** `pyproject.toml`
    and `.venv` both live at the repository root; `tools/` holds source. The
    canonical commands are
@@ -158,8 +166,9 @@ times or task caching become an actual measured problem.
   runtime because it reads generated artifacts.
 - Import direction is machine-enforced, so the core boundaries in `GOAL.md` §6
   survive contact with a growing codebase.
-- Two toolchains and no more. A contributor who only touches the renderer never
-  needs Python.
+- Three explicitly bounded toolchains. A contributor who only touches the
+  renderer does not need Python or Rust; full verification requires pnpm, uv,
+  and Cargo according to the affected-path gate.
 
 ### Negative
 - A schema change requires running the TypeScript generation step before Python

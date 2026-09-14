@@ -7,6 +7,10 @@ and owner review remain open.
 observable-state specification. It references canonical `AC-*` criteria; it
 does not redefine or weaken them.
 
+**Canonical revision:** the M5 contract revision declared by
+`contracts/version-manifest.json` (revision 25); the native-backend amendment
+is a separate current candidate revision.
+
 ## Context
 
 The scientific, world, frame, profile, symbolic, curve, and ObservableModel

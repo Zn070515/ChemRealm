@@ -182,6 +182,33 @@ describe("SolverAdapter contract", () => {
     await expect(adapter.solve(request)).rejects.toThrow(/provenance.*identity/i);
   });
 
+  it.each([
+    ["id", { id: "different-solver" }],
+    ["version", { version: "2.0.0" }],
+    ["nested validity", {
+      validity: {
+        ...descriptor.validity,
+        components: [...descriptor.validity.components, "NaOH"],
+      },
+    }],
+  ] as const)("rejects MODEL_OUT_OF_DOMAIN with mismatched nearestSupported %s", async (_name, mismatch) => {
+    const nearestSupported = {
+      ...descriptor,
+      ...mismatch,
+      validity: "validity" in mismatch ? mismatch.validity : descriptor.validity,
+    } as ModelDescriptor;
+    const adapter = new StubSolverAdapter({
+      descriptor,
+      outcome: {
+        status: "MODEL_OUT_OF_DOMAIN",
+        reason: "contract-test refusal",
+        nearestSupported,
+      },
+    });
+
+    await expect(adapter.solve(request)).rejects.toThrow(/nearestSupported.*identity/i);
+  });
+
   it("returns INVALID_INPUT instead of throwing for incomplete decoded request data", async () => {
     let invoked = false;
     const adapter = new StubSolverAdapter({

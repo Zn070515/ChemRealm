@@ -4,6 +4,10 @@
 > complete. This plan is subordinate to `SPEC-0001` and the current M5
 > observable-state specification; it does not redefine an `AC-*` criterion.
 
+**Canonical contract:** the M5 contract revision declared by
+`contracts/version-manifest.json` (revision 25); the native-backend amendment
+is a separate current candidate revision.
+
 ## Problem and scope
 
 The repository has independently verified World Runtime, Scientific Reality,

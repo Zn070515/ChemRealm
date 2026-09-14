@@ -62,6 +62,16 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
+function sameNumericValue(actual: unknown, expected: unknown): boolean {
+  if (typeof actual === "number" && typeof expected === "number") {
+    return Object.is(actual, expected);
+  }
+  if (isRecord(actual) && isRecord(expected)) {
+    return Object.is(actual.value, expected.value);
+  }
+  return false;
+}
+
 function hasExactParameters(
   actual: unknown,
   expected: Readonly<Record<string, number>>,
@@ -74,6 +84,30 @@ function hasExactParameters(
     (key) =>
       typeof actual[key] === "number" &&
       Object.is(actual[key], expected[key]),
+  );
+}
+
+function hasSameModelDescriptor(
+  actual: ModelDescriptor,
+  expected: ModelDescriptor,
+): boolean {
+  return (
+    actual.id === expected.id &&
+    actual.version === expected.version &&
+    actual.description === expected.description &&
+    sameNumericValue(actual.validity.temperature.min, expected.validity.temperature.min) &&
+    sameNumericValue(actual.validity.temperature.max, expected.validity.temperature.max) &&
+    sameNumericValue(
+      actual.validity.ionicStrengthMolalMax,
+      expected.validity.ionicStrengthMolalMax,
+    ) &&
+    actual.validity.solvent === expected.validity.solvent &&
+    actual.validity.phase === expected.validity.phase &&
+    actual.validity.activityCorrected === expected.validity.activityCorrected &&
+    actual.validity.species.length === expected.validity.species.length &&
+    actual.validity.species.every((value, index) => value === expected.validity.species[index]) &&
+    actual.validity.components.length === expected.validity.components.length &&
+    actual.validity.components.every((value, index) => value === expected.validity.components[index])
   );
 }
 
@@ -140,6 +174,14 @@ export function assertSolveResultIdentity(
   solverConfig: SolverConfig,
 ): SolveResult {
   const validated = validateSolveResult(result);
+  if (validated.status === "MODEL_OUT_OF_DOMAIN") {
+    if (!hasSameModelDescriptor(validated.nearestSupported, model)) {
+      throw new TypeError(
+        "solver returned MODEL_OUT_OF_DOMAIN with nearestSupported identity mismatch",
+      );
+    }
+    return validated;
+  }
   if (validated.status !== "OK") return validated;
 
   const state = validated.state;

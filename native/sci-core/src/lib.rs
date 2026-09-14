@@ -10,6 +10,7 @@ use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
 
 include!(concat!(env!("OUT_DIR"), "/version_constants.rs"));
+include!(concat!(env!("OUT_DIR"), "/native_schema_contract.rs"));
 
 const KW: f64 = 1.0e-14;
 const KA_HOAC: f64 = 1.7539e-5;
