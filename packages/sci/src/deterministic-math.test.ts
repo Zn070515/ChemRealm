@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 import {
   DET_EXP10_DOMAIN,
   detExp10,
@@ -23,6 +24,21 @@ function ulpDistance(actual: number, expected: number): bigint {
 }
 
 describe("deterministic base-10 math", () => {
+  it("matches the shared pinned arbitrary-precision corpus", () => {
+    const corpus = JSON.parse(
+      readFileSync(new URL("../test/math/deterministic-math-ulp.json", import.meta.url), "utf8"),
+    ) as {
+      log10: readonly { input: number; expected: string }[];
+      exp10: readonly { input: number; expected: string }[];
+    };
+    for (const vector of corpus.log10) {
+      expect(ulpDistance(detLog10(vector.input), Number(vector.expected))).toBeLessThanOrEqual(1n);
+    }
+    for (const vector of corpus.exp10) {
+      expect(ulpDistance(detExp10(vector.input), Number(vector.expected))).toBeLessThanOrEqual(1n);
+    }
+  });
+
   it.each([
     [1, "0"],
     [10, "1"],

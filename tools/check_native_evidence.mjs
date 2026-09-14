@@ -35,8 +35,20 @@ must(nativeEvidence, /bounded comparison[\s\S]*not a claim that the native model
   "native PHREEQC comparison does not claim model equivalence");
 must(nativeEvidence, /native World → ScientificFrame → Observable → DOM/i,
   "native browser composition remains pending");
+must(nativeEvidence, /explicit v2 native WorldCreated creation and replay/i,
+  "native supersession requires explicit v2 world creation and replay before rollout");
+must(nativeEvidence, /native-default rollout policy/i,
+  "native default is described as a post-supersession rollout decision");
+mustNot(nativeEvidence, /default new-world path after the supersession gate/i,
+  "native default rollout is not a circular supersession prerequisite");
 must(nativeEvidence, /no\s+silent\s+fallback/i,
   "native failure boundary is explicit");
+must(nativeSpec, /explicit v2 WorldCreated creation[\s\S]{0,100}replay/i,
+  "native specification requires explicit v2 world creation and replay evidence");
+must(nativeSpec, /later owner-approved rollout amendment may[\s\S]{0,80}default/i,
+  "native specification makes default selection a later rollout decision");
+mustNot(nativeSpec, /new worlds bind v2 only after explicit registration/i,
+  "native specification does not use default-like wording as the supersession gate");
 must(legacyEvidence, /^\*\*Status:\*\* \*\*S3 — Verified \/ Accepted\*\*/m,
   "legacy M4 S3 evidence remains preserved");
 

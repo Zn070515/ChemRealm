@@ -17,6 +17,7 @@ import type {
   ScientificExecutionContext,
   SolverAdapter,
 } from "./adapter.js";
+import { assertScientificExpressionSet } from "./expressions.js";
 
 function cloneAndFreezeObject<T extends object>(value: T): T {
   return Object.freeze({ ...value }) as T;
@@ -159,6 +160,15 @@ function validateScientificExecution(
   }
   if (result.status !== "OK" && expressions.length > 0) {
     throw new TypeError("non-OK scientific execution emitted expressions");
+  }
+  if (result.status === "OK") {
+    assertScientificExpressionSet(
+      expressions,
+      result.state,
+      model.id,
+      model.version,
+      context.sourceStateHash,
+    );
   }
   return Object.freeze({
     result,

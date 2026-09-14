@@ -33,6 +33,7 @@ import {
   buildAcidBaseModelDescriptor,
   buildAcidBaseSolverConfig,
 } from "./acidbase/model.js";
+import { assertScientificExpressionSet } from "./expressions.js";
 
 export const NATIVE_SCIENTIFIC_MODEL_VERSION =
   VERSION_MANIFEST.scientific.acidBase.nativeVersion;
@@ -125,27 +126,29 @@ function parseNativePayload(
     ) {
       throw new TypeError("native expression identity does not match execution context");
     }
+    if (
+      expression.producerVersion !==
+      VERSION_MANIFEST.scientific.acidBase.expressionProducerVersion
+    ) {
+      throw new TypeError("native expression producer version mismatch");
+    }
     expressions.push(Object.freeze({
       ...expression,
       substitutions: Object.freeze(expression.substitutions.map((entry) => Object.freeze({ ...entry }))),
       omittedTerms: Object.freeze([...expression.omittedTerms]),
     }) as unknown as ScientificExpression);
   }
-
-  const required = [
-    "charge-balance",
-    "water-autoprotolysis",
-    "ionic-strength-fixed-point",
-    "davies-activity-coefficient",
-    "activity-definition",
-  ];
-  if (result.status === "OK" && !required.every((id) =>
-    expressions.some((expression) => expression.equationId === id)
-  )) {
-    throw new TypeError("native backend omitted a required scientific expression");
-  }
   if (result.status !== "OK" && expressions.length > 0) {
     throw new TypeError("native backend emitted expressions for a non-OK result");
+  }
+  if (result.status === "OK") {
+    assertScientificExpressionSet(
+      expressions,
+      result.state,
+      model.id,
+      model.version,
+      expectedSourceStateHash,
+    );
   }
 
   return Object.freeze({

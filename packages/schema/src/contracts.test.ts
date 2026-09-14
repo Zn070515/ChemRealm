@@ -116,6 +116,27 @@ describe("native scientific bridge contracts", () => {
     });
   });
 
+  it("keeps authoring units out of the native bridge envelope", () => {
+    const authoringUnitRequest = {
+      ...request,
+      waterMass: { value: 1000, unit: "g" as const },
+      liquidVolume: { value: 100, unit: "mL" as const },
+      solutes: [{
+        soluteId: "HCl",
+        amount: { value: 100, unit: "mmol" as const },
+        mode: "fully-dissociated" as const,
+      }],
+      temperature: { value: 25, unit: "degC" as const },
+    };
+
+    expect(SolveRequestSchema.safeParse(authoringUnitRequest).success).toBe(true);
+    expect(NativeSolveEnvelopeSchema.safeParse({
+      bridgeSchemaVersion: NATIVE_BRIDGE_SCHEMA_VERSION,
+      request: authoringUnitRequest,
+      context: { sourceStateHash: "sha256:world-state" },
+    }).success).toBe(false);
+  });
+
   it.each([
     ["bridge version", { bridgeSchemaVersion: NATIVE_BRIDGE_SCHEMA_VERSION + 1 }],
     ["source identity", { context: { sourceStateHash: "" } }],

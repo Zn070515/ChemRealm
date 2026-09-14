@@ -210,6 +210,60 @@ describe("native scientific backend facade", () => {
     await expect(adapter.solve(request)).rejects.toThrow(/request hash mismatch/);
   });
 
+  it("rejects a native expression with a producer version outside the manifest", async () => {
+    const adapter = createNativeJsonAdapter(async (requestJson) =>
+      JSON.stringify((() => {
+        const valid = payloadForRequest(requestJson);
+        return payloadForRequest(requestJson, {
+          expressions: valid.expressions.map((expression) => ({
+            ...expression,
+            producerVersion: "invalid-test-version",
+          })) as NativeBackendPayload["expressions"],
+        });
+      })()),
+    );
+
+    await expect(adapter.solve(request)).rejects.toThrow(/expression producer version/i);
+  });
+
+  it("rejects duplicate or incomplete native equation sets", async () => {
+    const duplicate = createNativeJsonAdapter(async (requestJson) =>
+      JSON.stringify((() => {
+        const valid = payloadForRequest(requestJson);
+        return payloadForRequest(requestJson, {
+          expressions: [
+            ...valid.expressions,
+            valid.expressions[0]!,
+          ] as NativeBackendPayload["expressions"],
+        });
+      })()),
+    );
+    await expect(duplicate.solve(request)).rejects.toThrow(/exact scientific expression set/i);
+
+    const acidPayload = structuredClone(payload()) as NativeBackendPayload;
+    if (acidPayload.result.status !== "OK") throw new Error("fixture must be OK");
+    for (const species of acidPayload.result.state.species) {
+      if (species.symbol === "HOAc") {
+        species.molality.value = 0.06;
+        species.reducedMolality.value = 0.06;
+        species.activity.value = 0.06;
+        species.amount.value = 0.06;
+      }
+      if (species.symbol === "OAc-") {
+        species.molality.value = 0.04;
+        species.reducedMolality.value = 0.04;
+        species.activity.value = 0.032;
+        species.amount.value = 0.04;
+      }
+    }
+    const incomplete = createNativeJsonAdapter(async (requestJson) =>
+      JSON.stringify(payloadForRequest(requestJson, {
+        result: acidPayload.result,
+      })),
+    );
+    await expect(incomplete.solve(request)).rejects.toThrow(/exact scientific expression set/i);
+  });
+
   it("surfaces backend initialization or execution failure without using TypeScript", async () => {
     const adapter = createNativeJsonAdapter(async () => {
       throw new Error("WASM unavailable");

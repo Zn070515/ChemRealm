@@ -111,9 +111,10 @@ failure invokes TS silently.
 **Files/packages:** `packages/sci/src/registry.ts`, native adapter, model/config
 identity, genesis composition, replay/legacy tests, docs.
 
-**Implementation detail:** Register TS 1.0.0 as exact legacy and Rust/WASM 2.0.0
-as native candidate. New genesis uses native only after the gate; legacy genesis
-uses TS. Lookup remains exact.
+**Implementation detail:** Register the TypeScript and Rust/WASM identities as
+separate candidates. Legacy genesis uses its exact recorded backend. A native
+v2 genesis/replay path must be explicitly demonstrated before any rollout
+policy can select native as the default for new worlds; lookup remains exact.
 
 **Tests/evidence:** Old-world replay; native-genesis identity; unavailable
 backend; mismatch/provenance; no silent re-solve; stable content hash tests.
@@ -157,7 +158,8 @@ browser tests, `docs/evidence/M5.md`.
 **Implementation detail:** Route World → Sci request → explicit WASM adapter →
 ScientificFrame → ObservableModel → DOM. Burette, curve, expressions, volume,
 and qualification flags share world/sequence identity. The opt-in route is now
-implemented; default backend rollout and final visual acceptance remain gated.
+implemented; the explicit v2 world/replay, artifact, hosted-CI, and default
+rollout decisions remain separately gated.
 
 **Tests/evidence:** Browser fixture; native backend identity; DOM readouts;
 frame/curve/symbolic identity; initialization/domain/failure states; privacy

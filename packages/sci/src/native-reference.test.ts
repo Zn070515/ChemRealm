@@ -17,6 +17,7 @@ import {
 } from "./native-backend.js";
 import { detLog10 } from "./deterministic-math.js";
 import { projectScientificState } from "./projection.js";
+import { expectedScientificExpressionEquationIds } from "./expressions.js";
 
 interface ReferenceSolute {
   readonly soluteId: string;
@@ -311,23 +312,19 @@ describe("native WASM canonical reference matrix", () => {
         }
       }
     }
-    const required: readonly string[] = [
-      "charge-balance",
-      "water-autoprotolysis",
-      "ionic-strength-fixed-point",
-      "davies-activity-coefficient",
-      "activity-definition",
-    ];
     for (const referenceCase of requests) {
       const request = toRequest(referenceCase.request);
       const execution = await adapter.solveWithScientificArtifacts(request, {
         sourceStateHash: `native-reference-${referenceCase.id}`,
       });
       expect(execution.result.status, `${referenceCase.id} status`).toBe("OK");
-      const equationIds = new Set<string>(execution.expressions.map((expression) => expression.equationId));
-      expect([...required].every((equationId) => equationIds.has(equationId))).toBe(true);
+      if (execution.result.status !== "OK") throw new Error("reference result must be OK");
+      expect(execution.expressions.map((expression) => expression.equationId)).toEqual(
+        expectedScientificExpressionEquationIds(execution.result.state),
+      );
       expect(execution.expressions.every((expression) =>
         expression.producerId === "scientific-core" &&
+        expression.producerVersion === VERSION_MANIFEST.scientific.acidBase.expressionProducerVersion &&
         expression.modelId === VERSION_MANIFEST.scientific.acidBase.id &&
         expression.modelVersion === VERSION_MANIFEST.scientific.acidBase.nativeVersion &&
         expression.sourceStateHash === `native-reference-${referenceCase.id}`

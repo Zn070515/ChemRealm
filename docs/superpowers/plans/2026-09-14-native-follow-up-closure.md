@@ -2,7 +2,18 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Close the remaining findings from `C:/Users/16275/Desktop/advices/ChatGPT.md` without overstating native M4-B or M5 completion.
+**Goal:** Record the native follow-up remediation and keep its historical
+evidence attributable without overstating native M4-B or M5 completion. The
+later semantic-closure round is tracked in
+`2026-09-14-native-semantic-closure.md`.
+
+**Handoff status:** The native REF matrix, host/WASM differential, pinned
+PHREEQC comparison, explicit opt-in composition, and local contract/toolchain
+checks listed by this plan have since been exercised and attested by their own
+commits. The remaining work is the explicit native supersession gate: v2
+WorldCreated creation/replay, final native browser/artifact evidence, and a
+hosted attestation for one committed baseline. The default-backend choice is a
+later rollout decision, not evidence for that gate.
 
 **Architecture:** Keep `packages/schema` as the only authored cross-boundary contract, with Rust consuming a generated or mechanically checked representation. Keep native execution separate from the accepted TypeScript legacy backend, and make all stage-gate decisions explicit in the canonical plan and ADRs. Strengthen refusal identity at the `@chemrealm/sci` adapter boundary without changing World Runtime semantics.
 
@@ -19,6 +30,8 @@
 - Davies symbolic expressions use reduced dimensionless `Î` with unit `1`.
 - Native backend failures must not silently fall back to the TypeScript backend.
 - Active version values are read from `contracts/version-manifest.json`; generated sources and guards must remain synchronized.
+- M0's two-toolchain evidence is historical; Rust/Cargo is a post-M0 amendment.
+- A native-default rollout is a post-supersession decision, never a gate input.
 
 ---
 

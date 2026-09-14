@@ -115,7 +115,7 @@ Never use a global Python interpreter for this project. See `CLAUDE.md` §21.5.
 
 ## Verify
 
-These exact commands appear in `CLAUDE.md`, `PLAN-0001`, and CI. They are
+These commands are the reproducible verification surface used by CI. They are
 platform-neutral deliberately: the Windows-only `py` launcher does not exist
 on the GitHub Actions Ubuntu runner.
 
@@ -128,6 +128,10 @@ pnpm depcruise          # architectural import rules
 pnpm guards             # proves those rules actually fail on a violation
 pnpm verify:world       # World Runtime determinism/browser contract guard
 pnpm verify:versions    # central version manifest and generated metadata drift
+pnpm verify:native-schema
+pnpm verify:native-ts-differential
+pnpm native:test         # Rust host contract tests
+pnpm native:check-wasm   # Rust/WASM compilation boundary
 pnpm artifacts          # no third-party origin (AC-P5), no API route (AC-P1)
 pnpm lint
 
@@ -136,6 +140,12 @@ uv sync
 uv run pytest
 uv run python tools/check_acceptance_coverage.py
 ```
+
+The native differential command compares the accepted TypeScript adapter with
+the release WASM adapter across the complete REF, ORACLE, and adversarial
+request matrix. It is evidence for compatibility, not a claim that the two
+backend identities are the same or that the native supersession gate has
+passed.
 
 `pnpm guards` is worth knowing about: `depcruise` passing on a clean tree only
 shows nothing violates the rules *today*. The guard builds a violating tree in

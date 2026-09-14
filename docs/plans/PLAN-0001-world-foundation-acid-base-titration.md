@@ -84,7 +84,7 @@ Additionally, the owner must resolve before their milestones:
 
 | M | Title | Depends on | Primary risk |
 |---|---|---|---|
-| M0 | Repository foundation | — | Three toolchains with explicit CI boundaries |
+| M0 | Repository foundation | — | Two-toolchain baseline with explicit CI boundaries; native toolchain is a later amendment |
 | M1 | Schema and units | M0 | Getting the contract wrong early |
 | M2 | Event runtime and replay | M1 | Determinism |
 | M3 | Solver adapter contract | M1 | Over- or under-designing the envelope |
@@ -115,8 +115,10 @@ other, where the cross-language contract from ADR-0001 actually works, and where
 the architectural rules are enforced by the build rather than by review.
 
 The most important thing M0 proves is **not** that packages exist. It is that
-**the repository's three toolchains coexist in one CI run and a forbidden
-import fails the build.**
+**the original repository's two toolchains coexist in one CI run and a
+forbidden import fails the build.** Rust/Cargo was introduced later and is
+evidenced separately in [`native-toolchain-amendment.md`](../evidence/native-toolchain-amendment.md);
+later evidence must not be attributed retroactively to M0.
 Both are load-bearing assumptions of ADR-0001 and ADR-0006.
 
 ### Files and modules

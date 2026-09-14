@@ -2,6 +2,7 @@ use chemrealm_sci_core::{
     det_exp10, det_log10, solve_canonical_json, MODEL_ID, MODEL_VERSION,
     NATIVE_BRIDGE_SCHEMA_VERSION, SCIENTIFIC_EXPRESSION_SCHEMA_VERSION, SCIENTIFIC_SCHEMA_VERSION,
 };
+use serde::Deserialize;
 use serde_json::{json, Value};
 
 fn hcl_request(amount: f64) -> Value {
@@ -35,6 +36,51 @@ fn deterministic_math_matches_pinned_vectors() {
     assert!((det_log10(1.0) - 0.0).abs() <= f64::EPSILON);
     assert!((det_log10(0.1) + 1.0).abs() < 1e-15);
     assert!((det_exp10(-1e-1) - 0.7943282347242815).abs() < 1e-15);
+}
+
+#[derive(Debug, Deserialize)]
+struct MathCorpus {
+    log10: Vec<MathVector>,
+    exp10: Vec<MathVector>,
+}
+
+#[derive(Debug, Deserialize)]
+struct MathVector {
+    input: f64,
+    expected: String,
+}
+
+fn ordered_bits(value: f64) -> i128 {
+    let bits = value.to_bits();
+    let sign = 1_u64 << 63;
+    if bits & sign == 0 {
+        (sign | bits) as i128
+    } else {
+        sign as i128 - (bits & !sign) as i128
+    }
+}
+
+fn assert_within_one_ulp(actual: f64, expected: &str) {
+    let expected = expected.parse::<f64>().expect("corpus expected value");
+    let distance = (ordered_bits(actual) - ordered_bits(expected)).abs();
+    assert!(
+        distance <= 1,
+        "{actual:?} is {distance} ulps from {expected:?}"
+    );
+}
+
+#[test]
+fn deterministic_math_matches_shared_arbitrary_precision_corpus() {
+    let corpus: MathCorpus = serde_json::from_str(include_str!(
+        "../../../packages/sci/test/math/deterministic-math-ulp.json"
+    ))
+    .expect("pinned deterministic math corpus is valid JSON");
+    for vector in corpus.log10 {
+        assert_within_one_ulp(det_log10(vector.input), &vector.expected);
+    }
+    for vector in corpus.exp10 {
+        assert_within_one_ulp(det_exp10(vector.input), &vector.expected);
+    }
 }
 
 #[test]

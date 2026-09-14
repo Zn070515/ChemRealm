@@ -7,9 +7,9 @@
 ## Context
 
 M4 S3 verified the TypeScript implementation of the v0 acid-base model. M5
-composition now consumes a bound frame, but the scientific producer is still
-TypeScript and the Scientific Core expression producer does not yet list every
-equation used by the self-consistent activity solve. A native backend is
+composition now consumes a bound frame, and both Scientific Core producers
+must list the complete applicable equation set used by the self-consistent
+activity solve. A native backend is
 acceptable only if it preserves the same Scientific Reality and gives the
 browser a shared implementation.
 
@@ -178,21 +178,25 @@ The backend supersession gate is binary:
 4. REF-1…REF-10, adversarial cases, and ORACLE sweep are rerun with declared
    tolerances and explicit disagreement disposition.
 5. No disagreement is averaged, hidden, or converted into domain refusal.
-6. Existing v1 worlds replay through v1; new worlds bind v2 only after explicit
-   registration and validation.
+6. Existing v1 worlds replay through v1; an explicit v2 WorldCreated creation
+   and replay path is demonstrated without changing v1 lookup or history.
 7. WASM/backend failures and scientific failures remain distinct, with no
    silent TS fallback.
 8. M5 production composition/browser evidence consumes native through
    `@chemrealm/sci` without direct cross-core coupling.
-9. Rust/WASM artifacts are reproducible and attested in hosted CI.
+9. Rust/WASM artifacts are reproducible and attested in hosted CI for the same
+   committed native baseline as the preceding world/replay and browser evidence.
 
 ## Rollout/migration
 
 This is a backend identity migration, not an in-place rewrite of old worlds.
 The TypeScript adapter remains a legacy/replay and differential implementation.
-The native version becomes default only after the supersession evidence is
-complete. Any persisted schema change receives its own version and migration;
-backend replacement must not rewrite genesis content hashes.
+The supersession evidence must first establish explicit v2 world creation and
+replay, complete native production composition/browser behaviour, and exact
+artifact/hosted-CI identity. Only a later owner-approved rollout amendment may
+make the native version default for new worlds. Any persisted schema change
+receives its own version and migration; backend replacement must not rewrite
+genesis content hashes.
 
 ## Open questions
 

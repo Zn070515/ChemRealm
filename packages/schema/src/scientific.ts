@@ -44,7 +44,11 @@
 import { z } from "zod";
 
 import { VERSION_MANIFEST } from "./generated/versions.js";
-import { quantityOfDimension, toCanonical } from "./quantity.js";
+import {
+  canonicalQuantityOfDimension,
+  quantityOfDimension,
+  toCanonical,
+} from "./quantity.js";
 import {
   activity,
   activityCoefficient,
@@ -545,6 +549,41 @@ export function serializeSolveRequest(request: SolveRequest): SolveRequestDto {
   });
 }
 
+/**
+ * Canonical request representation consumed by the Rust/WASM ABI.
+ *
+ * `SolveRequestSchema` is intentionally an authoring-facing wire contract:
+ * it accepts equivalent units and the DTO bridge canonicalizes them. A native
+ * executor is a second language boundary and cannot perform that authoring
+ * normalization implicitly, so its envelope uses this stricter schema.
+ */
+const NativeSolveRequestSoluteSchema = z.discriminatedUnion("mode", [
+  z.strictObject({
+    soluteId: z.string().min(1),
+    amount: canonicalQuantityOfDimension("amount"),
+    mode: z.literal("fully-dissociated"),
+  }),
+  z.strictObject({
+    soluteId: z.string().min(1),
+    amount: canonicalQuantityOfDimension("amount"),
+    mode: z.literal("monoprotic-equilibrium"),
+    ka: canonicalQuantityOfDimension("dimensionless"),
+  }),
+]);
+
+export const NativeSolveRequestSchema = z.strictObject({
+  schemaVersion: z.literal(SCIENTIFIC_SCHEMA_VERSION),
+  waterMass: canonicalQuantityOfDimension("mass"),
+  liquidVolume: canonicalQuantityOfDimension("volume"),
+  solutes: z.array(NativeSolveRequestSoluteSchema),
+  temperature: canonicalQuantityOfDimension("temperature"),
+  indicators: z.array(z.strictObject({
+    indicatorId: z.string().min(1),
+    kaIn: canonicalQuantityOfDimension("dimensionless"),
+  })),
+});
+export type NativeSolveRequestDto = z.infer<typeof NativeSolveRequestSchema>;
+
 // ---------------------------------------------------------------------------
 // SolveResult
 // ---------------------------------------------------------------------------
@@ -620,7 +659,7 @@ export type NativeExecutionContextDto = z.infer<
 /** The only public request shape accepted by the Rust/WASM bridge. */
 export const NativeSolveEnvelopeSchema = z.strictObject({
   bridgeSchemaVersion: z.literal(NATIVE_BRIDGE_SCHEMA_VERSION),
-  request: SolveRequestSchema,
+  request: NativeSolveRequestSchema,
   context: NativeExecutionContextSchema,
 });
 export type NativeSolveEnvelopeDto = z.infer<typeof NativeSolveEnvelopeSchema>;

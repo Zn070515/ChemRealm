@@ -4,14 +4,84 @@ import {
   type ScientificExpressionEquationId,
   type ScientificExpressionSubstitution,
   type ScientificExpression,
+  type ScientificState,
 } from "@chemrealm/schema";
 
-import type { ScientificFrame } from "./frame.js";
 import { detLog10 } from "./deterministic-math.js";
 
 /** Version of the Scientific Core's expression producer contract. */
 export const SCIENTIFIC_EXPRESSION_PRODUCER_VERSION =
   VERSION_MANIFEST.scientific.acidBase.expressionProducerVersion;
+
+export const BASE_SCIENTIFIC_EXPRESSION_EQUATION_IDS = [
+  "charge-balance",
+  "water-autoprotolysis",
+  "ionic-strength-fixed-point",
+  "davies-activity-coefficient",
+  "activity-definition",
+] as const satisfies readonly ScientificExpressionEquationId[];
+
+export interface ScientificExpressionSource {
+  readonly scientificState: ScientificState;
+  readonly sourceStateHash: string;
+}
+
+/** Return the exact equation set applicable to a solved v0 state. */
+export function expectedScientificExpressionEquationIds(
+  state: Pick<ScientificState, "species">,
+): readonly ScientificExpressionEquationId[] {
+  const hasAcidFamily = state.species.some(
+    (entry) =>
+      (entry.symbol === "HOAc" || entry.symbol === "OAc-") &&
+      entry.molality > 0,
+  );
+  return hasAcidFamily
+    ? [...BASE_SCIENTIFIC_EXPRESSION_EQUATION_IDS, "acid-family-equilibrium", "acid-family-balance"]
+    : BASE_SCIENTIFIC_EXPRESSION_EQUATION_IDS;
+}
+
+/**
+ * Validate the complete producer contract at an execution boundary.
+ * Presence of a few familiar equation IDs is not enough: a backend must emit
+ * the exact applicable set once, with the manifest-pinned producer identity.
+ */
+export function assertScientificExpressionSet(
+  expressions: readonly ScientificExpression[],
+  state: Pick<ScientificState, "species">,
+  modelId: string,
+  modelVersion: string,
+  sourceStateHash: string,
+): void {
+  const expected = expectedScientificExpressionEquationIds(state);
+  if (expressions.length !== expected.length) {
+    throw new TypeError("scientific execution returned an inexact scientific expression set");
+  }
+  const actualIds = expressions.map((expression) => expression.equationId);
+  const actualCounts = new Map<string, number>();
+  for (const expression of expressions) {
+    actualCounts.set(
+      expression.equationId,
+      (actualCounts.get(expression.equationId) ?? 0) + 1,
+    );
+    if (expression.producerVersion !== SCIENTIFIC_EXPRESSION_PRODUCER_VERSION) {
+      throw new TypeError("scientific expression producer version mismatch");
+    }
+    if (
+      expression.modelId !== modelId ||
+      expression.modelVersion !== modelVersion ||
+      expression.sourceStateHash !== sourceStateHash ||
+      expression.schemaVersion !== SCIENTIFIC_EXPRESSION_SCHEMA_VERSION
+    ) {
+      throw new TypeError("scientific expression identity mismatch");
+    }
+  }
+  if (
+    expected.some((id) => actualCounts.get(id) !== 1) ||
+    actualIds.some((id) => !expected.includes(id as (typeof expected)[number]))
+  ) {
+    throw new TypeError("scientific execution returned an inexact scientific expression set");
+  }
+}
 
 function finite(value: number, name: string): number {
   if (!Number.isFinite(value)) throw new RangeError(`${name} must be finite`);
@@ -23,7 +93,7 @@ function format(value: number): string {
 }
 
 function speciesValue(
-  frame: ScientificFrame,
+  frame: ScientificExpressionSource,
   symbol: string,
   field: "reducedMolality" | "molality" | "activity" | "activityCoefficient",
 ): number {
@@ -50,7 +120,7 @@ function substituted(
 }
 
 function makeExpression(
-  frame: ScientificFrame,
+  frame: ScientificExpressionSource,
   equationId: ScientificExpressionEquationId,
   formula: string,
   expression: string,
@@ -88,7 +158,7 @@ function makeExpression(
  * result is still a presentation record, not a second solver.
  */
 export function createScientificExpressions(
-  frame: ScientificFrame,
+  frame: ScientificExpressionSource,
 ): readonly ScientificExpression[] {
   const h = speciesValue(frame, "H+", "molality");
   const na = speciesValue(frame, "Na+", "molality");
@@ -221,11 +291,11 @@ export function createScientificExpressions(
 
 /** Native/legacy adapters use this producer without constructing a frame. */
 export function createScientificExpressionsFromState(
-  state: ScientificFrame["scientificState"],
+  state: ScientificState,
   sourceStateHash: string,
 ): readonly ScientificExpression[] {
   return createScientificExpressions({
     scientificState: state,
     sourceStateHash,
-  } as ScientificFrame);
+  });
 }

@@ -16,12 +16,14 @@ async function document(relativePath) {
   return readFile(new URL(relativePath, root), "utf8");
 }
 
-const [adr0001, adr0014, readme, plan, m5Evidence, m5Plan, m5Spec, m5CompositionSpec] =
+const [adr0001, adr0014, readme, plan, m0Evidence, nativeAmendment, m5Evidence, m5Plan, m5Spec, m5CompositionSpec] =
   await Promise.all([
     document("docs/adr/0001-repository-and-workspace-strategy.md"),
     document("docs/adr/0014-native-scientific-core-and-wasm-deployment.md"),
     document("README.md"),
     document("docs/plans/PLAN-0001-world-foundation-acid-base-titration.md"),
+    document("docs/evidence/M0.md"),
+    document("docs/evidence/native-toolchain-amendment.md"),
     document("docs/evidence/M5.md"),
     document("docs/superpowers/plans/2026-09-13-m5-production-composition.md"),
     document("docs/superpowers/specs/2026-09-13-m5-contract-remediation.md"),
@@ -55,6 +57,24 @@ must(
   /\| M6 \|[^\n]*\|[^\n]*M5 S3[^\n]*M4-B S3[^\n]*\|/i,
   "canonical M6 milestone depends on M5 S3 and M4-B S3",
 );
+must(plan, /M0 \| Repository foundation[^\n]*Two-toolchain baseline/i,
+  "canonical PLAN preserves M0's historical two-toolchain scope");
+must(plan, /original repository's two toolchains/i,
+  "canonical PLAN does not retroactively attribute Rust to M0");
+must(m0Evidence, /two-toolchain/i,
+  "M0 evidence remains a two-toolchain historical packet");
+must(nativeAmendment, /Post-M0 Native Toolchain Amendment Evidence/i,
+  "native toolchain has a separate post-M0 evidence packet");
+must(nativeAmendment, /must not be cited as evidence[\s\S]{0,120}M0 two-toolchain/i,
+  "native amendment explicitly avoids retroactive M0 credit");
+must(m5Evidence, /Post-baseline semantic remediation attestation/i,
+  "M5 retains a post-baseline remediation attestation");
+must(m5Evidence, /Implementation baseline:[\s\S]{0,120}fdfec91/i,
+  "M5 preserves its historical implementation baseline");
+must(m5Evidence, /post-baseline remediation[\s\S]{0,240}841262d/i,
+  "M5 records the later semantic remediation commit");
+must(m5Evidence, /841262d[\s\S]{0,100}#115/i,
+  "M5 records the hosted CI attestation for the later remediation");
 for (const [name, text] of [
   ["M5 evidence", m5Evidence],
   ["M5 plan", m5Plan],

@@ -23,16 +23,25 @@ TypeScript `1.0.0` M4 S3 baseline.
 | Native WASM canonical REF matrix | PASS locally | `packages/sci/src/native-reference.test.ts` runs REF-1…REF-10 through the real release WASM and checks independent values, analytic identities, charge conservation, scale bound, projection, and the complete native expression set |
 | Native adversarial semantic fixture | PASS locally | `packages/sci/src/native-reference.test.ts` verifies the dilute HOAc water-equilibrium result and rejects the recorded Henderson–Hasselbalch shortcut |
 | Native host ↔ WASM differential matrix | PASS locally | `pnpm verify:native-differential` compares the complete host/WASM payload for 42 requests across REF, ORACLE, and adversarial fixture groups |
+| Native WASM ↔ accepted TypeScript differential matrix | PASS locally | `pnpm verify:native-ts-differential` compares status, species, activities, projections, and indicators across every REF, ORACLE, and adversarial request; backend identities remain distinct |
 | Native WASM ↔ PHREEQC oracle comparison | PASS locally | `M4-oracle-sweep-report.json` records 10/10 native-WASM-to-pinned-PHREEQC comparisons, signed differences, model identity, toolchain identity, and the bounded-offset/no-equivalence disposition |
 | Native governance boundary | PASS locally | `pnpm verify:native-governance` |
 
 ## Still required for native supersession S3
 
-The following evidence is intentionally not claimed by this packet:
+The following prerequisites must be evidenced before any separate rollout
+decision. They are not satisfied merely by saying that native will become the
+default after the gate:
 
-- native backend as the default new-world path after the supersession gate;
+- explicit v2 native WorldCreated creation and replay, with v1 exact lookup
+  still preserved;
 - complete native World → ScientificFrame → Observable → DOM/browser acceptance packet;
-- final native artifact and hosted-CI attestation for the supersession gate.
+- final native artifact identity and hosted-CI attestation for that exact
+  committed baseline.
+
+Only after those prerequisites pass may a subsequent owner decision choose a
+native-default rollout policy for new worlds. Default selection is an outcome
+of supersession acceptance, never one of its prerequisites.
 
 The native PHREEQC comparison is an independently executed bounded comparison,
 not a claim that the native model and PHREEQC are equivalent. Its signed offset
@@ -53,6 +62,8 @@ pnpm native:test
 pnpm native:clippy
 pnpm native:check-wasm
 pnpm build
+pnpm verify:native-differential
+pnpm verify:native-ts-differential
 CHEMREALM_REQUIRE_PHREEQC=1 uv run python tools/oracle/reference/run_m4_validation.py \
   --output docs/evidence/M4-oracle-sweep-report.json
 pnpm exec vitest run apps/web/src/composition.test.ts

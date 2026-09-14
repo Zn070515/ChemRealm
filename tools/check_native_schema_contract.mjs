@@ -40,6 +40,22 @@ function unionRequiredProperties(schema) {
   );
 }
 
+function unitConstraint(schema) {
+  const unit = schema?.properties?.unit;
+  if (unit?.const !== undefined) return [unit.const];
+  if (Array.isArray(unit?.enum)) return unit.enum;
+  return [];
+}
+
+function requireCanonicalUnit(schema, path, expected, failures) {
+  const actual = unitConstraint(schema);
+  if (actual.length !== 1 || actual[0] !== expected) {
+    failures.push(
+      `native schema ${path} must require canonical unit ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`,
+    );
+  }
+}
+
 function structFields(source, name) {
   const match = source.match(new RegExp(`struct\\s+${name}\\s*\\{([\\s\\S]*?)\\n\\}`, "m"));
   if (match === null) return null;
@@ -111,6 +127,58 @@ const payloadDomainResult = payloadResult?.oneOf?.[1];
 const payloadNotConvergedResult = payloadResult?.oneOf?.[2];
 const payloadInvalidInputResult = payloadResult?.oneOf?.[3];
 
+// A field-name match is not enough for a cross-language ABI. Rust's
+// `require_unit` consumes canonical values only; keep the generated schema's
+// discriminated unit semantics mechanically aligned with that contract.
+requireCanonicalUnit(
+  envelopeRequest?.properties?.waterMass,
+  "request.waterMass",
+  "kg",
+  failures,
+);
+requireCanonicalUnit(
+  envelopeRequest?.properties?.liquidVolume,
+  "request.liquidVolume",
+  "L",
+  failures,
+);
+requireCanonicalUnit(
+  envelopeRequest?.properties?.temperature,
+  "request.temperature",
+  "K",
+  failures,
+);
+for (const [index, variant] of (requestSolute?.oneOf ?? []).entries()) {
+  requireCanonicalUnit(variant.properties?.amount, `request.solutes[${index}].amount`, "mol", failures);
+  if (variant.properties?.ka !== undefined) {
+    requireCanonicalUnit(variant.properties.ka, `request.solutes[${index}].ka`, "1", failures);
+  }
+}
+requireCanonicalUnit(
+  envelopeRequest?.properties?.indicators?.items?.properties?.kaIn,
+  "request.indicators[].kaIn",
+  "1",
+  failures,
+);
+for (const [field, unit] of [
+  ["water_mass", "kg"],
+  ["liquid_volume", "L"],
+  ["temperature", "K"],
+] ) {
+  if (!rustSource.includes(`require_unit(&request.${field}, "${unit}"`)) {
+    failures.push(`Rust RawRequest.${field} does not enforce canonical unit ${unit}`);
+  }
+}
+if (!rustSource.includes('require_unit(&solute.amount, "mol"')) {
+  failures.push("Rust RawSolute.amount does not enforce canonical unit mol");
+}
+if (!rustSource.includes('require_unit(ka, "1"')) {
+  failures.push("Rust equilibrium Ka does not enforce canonical unit 1");
+}
+if (!rustSource.includes('require_unit(&indicator.ka_in, "1"')) {
+  failures.push("Rust indicator Ka does not enforce canonical unit 1");
+}
+
 for (const [name, properties, structName] of [
   ["quantity", { value: {}, unit: {} }, "Quantity"],
   ["request solute", unionRequiredProperties(requestSolute), "RawSolute"],
@@ -170,6 +238,22 @@ if (
   ).length === 0
 ) {
   failures.push("self-test: removing a nested expression field was not detected");
+}
+
+const damagedEnvelope = structuredClone(envelope);
+damagedEnvelope.properties.request.properties.waterMass.properties.unit = {
+  enum: ["kg", "g"],
+  type: "string",
+};
+const damagedUnitFailures = [];
+requireCanonicalUnit(
+  damagedEnvelope.properties.request.properties.waterMass,
+  "request.waterMass",
+  "kg",
+  damagedUnitFailures,
+);
+if (damagedUnitFailures.length === 0) {
+  failures.push("self-test: widening a native unit constraint was not detected");
 }
 
 if (failures.length > 0) {

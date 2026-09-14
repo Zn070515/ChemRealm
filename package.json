@@ -22,6 +22,7 @@
     "verify:native-evidence": "node tools/check_native_evidence.mjs",
     "verify:native-schema": "node tools/check_native_schema_contract.mjs",
     "verify:native-differential": "node tools/oracle/reference/run_native_differential.mjs",
+    "verify:native-ts-differential": "node tools/oracle/reference/run_native_ts_differential.mjs",
     "generate:versions": "node tools/generate_version_sources.mjs",
     "verify:m4-contracts": "node tools/check_m4_contract_consistency.mjs",
     "verify:m5-contracts": "node tools/check_m5_contract_consistency.mjs",

@@ -34,9 +34,7 @@
                 "additionalProperties": false,
                 "properties": {
                   "unit": {
-                    "enum": [
-                      "1"
-                    ],
+                    "const": "1",
                     "type": "string"
                   },
                   "value": {
@@ -62,11 +60,7 @@
           "additionalProperties": false,
           "properties": {
             "unit": {
-              "enum": [
-                "L",
-                "mL",
-                "uL"
-              ],
+              "const": "L",
               "type": "string"
             },
             "value": {
@@ -93,10 +87,7 @@
                     "additionalProperties": false,
                     "properties": {
                       "unit": {
-                        "enum": [
-                          "mol",
-                          "mmol"
-                        ],
+                        "const": "mol",
                         "type": "string"
                       },
                       "value": {
@@ -132,10 +123,7 @@
                     "additionalProperties": false,
                     "properties": {
                       "unit": {
-                        "enum": [
-                          "mol",
-                          "mmol"
-                        ],
+                        "const": "mol",
                         "type": "string"
                       },
                       "value": {
@@ -152,9 +140,7 @@
                     "additionalProperties": false,
                     "properties": {
                       "unit": {
-                        "enum": [
-                          "1"
-                        ],
+                        "const": "1",
                         "type": "string"
                       },
                       "value": {
@@ -192,10 +178,7 @@
           "additionalProperties": false,
           "properties": {
             "unit": {
-              "enum": [
-                "K",
-                "degC"
-              ],
+              "const": "K",
               "type": "string"
             },
             "value": {
@@ -212,11 +195,7 @@
           "additionalProperties": false,
           "properties": {
             "unit": {
-              "enum": [
-                "kg",
-                "g",
-                "mg"
-              ],
+              "const": "kg",
               "type": "string"
             },
             "value": {
