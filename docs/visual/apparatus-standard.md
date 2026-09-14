@@ -115,8 +115,11 @@ about where the light comes from read as a collage, not a scene.
 
 - The palette must be defined as tokens, not literals in components.
 - Indicator colours (phenolphthalein pink, methyl orange red/yellow) are the one
-  place where saturated colour is required. They must be checkable against a
-  labelled reference swatch, because the *colour is the observation*.
+  place where saturated colour is required. They must be checkable against the
+  labelled reference swatches in
+  [`indicator-palettes.json`](reference/indicator-palettes.json) and
+  [`indicator-reference-swatches.svg`](reference/indicator-reference-swatches.svg),
+  because the *colour is the observation*.
 - The scene must be legible under a light and a dark background setting if both
   are offered. `GOAL.md` §15 names light/dark/background contrast tests.
 - Colour must never be the sole channel carrying scientific information.

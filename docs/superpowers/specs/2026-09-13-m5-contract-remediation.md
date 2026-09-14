@@ -102,10 +102,12 @@ runtime geometry is restored.
 Indicator palette selection is an empirical observable transform, not an
 equilibrium calculation. The palette is keyed by the declared indicator
 identity and contains named acid/base endpoint tokens plus an explicit
-observable provenance note. Provenance-bearing empirical colour literals are
-allowed only in this declared palette catalogue; render components may not
-embed ad-hoc chemical colours. The ratio remains the only scientific numeric
-input to interpolation.
+observable provenance note. Each token reference must resolve to the checked-in
+`docs/visual/reference/indicator-palettes.json` registry, its source claims,
+review record, and labelled SVG swatches. Provenance-bearing empirical colour
+literals are allowed only in this declared palette catalogue; render components
+may not embed ad-hoc chemical colours. The ratio remains the only scientific
+numeric input to interpolation.
 
 Scientific expressions are schema-owned, equation-bearing records with current
 numeric substitutions, expression classification, model identity, and

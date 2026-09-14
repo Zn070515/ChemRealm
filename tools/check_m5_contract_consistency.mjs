@@ -32,6 +32,16 @@ const [spec, childSpec, productionSpec, evidence, plan, adr, visualStandard, com
 const observableSource = await document("packages/render/src/observable/index.ts");
 const levelSource = await document("packages/render/src/observable/level.ts");
 const frameSource = await document("packages/sci/src/frame.ts");
+const tokenSource = await document("packages/render/src/observable/tokens.ts");
+const indicatorPaletteManifest = JSON.parse(
+  await document("docs/visual/reference/indicator-palettes.json"),
+);
+const indicatorSwatches = await document(
+  "docs/visual/reference/indicator-reference-swatches.svg",
+);
+const indicatorPaletteReview = await document(
+  "docs/visual/reference/indicator-palette-review.md",
+);
 
 const failures = [];
 const versionManifest = await readVersionManifest();
@@ -40,6 +50,12 @@ function must(text, pattern, message) {
 }
 function mustNot(text, pattern, message) {
   if (pattern.test(text)) failures.push(`stale: ${message}`);
+}
+function requirePalette(condition, message) {
+  if (!condition) failures.push(`missing: ${message}`);
+}
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 must(
@@ -152,6 +168,79 @@ must(adr, /DOM\/Pixi[^\n]*Renderer|actual drawing[^\n]*Renderer/i, "ADR-0006 rec
 must(adr, /projectScientificFrame|sourceStateHash/i, "ADR-0006 records frame identity at the composition boundary");
 must(visualStandard, /provenance-bearing[^\n]*identity-keyed[^\n]*palette|identity-keyed[^\n]*palette[^\n]*provenance-bearing/i, "apparatus standard confines empirical colour literals to the declared palette");
 mustNot(visualStandard, /No hard-coded chemical colour literal anywhere in the render path/i, "apparatus standard does not prohibit the declared empirical palette");
+
+mustNot(tokenSource, /owner-approved-v0-indicator-reference-swatch/i, "palette references do not point to an unresolvable placeholder");
+requirePalette(
+  indicatorPaletteManifest.catalogId === "indicator-palette",
+  "indicator palette reference artifact has the declared catalog identity",
+);
+requirePalette(
+  indicatorPaletteManifest.swatchArtifact ===
+    "docs/visual/reference/indicator-reference-swatches.svg",
+  "indicator palette manifest names the checked-in swatch artifact",
+);
+requirePalette(
+  indicatorPaletteManifest.reviewRecord ===
+    "docs/visual/reference/indicator-palette-review.md",
+  "indicator palette manifest names the checked-in contract review record",
+);
+requirePalette(
+  Array.isArray(indicatorPaletteManifest.entries) &&
+    indicatorPaletteManifest.entries.length > 0,
+  "indicator palette manifest contains entries",
+);
+for (const entry of indicatorPaletteManifest.entries ?? []) {
+  const referenceId = `indicator-palette/${entry.indicatorId}`;
+  requirePalette(
+    entry.referenceId === referenceId,
+    `${referenceId} has a stable reference identity`,
+  );
+  must(
+    tokenSource,
+    new RegExp(`reference: \\"${escapeRegExp(entry.referenceId)}\\"`),
+    `${referenceId} is used by the render palette token`,
+  );
+  requirePalette(
+    entry.review?.status === "m5-contract-reviewed" &&
+      entry.review?.record === indicatorPaletteManifest.reviewRecord,
+    `${referenceId} has an M5 contract review record`,
+  );
+  requirePalette(
+    indicatorPaletteReview.includes(entry.referenceId),
+    `${referenceId} is named by the checked-in review record`,
+  );
+  requirePalette(
+    Array.isArray(entry.sources) &&
+      entry.sources.length > 0 &&
+      entry.sources.every(
+        (source) =>
+          typeof source.url === "string" && source.url.startsWith("https://") &&
+          typeof source.claim === "string" && source.claim.length > 0,
+      ),
+    `${referenceId} has source claims with stable HTTPS references`,
+  );
+  for (const [formName, form] of [
+    ["acid", entry.acidForm],
+    ["base", entry.baseForm],
+  ]) {
+    const escapedSwatchId = escapeRegExp(form?.swatchId ?? "");
+    const escapedLabel = escapeRegExp(form?.label ?? "");
+    requirePalette(
+      new RegExp(
+        `<g[^>]*id=["']${escapedSwatchId}["'][^>]*data-indicator-id=["']${escapeRegExp(entry.indicatorId)}["'][^>]*data-form=["']${formName}["']`,
+        "i",
+      ).test(indicatorSwatches),
+      `${referenceId} ${formName} swatch identity is labelled in the SVG artifact`,
+    );
+    requirePalette(
+      new RegExp(
+        `<g[^>]*id=["']${escapedSwatchId}["'][\\s\\S]*?<text[^>]*>${escapedLabel}</text>`,
+        "i",
+      ).test(indicatorSwatches),
+      `${referenceId} ${formName} swatch has a human-readable label`,
+    );
+  }
+}
 
 if (failures.length > 0) {
   console.error("M5 contract consistency check failed:");

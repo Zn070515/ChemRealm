@@ -28,7 +28,7 @@ export const INDICATOR_COLOUR_PALETTES = Object.freeze({
     baseForm: Object.freeze({ red: 235, green: 92, blue: 164, alpha: 1 }),
     provenance: Object.freeze({
       kind: "empirical-observable" as const,
-      reference: "owner-approved-v0-indicator-reference-swatch",
+      reference: "indicator-palette/phenolphthalein",
       note: "Endpoint tokens are an empirical presentation approximation.",
     }),
   }),
@@ -38,7 +38,7 @@ export const INDICATOR_COLOUR_PALETTES = Object.freeze({
     baseForm: Object.freeze({ red: 248, green: 210, blue: 54, alpha: 1 }),
     provenance: Object.freeze({
       kind: "empirical-observable" as const,
-      reference: "owner-approved-v0-indicator-reference-swatch",
+      reference: "indicator-palette/methyl-orange",
       note: "Endpoint tokens are an empirical presentation approximation.",
     }),
   }),

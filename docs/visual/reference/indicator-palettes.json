@@ -1,0 +1,63 @@
+{
+  "catalogId": "indicator-palette",
+  "purpose": "M5 empirical indicator presentation contract; endpoint colours are labelled qualitative observations, not equilibrium calculations or calibrated instrument measurements.",
+  "swatchArtifact": "docs/visual/reference/indicator-reference-swatches.svg",
+  "reviewRecord": "docs/visual/reference/indicator-palette-review.md",
+  "entries": [
+    {
+      "referenceId": "indicator-palette/phenolphthalein",
+      "indicatorId": "phenolphthalein",
+      "acidForm": {
+        "label": "acid form · colourless / near-white",
+        "swatchId": "phenolphthalein-acid",
+        "hex": "#f5f5f5"
+      },
+      "baseForm": {
+        "label": "base form · pink",
+        "swatchId": "phenolphthalein-base",
+        "hex": "#eb5ca4"
+      },
+      "sources": [
+        {
+          "claim": "Phenolphthalein is colourless in acidic solution and pink in basic solution.",
+          "source": "Chemistry LibreTexts, Acid-Base Indicators",
+          "url": "https://chem.libretexts.org/Bookshelves/Physical_and_Theoretical_Chemistry_Textbook_Maps/Supplemental_Modules_%28Physical_and_Theoretical_Chemistry%29/Equilibria/Acid-Base_Equilibria/6._Acid-Base_Indicators"
+        }
+      ],
+      "review": {
+        "status": "m5-contract-reviewed",
+        "record": "docs/visual/reference/indicator-palette-review.md"
+      }
+    },
+    {
+      "referenceId": "indicator-palette/methyl-orange",
+      "indicatorId": "methyl-orange",
+      "acidForm": {
+        "label": "acid form · red",
+        "swatchId": "methyl-orange-acid",
+        "hex": "#d23030"
+      },
+      "baseForm": {
+        "label": "base form · yellow",
+        "swatchId": "methyl-orange-base",
+        "hex": "#f8d236"
+      },
+      "sources": [
+        {
+          "claim": "Methyl orange changes through a red-to-orange-to-yellow range, with yellow dominant in alkaline solution.",
+          "source": "Chemistry LibreTexts, Acid-Base Titrations",
+          "url": "https://chem.libretexts.org/Courses/Gettysburg_College/Chem_108%3A_Textbook/14%3A_Acid-Base_Equilibria/14.10%3A_Acid-Base_Titrations"
+        },
+        {
+          "claim": "Methyl orange is an acidic-range indicator with a red/yellow endpoint convention.",
+          "source": "Chemistry LibreTexts, Acid-Base Titration",
+          "url": "https://chem.libretexts.org/Courses/University_of_British_Columbia/CHEM_100%3A_Foundations_of_Chemistry/14%3A_Acids_and_Bases/14.06%3A_AcidBase_Titration"
+        }
+      ],
+      "review": {
+        "status": "m5-contract-reviewed",
+        "record": "docs/visual/reference/indicator-palette-review.md"
+      }
+    }
+  ]
+}

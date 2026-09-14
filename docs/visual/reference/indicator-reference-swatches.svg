@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="250" viewBox="0 0 720 250" role="img" aria-labelledby="title description">
+  <title id="title">ChemRealm v0 indicator reference swatches</title>
+  <desc id="description">Labelled qualitative endpoint swatches for phenolphthalein and methyl orange. These are presentation references, not calibrated colour measurements.</desc>
+  <g id="phenolphthalein-acid" data-indicator-id="phenolphthalein" data-form="acid">
+    <rect x="20" y="45" width="320" height="70" rx="8" fill="#f5f5f5" stroke="#555" />
+    <text x="35" y="86" font-family="sans-serif" font-size="18">acid form · colourless / near-white</text>
+  </g>
+  <g id="phenolphthalein-base" data-indicator-id="phenolphthalein" data-form="base">
+    <rect x="380" y="45" width="320" height="70" rx="8" fill="#eb5ca4" stroke="#555" />
+    <text x="395" y="86" font-family="sans-serif" font-size="18">base form · pink</text>
+  </g>
+  <g id="methyl-orange-acid" data-indicator-id="methyl-orange" data-form="acid">
+    <rect x="20" y="150" width="320" height="70" rx="8" fill="#d23030" stroke="#555" />
+    <text x="35" y="191" font-family="sans-serif" font-size="18" fill="#fff">acid form · red</text>
+  </g>
+  <g id="methyl-orange-base" data-indicator-id="methyl-orange" data-form="base">
+    <rect x="380" y="150" width="320" height="70" rx="8" fill="#f8d236" stroke="#555" />
+    <text x="395" y="191" font-family="sans-serif" font-size="18">base form · yellow</text>
+  </g>
+</svg>
