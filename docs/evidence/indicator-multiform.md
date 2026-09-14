@@ -1,6 +1,7 @@
 # Candidate evidence — ordinary phenolphthalein three-form model
 
-**Status:** S2 candidate evidence; owner-facing closure is pending. This packet
+**Status:** S2 candidate evidence; implementation and committed-baseline
+attestation are complete, while owner-facing closure is pending. This packet
 does not promote the candidate to a production adapter, M4 replacement, or
 optical colour model.
 
@@ -39,6 +40,7 @@ pnpm verify:indicator-multiform-reference
 pnpm exec vitest run packages/sci/src/acidbase/multiform.test.ts apps/web/src/composition.test.ts
 cargo test --manifest-path native/sci-core/Cargo.toml --test indicator_multiform
 uv run pytest -q
+```
 
 ## Local artifact ledger
 
@@ -56,11 +58,27 @@ The central version source is `contracts/version-manifest.json`; generated
 sources are checked by `pnpm verify:versions`. Strong-acid orange/yellow is
 documented as `CHEMICAL_FORMS_UNAVAILABLE` only; no orange RGB or spectrum is
 implemented or enabled by this candidate.
-```
-
 The native differential commands require the freshly built
 `packages/sci/dist/wasm/chemrealm_sci_core.wasm`; the package build regenerates
 the shared native contract source and WASM artifact from the central manifest.
+
+## Committed-baseline attestation
+
+The candidate implementation and this evidence packet are bound to the
+following committed baseline:
+
+| Item | Value |
+|---|---|
+| Git baseline | `1b91dc1afce56c97adc8e9287dedc17169527a58` |
+| Hosted CI run | `34853566212` — success |
+| Hosted CI URL | `https://github.com/Zn070515/ChemRealm/actions/runs/34853566212` |
+
+The hosted run completed installation, TypeScript and test typechecks, build,
+native/WASM checks, ordinary and coupled differential checks, full tests,
+schema/version/governance guards, browser checks, Python reference tests,
+PHREEQC validation, and acceptance-coverage mapping. This attestation proves
+the committed implementation checks; it does not constitute owner acceptance,
+production-adapter rollout, or an S3 claim.
 
 ## Boundary and non-claims
 
@@ -74,5 +92,6 @@ the shared native contract source and WASM artifact from the central manifest.
 - The TypeScript↔WASM differential is an implementation-consistency check, not
   an independent scientific reference. The Decimal derivation is separate from
   `packages/sci` and owns the MF fixture semantics.
-- Final schema/spec acceptance, committed-baseline attestation, and any future
-  production-adapter rollout require a separate owner review.
+- Final schema/spec acceptance and any future production-adapter rollout
+  require a separate owner review. The committed-baseline attestation above
+  is complete for this handoff, but it does not replace that review.

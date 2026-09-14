@@ -1,11 +1,14 @@
 # Indicator multiform scientific model implementation plan
 
-> **Status:** Steps 1–7 are implemented locally for the owner-accepted ordinary-aqueous
-> three-form candidate. MF-1…MF-10 fixtures, independent checks, coupled
-> TypeScript↔WASM differential evidence, and a real World Runtime replay test
-> are present, and the candidate evidence packet records the reproducible local
-> artifact ledger. Final owner-facing closure is not complete. Strong-acid
-> cation/orange remains refusal-only and is not authorized for implementation.
+> **Status:** Steps 1–7 are implemented and attested for the owner-accepted
+> ordinary-aqueous three-form candidate at committed baseline
+> `1b91dc1afce56c97adc8e9287dedc17169527a58`; hosted CI run
+> `34853566212` completed successfully. MF-1…MF-10 fixtures, independent
+> checks, coupled TypeScript↔WASM differential evidence, and a real World
+> Runtime replay test are present. Formal owner-facing closure, candidate SPEC
+> acceptance, production-adapter rollout, and optical enablement remain
+> separate pending decisions. Strong-acid cation/orange remains refusal-only
+> and is not authorized for implementation.
 
 ## Objective
 
@@ -144,11 +147,13 @@ packet; owner-facing closure remains separate from implementation.
 
 Update canonical SPEC revision and central versions only when the accepted
 implementation contract actually changes. Record model/config/reference hashes,
-source provenance, command output, and limitations. Existing worlds retain
-their persisted model identity; no migration invents historic form fractions or
-optical data. **Complete locally:** the candidate evidence packet records the
-contract, reference-manifest, and WASM hashes plus the reproducible commands.
-Owner-facing closure and any production-adapter rollout remain pending.
+source provenance, command output, limitations, and the committed CI baseline.
+Existing worlds retain their persisted model identity; no migration invents
+historic form fractions or optical data. **Complete for this candidate
+handoff:** the evidence packet records the contract, reference-manifest, WASM,
+commit, and hosted-CI hashes plus reproducible commands. Formal owner-facing
+closure, candidate SPEC acceptance, and any production-adapter rollout remain
+separate decisions and are not implied by the attestation.
 
 ## Final acceptance matrix
 
@@ -180,10 +185,27 @@ TypeScript/Rust sources are checked by `pnpm verify:versions`. Strong-acid
 orange/yellow is documented as a refusal boundary only and has no RGB,
 spectrum, or production solver path in this candidate.
 
+## Committed-baseline handoff
+
+The candidate implementation and evidence packet are attested at:
+
+| Item | Value |
+|---|---|
+| Git baseline | `1b91dc1afce56c97adc8e9287dedc17169527a58` |
+| Hosted CI run | `34853566212` — success |
+| Hosted CI URL | `https://github.com/Zn070515/ChemRealm/actions/runs/34853566212` |
+
+The hosted run covers installation, TypeScript and test typechecks, build,
+native/WASM checks, ordinary and coupled differential checks, full tests,
+schema/version/governance guards, browser checks, Python reference tests,
+PHREEQC validation, and acceptance-coverage mapping. This is committed
+implementation evidence; it is not an owner acceptance or an S3 claim.
+
 ## Current stop condition
 
-The owner has accepted the ordinary-aqueous candidate scope, so implementation
-may proceed for that scope. Do not claim this candidate as S3, switch the
-existing production adapter, or enable an optical tint until the final
-committed evidence packet and owner-facing closure are complete. Strong-acid
-cation/orange remains refusal-only.
+The owner has accepted the ordinary-aqueous candidate scope, and the local
+implementation/evidence handoff is complete. Do not switch the existing
+production adapter, claim this candidate as S3, or enable an optical tint
+until the owner separately accepts the candidate SPEC/evidence packet and a
+production rollout decision is recorded. Strong-acid cation/orange remains
+refusal-only.
