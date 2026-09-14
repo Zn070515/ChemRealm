@@ -35,6 +35,7 @@ export function scientificState(): ScientificState {
     ionicStrengthReduced: reducedIonicStrength(0.01),
     modelPh: ph(2.0969),
     indicators: [{ indicatorId: "phenolphthalein", protonationRatio: 0.5 }],
+    indicatorObservations: [],
     validity: {
       inDomain: true,
       withinProposedAccuracyEnvelope: true,

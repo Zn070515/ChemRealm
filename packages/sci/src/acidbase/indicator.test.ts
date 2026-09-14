@@ -2,11 +2,17 @@ import { describe, expect, it } from "vitest";
 import {
   activity,
   activityCoefficient,
+  mol,
   thermodynamicConstant,
+  VERSION_MANIFEST,
   type ActivityCoefficient,
   type ThermodynamicConstant,
 } from "@chemrealm/schema";
-import { protonationRatio, type IndicatorInput } from "./indicator.js";
+import {
+  chemicalFormObservation,
+  protonationRatio,
+  type IndicatorInput,
+} from "./indicator.js";
 
 const INDICATOR: IndicatorInput = {
   indicatorId: "phenolphthalein",
@@ -16,6 +22,37 @@ const INDICATOR: IndicatorInput = {
 const ANION_GAMMA = activityCoefficient(0.8);
 
 describe("indicator equilibrium ratio", () => {
+  it("returns no chemical observation when no conserved optical dose is present", () => {
+    expect(
+      chemicalFormObservation(
+        INDICATOR,
+        VERSION_MANIFEST.scientific.acidBase.id,
+        VERSION_MANIFEST.scientific.acidBase.legacyVersion,
+        "sha256:state",
+      ),
+    ).toBeUndefined();
+  });
+
+  it("refuses unsupported multi-form chemistry without inventing forms", () => {
+    const observation = chemicalFormObservation(
+      { ...INDICATOR, totalAmount: mol(5e-7) },
+      VERSION_MANIFEST.scientific.acidBase.id,
+      VERSION_MANIFEST.scientific.acidBase.legacyVersion,
+      "sha256:state",
+    );
+
+    expect(observation).toEqual({
+      status: "CHEMICAL_FORMS_UNAVAILABLE",
+      indicatorId: "phenolphthalein",
+      totalAmount: mol(5e-7),
+      reason: expect.stringMatching(/multi-form|chemical model/i),
+      modelId: VERSION_MANIFEST.scientific.acidBase.id,
+      modelVersion: VERSION_MANIFEST.scientific.acidBase.legacyVersion,
+      sourceReplayHash: "sha256:state",
+    });
+    expect(JSON.stringify(observation)).not.toMatch(/lactone|quinoid|orange/i);
+  });
+
   it("uses the activity-based protonation relation", () => {
     const ratio = protonationRatio(
       {

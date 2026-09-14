@@ -33,6 +33,7 @@ function state(
     ionicStrengthReduced: reducedIonicStrength(0.2),
     modelPh: ph(1.1064),
     indicators: [],
+    indicatorObservations: [],
     validity: {
       inDomain: true,
       withinProposedAccuracyEnvelope: true,

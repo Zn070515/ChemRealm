@@ -72,6 +72,7 @@ function validState(provenance: Partial<ScientificState["provenance"]> = {}): Sc
     ionicStrengthReduced: reducedIonicStrength(0),
     modelPh: ph(7),
     indicators: [],
+    indicatorObservations: [],
     validity: { inDomain: true, withinProposedAccuracyEnvelope: true },
     provenance: {
       modelId: "test-solver",

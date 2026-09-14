@@ -69,7 +69,7 @@ Scientific wire schema v2 introduced explicit numerical diagnostics:
 computed. Scientific wire schema v2 introduced explicit numerical diagnostics;
 v3 introduced the separation of accepted input components from equilibrium
 species; v5 adds the optional conserved indicator dose to a solve request. The
-current scientific wire schema is v5, with the number distributed from the
+current scientific wire schema is v6, with the number distributed from the
 central version manifest.
 A missing bracket or a
 numeric argument error is never reported with a fabricated zero residual.

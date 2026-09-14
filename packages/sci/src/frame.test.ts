@@ -32,6 +32,7 @@ function scientificState(): ScientificState {
     ionicStrengthReduced: reducedIonicStrength(0.2),
     modelPh: ph(1.1),
     indicators: [],
+    indicatorObservations: [],
     validity: {
       inDomain: true,
       withinProposedAccuracyEnvelope: true,

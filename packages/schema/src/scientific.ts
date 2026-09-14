@@ -365,6 +365,82 @@ export const IndicatorStateSchema = z.strictObject({
 export type IndicatorStateDto = z.infer<typeof IndicatorStateSchema>;
 export type IndicatorState = IndicatorStateDto;
 
+const IndicatorChemicalFormFractionSchema = z.strictObject({
+  formId: z.string().min(1),
+  fraction: z.number().finite().nonnegative().max(1),
+});
+export type IndicatorChemicalFormFraction = z.infer<
+  typeof IndicatorChemicalFormFractionSchema
+>;
+
+const ChemicalFormsOkSchema = z.strictObject({
+  status: z.literal("CHEMICAL_FORMS_OK"),
+  indicatorId: z.string().min(1),
+  totalAmount: canonicalQuantityOfDimension("amount"),
+  forms: z.array(IndicatorChemicalFormFractionSchema).min(1),
+  modelId: z.string().min(1),
+  modelVersion: z.string().min(1),
+  sourceReplayHash: z.string().min(1),
+}).superRefine((observation, context) => {
+  const formIds = new Set<string>();
+  let total = 0;
+  for (const [index, form] of observation.forms.entries()) {
+    if (formIds.has(form.formId)) {
+      context.addIssue({
+        code: "custom",
+        path: ["forms", index, "formId"],
+        message: "chemical form IDs must be unique",
+      });
+    }
+    formIds.add(form.formId);
+    total += form.fraction;
+  }
+  if (Math.abs(total - 1) > 1e-12) {
+    context.addIssue({
+      code: "custom",
+      path: ["forms"],
+      message: "chemical form fractions must sum to one",
+    });
+  }
+});
+
+const ChemicalFormsUnavailableSchema = z.strictObject({
+  status: z.literal("CHEMICAL_FORMS_UNAVAILABLE"),
+  indicatorId: z.string().min(1),
+  totalAmount: canonicalQuantityOfDimension("amount").optional(),
+  reason: z.string().min(1),
+  modelId: z.string().min(1),
+  modelVersion: z.string().min(1),
+  sourceReplayHash: z.string().min(1),
+});
+
+export const IndicatorChemicalObservationSchema = z.union([
+  ChemicalFormsOkSchema,
+  ChemicalFormsUnavailableSchema,
+]);
+export type IndicatorChemicalObservationDto = z.infer<
+  typeof IndicatorChemicalObservationSchema
+>;
+export type IndicatorChemicalObservation =
+  | {
+      readonly status: "CHEMICAL_FORMS_OK";
+      readonly indicatorId: string;
+      readonly totalAmount: Mol;
+      readonly forms: readonly IndicatorChemicalFormFraction[];
+      readonly modelId: string;
+      readonly modelVersion: string;
+      readonly sourceReplayHash: string;
+    }
+  | {
+      readonly status: "CHEMICAL_FORMS_UNAVAILABLE";
+      readonly indicatorId: string;
+      readonly totalAmount?: Mol;
+      readonly reason: string;
+      readonly modelId: string;
+      readonly modelVersion: string;
+      readonly sourceReplayHash: string;
+    };
+
 // ---------------------------------------------------------------------------
 // ScientificState
 // ---------------------------------------------------------------------------
@@ -383,6 +459,7 @@ export const ScientificStateSchema = z.strictObject({
    */
   modelPh: quantityOfDimension("dimensionless"),
   indicators: z.array(IndicatorStateSchema),
+  indicatorObservations: z.array(IndicatorChemicalObservationSchema),
   validity: ValidityStatusSchema,
   provenance: ProvenanceSchema,
 });
@@ -405,6 +482,7 @@ export interface ScientificState {
   ionicStrengthReduced: ReducedIonicStrength;
   modelPh: Ph;
   indicators: readonly IndicatorState[];
+  indicatorObservations: readonly IndicatorChemicalObservation[];
   validity: ValidityStatus;
   provenance: Provenance;
 }
@@ -423,6 +501,30 @@ export function parseScientificState(dto: ScientificStateDto): ScientificState {
       indicatorId: i.indicatorId,
       protonationRatio: i.protonationRatio,
     })),
+    indicatorObservations: dto.indicatorObservations.map((observation) => {
+      if (observation.status === "CHEMICAL_FORMS_OK") {
+        return {
+          status: observation.status,
+          indicatorId: observation.indicatorId,
+          totalAmount: mol(toCanonical(observation.totalAmount).value),
+          forms: observation.forms.map((form) => ({ ...form })),
+          modelId: observation.modelId,
+          modelVersion: observation.modelVersion,
+          sourceReplayHash: observation.sourceReplayHash,
+        };
+      }
+      return {
+        status: observation.status,
+        indicatorId: observation.indicatorId,
+        ...(observation.totalAmount === undefined
+          ? {}
+          : { totalAmount: mol(toCanonical(observation.totalAmount).value) }),
+        reason: observation.reason,
+        modelId: observation.modelId,
+        modelVersion: observation.modelVersion,
+        sourceReplayHash: observation.sourceReplayHash,
+      };
+    }),
     validity: dto.validity,
     provenance: parseProvenance(dto.provenance),
   };
@@ -780,6 +882,30 @@ export function serializeScientificState(
     ionicStrengthReduced: { value: state.ionicStrengthReduced.value, unit: "1" },
     modelPh: { value: state.modelPh.value, unit: "1" },
     indicators: state.indicators.map((indicator) => ({ ...indicator })),
+    indicatorObservations: state.indicatorObservations.map((observation) => {
+      if (observation.status === "CHEMICAL_FORMS_OK") {
+        return {
+          status: observation.status,
+          indicatorId: observation.indicatorId,
+          totalAmount: { value: observation.totalAmount as number, unit: "mol" },
+          forms: observation.forms.map((form) => ({ ...form })),
+          modelId: observation.modelId,
+          modelVersion: observation.modelVersion,
+          sourceReplayHash: observation.sourceReplayHash,
+        };
+      }
+      return {
+        status: observation.status,
+        indicatorId: observation.indicatorId,
+        ...(observation.totalAmount === undefined
+          ? {}
+          : { totalAmount: { value: observation.totalAmount as number, unit: "mol" } }),
+        reason: observation.reason,
+        modelId: observation.modelId,
+        modelVersion: observation.modelVersion,
+        sourceReplayHash: observation.sourceReplayHash,
+      };
+    }),
     validity: { ...state.validity },
     provenance: { ...state.provenance, parameters: { ...state.provenance.parameters } },
   };

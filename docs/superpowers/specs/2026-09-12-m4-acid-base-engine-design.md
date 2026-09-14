@@ -8,7 +8,7 @@ is recorded as the accepted revision-13 amendment in `SPEC-0001` and
 as the accepted revision-14 amendment in `SPEC-0001` and `ADR-0012`.
 The scientific wire result diagnostics are the accepted revision-15 amendment:
 scientific schema v2 introduced an explicit numerical failure code and reason.
-The current scientific wire schema is v5; scientific wire schema v3 introduced
+The current scientific wire schema is v6; scientific wire schema v3 introduced
 the separation of accepted input components from equilibrium species. The
 cross-system compatibility
 closure is the accepted revision-16 amendment: actual scenario components

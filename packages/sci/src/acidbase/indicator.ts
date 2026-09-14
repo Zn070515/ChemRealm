@@ -1,12 +1,40 @@
 import type {
   Activity,
   ActivityCoefficient,
+  IndicatorChemicalObservation,
+  Mol,
   ThermodynamicConstant,
 } from "@chemrealm/schema";
 
 export interface IndicatorInput {
   readonly indicatorId: string;
   readonly kaIn: ThermodynamicConstant;
+  readonly totalAmount?: Mol;
+}
+
+/**
+ * The v0 acid-base model exposes only the accepted monoprotic indicator
+ * approximation. It must not reinterpret that ratio as a multi-form optical
+ * chemistry result. A future model may return `CHEMICAL_FORMS_OK` here after
+ * its forms, constants, domain, and references are independently accepted.
+ */
+export function chemicalFormObservation(
+  indicator: IndicatorInput,
+  modelId: string,
+  modelVersion: string,
+  sourceReplayHash: string,
+): IndicatorChemicalObservation | undefined {
+  if (indicator.totalAmount === undefined) return undefined;
+  return {
+    status: "CHEMICAL_FORMS_UNAVAILABLE",
+    indicatorId: indicator.indicatorId,
+    totalAmount: indicator.totalAmount,
+    reason:
+      "the v0 acid-base model does not resolve this indicator's multi-form chemical model",
+    modelId,
+    modelVersion,
+    sourceReplayHash,
+  };
 }
 
 function asRecord(value: unknown, name: string): Record<string, unknown> {

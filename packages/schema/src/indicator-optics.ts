@@ -307,62 +307,14 @@ export function parseFrozenOpticalPathSnapshot(
   return path;
 }
 
-const IndicatorChemicalFormFractionSchema = z.strictObject({
-  formId: z.string().min(1),
-  fraction: z.number().finite().nonnegative().max(1),
-});
-export type IndicatorChemicalFormFraction = z.infer<
-  typeof IndicatorChemicalFormFractionSchema
->;
-
-const ChemicalFormsOkSchema = z.strictObject({
-  status: z.literal("CHEMICAL_FORMS_OK"),
-  indicatorId: z.string().min(1),
-  totalAmount: canonicalQuantityOfDimension("amount"),
-  forms: z.array(IndicatorChemicalFormFractionSchema).min(1),
-  modelId: z.string().min(1),
-  modelVersion: z.string().min(1),
-  sourceReplayHash: HashSchema,
-}).superRefine((observation, context) => {
-  const formIds = new Set<string>();
-  let total = 0;
-  for (const [index, form] of observation.forms.entries()) {
-    if (formIds.has(form.formId)) {
-      context.addIssue({
-        code: "custom",
-        path: ["forms", index, "formId"],
-        message: "chemical form IDs must be unique",
-      });
-    }
-    formIds.add(form.formId);
-    total += form.fraction;
-  }
-  if (Math.abs(total - 1) > 1e-12) {
-    context.addIssue({
-      code: "custom",
-      path: ["forms"],
-      message: "chemical form fractions must sum to one",
-    });
-  }
-});
-
-const ChemicalFormsUnavailableSchema = z.strictObject({
-  status: z.literal("CHEMICAL_FORMS_UNAVAILABLE"),
-  indicatorId: z.string().min(1),
-  totalAmount: canonicalQuantityOfDimension("amount").optional(),
-  reason: z.string().min(1),
-  modelId: z.string().min(1),
-  modelVersion: z.string().min(1),
-  sourceReplayHash: HashSchema,
-});
-
-export const IndicatorChemicalObservationSchema = z.union([
-  ChemicalFormsOkSchema,
-  ChemicalFormsUnavailableSchema,
-]);
-export type IndicatorChemicalObservation = z.infer<
-  typeof IndicatorChemicalObservationSchema
->;
+export {
+  IndicatorChemicalObservationSchema,
+} from "./scientific.js";
+export type {
+  IndicatorChemicalFormFraction,
+  IndicatorChemicalObservation,
+  IndicatorChemicalObservationDto,
+} from "./scientific.js";
 
 const TransmittanceSampleSchema = z.strictObject({
   wavelengthNanometres: z.number().int().positive(),

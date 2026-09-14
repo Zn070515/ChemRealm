@@ -162,6 +162,14 @@ function validateScientificExecution(
     throw new TypeError("non-OK scientific execution emitted expressions");
   }
   if (result.status === "OK") {
+    for (const observation of result.state.indicatorObservations) {
+      if (
+        observation.modelId !== model.id ||
+        observation.modelVersion !== model.version
+      ) {
+        throw new TypeError("scientific indicator observation identity mismatch");
+      }
+    }
     assertScientificExpressionSet(
       expressions,
       result.state,
@@ -208,6 +216,16 @@ export function assertSolveResultIdentity(
     }
     if (!hasExactParameters(provenance.parameters, solverConfig.parameters)) {
       mismatches.push("parameters");
+    }
+  }
+
+  for (const observation of state.indicatorObservations) {
+    if (
+      observation.modelId !== model.id ||
+      observation.modelVersion !== model.version
+    ) {
+      mismatches.push("indicatorObservations");
+      break;
     }
   }
 

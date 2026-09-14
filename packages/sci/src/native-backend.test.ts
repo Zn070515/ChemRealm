@@ -80,6 +80,7 @@ function payload(overrides: Partial<NativeBackendPayload> = {}): NativeBackendPa
         ionicStrengthReduced: { value: 0.1, unit: "1" },
         modelPh: { value: 1.1, unit: "1" },
         indicators: [],
+        indicatorObservations: [],
         validity: { inDomain: true, withinProposedAccuracyEnvelope: true },
         provenance: {
           modelId: "acidbase-monoprotic-davies",
@@ -200,6 +201,27 @@ describe("native scientific backend facade", () => {
     expect(execution.requestHash).not.toBe(sourceStateHash);
     expect(envelope.context.sourceStateHash).toBe(sourceStateHash);
     expect(execution.expressions[0]?.sourceStateHash).toBe(sourceStateHash);
+  });
+
+  it("rejects a chemical observation whose source identity disagrees with the execution", async () => {
+    const adapter = createNativeJsonAdapter(async (requestJson) => {
+      const valid = structuredClone(payloadForRequest(requestJson)) as NativeBackendPayload;
+      if (valid.result.status !== "OK") throw new Error("fixture must be OK");
+      valid.result.state.indicatorObservations = [{
+        status: "CHEMICAL_FORMS_UNAVAILABLE",
+        indicatorId: "phenolphthalein",
+        totalAmount: { value: 5e-7, unit: "mol" },
+        reason: "test chemical coverage refusal",
+        modelId: VERSION_MANIFEST.scientific.acidBase.id,
+        modelVersion: VERSION_MANIFEST.scientific.acidBase.nativeVersion,
+        sourceReplayHash: "sha256:wrong-source",
+      }];
+      return JSON.stringify(valid);
+    });
+
+    await expect(adapter.solveWithScientificArtifacts(request, {
+      sourceStateHash: "sha256:expected-source",
+    })).rejects.toThrow(/indicator observation source identity/i);
   });
 
   it("rejects a payload from another backend version instead of selecting a fallback", async () => {
@@ -341,6 +363,48 @@ describe("native scientific backend facade", () => {
     const result = await adapter.solve(request);
 
     expect(result.status).toBe("OK");
+  });
+
+  it("preserves chemical-form refusal and source identity across the native bridge", async () => {
+    const candidate = buildAcidBaseSolveRequest({
+      waterMass: kilogram(1),
+      liquidVolume: litre(0.1),
+      temperature: kelvin(298.15),
+      componentAmounts: [{ componentId: "NaOH", amount: mol(0.1) }],
+      indicators: [{
+        indicatorId: "phenolphthalein",
+        kaIn: thermodynamicConstant(1e-9),
+      }],
+      indicatorAmounts: [{ indicatorId: "phenolphthalein", amount: mol(5e-7) }],
+      solverConfig: buildAcidBaseSolverConfig(),
+    });
+    const sourceStateHash = "sha256:indicator-native-parity";
+    const [typescriptExecution, nativeExecution] = await Promise.all([
+      createAcidBaseAdapter().solveWithScientificArtifacts(candidate, { sourceStateHash }),
+      nativeAdapter.solveWithScientificArtifacts(candidate, { sourceStateHash }),
+    ]);
+
+    expect(typescriptExecution.result.status).toBe("OK");
+    expect(nativeExecution.result.status).toBe("OK");
+    if (typescriptExecution.result.status !== "OK" || nativeExecution.result.status !== "OK") {
+      throw new Error("expected both scientific executions to succeed");
+    }
+    const withoutModelIdentity = (observation: {
+      readonly modelId: string;
+      readonly modelVersion: string;
+      readonly [key: string]: unknown;
+    }) => {
+      const { modelId: _modelId, modelVersion: _modelVersion, ...semanticObservation } = observation;
+      return semanticObservation;
+    };
+    expect(nativeExecution.result.state.indicatorObservations.map(withoutModelIdentity))
+      .toEqual(typescriptExecution.result.state.indicatorObservations.map(withoutModelIdentity));
+    expect(nativeExecution.result.state.indicatorObservations[0]).toMatchObject({
+      status: "CHEMICAL_FORMS_UNAVAILABLE",
+      sourceReplayHash: sourceStateHash,
+      modelId: VERSION_MANIFEST.scientific.acidBase.id,
+      modelVersion: VERSION_MANIFEST.scientific.acidBase.nativeVersion,
+    });
   });
 
   it.each([

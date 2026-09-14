@@ -128,6 +128,49 @@ fn host_bridge_returns_schema_shaped_state_and_complete_base_equations() {
 }
 
 #[test]
+fn host_bridge_reports_unavailable_multiform_chemistry_for_an_optical_dose() {
+    let request = hcl_request(0.1).tap_mut(|value| {
+        value["indicators"] = json!([{
+            "indicatorId": "phenolphthalein",
+            "kaIn": { "value": 1e-9, "unit": "1" },
+            "totalAmount": { "value": 5e-7, "unit": "mol" }
+        }]);
+    });
+    let response = solve(request);
+    assert_eq!(response["result"]["status"], "OK");
+    assert_eq!(
+        response["result"]["state"]["indicatorObservations"][0]["status"],
+        "CHEMICAL_FORMS_UNAVAILABLE"
+    );
+    assert_eq!(
+        response["result"]["state"]["indicatorObservations"][0]["indicatorId"],
+        "phenolphthalein"
+    );
+    assert_eq!(
+        response["result"]["state"]["indicatorObservations"][0]["totalAmount"],
+        json!({ "value": 5e-7, "unit": "mol" })
+    );
+    assert_eq!(
+        response["result"]["state"]["indicatorObservations"][0]["modelId"],
+        MODEL_ID
+    );
+    assert_eq!(
+        response["result"]["state"]["indicatorObservations"][0]["modelVersion"],
+        MODEL_VERSION
+    );
+    assert_eq!(
+        response["result"]["state"]["indicatorObservations"][0]["sourceReplayHash"],
+        "sha256:test-world-state"
+    );
+    assert!(
+        response["result"]["state"]["indicatorObservations"][0]["reason"]
+            .as_str()
+            .unwrap()
+            .contains("multi-form")
+    );
+}
+
+#[test]
 fn native_identity_is_backed_by_the_checked_in_model_contract() {
     let contract: Value =
         serde_json::from_str(include_str!(env!("CHEMREALM_NATIVE_MODEL_CONTRACT_PATH")))

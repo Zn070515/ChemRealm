@@ -24,7 +24,7 @@ import type {
 } from "../adapter.js";
 import { createScientificExpressionsFromState } from "../expressions.js";
 import { detLog10 } from "../deterministic-math.js";
-import { protonationRatio } from "./indicator.js";
+import { chemicalFormObservation, protonationRatio } from "./indicator.js";
 import { aggregateComponents, type AcidBaseComponentTotals } from "./catalog.js";
 import {
   ACID_BASE_MODEL_ID,
@@ -66,6 +66,8 @@ const SPECIES_FIELDS = [
   ["Na+", "sodium"],
   ["Cl-", "chloride"],
 ] as const satisfies readonly (readonly [string, keyof ReducedSpeciesMolalities])[];
+
+const UNBOUND_SOURCE_REPLAY_HASH = "sha256:unbound-scientific-request";
 
 function outOfDomain(
   descriptor: ModelDescriptor,
@@ -169,6 +171,7 @@ function buildScientificState(
   model: ModelDescriptor,
   solverConfig: SolverConfig,
   constants: AcidBaseConstants,
+  sourceReplayHash: string,
 ): ScientificState {
   const activities = daviesActivities(
     solved.ionicStrength,
@@ -201,6 +204,15 @@ function buildScientificState(
         activities.monovalentAnion,
       ),
     })),
+    indicatorObservations: request.indicators.flatMap((indicator) => {
+      const observation = chemicalFormObservation(
+        indicator,
+        model.id,
+        model.version,
+        sourceReplayHash,
+      );
+      return observation === undefined ? [] : [observation];
+    }),
     validity: {
       inDomain: true,
       withinProposedAccuracyEnvelope:
@@ -220,6 +232,7 @@ function solveRequest(
   request: SolveRequest,
   model: ModelDescriptor,
   solverConfig: SolverConfig,
+  sourceReplayHash: string,
 ): SolveResult {
   const violations = validateSolveRequest(request);
   if (violations.length > 0) {
@@ -261,7 +274,14 @@ function solveRequest(
     }
   }
 
-  const state = buildScientificState(request, reducedResult, model, solverConfig, constants);
+  const state = buildScientificState(
+    request,
+    reducedResult,
+    model,
+    solverConfig,
+    constants,
+    sourceReplayHash,
+  );
   return assertSolveResultIdentity({ status: "OK", state }, model, solverConfig);
 }
 
@@ -274,9 +294,15 @@ export function createAcidBaseAdapter(): ScientificExecutionAdapter {
     version: ACID_BASE_MODEL_VERSION,
     model,
     solverConfig,
-    solve: async (request) => solveRequest(request, model, solverConfig),
+    solve: async (request) =>
+      solveRequest(request, model, solverConfig, UNBOUND_SOURCE_REPLAY_HASH),
     solveWithScientificArtifacts: async (request, context) => {
-      const result = solveRequest(request, model, solverConfig);
+      const result = solveRequest(
+        request,
+        model,
+        solverConfig,
+        context.sourceStateHash,
+      );
       if (result.status !== "OK") {
         return {
           result,

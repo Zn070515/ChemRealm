@@ -91,7 +91,7 @@
           "type": "object"
         },
         "schemaVersion": {
-          "const": 4,
+          "const": 6,
           "type": "number"
         },
         "solutes": {

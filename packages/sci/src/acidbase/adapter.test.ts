@@ -125,6 +125,37 @@ describe("production acid-base SolverAdapter", () => {
     expect(state.indicators[0]?.protonationRatio).toBeGreaterThan(1);
   });
 
+  it("reports unavailable multi-form chemistry for an optically dosed indicator", async () => {
+    const adapter = createAcidBaseAdapter();
+    const execution = await adapter.solveWithScientificArtifacts(
+      request(
+        [{ soluteId: "NaOH", amount: mol(0.1), mode: "fully-dissociated" }],
+        [{
+          indicatorId: "phenolphthalein",
+          kaIn: thermodynamicConstant(1e-9),
+          totalAmount: mol(5e-7),
+        }],
+      ),
+      { sourceStateHash: "sha256:indicator-observation-test" },
+    );
+
+    expect(execution.result.status).toBe("OK");
+    if (execution.result.status !== "OK") throw new Error("expected an OK result");
+    expect(execution.result.state.indicatorObservations).toEqual([{
+      status: "CHEMICAL_FORMS_UNAVAILABLE",
+      indicatorId: "phenolphthalein",
+      totalAmount: 5e-7,
+      reason: expect.stringMatching(/multi-form|chemical model/i),
+      modelId: ACID_BASE_MODEL_ID,
+      modelVersion: ACID_BASE_MODEL_VERSION,
+      sourceReplayHash: "sha256:indicator-observation-test",
+    }]);
+    expect(execution.result.state.indicators[0]?.protonationRatio).toBeGreaterThan(0);
+    expect(JSON.stringify(execution.result.state.indicatorObservations)).not.toMatch(
+      /strong-acid-cation|orange/i,
+    );
+  });
+
   it.each([
     [
       "unsupported component",

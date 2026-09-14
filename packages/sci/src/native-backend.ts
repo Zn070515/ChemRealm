@@ -139,6 +139,11 @@ function parseNativePayload(
     throw new TypeError("native backend emitted expressions for a non-OK result");
   }
   if (result.status === "OK") {
+    for (const observation of result.state.indicatorObservations) {
+      if (observation.sourceReplayHash !== expectedSourceStateHash) {
+        throw new TypeError("native indicator observation source identity mismatch");
+      }
+    }
     assertScientificExpressionSet(
       expressions,
       result.state,

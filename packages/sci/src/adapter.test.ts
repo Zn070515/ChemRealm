@@ -50,6 +50,7 @@ function makeState(
     ionicStrengthReduced: reducedIonicStrength(0),
     modelPh: ph(7),
     indicators: [],
+    indicatorObservations: [],
     validity: {
       inDomain: true,
       withinProposedAccuracyEnvelope: true,

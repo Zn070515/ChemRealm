@@ -737,8 +737,9 @@ git commit -m "Resolve frozen indicator optical inputs at genesis"
 - Modify: `packages/schema/src/scientific.ts`
 - Modify: `packages/sci/src/acidbase/indicator.ts`
 - Modify: `packages/sci/src/acidbase/indicator.test.ts`
-- Modify: `packages/sci/src/acidbase/adapter.ts`
+- Modify: `packages/sci/src/acidbase/index.ts`
 - Modify: `packages/sci/src/acidbase/adapter.test.ts`
+- Modify: `packages/sci/src/identity.ts`
 - Modify: `packages/sci/src/result.ts`
 - Modify: `packages/sci/src/native-backend.ts`
 - Modify: `packages/sci/src/native-backend.test.ts`
@@ -749,7 +750,7 @@ git commit -m "Resolve frozen indicator optical inputs at genesis"
 - Consumes: solve-request indicator dose and Task 2 `IndicatorChemicalObservationSchema`.
 - Produces: `ScientificState.indicatorObservations: readonly IndicatorChemicalObservation[]` while retaining legacy `indicators[].protonationRatio` only for historical compatibility surfaces.
 
-- [ ] **Step 1: Write failing TS/native parity tests**
+- [x] **Step 1: Write failing TS/native parity tests**
 
 ```ts
 const state = await adapter.solveWithScientificArtifacts(requestWithPhenolphthaleinDose, identity);
@@ -769,7 +770,7 @@ Add a regression asserting that request pH/model pH cannot change an
 `UNAVAILABLE` observation into `CHEMICAL_FORMS_OK`, and that the present v0
 adapter cannot emit `strong-acid-cation` or any orange instruction.
 
-- [ ] **Step 2: Run focused tests and verify RED**
+- [x] **Step 2: Run focused tests and verify RED**
 
 ```text
 pnpm exec vitest run packages/sci/src/acidbase/indicator.test.ts packages/sci/src/acidbase/adapter.test.ts packages/sci/src/native-backend.test.ts
@@ -779,7 +780,7 @@ cargo test --manifest-path native/sci-core/Cargo.toml --test contract
 Expected: no indicator observation field exists and native JSON cannot preserve
 the new wire contract.
 
-- [ ] **Step 3: Implement conservative v0 semantics**
+- [x] **Step 3: Implement conservative v0 semantics**
 
 The v0 acid-base adapter continues to calculate its accepted monoprotic
 `protonationRatio`, but for every optically dosed indicator returns
@@ -788,7 +789,7 @@ chemical model. It must not relabel the existing HIn/In− ratio as lactone,
 quinoid dianion, or strong-acid cation. Serialize/parse the identical tagged
 result in TypeScript and Rust/WASM and add it to adapter provenance identity.
 
-- [ ] **Step 4: Run focused tests and verify GREEN**
+- [x] **Step 4: Run focused tests and verify GREEN**
 
 ```text
 pnpm exec vitest run packages/sci/src/acidbase/indicator.test.ts packages/sci/src/acidbase/adapter.test.ts packages/sci/src/native-backend.test.ts

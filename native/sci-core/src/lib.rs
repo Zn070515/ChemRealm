@@ -202,6 +202,7 @@ struct ScientificStateDto {
     ionic_strength_reduced: Quantity,
     model_ph: Quantity,
     indicators: Vec<IndicatorStateDto>,
+    indicator_observations: Vec<IndicatorChemicalObservationDto>,
     validity: ValidityStatusDto,
     provenance: ProvenanceDto,
 }
@@ -222,6 +223,19 @@ struct SpeciesStateDto {
 struct IndicatorStateDto {
     indicator_id: String,
     protonation_ratio: f64,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct IndicatorChemicalObservationDto {
+    status: &'static str,
+    indicator_id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    total_amount: Option<Quantity>,
+    reason: String,
+    model_id: &'static str,
+    model_version: &'static str,
+    source_replay_hash: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -1256,6 +1270,7 @@ fn solve_reduced(totals: Totals) -> Result<SolveSuccess, SolveFailure> {
 fn build_state(
     request: &ValidatedRequest<'_>,
     solved: SolveSuccess,
+    source_replay_hash: &str,
 ) -> Result<ScientificStateDto, SolveFailure> {
     let candidate = solved.candidate;
     let gamma = davies_gamma(candidate.ionic_strength)?;
@@ -1289,6 +1304,24 @@ fn build_state(
             protonation_ratio: indicator.ka_in.value / (hydrogen_activity * gamma),
         })
         .collect();
+    let indicator_observations = request
+        .request
+        .indicators
+        .iter()
+        .filter_map(|indicator| {
+            indicator.total_amount.as_ref().map(|total_amount| {
+                IndicatorChemicalObservationDto {
+                    status: "CHEMICAL_FORMS_UNAVAILABLE",
+                    indicator_id: indicator.indicator_id.clone(),
+                    total_amount: Some(quantity(total_amount.value, "mol")),
+                    reason: "the v0 acid-base model does not resolve this indicator's multi-form chemical model".to_string(),
+                    model_id: MODEL_ID,
+                    model_version: MODEL_VERSION,
+                    source_replay_hash: source_replay_hash.to_string(),
+                }
+            })
+        })
+        .collect();
     let mut parameters = BTreeMap::new();
     parameters.insert("Davies_A".to_string(), DAVIES_A);
     parameters.insert("Davies_b".to_string(), DAVIES_B);
@@ -1312,6 +1345,7 @@ fn build_state(
         ionic_strength_reduced: quantity(candidate.ionic_strength, "1"),
         model_ph: quantity(model_ph, "1"),
         indicators,
+        indicator_observations,
         validity: ValidityStatusDto {
             in_domain: true,
             within_proposed_accuracy_envelope: candidate.ionic_strength <= PROPOSED_ENVELOPE,
@@ -1575,7 +1609,7 @@ fn solve_payload(
                 result: not_converged(code, reason, iterations, residual),
                 expressions: vec![],
             },
-            Ok((_totals, solved)) => match build_state(&validated, solved) {
+            Ok((_totals, solved)) => match build_state(&validated, solved, &source_state_hash) {
                 Ok(state) => BackendPayload {
                     bridge_schema_version: NATIVE_BRIDGE_SCHEMA_VERSION,
                     backend: BackendIdentity {

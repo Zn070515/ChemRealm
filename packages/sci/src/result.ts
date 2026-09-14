@@ -20,4 +20,6 @@ export type {
   SolveResultDto,
   ScientificState,
   ScientificStateDto,
+  IndicatorChemicalObservation,
+  IndicatorChemicalObservationDto,
 } from "@chemrealm/schema";

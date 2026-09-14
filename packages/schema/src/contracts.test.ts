@@ -1536,6 +1536,7 @@ describe("DTOs parse into domain quantities, not bare numbers", () => {
         ionicStrengthReduced: { value: 0.1, unit: "1" },
         modelPh: { value: 1.05, unit: "1" },
         indicators: [],
+        indicatorObservations: [],
         validity: { inDomain: true, withinProposedAccuracyEnvelope: true },
         provenance: {
           modelId: "acidbase-monoprotic-davies",
