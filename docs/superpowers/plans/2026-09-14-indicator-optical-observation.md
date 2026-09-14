@@ -1065,7 +1065,7 @@ git commit -m "Record reviewed indicator optical profile data"
 - Consumes: Task 8 accepted form-specific spectrum packet.
 - Produces: only after a separate M4 scientific acceptance, `CHEMICAL_FORMS_OK` for one explicitly modelled indicator/form system.
 
-- [ ] **Step 1: Write the scientific sub-spec and reference matrix before solver code**
+- [x] **Step 1: Write the scientific sub-spec and reference matrix before solver code**
 
 The sub-spec must name every aqueous species/reaction, thermodynamic or
 conditional constant, activity convention, water convention, temperature and

@@ -3,11 +3,14 @@
 - **Status:** **Accepted through revision 20** — M4 S3 owner acceptance recorded
   on 2026-09-13 against the committed implementation baseline and CI attestation.
 - **Accepted baseline:** commit `8310c685`, `SPEC-0001` revision 6
-- **Current revision:** **27 Candidate** — indicator optical observation
-  authority and refusal-first optical boundary. Revisions 21–27 remain
+- **Current revision:** **28 Candidate** — indicator optical observation
+  authority and the candidate multi-form indicator scientific boundary.
+  Revisions 21–28 remain
   candidate amendments pending owner review; revision 27 adds the
   data-backed optical statuses, frozen optical inputs, and v0
-  strong-acid-phenolphthalein boundary recorded in the amendment table below.
+  strong-acid-phenolphthalein boundary; revision 28 adds the candidate
+  ordinary-aqueous multi-form model and explicit strong-acid refusal boundary
+  recorded in the amendment table below.
   Revisions 7–20 are accepted amendments; revisions 13–20 were accepted by
   the owner on 2026-09-13.
   See "Amendments since acceptance" below.
@@ -52,6 +55,7 @@
 | 25 | 2026-09-13 | M5 semantic composition closure: Scientific Core expressions are equation-bearing records with current numerical substitutions and explicit v0 omissions; acid-base component/mode/constant selection is owned by the Scientific Core request builder rather than web composition; curve x-values are cumulative committed source→target titrant delivery with an explicit initial zero point; burette derivation filters the same committed transfer relation; and the deterministic composition DOM exposes model/accuracy metadata from ObservableModel. | Candidate — owner review pending |
 | 26 | 2026-09-13 | Native Scientific Core/WASM backend supersession candidate: Rust becomes the next production implementation for new worlds after a dedicated differential/oracle gate; the exact TypeScript 1.0.0 adapter remains the legacy replay/reference backend; no silent cross-version fallback is allowed; Scientific Core expressions must include the ionic-strength fixed point, Davies activity relation, and `activity = γ · m̂` alongside existing equations; and the M4 scientific matrix plus M5 production composition must be rerun against the native backend before supersession. | Candidate — owner review pending |
 | 27 | 2026-09-14 | Indicator optical observation authority: the future data-backed optical boundary is refusal-first with `OPTICAL_MODEL_OK`, `OPTICAL_MODEL_OUT_OF_COVERAGE`, and `OPTICAL_MODEL_DATA_MISSING`; endpoint-RGB fallback is prohibited; genesis freezes indicator dose, optical profile, and optical path identity; chemical-form coverage remains distinct from optical coverage; and the v0 monoprotic model cannot emit strong-acid phenolphthalein orange. AC-O1–AC-O8 define the candidate optical contract. | Candidate — owner review pending |
+| 28 | 2026-09-14 | Candidate multi-form indicator scientific boundary: the initial ordinary-aqueous phenolphthalein model names `H₂In`, `HIn⁻`, and `In²⁻` with distinct `Ka_In_1`/`Ka_In_2`, coupled charge and ionic-strength treatment, complete fraction/balance evidence, and explicit refusal for the strong-acid cation and strong-base-altered forms. No numerical constants, solver implementation, or optical profile are admitted by this amendment until the dedicated sub-spec and independent reference matrix are owner-accepted. | Candidate — owner review pending |
 
 A revision bump is recorded here rather than only in the body because the header
 is what a reader checks before deciding whether the file they are reading is the
@@ -1853,6 +1857,25 @@ chemical-form model and covered optical profile.
 | AC-O6 | Indicator dose is conserved through world transfers and its replay identity is frozen. | world transfer, branch, migration, and replay tests |
 | AC-O7 | Renderer consumes tint/strength/status only and cannot treat a scientific pH or ratio as a colour instruction. | dependency and renderer-boundary tests |
 | AC-O8 | Optical-profile data, deterministic transform, replay, refusal, and browser inspection evidence are reproducible on the committed baseline. | committed-baseline verification packet and browser evidence |
+
+### Candidate revision 28 — multi-form indicator science
+
+Revision 28 is a candidate scientific extension, not an alteration of the
+accepted M4 v0 solver. The detailed contract is in
+[`2026-09-14-indicator-multiform-scientific-model.md`](../superpowers/specs/2026-09-14-indicator-multiform-scientific-model.md)
+and its independent reference matrix. Until the owner accepts that contract
+and its evidence plan:
+
+- ordinary aqueous phenolphthalein forms are specified as `H₂In`, `HIn⁻`, and
+  `In²⁻`, with separate source-backed constants and coupled balances;
+- `strong-acid-cation` and `strong-base-altered` remain explicit unavailable
+  cases, so the system cannot manufacture an orange result from a generic
+  acidic pH;
+- no existing monoprotic `Ka_in` may be reused as `Ka_In_1` or `Ka_In_2`;
+- no implementation may emit `CHEMICAL_FORMS_OK` for this candidate, and no
+  optical profile may be promoted from the Task 8 qualitative-only registry;
+- existing worlds retain their accepted solver identity and are not silently
+  migrated to this candidate.
 
 ### ACE
 

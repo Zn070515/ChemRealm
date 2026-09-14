@@ -41,8 +41,8 @@ must(
 );
 must(
   spec,
-  new RegExp(`\\| ${manifest.spec.currentRevision} \\|[^\\n]*indicator optical`, "i"),
-  "SPEC amendment history records the indicator-optical authority change",
+  /\| \d+ \|[^\n]*indicator optical observation authority/i,
+  "SPEC amendment history retains the indicator-optical authority change",
 );
 must(
   spec,
