@@ -74,6 +74,17 @@ describe("renderer-neutral scene state", () => {
     expect(Object.isFrozen(scene)).toBe(true);
     expect(scene.nodes.filter((node) => node.id.includes("ph-readout"))).toHaveLength(1);
     expect(scene.nodes.some((node) => node.id === "taught-ph-readout")).toBe(true);
+    const indicator = scene.nodes.find((node) => node.id === "indicator-0");
+    expect(indicator?.data).toMatchObject({
+      tintSrgb: [
+        expect.any(Number),
+        expect.any(Number),
+        expect.any(Number),
+      ],
+      tintStrength: expect.any(Number),
+      interpolation: "qualitative-srgb",
+    });
+    expect(indicator?.data).not.toHaveProperty("alpha");
   });
 
   it("swaps to a scientific model pH policy without emitting taught pH", () => {

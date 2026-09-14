@@ -11,7 +11,7 @@ import {
   type BuretteInput,
   type BuretteState,
 } from "./burette.js";
-import { mapIndicatorRatioToColor, type IndicatorColour } from "./color.js";
+import { mapIndicatorRatioToTint, type IndicatorTint } from "./color.js";
 import { buildCurve, type CurveFrame, type CurvePoint } from "./curve.js";
 import { formatModelPh, formatTaughtPh } from "./format.js";
 import {
@@ -55,7 +55,7 @@ export interface ObservableInput {
 export interface ObservableIndicator {
   readonly indicatorId: string;
   readonly protonationRatio: number;
-  readonly color: IndicatorColour;
+  readonly tint: IndicatorTint;
 }
 
 export interface ObservableReadouts {
@@ -124,7 +124,7 @@ export function buildObservableModel(input: ObservableInput): ObservableModel {
     return Object.freeze({
       indicatorId: indicator.indicatorId,
       protonationRatio: indicator.protonationRatio,
-      color: mapIndicatorRatioToColor(indicator.indicatorId, indicator.protonationRatio),
+      tint: mapIndicatorRatioToTint(indicator.indicatorId, indicator.protonationRatio),
     });
   });
 

@@ -216,6 +216,6 @@ describe("observable model", () => {
 
     const model = buildObservableModel(withMethylOrange);
     expect(model.indicators).toHaveLength(2);
-    expect(model.indicators[0]?.color).not.toEqual(model.indicators[1]?.color);
+    expect(model.indicators[0]?.tint).not.toEqual(model.indicators[1]?.tint);
   });
 });

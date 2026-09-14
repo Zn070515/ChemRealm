@@ -2,7 +2,7 @@ import {
   SCIENTIFIC_MODEL_HYDROGEN_ION_POLICY,
   TAUGHT_HYDROGEN_ION_POLICY,
   toRenderState,
-  type IndicatorColour,
+  type IndicatorTint,
   type RenderNode,
 } from "@chemrealm/render";
 import { useEffect, useState, type ReactElement } from "react";
@@ -55,8 +55,8 @@ function numberFromNode(node: RenderNode | undefined, key: string): string {
   return typeof value === "number" ? String(value) : "";
 }
 
-function colourStyle(colour: IndicatorColour): string {
-  return `rgba(${colour.red}, ${colour.green}, ${colour.blue}, ${colour.alpha})`;
+function tintStyle(tint: IndicatorTint): string {
+  return `rgb(${tint.srgb.join(", ")})`;
 }
 
 function selectedPolicy(id: PolicyId) {
@@ -149,14 +149,27 @@ export function App({ schemaVersion }: { schemaVersion: number }): ReactElement 
                 <span data-testid="indicator-id">{indicator.indicatorId}</span>
                 <span
                   data-testid="indicator-swatch"
-                  aria-label={`${indicator.indicatorId} empirical colour`}
+                  aria-label={`${indicator.indicatorId} qualitative presentation tint`}
+                  data-tint-strength={indicator.tint.strength}
+                  data-interpolation={indicator.tint.interpolation}
                   style={{
                     display: "inline-block",
                     width: "1.5rem",
                     height: "1.5rem",
-                    backgroundColor: colourStyle(indicator.color),
+                    backgroundColor: "rgb(245, 245, 245)",
                   }}
-                />
+                >
+                  <span
+                    data-testid="indicator-tint"
+                    aria-hidden="true"
+                    style={{
+                      display: "block",
+                      width: "100%",
+                      height: "100%",
+                      backgroundColor: tintStyle(indicator.tint),
+                    }}
+                  />
+                </span>
               </div>
             ))}
           </section>

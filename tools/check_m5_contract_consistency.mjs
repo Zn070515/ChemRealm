@@ -33,6 +33,7 @@ const observableSource = await document("packages/render/src/observable/index.ts
 const levelSource = await document("packages/render/src/observable/level.ts");
 const frameSource = await document("packages/sci/src/frame.ts");
 const tokenSource = await document("packages/render/src/observable/tokens.ts");
+const colorSource = await document("packages/render/src/observable/color.ts");
 const indicatorPaletteManifest = JSON.parse(
   await document("docs/visual/reference/indicator-palettes.json"),
 );
@@ -132,6 +133,10 @@ must(
 );
 must(observableSource, /interface ScientificFrame[\s\S]{0,500}physical[\s\S]{0,180}liquidVolume/i, "Observable frame includes the bound physical volume");
 must(observableSource, /interface ObservableInput[\s\S]{0,350}volumeProfileSnapshot/i, "Observable input consumes the replay-frozen profile snapshot");
+must(observableSource, /interface ObservableIndicator[\s\S]{0,180}tint:\s*IndicatorTint/i, "Observable indicator exposes a semantic tint rather than an RGBA colour");
+mustNot(observableSource, /interface ObservableIndicator[\s\S]{0,180}color:/i, "Observable indicator does not expose the deprecated colour shape");
+must(colorSource, /export interface IndicatorTint|mapIndicatorRatioToTint/i, "colour mapper exposes the interim IndicatorTint contract");
+mustNot(colorSource, /alpha|rgba\(|mapIndicatorRatioToColor|IndicatorColour/i, "interim tint mapper does not carry opacity or the deprecated colour API");
 must(observableSource, /volumeProfileFromSnapshot\(input\.volumeProfileSnapshot\)/i, "Observable reconstructs the executable profile internally");
 must(levelSource, /parseVolumeProfileSnapshot/i, "profile adapter validates the snapshot content hash before interpolation");
 mustNot(observableSource, /interface ObservableInput[\s\S]{0,350}readonly volumeProfile:\s*VolumeProfile/i, "Observable input does not accept an executable profile adapter");
@@ -143,10 +148,14 @@ must(compositionSource, /deliveredTitrantVolume[\s\S]{0,120}prefixStates/i, "com
 must(compositionSource, /fromVesselId === SOURCE_VESSEL_ID[\s\S]{0,180}toVesselId === TARGET_VESSEL_ID/i, "composition filters burette facts by exact source and target");
 mustNot(appSource, /activity model:\s*Davies/i, "DOM adapter does not hard-code the activity model");
 must(appSource, /activity model:\s*\{composition\.observable\.readouts\.activityModel\}/i, "DOM adapter renders the ObservableModel activity model");
+must(appSource, /qualitative presentation tint/i, "DOM adapter labels the interim indicator output as a qualitative presentation tint");
+mustNot(appSource, /rgba\(/i, "DOM adapter does not present the interim tint as alpha or liquid opacity");
+must(appSource, /backgroundColor:\s*["']rgb\(245, 245, 245\)["']/i, "DOM adapter composes the tint over an explicit neutral swatch background");
 must(expressionSource, /equationId[\s\S]{0,500}substitutions/i, "Scientific Core expressions carry structured equations and substitutions");
 mustNot(expressionSource, /solve charge balance and component balances self-consistently/i, "natural-language placeholder is not emitted as an exact expression");
 
 must(evidence, /M5-FRAME[^\n]*\| PASS locally/i, "M5 frame evidence records the production composition boundary");
+must(evidence, /Interim palette baseline attestation[\s\S]{0,500}44c3a02a206c2b75927235a4c19d67ce359f8bd7[\s\S]{0,260}(?:#120|34822425379)/i, "M5 records the exact pre-optical palette closure baseline and hosted CI attestation");
 must(evidence, /AC-V3[^\n]*\| PASS locally/i, "AC-V3 contract-level evidence is complete for M5");
 must(evidence, /AC-V4[^\n]*\| PASS locally/i, "AC-V4 contract-level evidence is complete for M5");
 must(evidence, /contract-level[\s\S]{0,240}M5 S3 does not require M6/i, "M5 contract acceptance does not wait for M6 realization");

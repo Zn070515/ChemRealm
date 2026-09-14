@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { INDICATOR_COLOUR_PALETTES } from "../packages/render/src/observable/tokens.ts";
+import { INDICATOR_PALETTES } from "../packages/render/src/observable/tokens.ts";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 const read = (relativePath) => readFileSync(`${root}/${relativePath}`, "utf8");
@@ -26,11 +26,11 @@ describe("M5 empirical indicator palette provenance", () => {
         `indicator-palette/${entry.indicatorId}`,
       );
       expect(tokens).toContain(`reference: "${entry.referenceId}"`);
-      const palette = INDICATOR_COLOUR_PALETTES[entry.indicatorId];
+      const palette = INDICATOR_PALETTES[entry.indicatorId];
       expect(palette).toBeDefined();
       expect(palette.indicatorId).toBe(entry.indicatorId);
-      expect(toHex(palette.acidForm)).toBe(entry.acidForm.hex);
-      expect(toHex(palette.baseForm)).toBe(entry.baseForm.hex);
+      expect(toHex(palette.acidForm.srgb)).toBe(entry.acidForm.hex);
+      expect(toHex(palette.baseForm.srgb)).toBe(entry.baseForm.hex);
       expect(entry.review.status).toBe("m5-contract-reviewed");
       expect(entry.review.record).toBe(
         "docs/visual/reference/indicator-palette-review.md",
@@ -62,8 +62,8 @@ function swatchesContainLabel(svg, swatchId, label) {
   ).test(svg);
 }
 
-function toHex(color) {
-  return `#${[color.red, color.green, color.blue]
+function toHex(srgb) {
+  return `#${srgb
     .map((channel) => channel.toString(16).padStart(2, "0"))
     .join("")}`;
 }

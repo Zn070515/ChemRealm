@@ -1,4 +1,4 @@
-import { type IndicatorColour } from "../observable/color.js";
+import { type IndicatorTint } from "../observable/color.js";
 import { formatBuretteScaleReading } from "../observable/format.js";
 import { type ObservableModel, type ObservableReadouts } from "../observable/index.js";
 
@@ -44,12 +44,16 @@ function frozenData(data: Record<string, unknown>): Readonly<Record<string, unkn
   return Object.freeze(data);
 }
 
-function indicatorShape(id: string, color: IndicatorColour, zIndex: number): RenderNode {
+function indicatorShape(id: string, tint: IndicatorTint, zIndex: number): RenderNode {
   return Object.freeze({
     id,
     kind: "shape" as const,
     zIndex,
-    data: frozenData({ color }),
+    data: frozenData({
+      tintSrgb: tint.srgb,
+      tintStrength: tint.strength,
+      interpolation: tint.interpolation,
+    }),
   });
 }
 
@@ -111,7 +115,7 @@ export function toRenderState(
   }
 
   model.indicators.forEach((indicator, index) => {
-    nodes.push(indicatorShape(`indicator-${index}`, indicator.color, 15));
+    nodes.push(indicatorShape(`indicator-${index}`, indicator.tint, 15));
   });
 
   return Object.freeze({ version: model.version, nodes: Object.freeze(nodes) });

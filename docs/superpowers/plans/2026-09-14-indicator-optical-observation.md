@@ -163,7 +163,7 @@ field, like `VolumeProfileSnapshot`.
 - Consumes: a persisted `SolverConfig` from `WorldState`.
 - Produces: `solverConfigIdentityHash(config)`, `registry.lookupBySolverConfig(config)`, `registry.lookupScientificExecutionBySolverConfig(config)`, and `buildAcidBaseSolveRequest({ ..., solverConfig })`.
 
-- [ ] **Step 1: Write the failing exact-config replay tests**
+- [x] **Step 1: Write the failing exact-config replay tests**
 
 ```ts
 const modified = {
@@ -191,7 +191,7 @@ id/version/parameters is found and that parameter-key order does not alter the
 canonical identity hash. Add a persisted-world test where only `Ka_HOAc` changes
 one bit and composition refuses before any pH is emitted.
 
-- [ ] **Step 2: Run focused tests and verify RED**
+- [x] **Step 2: Run focused tests and verify RED**
 
 ```text
 pnpm exec vitest run packages/sci/src/registry.test.ts packages/sci/src/acidbase/request.test.ts apps/web/src/composition.test.ts
@@ -200,7 +200,7 @@ pnpm exec vitest run packages/sci/src/registry.test.ts packages/sci/src/acidbase
 Expected: the current registry finds by id/version despite the changed parameter
 and the request builder reads the current default `Ka_HOAc`.
 
-- [ ] **Step 3: Implement full-config identity at both boundaries**
+- [x] **Step 3: Implement full-config identity at both boundaries**
 
 In schema, canonicalize the parameter record by sorted key and finite numeric
 value, then hash `{ id, version, parameters }` with the existing canonical hash
@@ -215,7 +215,7 @@ whose model identity or required parameter set does not belong to the adapter;
 it never reads `DEFAULT_ACID_BASE_CONSTANTS` on a replay path. Extend the M4
 guard so id/version-only lookup from `WorldState.solverConfig` fails CI.
 
-- [ ] **Step 4: Run focused tests and verify GREEN**
+- [x] **Step 4: Run focused tests and verify GREEN**
 
 ```text
 pnpm exec vitest run packages/schema/src/scientific.test.ts packages/sci/src/registry.test.ts packages/sci/src/acidbase/request.test.ts apps/web/src/composition.test.ts
@@ -223,7 +223,7 @@ pnpm verify:m4-contracts
 pnpm verify:world
 ```
 
-- [ ] **Step 5: Commit replay-identity closure**
+- [x] **Step 5: Commit replay-identity closure**
 
 ```text
 git add packages/schema/src/scientific.ts packages/schema/src/scientific.test.ts packages/sci/src/registry.ts packages/sci/src/registry.test.ts packages/sci/src/acidbase/request.ts packages/sci/src/acidbase/request.test.ts apps/web/src/composition.ts apps/web/src/composition.test.ts tools/check_m4_contract_consistency.mjs docs/evidence/M4-native.md
@@ -252,7 +252,7 @@ git commit -m "Bind persisted solver parameters to replay execution"
 - Consumes: one checked-in native contract whose `model.id`, `model.version`, and `solverConfig.parameters` are read from the central-manifest-selected native version.
 - Produces: TypeScript native adapter and Rust/WASM constants generated from the same JSON artifact; an M4-B matrix for AC-S4, AC-S8, AC-S11, AC-S13, and AC-S14.
 
-- [ ] **Step 1: Write the failing contract-source and native-matrix tests**
+- [x] **Step 1: Write the failing contract-source and native-matrix tests**
 
 ```ts
 expect(nativeAdapter.solverConfig).toEqual(parseNativeModelContract().solverConfig);
@@ -272,7 +272,7 @@ Add independent evidence tests for: native solver component/temperature refusal
 strong/weak v0 Scenario → WorldCreated → WorldState → SolveRequest → WASM
 family sweep (AC-S14).
 
-- [ ] **Step 2: Run focused tests and verify RED**
+- [x] **Step 2: Run focused tests and verify RED**
 
 ```text
 pnpm exec vitest run packages/sci/src/native-backend.test.ts
@@ -284,7 +284,7 @@ Expected: native v2 descriptor/config is cloned from legacy TypeScript builders
 and Rust constants are independently handwritten; the five M4-B matrix rows do
 not have completed evidence.
 
-- [ ] **Step 3: Establish the shared native contract and derive both implementations**
+- [x] **Step 3: Establish the shared native contract and derive both implementations**
 
 The contract JSON contains model descriptor, exact solver parameters, validity
 domain, component/species set, water-activity convention, and numeric-policy
@@ -301,7 +301,7 @@ artifact from the committed baseline; record its SHA-256 and hosted CI run only
 after that run succeeds. Do not call M4-B S3 until all five criteria, exact
 artifact identity, and hosted attestation pass.
 
-- [ ] **Step 4: Run native and cross-system verification GREEN**
+- [x] **Step 4: Run native and cross-system verification GREEN**
 
 ```text
 pnpm generate:versions
@@ -318,7 +318,7 @@ pnpm verify:native-ts-differential
 pnpm exec vitest run packages/sci/src/native-backend.test.ts apps/web/src/composition.test.ts
 ```
 
-- [ ] **Step 5: Commit native identity and evidence as one closure unit**
+- [x] **Step 5: Commit native identity and evidence as one closure unit**
 
 ```text
 git add contracts/scientific/acidbase-monoprotic-davies-2.0.0.json contracts/scientific/acidbase-monoprotic-davies-2.0.0.test.json contracts/version-manifest.json tools/version-manifest.mjs tools/check_versions.mjs tools/check_native_schema_contract.mjs packages/sci/src/acidbase/model.ts packages/sci/src/native-backend.ts packages/sci/src/native-backend.test.ts native/sci-core/build.rs native/sci-core/src/lib.rs native/sci-core/tests/contract.rs docs/evidence/M4-native.md docs/evidence/native-toolchain-amendment.md
@@ -343,7 +343,7 @@ git commit -m "Close native solver identity and M4-B evidence"
 - Consumes: the existing qualitative empirical palette record.
 - Produces: `IndicatorTint { readonly srgb: readonly [number, number, number]; readonly strength: number; readonly interpolation: "qualitative-srgb" }`, with no RGBA/opacity claim, and an M5 evidence attestation for `44c3a02a206c2b75927235a4c19d67ce359f8bd7` / CI #120 run `34822425379`.
 
-- [ ] **Step 1: Write failing tint and attestation tests**
+- [x] **Step 1: Write failing tint and attestation tests**
 
 ```ts
 const colourless = mapIndicatorRatioToTint("phenolphthalein", 0);
@@ -364,7 +364,7 @@ palette provenance closure and require the exact commit plus CI #120/run
 swatch is named a qualitative presentation tint, never liquid opacity or a
 spectrophotometric result.
 
-- [ ] **Step 2: Run focused checks and verify RED**
+- [x] **Step 2: Run focused checks and verify RED**
 
 ```text
 pnpm exec vitest run packages/render/src/observable/color.test.ts packages/render/src/observable/observable.test.ts packages/render/src/state/scene.test.ts
@@ -375,7 +375,7 @@ pnpm verify:m5-contracts
 Expected: the current type carries `alpha`, scene/App can present that alpha as
 an RGBA liquid fill, and M5 evidence lacks the #120 palette closure attestation.
 
-- [ ] **Step 3: Implement only the interim semantic correction**
+- [x] **Step 3: Implement only the interim semantic correction**
 
 Rename the public output to `IndicatorTint`, remove alpha from palette and
 mapper contracts, and add `strength`. Map the colourless phenolphthalein acid
@@ -387,7 +387,7 @@ swatch background rather than using tint strength as liquid opacity. Record the
 exact #120 baseline in M5 evidence while preserving M5 S2 and all incomplete
 criteria.
 
-- [ ] **Step 4: Run focused checks and verify GREEN**
+- [x] **Step 4: Run focused checks and verify GREEN**
 
 ```text
 pnpm exec vitest run packages/render/src/observable/color.test.ts packages/render/src/observable/observable.test.ts packages/render/src/state/scene.test.ts
@@ -396,7 +396,7 @@ pnpm verify:m5-contracts
 git diff --check
 ```
 
-- [ ] **Step 5: Commit the M5 handoff correction**
+- [x] **Step 5: Commit the M5 handoff correction**
 
 ```text
 git add packages/render/src/observable/tokens.ts packages/render/src/observable/color.ts packages/render/src/observable/color.test.ts packages/render/src/observable/observable.test.ts packages/render/src/state/scene.ts packages/render/src/state/scene.test.ts apps/web/src/App.tsx tests/browser/m5-composition.spec.ts tools/check_m5_contract_consistency.mjs docs/evidence/M5.md

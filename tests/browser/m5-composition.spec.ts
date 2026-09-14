@@ -13,6 +13,23 @@ test.describe("M5 production composition", () => {
     await expect(page.getByTestId("ph-readout")).toHaveText(/^pH \d+\.\d{2}$/);
     await expect(page.getByTestId("burette-reading")).toHaveText(/mL$/);
     await expect(page.getByTestId("indicator-id")).toHaveText("phenolphthalein");
+    await expect(page.getByTestId("indicator-swatch")).toHaveAttribute(
+      "aria-label",
+      "phenolphthalein qualitative presentation tint",
+    );
+    await expect(page.getByTestId("indicator-swatch")).toHaveAttribute(
+      "data-interpolation",
+      "qualitative-srgb",
+    );
+    await expect(page.getByTestId("indicator-swatch")).toHaveCSS(
+      "background-color",
+      "rgb(245, 245, 245)",
+    );
+    await expect(page.getByTestId("indicator-tint")).toHaveCSS(
+      "background-color",
+      /^rgb\(/,
+    );
+    await expect(page.getByTestId("indicator-swatch")).not.toHaveAttribute("data-optical-model");
     await expect(page.getByTestId("symbolic-expression")).toContainText("Scientific Core");
     await expect(page.getByTestId("symbolic-expression")).toContainText("m(H+)");
     expect(await page.getByTestId("curve-point").count()).toBeGreaterThanOrEqual(4);
