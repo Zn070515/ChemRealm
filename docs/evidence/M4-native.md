@@ -21,6 +21,7 @@ TypeScript `1.0.0` M4 S3 baseline.
 | Explicit solver selection | PASS locally | reversed registry-order tests preserve the explicitly selected identity |
 | Explicit native production composition | PASS locally | `apps/web/src/composition.test.ts` and `tests/browser/m5-composition.spec.ts?backend=native` prove a registered WASM adapter drives World → ScientificFrame → Observable → DOM without TS expression substitution |
 | Native WASM canonical REF matrix | PASS locally | `packages/sci/src/native-reference.test.ts` runs REF-1…REF-10 through the real release WASM and checks independent values, analytic identities, charge conservation, scale bound, projection, and the complete native expression set |
+| Native adversarial semantic fixture | PASS locally | `packages/sci/src/native-reference.test.ts` verifies the dilute HOAc water-equilibrium result and rejects the recorded Henderson–Hasselbalch shortcut |
 | Native host ↔ WASM differential matrix | PASS locally | `pnpm verify:native-differential` compares the complete host/WASM payload for 42 requests across REF, ORACLE, and adversarial fixture groups |
 | Native governance boundary | PASS locally | `pnpm verify:native-governance` |
 
@@ -28,7 +29,6 @@ TypeScript `1.0.0` M4 S3 baseline.
 
 The following evidence is intentionally not claimed by this packet:
 
-- native adversarial semantic matrix;
 - native PHREEQC oracle execution and disagreement disposition;
 - native backend as the default new-world path after the supersession gate;
 - complete native World → ScientificFrame → Observable → DOM/browser acceptance packet;

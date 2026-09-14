@@ -264,6 +264,32 @@ describe("native WASM canonical reference matrix", () => {
     expect(maximum).toBeLessThanOrEqual(fixture.expectedMaxDifference);
   });
 
+  it("preserves the adversarial dilute weak-acid divergence", async () => {
+    const fixture = loadFixture<SingleFixture>("ADVERSARIAL-HOAC-DILUTE");
+    const { state } = await solveOk(adapter, fixture.id, fixture.request);
+    expectNear(state.modelPh.value, fixture.expected.modelPh, fixture.tolerance.absolute);
+    expectNear(
+      state.ionicStrengthMolal.value,
+      fixture.expected.ionicStrengthMolal,
+      fixture.tolerance.absolute,
+    );
+    assertCharge(state, fixture.tolerance.chargeResidual);
+
+    const comparison = loadFixture<SingleFixture & {
+      readonly comparison: {
+        readonly hendersonHasselbalchApproximationPh: number;
+        readonly pHDivergence: number;
+        readonly divergenceClaim: string;
+      };
+    }>("ADVERSARIAL-HOAC-DILUTE").comparison;
+    expect(comparison.divergenceClaim).toBe("approximately 0.65 pH");
+    expect(comparison.pHDivergence).toBeGreaterThan(0.6);
+    expect(state.modelPh.value).not.toBeCloseTo(
+      comparison.hendersonHasselbalchApproximationPh,
+      1,
+    );
+  });
+
   it("emits the complete Scientific Core equation set for every solved canonical REF input", async () => {
     const manifest = JSON.parse(
       readFileSync(new URL("manifest.json", referenceUrl), "utf8"),
