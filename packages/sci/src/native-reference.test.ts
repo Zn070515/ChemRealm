@@ -15,6 +15,7 @@ import {
   loadNativeWasmExecutor,
   type NativeExpressionSolverAdapter,
 } from "./native-backend.js";
+import { detLog10 } from "./deterministic-math.js";
 import { projectScientificState } from "./projection.js";
 
 interface ReferenceSolute {
@@ -216,19 +217,19 @@ describe("native WASM canonical reference matrix", () => {
         const acetate = state.species.find((species) => species.symbol === "OAc-")!;
         if (fixture.kind === "analytic-acid-excess") {
           expect(state.modelPh.value).toBeCloseTo(
-            -(Math.log10(referenceCase.excessMolality!) +
-              Math.log10(hydrogen.activityCoefficient.value)),
+            -(detLog10(referenceCase.excessMolality!) +
+              detLog10(hydrogen.activityCoefficient.value)),
             9,
           );
         } else if (fixture.kind === "analytic-base-excess") {
           expect(state.modelPh.value).toBeCloseTo(
-            14 + Math.log10(referenceCase.excessMolality!) +
-              Math.log10(hydroxide.activityCoefficient.value),
+            14 + detLog10(referenceCase.excessMolality!) +
+              detLog10(hydroxide.activityCoefficient.value),
             9,
           );
         } else {
           expect(state.modelPh.value).toBeCloseTo(
-            referenceCase.pKa! + Math.log10(acetate.activityCoefficient.value),
+            referenceCase.pKa! + detLog10(acetate.activityCoefficient.value),
             3,
           );
         }

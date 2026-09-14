@@ -131,13 +131,18 @@ migration/re-solve.
 **Implementation detail:** Run REF-1…REF-10, adversarial cases, domain/boundary
 matrix, deterministic math, provenance/diagnostics, and PHREEQC ORACLE sweep
 against native host and WASM where applicable. Report signed differences and
-offsets; never average or relabel disagreement as equivalence.
+offsets; never average or relabel disagreement as equivalence. The native
+PHREEQC comparison is a separate execution path in the shared oracle report;
+it must carry native model identity and pinned toolchain identity.
 
 **Tests/evidence:** The real release WASM now runs the canonical REF-1…REF-10
 matrix and checks the independent values, identities, projections, invariants,
-and native expression set. Remaining evidence is the Rust-host ↔ WASM
-differential report, adversarial matrix, PHREEQC identity attestation, and all
-M4 criteria rerun on native. Keep the original TS M4 packet unchanged.
+and native expression set. The Rust-host ↔ WASM differential matrix and the
+native WASM ↔ pinned PHREEQC comparison are now locally executable and
+machine-checked. Remaining evidence is native adversarial/domain completeness,
+all M4 criteria rerun on native, the default-backend gate, complete native
+browser composition, and hosted-CI attestation. Keep the original TS M4 packet
+unchanged.
 
 **Stop/go:** Stop on unexplained disagreement, missing reference input, or
 unclassified failure.

@@ -17,6 +17,7 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parents[3]
 REFERENCE_DIR = REPO_ROOT / "packages" / "sci" / "test" / "reference"
 TS_RUNNER = REPO_ROOT / "tools" / "oracle" / "reference" / "run_ts_cases.mjs"
+NATIVE_RUNNER = REPO_ROOT / "tools" / "oracle" / "reference" / "run_native_cases.mjs"
 VERSION_MANIFEST_PATH = REPO_ROOT / "contracts" / "version-manifest.json"
 PHREEQC_RUNNER = REPO_ROOT / "tools" / "oracle" / "phreeqc" / "run_batch.py"
 MANIFEST_PATH = REFERENCE_DIR / "manifest.json"
@@ -154,6 +155,27 @@ def run_ts() -> list[dict[str, Any]]:
     return value
 
 
+def run_native() -> list[dict[str, Any]]:
+    completed = subprocess.run(
+        ["node", str(NATIVE_RUNNER), str(REFERENCE_DIR), "ORACLE"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        check=False,
+    )
+    if completed.returncode != 0:
+        raise RuntimeError(f"native WASM reference runner failed:\n{completed.stderr}")
+    try:
+        value = json.loads(completed.stdout)
+    except json.JSONDecodeError as error:
+        raise RuntimeError(f"native WASM reference runner returned invalid JSON: {completed.stdout}") from error
+    if not isinstance(value, list):
+        raise RuntimeError("native WASM reference runner did not return a list")
+    return value
+
+
 def required_float(row: dict[str, str], *names: str) -> float:
     for name in names:
         if name in row:
@@ -253,7 +275,11 @@ def run_phreeqc() -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
     return results, first["tool"]
 
 
-def compare(ts_rows: list[dict[str, Any]], phreeqc_rows: dict[str, dict[str, Any]]) -> dict[str, Any]:
+def compare(
+    ts_rows: list[dict[str, Any]],
+    phreeqc_rows: dict[str, dict[str, Any]],
+    native_rows: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
     versions = load_version_manifest()
     schema_versions = versions["oracle"]
     acid_base = versions["scientific"]["acidBase"]
@@ -332,7 +358,97 @@ def compare(ts_rows: list[dict[str, Any]], phreeqc_rows: dict[str, dict[str, Any
         "attributionDisposition": attribution_disposition(),
         "attributionAxes": attribution_axes(),
     }
-    return {
+    native_cross_engine: dict[str, Any] | None = None
+    if native_rows is not None:
+        if [row.get("id") for row in native_rows] != oracle_ids:
+            raise RuntimeError("native WASM runner did not return every oracle fixture in order")
+        native_identity = {
+            "id": acid_base["id"],
+            "version": acid_base["nativeVersion"],
+        }
+        if not native_rows:
+            raise RuntimeError("native WASM runner returned no oracle fixtures")
+        native_points: list[dict[str, Any]] = []
+        for native in native_rows:
+            case_id = native["id"]
+            oracle = phreeqc_rows.get(case_id)
+            if oracle is None:
+                raise RuntimeError(f"PHREEQC result is missing native comparison point {case_id}")
+            if native.get("status") != "OK" or oracle.get("status") != "OK":
+                native_points.append({
+                    "id": case_id,
+                    "status": "FAIL",
+                    "reason": "native or PHREEQC engine did not return OK",
+                })
+                continue
+            if native.get("model") != native_identity:
+                raise RuntimeError(
+                    f"native result {case_id} has unexpected model identity: "
+                    f"{native.get('model')!r}; expected {native_identity!r}"
+                )
+            try:
+                native_model_ph = float(native["modelPh"])
+                oracle_model_ph = float(oracle["modelPh"])
+                native_ionic_strength = float(native["ionicStrengthMolal"])
+                oracle_ionic_strength = float(oracle["ionicStrengthMolal"])
+            except (KeyError, TypeError, ValueError):
+                native_points.append({
+                    "id": case_id,
+                    "status": "FAIL",
+                    "reason": "native or PHREEQC result lacks numeric comparison fields",
+                })
+                continue
+            if not all(math.isfinite(value) for value in (
+                native_model_ph,
+                oracle_model_ph,
+                native_ionic_strength,
+                oracle_ionic_strength,
+            )):
+                native_points.append({
+                    "id": case_id,
+                    "status": "FAIL",
+                    "reason": "native or PHREEQC result contains a non-finite numeric field",
+                })
+                continue
+            difference = abs(native_model_ph - oracle_model_ph)
+            native_points.append({
+                "id": case_id,
+                "status": "PASS" if difference <= 0.02 else "FAIL",
+                "nativeModelPh": native_model_ph,
+                "phreeqcModelPh": oracle_model_ph,
+                "signedPhDifference": native_model_ph - oracle_model_ph,
+                "absolutePhDifference": difference,
+                "nativeIonicStrengthMolal": native_ionic_strength,
+                "phreeqcIonicStrengthMolal": oracle_ionic_strength,
+            })
+        native_differences = [
+            point["signedPhDifference"]
+            for point in native_points
+            if "signedPhDifference" in point
+        ]
+        native_cross_engine = {
+            "model": native_rows[0].get("model") if native_rows else None,
+            "points": native_points,
+            "pointCount": len(native_points),
+            "allPointsCompared": len(native_points) == len(oracle_ids),
+            "maxAbsolutePhDifference": max(
+                (abs(value) for value in native_differences),
+                default=0.0,
+            ),
+            "signedPhDifferenceSummary": {
+                "minimum": min(native_differences, default=0.0),
+                "maximum": max(native_differences, default=0.0),
+                "mean": sum(native_differences) / len(native_differences)
+                if native_differences else 0.0,
+                "allSameSign": bool(native_differences)
+                and all(value > 0 for value in native_differences),
+            },
+            "tolerancePh": 0.02,
+            "pass": len(native_points) == len(oracle_ids)
+            and all(point["status"] == "PASS" for point in native_points),
+            "interpretation": "Native WASM and PHREEQC are independently executed; a bounded offset is not an equivalence claim.",
+        }
+    report = {
         "schemaVersion": schema_versions["crossCheckReport"],
         "model": {"id": acid_base["id"], "version": acid_base["legacyVersion"]},
         "basis": "molality",
@@ -360,6 +476,10 @@ def compare(ts_rows: list[dict[str, Any]], phreeqc_rows: dict[str, dict[str, Any
             "executionEnvironment": "local oracle run; CI repeats the pinned installation and sweep",
         },
     }
+    if native_cross_engine is not None:
+        report["nativeCrossEngine"] = native_cross_engine
+        report["pass"] = report["pass"] and native_cross_engine["pass"]
+    return report
 
 
 def main() -> int:
@@ -368,8 +488,9 @@ def main() -> int:
     args = parser.parse_args()
     oracle_ids = fixture_ids("oracleFixtures")
     ts_rows = run_ts()
+    native_rows = run_native()
     phreeqc_rows, toolchain = run_phreeqc()
-    report = compare(ts_rows, phreeqc_rows)
+    report = compare(ts_rows, phreeqc_rows, native_rows)
     report["phreeqc"] = toolchain
     if args.output:
         output = args.output if args.output.is_absolute() else REPO_ROOT / args.output

@@ -61,7 +61,7 @@ export const VERSION_MANIFEST = deepFreeze({
     "phreeqc": "3.8.6-17100",
     "referenceManifest": 2,
     "referenceFixture": 1,
-    "crossCheckReport": 1,
+    "crossCheckReport": 2,
     "constantsProvenance": 1,
     "v0Inputs": 2,
     "envelopeReference": 1

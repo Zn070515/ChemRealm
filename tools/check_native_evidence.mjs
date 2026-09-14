@@ -29,8 +29,10 @@ function mustNot(text, pattern, message) {
 
 must(nativeEvidence, /^\*\*Status:\*\* \*\*S2[\s\S]*native[\s-]+supersession S3 remains open\*\*/m,
   "native evidence stays at S2 with supersession S3 open");
-must(nativeEvidence, /native PHREEQC oracle execution/i,
-  "native PHREEQC evidence remains pending");
+must(nativeEvidence, /Native WASM ↔ PHREEQC oracle comparison/i,
+  "native WASM-to-PHREEQC comparison evidence is recorded");
+must(nativeEvidence, /bounded comparison[\s\S]*not a claim that the native model and PHREEQC are equivalent/i,
+  "native PHREEQC comparison does not claim model equivalence");
 must(nativeEvidence, /native World → ScientificFrame → Observable → DOM/i,
   "native browser composition remains pending");
 must(nativeEvidence, /no\s+silent\s+fallback/i,
@@ -52,6 +54,6 @@ if (failures.length > 0) {
 }
 
 console.log("ok    native evidence stays S2 while legacy M4 S3 remains historical");
-console.log("ok    native REF/PHREEQC/browser supersession evidence is explicitly pending");
+console.log("ok    native REF and bounded PHREEQC comparison evidence are recorded");
 console.log("ok    native specification and plan contain no premature S3 claim");
 console.log("\nRESULT: PASS");
