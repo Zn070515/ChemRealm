@@ -1,0 +1,170 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "maxLiquidVolume": {
+      "additionalProperties": false,
+      "properties": {
+        "unit": {
+          "const": "L",
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "value",
+        "unit"
+      ],
+      "type": "object"
+    },
+    "minLiquidVolume": {
+      "additionalProperties": false,
+      "properties": {
+        "unit": {
+          "const": "L",
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "value",
+        "unit"
+      ],
+      "type": "object"
+    },
+    "pathLength": {
+      "additionalProperties": false,
+      "properties": {
+        "unit": {
+          "const": "mm",
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "value",
+        "unit"
+      ],
+      "type": "object"
+    },
+    "pathRuleHash": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "pathRuleId": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "pathRuleVersion": {
+      "const": "1.0.0",
+      "type": "string"
+    },
+    "provenance": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "enum": [
+            "measured",
+            "evaluated",
+            "calculated",
+            "empirical",
+            "pedagogicalApproximation"
+          ],
+          "type": "string"
+        },
+        "edition": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "lastVerified": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "pressure": {
+          "additionalProperties": false,
+          "properties": {
+            "unit": {
+              "enum": [
+                "kPa",
+                "Pa",
+                "atm"
+              ],
+              "type": "string"
+            },
+            "value": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "value",
+            "unit"
+          ],
+          "type": "object"
+        },
+        "reference": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "source": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "temperature": {
+          "additionalProperties": false,
+          "properties": {
+            "unit": {
+              "enum": [
+                "K",
+                "degC"
+              ],
+              "type": "string"
+            },
+            "value": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "value",
+            "unit"
+          ],
+          "type": "object"
+        },
+        "uncertainty": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "version": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "reference",
+        "category"
+      ],
+      "type": "object"
+    },
+    "representation": {
+      "const": "fixed-path",
+      "type": "string"
+    }
+  },
+  "required": [
+    "pathRuleId",
+    "pathRuleVersion",
+    "pathRuleHash",
+    "representation",
+    "pathLength",
+    "minLiquidVolume",
+    "maxLiquidVolume",
+    "provenance"
+  ],
+  "type": "object"
+}

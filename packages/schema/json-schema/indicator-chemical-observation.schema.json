@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "anyOf": [
+    {
+      "additionalProperties": false,
+      "properties": {
+        "forms": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "formId": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "fraction": {
+                "maximum": 1,
+                "minimum": 0,
+                "type": "number"
+              }
+            },
+            "required": [
+              "formId",
+              "fraction"
+            ],
+            "type": "object"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "indicatorId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "modelId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "modelVersion": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "sourceReplayHash": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "status": {
+          "const": "CHEMICAL_FORMS_OK",
+          "type": "string"
+        },
+        "totalAmount": {
+          "additionalProperties": false,
+          "properties": {
+            "unit": {
+              "const": "mol",
+              "type": "string"
+            },
+            "value": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "value",
+            "unit"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "status",
+        "indicatorId",
+        "totalAmount",
+        "forms",
+        "modelId",
+        "modelVersion",
+        "sourceReplayHash"
+      ],
+      "type": "object"
+    },
+    {
+      "additionalProperties": false,
+      "properties": {
+        "indicatorId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "modelId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "modelVersion": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "reason": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "sourceReplayHash": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "status": {
+          "const": "CHEMICAL_FORMS_UNAVAILABLE",
+          "type": "string"
+        },
+        "totalAmount": {
+          "additionalProperties": false,
+          "properties": {
+            "unit": {
+              "const": "mol",
+              "type": "string"
+            },
+            "value": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "value",
+            "unit"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "status",
+        "indicatorId",
+        "reason",
+        "modelId",
+        "modelVersion",
+        "sourceReplayHash"
+      ],
+      "type": "object"
+    }
+  ]
+}

@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "anyOf": [
+    {
+      "additionalProperties": false,
+      "properties": {
+        "conditions": {
+          "additionalProperties": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "propertyNames": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "indicatorId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "profileHash": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "profileId": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "sourceReplayHash": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "status": {
+          "const": "OPTICAL_MODEL_OK",
+          "type": "string"
+        },
+        "tintSrgb": {
+          "items": false,
+          "maxItems": 3,
+          "minItems": 3,
+          "prefixItems": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            }
+          ],
+          "type": "array"
+        },
+        "tintStrength": {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        "transmittanceSamples": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "transmittance": {
+                "maximum": 1,
+                "minimum": 0,
+                "type": "number"
+              },
+              "wavelengthNanometres": {
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "wavelengthNanometres",
+              "transmittance"
+            ],
+            "type": "object"
+          },
+          "minItems": 1,
+          "type": "array"
+        }
+      },
+      "required": [
+        "status",
+        "indicatorId",
+        "tintSrgb",
+        "tintStrength",
+        "transmittanceSamples",
+        "profileId",
+        "profileHash",
+        "sourceReplayHash",
+        "conditions"
+      ],
+      "type": "object"
+    },
+    {
+      "anyOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "indicatorId": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "missingOrOutOfRange": {
+              "items": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "reason": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "sourceReplayHash": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "status": {
+              "const": "OPTICAL_MODEL_DATA_MISSING",
+              "type": "string"
+            }
+          },
+          "required": [
+            "status",
+            "indicatorId",
+            "reason",
+            "sourceReplayHash",
+            "missingOrOutOfRange"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "indicatorId": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "missingOrOutOfRange": {
+              "items": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "reason": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "sourceReplayHash": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "status": {
+              "const": "OPTICAL_MODEL_OUT_OF_COVERAGE",
+              "type": "string"
+            }
+          },
+          "required": [
+            "status",
+            "indicatorId",
+            "reason",
+            "sourceReplayHash",
+            "missingOrOutOfRange"
+          ],
+          "type": "object"
+        }
+      ]
+    }
+  ]
+}

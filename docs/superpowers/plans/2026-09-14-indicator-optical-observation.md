@@ -485,20 +485,19 @@ git commit -m "Specify indicator optical observation contracts"
 - Create: `packages/schema/src/indicator-optics.test.ts`
 - Modify: `packages/schema/src/index.ts`
 - Modify: `packages/schema/src/json-schema.ts`
-- Modify: `packages/schema/scripts/emit-json-schema.mjs`
 - Modify: `packages/schema/json-schema/*.schema.json` (generated)
 
 **Interfaces:**
 - Consumes: `DataProvenanceSchema`, canonical quantities, `hashCanonical`, and manifest-derived profile/path versions.
 - Produces: `OpticalProfileSnapshotSchema`, `FrozenOpticalPathSnapshotSchema`, `IndicatorChemicalObservationSchema`, `IndicatorOpticalObservationSchema`, `opticalProfileHash`, `opticalPathHash`, `parseOpticalProfileSnapshot`, and `parseFrozenOpticalPathSnapshot`.
 
-- [ ] **Step 1: Write failing parser/hash tests**
+- [x] **Step 1: Write failing parser/hash tests**
 
 ```ts
 expect(() => parseOpticalProfileSnapshot({
   ...validProfile,
   profileHash: validProfile.profileHash,
-  formSpectra: [{ ...validProfile.formSpectra[0], samples: reversedSamples }],
+  formSpectra: [{ ...validProfile.formSpectra[0], samples: changedEpsilonSamples }],
 })).toThrow("optical profile hash mismatch");
 
 expect(() => OpticalProfileSnapshotSchema.parse({
@@ -509,7 +508,7 @@ expect(() => OpticalProfileSnapshotSchema.parse({
 
 expect(() => parseFrozenOpticalPathSnapshot({
   ...validPath,
-  pathLength: { value: 2, unit: "cm" },
+  pathLength: { value: 11, unit: "mm" },
 })).toThrow("optical path hash mismatch");
 ```
 
@@ -521,7 +520,7 @@ temperature range, concentration range, fixed illuminant `D65`, observer
 `reviewStatus: "qualitative-only"` and must not contain or enable an `OK`
 transform.
 
-- [ ] **Step 2: Run tests and verify RED**
+- [x] **Step 2: Run tests and verify RED**
 
 ```text
 pnpm exec vitest run packages/schema/src/indicator-optics.test.ts
@@ -529,7 +528,7 @@ pnpm exec vitest run packages/schema/src/indicator-optics.test.ts
 
 Expected: module/import failures.
 
-- [ ] **Step 3: Implement schema-owned validation**
+- [x] **Step 3: Implement schema-owned validation**
 
 Define `OpticalSpectrumSampleSchema` with integer nanometres and finite,
 non-negative epsilon values. Require at least two samples and strict wavelength
@@ -542,11 +541,14 @@ its literals describe only the cited source and are not normalized into invented
 conditions. Compute profile/path hashes from canonical hash-excluded payloads
 and parse only when the recomputed hash matches.
 
+The existing generic JSON Schema emitter consumes `JSON_SCHEMA_SOURCES`, so
+registering these schemas there requires no optical-specific emitter branch.
+
 Define chemical-form parser rules here: no duplicate form ID, no negative or
 non-finite fraction, non-empty list for `CHEMICAL_FORMS_OK`, and a sum within
 `1e-12` of one. `CHEMICAL_FORMS_UNAVAILABLE` cannot carry a form list.
 
-- [ ] **Step 4: Run schema checks and verify GREEN**
+- [x] **Step 4: Run schema checks and verify GREEN**
 
 ```text
 pnpm exec vitest run packages/schema/src/indicator-optics.test.ts
@@ -554,7 +556,7 @@ pnpm typecheck
 pnpm verify:schema-artifacts
 ```
 
-- [ ] **Step 5: Commit the artifact boundary**
+- [x] **Step 5: Commit the artifact boundary**
 
 ```text
 git add packages/schema/src/indicator-optics.ts packages/schema/src/indicator-optics.test.ts packages/schema/src/index.ts packages/schema/src/json-schema.ts packages/schema/scripts/emit-json-schema.mjs packages/schema/json-schema

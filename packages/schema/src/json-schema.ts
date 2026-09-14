@@ -27,6 +27,12 @@ import {
   SolveResultSchema,
 } from "./scientific.js";
 import { WorldStateSchema } from "./world.js";
+import {
+  FrozenOpticalPathSnapshotSchema,
+  IndicatorChemicalObservationSchema,
+  IndicatorOpticalObservationSchema,
+  OpticalProfileSnapshotSchema,
+} from "./indicator-optics.js";
 
 /**
  * Every contract the Python side needs to validate against. Adding a contract
@@ -42,6 +48,10 @@ export const JSON_SCHEMA_SOURCES = {
   "scenario": ScenarioSchema,
   "scientific-state": ScientificStateSchema,
   "scientific-expression": ScientificExpressionSchema,
+  "optical-profile": OpticalProfileSnapshotSchema,
+  "optical-path": FrozenOpticalPathSnapshotSchema,
+  "indicator-chemical-observation": IndicatorChemicalObservationSchema,
+  "indicator-optical-observation": IndicatorOpticalObservationSchema,
   "solve-result": SolveResultSchema,
   "native-solve-envelope": NativeSolveEnvelopeSchema,
   "native-backend-payload": NativeBackendPayloadSchema,
