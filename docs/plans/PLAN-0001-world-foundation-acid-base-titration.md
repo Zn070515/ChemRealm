@@ -804,8 +804,8 @@ be tested at all.
 ```
 packages/render/src/observable/index.ts       ScientificState → ObservableModel
 packages/render/src/observable/level.ts       volume + volume profile → liquid level
-packages/render/src/observable/color.ts       indicator ratio → colour (empirical)
-packages/render/src/observable/tokens.ts      named empirical presentation tokens
+packages/render/src/observable/optics.ts      frozen spectra → optical observation/refusal
+packages/render/src/observable/optics-reference-vectors.json test-only colourimetry vectors
 packages/render/src/observable/burette.ts     scale/contained/delivered state
 packages/render/src/observable/curve.ts       state sequence → pH–volume points
 packages/render/src/observable/species.ts     composition projection (micro view)
@@ -846,13 +846,13 @@ volume-profile identity, and the ScientificFrame physical-input block.
 
 1. `level.ts` consumes a vessel's published interior volume profile
    (`docs/visual/apparatus-standard.md` §1). Fixture vessels provide profiles.
-2. `color.ts` consumes only the Scientific Core's already-computed
-   `protonationRatio`. The equilibrium expression
-   `m(In⁻)/m(HIn) = Ka_in · γ_HIn / (a_H · γ_In)` with `γ_HIn = 1`
-   (`SPEC-0001` §Indicator model) is upstream scientific-contract context, not
-   code to copy into render. Colour mixing between declared empirical acid-form
-   and base-form endpoints has no threshold branch and imports no `Ka`,
-   activity, or activity coefficient.
+2. `optics.ts` consumes only a schema-owned chemical-form observation plus
+   frozen indicator dose, declared path, profile, and physical conditions. It
+   applies the refusal-first Beer–Lambert/colourimetry transform only when a
+   reviewed quantitative profile covers every required form and condition.
+   Missing or qualitative-only data produces a tagged refusal with no swatch;
+   it never turns `protonationRatio`, pH, `Ka`, activity, or an endpoint colour
+   token into a tint.
 3. `burette.ts` derives three separate values from committed deliveries:
    `currentScaleReading = initialScaleReading + Σ delivered`,
    `deliveredVolume = Σ delivered`, and
@@ -895,9 +895,11 @@ volume-profile identity, and the ScientificFrame physical-input block.
    version, and source-state identity. It may present the Henderson–Hasselbalch
    form **flagged `label: "shortcut"`** alongside the exact solve, but cannot
    author an untraceable exact expression.
-7. Colour values come from a declarative indicator-identity palette catalogue;
-   provenance-bearing empirical colour literals are allowed only in that
-   catalogue, not in chemistry-specific branches or unlabelled transforms.
+7. Quantitative colour values come only from the tagged optical observation.
+   Any future empirical palette used for non-quantitative presentation must be
+   explicitly identity-keyed and provenance-bearing, and cannot be used as a
+   fallback for `OPTICAL_MODEL_DATA_MISSING` or
+   `OPTICAL_MODEL_OUT_OF_COVERAGE`.
 8. `toRenderState` receives a replaceable hydrogen-ion presentation policy and
    emits exactly one convention-specific pH readout per view.
 
@@ -905,8 +907,9 @@ volume-profile identity, and the ScientificFrame physical-input block.
 
 | Test | Proves |
 |---|---|
-| Colour varies continuously with the ratio; no discontinuity at any threshold | AC-V2 |
-| M5 contract-level palette fixture: empirical colour literals are confined to the declared identity-keyed catalogue | AC-V3 |
+| Refusal-first optical observation uses declared spectra, dose, concentration, path, and pinned colourimetry; missing data has no tint | AC-O1..AC-O3, AC-O7 |
+| Test-only Beer–Lambert vectors verify concentration/path scaling without enabling unsupported production colour | AC-O2, AC-O5 |
+| No ratio-only endpoint palette can create production indicator colour; the candidate optical path is quantitative-or-refusal and identity-keyed | AC-V2, AC-V3 |
 | M5 contract-level liquid level calls `h(V)` and its `V(h)` inverse round-trips within the declared tolerance | AC-V4 |
 | `currentScaleReading == initialScaleReading + Σ delivered`, while `containedVolume` remains separate; compensated full-draw boundary does not false-overdraw | Burette semantics / failure mode 14 |
 | pH is formatted to exactly 2 dp and a scale reading such as 0.025 L is `25.00 mL` | AC-V6 |
@@ -916,7 +919,7 @@ volume-profile identity, and the ScientificFrame physical-input block.
 | DOM assertions: the taught quantity may be labelled plainly "pH"; model pH always carries its activity-model label; no view mixes the two | AC-V8 |
 | Inspection copy/DOM assertion never calls model pH true/thermodynamic and names the IUPAC notional convention plus activity model | AC-V10 |
 | Deterministic fixture/DOM assertion visibly qualifies results whose `withinProposedAccuracyEnvelope` is false | AC-V11 |
-| Candidate optical observation authority, refusal statuses, frozen dose/profile/path identity, and v0 strong-acid phenolphthalein boundary are defined before optical implementation | AC-O1..AC-O8 — Tasks 1–11 of the approved indicator-optical plan; no optical S3 claim is made until those tasks produce criterion-specific evidence |
+| Candidate optical observation authority, refusal statuses, frozen dose/profile/path identity, and v0 strong-acid phenolphthalein boundary are defined and locally exercised | AC-O1..AC-O8 — the optical plan's evidence matrix; production `OPTICAL_MODEL_OK` remains blocked until a quantitative source packet is admitted |
 
 ### Stop condition
 

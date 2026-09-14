@@ -310,7 +310,7 @@ export function observeIndicatorOptics(
     }, 0) * pathLengthCm;
     return deterministicPow10(-absorbance);
   });
-  const blank = [1, 1];
+  const blank = COLOURIMETRY_REFERENCE.wavelengths.map(() => 1);
   const x = integrate(transmittance, COLOURIMETRY_REFERENCE.xBar);
   const y = integrate(transmittance, COLOURIMETRY_REFERENCE.yBar);
   const z = integrate(transmittance, COLOURIMETRY_REFERENCE.zBar);

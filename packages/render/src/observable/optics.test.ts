@@ -52,6 +52,7 @@ const profilePayload = {
     samples: [
       { wavelengthNanometres: 500, epsilon: 10 },
       { wavelengthNanometres: 510, epsilon: 20 },
+      { wavelengthNanometres: 520, epsilon: 30 },
     ],
   }],
   conditions: {
@@ -136,6 +137,39 @@ function pathLength(value: number): FrozenOpticalPathSnapshot {
 }
 
 describe("deterministic indicator optical observation", () => {
+  it("normalizes tint strength against the complete colourimetry reference grid", () => {
+    const result = observeIndicatorOptics(input({
+      chemical: { ...chemical, totalAmount: mol(1e-5) },
+      liquidVolume: litre(0.1),
+      opticalPath: pathLength(10),
+    }));
+
+    expect(result.status).toBe("OPTICAL_MODEL_OK");
+    if (result.status !== "OPTICAL_MODEL_OK") {
+      throw new Error("expected optical model success");
+    }
+
+    const trapezoid = (values: readonly number[], component: readonly number[]) => {
+      let total = 0;
+      for (let index = 0; index < values.length - 1; index += 1) {
+        const span = referenceData.wavelengthNanometres[index + 1]!
+          - referenceData.wavelengthNanometres[index]!;
+        const first = values[index]! * referenceData.d65RelativePower[index]! * component[index]!;
+        const second = values[index + 1]! * referenceData.d65RelativePower[index + 1]! * component[index + 1]!;
+        total += ((first + second) / 2) * span;
+      }
+      return total;
+    };
+    const transmittance = result.transmittanceSamples.map((sample) => sample.transmittance);
+    const fullGridY = trapezoid(transmittance, referenceData.cie1931YBar);
+    const fullGridBlankY = trapezoid(
+      referenceData.wavelengthNanometres.map(() => 1),
+      referenceData.cie1931YBar,
+    );
+
+    expect(result.tintStrength).toBeCloseTo(1 - fullGridY / fullGridBlankY, 12);
+  });
+
   it("refuses missing chemical coverage instead of inventing a tint", () => {
     const unavailable: IndicatorChemicalObservation = {
       status: "CHEMICAL_FORMS_UNAVAILABLE",

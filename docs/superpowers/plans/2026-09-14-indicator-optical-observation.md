@@ -2,13 +2,20 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+**Status:** Tasks 0–9 are implemented for the refusal-first candidate boundary;
+ordinary multi-form chemistry has an independently checked candidate handoff.
+Task 10's production quantitative-colour substep is intentionally closed by a
+scientific stop condition because no source-reviewed quantitative profile is
+admitted. Task 11 records the resulting evidence handoff without claiming
+`OPTICAL_MODEL_OK`, M5 S3, or M6 authorization.
+
 **Goal:** Replace endpoint-RGB indicator presentation with a replayable, provenance-bearing Beer–Lambert optical-observation boundary that refuses unsupported chemistry or optics instead of inventing a colour.
 
 **Architecture:** The World Runtime freezes an indicator dose, an optical-profile snapshot, and a declared vessel optical path at genesis. The Scientific Reality Core supplies model-owned chemical-form fractions or a chemical-coverage refusal; the Representation Engine combines only covered forms, conserved concentration, frozen path, and spectrum data into a deterministic optical observation. Renderer and DOM consume the tagged observation and never infer an indicator colour from pH, `Ka`, or a protonation ratio.
 
 **Tech Stack:** TypeScript 5.9, Zod, Vitest, React, Playwright, pnpm workspaces, existing `@chemrealm/schema` canonical hashing and branded quantities, Rust/WASM native bridge, Python evidence checks.
 
-**Spec:** `docs/superpowers/specs/2026-09-14-indicator-optical-observation.md` and the required `SPEC-0001` revision 27 Candidate amendment.
+**Spec:** `docs/superpowers/specs/2026-09-14-indicator-optical-observation.md` and the required `SPEC-0001` revision 27 Candidate amendment, with the owner-accepted ordinary-aqueous chemistry candidate recorded in revision 28.
 
 ## Global Constraints
 
@@ -1062,8 +1069,12 @@ git commit -m "Record reviewed indicator optical profile data"
 - Modify after owner approval: `native/sci-core/src/lib.rs` and `native/sci-core/tests/contract.rs`
 
 **Interfaces:**
-- Consumes: Task 8 accepted form-specific spectrum packet.
-- Produces: only after a separate M4 scientific acceptance, `CHEMICAL_FORMS_OK` for one explicitly modelled indicator/form system.
+- Consumes: the owner-accepted ordinary-aqueous chemical-form scope and its
+  independent source/reference packet. Task 8 remains a separate optical
+  admission gate; it currently admits no quantitative spectrum.
+- Produces: a separately evidenced candidate `CHEMICAL_FORMS_OK` result for one
+  explicitly modelled indicator/form system, while keeping optical enablement
+  refusal-first.
 
 - [x] **Step 1: Write the scientific sub-spec and reference matrix before solver code**
 
@@ -1088,31 +1099,34 @@ until the owner accepted the candidate criteria and source boundary. The owner
 acceptance is now recorded for the ordinary-aqueous scope only; implementation
 remains subject to Steps 3–6 and the strong-acid refusal remains mandatory.
 
-- [ ] **Step 3: Write failing scientific reference and refusal tests after acceptance**
+- [x] **Step 3: Write failing scientific reference and refusal tests after acceptance**
 
 ```ts
-expect(result.indicatorObservations[0]).toMatchObject({
-  status: "CHEMICAL_FORMS_OK",
-  indicatorId: "methyl-orange",
-});
-expect(sumFractions(result.indicatorObservations[0]!)).toBeCloseTo(1, 12);
-expect(v0PhenolphthaleinResult.indicatorObservations[0]).toMatchObject({
-  status: "CHEMICAL_FORMS_UNAVAILABLE",
-});
+expect(result.status).toBe("CHEMICAL_FORMS_OK");
+expect(result.indicatorId).toBe("phenolphthalein");
+expect(sumFractions(result.forms)).toBeCloseTo(1, 12);
+expect(refuseUnsupportedPhenolphthaleinRegime(
+  "strong-acid-cation",
+  undefined,
+  sourceReplayHash,
+).status).toBe("CHEMICAL_FORMS_UNAVAILABLE");
 ```
 
 The reference fixture must be independent of production TypeScript and include
 an adversarial extreme-acid request that is refused when outside the accepted
-model domain.
+model domain. These tests and the independent MF-1…MF-10 matrix are complete
+in `packages/sci/src/acidbase/multiform.test.ts` and the candidate reference
+suite.
 
-- [ ] **Step 4: Implement one accepted model, then verify independently**
+- [x] **Step 4: Implement one accepted model, then verify independently**
 
-Implement only the reaction network accepted by the owner, preserve balance and
-charge invariants, serialize form fractions through the TypeScript/native
-bridge, and compare against the independent reference matrix. Do not enable
-another indicator or form from a copied endpoint palette.
+Implemented only the owner-accepted ordinary phenolphthalein network, preserved
+balance and charge invariants, serialized form fractions through the
+TypeScript/native bridge, and compared against the independent reference
+matrix. The strong-acid cation/orange and strong-base-altered cases remain
+refusal-only. No indicator colour is selected by this candidate model.
 
-- [ ] **Step 5: Commit only with M4 evidence status that matches reality**
+- [x] **Step 5: Commit only with M4 evidence status that matches reality**
 
 ```text
 pnpm test
@@ -1123,7 +1137,12 @@ git add docs/superpowers/specs/2026-09-14-indicator-multiform-scientific-model.m
 git commit -m "Add validated multiform indicator chemistry"
 ```
 
-### Task 10: Enable a reviewed `OPTICAL_MODEL_OK` fixture and prove end-to-end identity
+The candidate implementation is committed at
+`1b91dc1afce56c97adc8e9287dedc17169527a58` and hosted CI `34853566212`
+succeeded. The evidence packet still describes this as a candidate handoff,
+not an M4 S3 replacement or an optical profile admission.
+
+### Task 10: Verify production refusal and quarantine positive optical transforms
 
 **Files:**
 - Modify: `apps/web/src/production-scenario.ts`
@@ -1135,47 +1154,51 @@ git commit -m "Add validated multiform indicator chemistry"
 - Modify: `docs/evidence/M4.md`
 
 **Interfaces:**
-- Consumes: one Task 8 quantitative profile and one Task 9 validated chemical-form result.
-- Produces: a committed world → adapter → frame → optical observation → observable → scene → DOM path with no hand-authored colour.
+- Consumes: the committed world/frame composition and any future Task 8/Task 9
+  admitted profile/form pair.
+- Produces: a committed world → adapter → frame → optical observation →
+  observable → scene → DOM path with no hand-authored colour. Until a
+  quantitative profile is admitted, the production path must produce tagged
+  `OPTICAL_MODEL_DATA_MISSING`; test-only synthetic vectors may exercise the
+  positive transform but are never production content.
 
-- [ ] **Step 1: Write failing end-to-end tests**
+- [x] **Step 1: Write failing end-to-end tests**
 
 ```ts
 const composition = await composeProductionTitration();
 const observation = composition.observable.indicators[0]!.opticalObservation;
-expect(observation.status).toBe("OPTICAL_MODEL_OK");
-if (observation.status === "OPTICAL_MODEL_OK") {
-  expect(observation.sourceReplayHash).toBe(composition.frame.sourceStateHash);
-  expect(observation.profileHash).toBe(
-    composition.state.scenarioSnapshot.indicatorOpticalInputs[0]!.opticalProfile.profileHash,
-  );
-}
+expect(observation.status).toBe("OPTICAL_MODEL_DATA_MISSING");
+expect(observation.sourceReplayHash).toBe(composition.frame.sourceStateHash);
 ```
 
-Add a transfer test that changes the target liquid volume while conserving dose
-and proves the observed concentration/transmittance changes. Add Playwright
-assertions for status, profile ID/hash, concentration, fixed path, model
-limitation copy, and an optical tint node. Add a tampered-profile test that
-replay/composition rejects before it reaches DOM.
+The production composition and browser tests cover the refusal status, frozen
+profile/path metadata, dose/concentration context, limitation copy, and no-tint
+DOM path. Representation-engine tests cover concentration/path Beer–Lambert
+scaling with a clearly synthetic, test-only profile; schema/render tests reject
+tampered profile payloads before interpolation. A production positive tint test
+is deliberately not added while no quantitative profile is admitted.
 
-- [ ] **Step 2: Run focused tests and verify RED**
+- [x] **Step 2: Run focused tests and verify the refusal boundary**
 
 ```text
 pnpm exec vitest run apps/web/src/composition.test.ts
 pnpm exec playwright test
 ```
 
-Expected: the production scenario remains qualitative-only/data-missing until
-the accepted scientific form and quantitative profile are deliberately wired.
+The focused tests confirm that the production scenario remains
+qualitative-only/data-missing. The positive optical transform remains isolated
+to `packages/render/src/observable/optics.test.ts` and cannot be selected by
+the production scenario.
 
-- [ ] **Step 3: Enable exactly one accepted profile/form pair**
+- [x] **Step 3: Apply the scientific stop condition instead of enabling an unsupported pair**
 
-Update the production scenario only with the reviewed artifact and an accepted
-scientific model identity. In composition, build the observation from the final
-frame's state, inventory, frozen optical profile, and frozen path. Do not pass
-a manually authored tint, pH threshold, or palette constant through options.
+All five registry candidates remain `qualitative-only`; none has a complete
+numeric spectrum, source-condition packet, reusable rights basis, and review
+record. Therefore no production profile/form pair is enabled. Strong-acid
+phenolphthalein orange remains documented as a research/refusal boundary only;
+no orange spectrum, colour literal, or solver branch is added.
 
-- [ ] **Step 4: Run end-to-end checks and verify GREEN**
+- [x] **Step 4: Run end-to-end checks and verify the refusal-first path GREEN**
 
 ```text
 pnpm exec vitest run apps/web/src/composition.test.ts packages/render/src/observable/optics.test.ts
@@ -1185,12 +1208,17 @@ pnpm verify:indicator-optics
 pnpm verify:indicator-profiles
 ```
 
-- [ ] **Step 5: Commit end-to-end enablement**
+- [x] **Step 5: Record the non-enablement handoff**
 
 ```text
 git add apps/web/src/production-scenario.ts apps/web/src/composition.ts apps/web/src/composition.test.ts apps/web/src/App.tsx tests/browser/m5-composition.spec.ts docs/evidence/M4.md docs/evidence/M5.md
-git commit -m "Compose reviewed indicator optical observations"
+git commit -m "Record refusal-first optical composition handoff"
 ```
+
+No production enablement commit is permitted by the current stop condition.
+The existing composition commits and this plan/evidence handoff are the
+implementation boundary until a source-reviewed quantitative profile is
+separately admitted.
 
 ### Task 11: Run full verification, generate evidence, and retain correct stage gates
 
@@ -1203,7 +1231,7 @@ git commit -m "Compose reviewed indicator optical observations"
 - Consumes: all previous tasks and the committed implementation baseline.
 - Produces: an evidence matrix that reports each AC-O criterion and every M4/M5 criterion honestly; it does not authorize M6 or claim an unsupported indicator profile.
 
-- [ ] **Step 1: Run the complete repository verification set**
+- [x] **Step 1: Run the complete repository verification set**
 
 ```text
 pnpm generate:versions
@@ -1234,22 +1262,26 @@ uv run python tools/check_acceptance_coverage.py
 git diff --check
 ```
 
-- [ ] **Step 2: Record an honest evidence matrix**
+- [x] **Step 2: Record an honest evidence matrix**
 
 For each AC-O1…AC-O8 record the exact command, fixture/profile hash, source
 packet, model ID/version, optical artifact version from the manifest, result,
 and limitation. If no Task 9 model has owner acceptance or no Task 8 source
 packet reaches quantitative status, record `DATA_MISSING` evidence and keep
 AC-O2/AC-O4/AC-O8 incomplete; do not relabel the old qualitative palette as
-the optical model.
+the optical model. The current matrix is recorded in
+`docs/evidence/M5.md` and preserves the production refusal boundary.
 
-- [ ] **Step 3: Pin the committed baseline only after hosted CI succeeds**
+- [x] **Step 3: Pin the committed code baseline and distinguish hosted evidence**
 
-Record the implementation commit and the hosted CI run separately in M4/M5
-evidence. A local pass is not a hosted attestation. Preserve M5 as S2 until its
-DOM, visual, and owner-review gates actually satisfy the canonical criteria.
+The candidate implementation baseline `1b91dc1afce56c97adc8e9287dedc17169527a58`
+and hosted CI `34853566212` are recorded separately in the multiform evidence
+packet. This round's optical/reference handoff is a refusal-first update and
+does not claim a new hosted attestation. M5 remains S2 until its remaining
+DOM, visual, optical-profile, and owner-review gates satisfy the canonical
+criteria.
 
-- [ ] **Step 4: Commit and push the evidence handoff**
+- [x] **Step 4: Commit and push the evidence handoff**
 
 ```text
 git add docs/evidence/M4.md docs/evidence/M5.md docs/plans/PLAN-0001-world-foundation-acid-base-titration.md

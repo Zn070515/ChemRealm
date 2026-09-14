@@ -1,6 +1,7 @@
 # Indicator Optical Observation Design
 
-> **Status:** Proposed design — no implementation or acceptance claim
+> **Status:** Candidate boundary implemented through refusal-first S2; no
+> quantitative production profile or `OPTICAL_MODEL_OK` acceptance claim
 > 
 > **Scope:** A data-backed replacement for endpoint-RGB indicator presentation.
 > 
@@ -11,9 +12,10 @@
 
 ## Context
 
-M5 currently maps a Scientific Core indicator `protonationRatio` directly onto
-identity-keyed endpoint RGB tokens. The tokens have now gained resolvable
-qualitative provenance, but they are still **presentation approximations**:
+The earlier M5 slice mapped a Scientific Core indicator `protonationRatio`
+directly onto identity-keyed endpoint RGB tokens. Those tokens gained
+resolvable qualitative provenance, but they remained **presentation
+approximations**:
 they do not contain an absorption spectrum, indicator amount, solution
 concentration, optical path length, illumination, observer model, or a
 coverage/refusal policy. They therefore cannot truthfully be described as a
