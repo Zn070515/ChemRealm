@@ -16,6 +16,7 @@ import { buildAcidBaseSolveRequest } from "./acidbase/request.js";
 import { createAcidBaseAdapter } from "./acidbase/index.js";
 import {
   createNativeJsonAdapter,
+  createWasmJsonExecutor,
   loadNativeWasmExecutor,
   NATIVE_BRIDGE_SCHEMA_VERSION,
   type NativeBackendPayload,
@@ -215,6 +216,30 @@ describe("native scientific backend facade", () => {
     });
 
     await expect(adapter.solve(request)).rejects.toThrow("WASM unavailable");
+  });
+
+  it("deallocates a malformed native output buffer when UTF-8 decoding fails", () => {
+    const memory = new ArrayBuffer(128);
+    const deallocations: Array<[number, number]> = [];
+    const outputPointer = 32;
+    new Uint8Array(memory)[outputPointer] = 0xc3;
+
+    const execute = createWasmJsonExecutor({
+      exports: {
+        memory: { buffer: memory },
+        chemrealm_alloc: () => 8,
+        chemrealm_dealloc: (pointer: number, length: number) => {
+          deallocations.push([pointer, length]);
+        },
+        chemrealm_solve_json: () => (1n << 32n) | BigInt(outputPointer),
+      },
+    } as never);
+
+    expect(() => execute("x")).toThrow();
+    expect(deallocations).toEqual([
+      [8, 1],
+      [outputPointer, 1],
+    ]);
   });
 
   it("returns INVALID_INPUT at the facade boundary without invoking native code", async () => {
