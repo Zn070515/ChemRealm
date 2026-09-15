@@ -141,8 +141,9 @@ production constant in renderer code.
 PixiJS v8 is an adapter below `RenderState`. It creates an asynchronous
 application, fits a fixed logical scene to its host, draws the original
 apparatus layers and keeps text/readouts in the DOM companion surface. The
-renderer uses one light direction, glass tint, highlight side and stroke family
-for the asset family. Runtime text, graduations, liquid height and meniscus are
+renderer uses one light direction, highlight side and stroke family for the
+scene, with declared family-specific glass/material profiles that remain
+visually compatible. Runtime text, graduations, liquid height and meniscus are
 drawn from render data rather than baked into the master.
 
 ### Surface separation

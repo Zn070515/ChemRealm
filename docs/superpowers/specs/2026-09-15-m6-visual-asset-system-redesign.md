@@ -145,6 +145,21 @@ source/license records, QA and deterministic fixture. Visual and interaction
 geometry are separate records linked by part ID. Runtime executable profiles are
 constructed only from validated content-addressed snapshots.
 
+The Gold Master package uses family-owned anatomy rather than a universal layer
+checklist. Acid burettes expose PTFE stopcock body and rotary-key parts; alkali
+burettes expose a lower glass connector, rubber delivery tube, glass bead and
+pinch region; beakers expose an open rim with an integrated rim-continuous
+spout and glass contact foot; Erlenmeyer flasks expose a curved shoulder,
+cylindrical neck, open rim and flat contact foot. Fictitious base or hardware
+layers are forbidden. Each asset records a material profile, at least five
+landmark anchors and deterministic LOD visibility.
+
+The master SVG is construction truth and contains no scene shadow. Later LODs
+may add a scene-owned contact shadow but may not change family anatomy,
+capacity, declared dimensions, profile identity or actuator identity. Physical
+and normalized comparison sheets must be generated from the actual master
+geometry, never from hand-authored proxy outlines.
+
 ## Learning design
 
 M6 makes apparatus and state legible for future prediction, operation,
@@ -167,6 +182,7 @@ Planned Representation Engine additions are:
 - typed anchors and hit regions linked to parts;
 - capability and state-coverage records;
 - family-level visual-token and construction-template identity;
+- family-specific anatomy, landmark and material-profile records;
 - deterministic size-class/LOD selection for master, scene, preview and
   thumbnail surfaces;
 - explicit experiment-world, measurement, catalog-preview, inspector and
@@ -207,15 +223,17 @@ Tests must be written before each implementation change and observed failing.
 2. Asset tests cover layers, bounds, no external references, provenance,
    license and central version source.
 3. Geometry tests cover profile round-trip, liquid clipping, graduation
-   direction, family construction markers and profile-preserving LOD variants.
+   direction, family-specific anatomy, landmark bounds, material-profile
+   identity and profile-preserving LOD variants.
 4. Render tests prove Pixi consumes only RenderState and dynamic values come
    from Observable output.
 5. Fixtures cover empty, loaded, selected, refusal and supported observation
    states where declared.
 6. Interaction tests prove traceability without creating World events.
 7. Browser captures cover all four named viewports and accessible readouts.
-8. Physical-scale and normalized-shape comparison sheets cover every family
-   variation and list changed parameters with source/rationale.
+8. Physical-scale and normalized-shape comparison sheets embed every checked-in
+   master geometry, cover every family variation and list changed parameters
+   with source/rationale.
 9. Size-class and thumbnail tests cover identity-defining features at small
    rendered heights; dual-background captures cover dark and light neutral
    conditions.

@@ -1,53 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="28 12 390 260" data-asset-id="conical-flask-100ml" data-specification-id="conical-flask-100ml" data-family-id="conical-flask" data-capacity-ml="100" data-dimensions-mm="62 105 62" data-lod="scene" data-coordinate-unit="mm" data-visual-role="apparatus-geometry" data-view-mode="experiment-world" data-measurement-qualified="false" role="img" aria-labelledby="title desc">
-  <title id="title">Erlenmeyer flask, 100 mL — scene construction</title>
-  <desc id="desc">Original ChemRealm apparatus geometry. This scene LOD preserves semantic structure and contains no runtime reading, liquid quantity or chemical colour.</desc>
-  <defs>
-    <linearGradient id="conical-flask-100ml-glass" x1="0" x2="1" y1="0" y2="0">
-      <stop offset="0" stop-color="#8ab5bf" stop-opacity=".16"/>
-      <stop offset=".12" stop-color="#ffffff" stop-opacity=".42"/>
-      <stop offset=".32" stop-color="#d7eef1" stop-opacity=".12"/>
-      <stop offset=".78" stop-color="#ffffff" stop-opacity=".30"/>
-      <stop offset="1" stop-color="#5d8b95" stop-opacity=".20"/>
-    </linearGradient>
-    <linearGradient id="conical-flask-100ml-glass-edge" x1="0" x2="1">
-      <stop offset="0" stop-color="#315c66"/>
-      <stop offset=".5" stop-color="#9fc5c9"/>
-      <stop offset="1" stop-color="#2d5059"/>
-    </linearGradient>
-    <linearGradient id="conical-flask-100ml-steel" x1="0" x2="1">
-      <stop offset="0" stop-color="#26353b"/>
-      <stop offset=".18" stop-color="#7c9298"/>
-      <stop offset=".40" stop-color="#e2eaeb"/>
-      <stop offset=".58" stop-color="#71848a"/>
-      <stop offset="1" stop-color="#1e292e"/>
-    </linearGradient>
-    <linearGradient id="conical-flask-100ml-rubber" x1="0" x2="1">
-      <stop offset="0" stop-color="#192328"/>
-      <stop offset=".45" stop-color="#59686b"/>
-      <stop offset="1" stop-color="#11191d"/>
-    </linearGradient>
-    <filter id="conical-flask-100ml-shadow" x="-30%" y="-40%" width="160%" height="190%">
-      <feGaussianBlur stdDeviation="5"/>
-    </filter>
-    <style>
-      .edge { stroke: url(#conical-flask-100ml-glass-edge); stroke-linejoin: round; }
-      .glass-fill { fill: url(#conical-flask-100ml-glass); }
-      .steel-fill { fill: url(#conical-flask-100ml-steel); }
-      .rubber-fill { fill: url(#conical-flask-100ml-rubber); }
-      .detail { stroke: #29444c; stroke-linecap: round; stroke-linejoin: round; }
-      .highlight { stroke: #f8ffff; stroke-linecap: round; fill: none; }
-    </style>
-  </defs>
-  <g data-layer="shadow"><ellipse cx="185" cy="171.3" rx="43.7224" ry="16" fill="#203137" opacity=".13" filter="url(#conical-flask-100ml-shadow)"/></g>
-  <g data-layer="glass-back" data-part="vessel.body"><path d="M169 72L137.68 119.30000000000001Q131.68 126.30000000000001 131.68 140.3Q131.68 153.3 147.68 154.3H222.32Q238.32 153.3 238.32 140.3Q238.32 126.30000000000001 232.32 119.30000000000001L201 72Z" class="glass-fill edge" stroke-width="4.3"/></g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="28 12 390 270" data-asset-id="conical-flask-100ml" data-specification-id="conical-flask-100ml" data-family-id="conical-flask" data-capacity-ml="100" data-dimensions-mm="62 105 62" data-material-profile="curved-borosilicate-vessel" data-lod="scene" data-lod-detail="scene" data-coordinate-unit="mm" data-visual-role="apparatus-geometry" data-view-mode="experiment-world" data-measurement-qualified="false" data-anatomy="flat-contact-foot|curved-conical-body|shoulder-transition|cylindrical-neck|open-mouth-rim|interior-cavity" role="img" aria-labelledby="conical-flask-100ml-scene-title conical-flask-100ml-scene-desc">
+<title id="conical-flask-100ml-scene-title">Erlenmeyer flask, 100 mL — scene construction</title>
+<desc id="conical-flask-100ml-scene-desc">Original ChemRealm apparatus geometry. This scene LOD preserves family anatomy and contains no runtime reading, liquid quantity or chemical colour.</desc>
+<defs><linearGradient id="conical-flask-100ml-glass" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#a7c5cd" stop-opacity=".12"/><stop offset=".14" stop-color="#ffffff" stop-opacity=".31"/><stop offset=".42" stop-color="#d2e9eb" stop-opacity=".10"/><stop offset="1" stop-color="#628b94" stop-opacity=".17"/></linearGradient><linearGradient id="conical-flask-100ml-edge" x1="0" x2="1"><stop offset="0" stop-color="#638b93" stop-opacity=".34"/><stop offset=".5" stop-color="#d9eff0" stop-opacity=".62"/><stop offset="1" stop-color="#638b93" stop-opacity=".30"/></linearGradient><linearGradient id="conical-flask-100ml-ptfe" x1="0" x2="1"><stop offset="0" stop-color="#d5d8d3"/><stop offset=".42" stop-color="#f5f4ea"/><stop offset="1" stop-color="#9da49d"/></linearGradient><linearGradient id="conical-flask-100ml-rubber" x1="0" x2="1"><stop offset="0" stop-color="#3d4a4a"/><stop offset=".5" stop-color="#8a9890"/><stop offset="1" stop-color="#253131"/></linearGradient><filter id="conical-flask-100ml-shadow" x="-30%" y="-40%" width="160%" height="190%"><feGaussianBlur stdDeviation="5"/></filter><style>.glass-fill{fill:url(#conical-flask-100ml-glass)}.glass-edge{fill:none;stroke:url(#conical-flask-100ml-edge);stroke-linecap:round;stroke-linejoin:round}.detail{stroke:#49686d;stroke-linecap:round;stroke-linejoin:round;fill:none}.highlight{stroke:#f7ffff;stroke-linecap:round;stroke-linejoin:round;fill:none}.ptfe-fill{fill:url(#conical-flask-100ml-ptfe)}.rubber-fill{fill:url(#conical-flask-100ml-rubber)}</style></defs>
+<g data-layer="shadow"><ellipse cx="185" cy="174.05" rx="41.59" ry="15" fill="#203137" opacity=".13" filter="url(#conical-flask-100ml-shadow)"/></g>
+  <g data-layer="body" data-part="vessel.body"><path d="M 169 77.9 C 165 99.9 157.68 96.05 139.68 124.05 C 127.68 142.05 131.68 155.05 149.68 158.05 C 187.68 164.05 182.32 164.05 220.32 158.05 C 238.32 155.05 242.32 142.05 230.32 124.05 C 212.32 96.05 205 99.9 201 77.9 Z" class="glass-fill"/></g>
+  <g data-layer="glass-back" data-part="vessel.body"><path d="M145.68 122.05C163.68 94.05 168 109.9 171 91.9" class="glass-edge" stroke-width="2.2" opacity=".58"/><path d="M224.32 122.05C206.32 94.05 202 109.9 199 91.9" class="glass-edge" stroke-width="1.8" opacity=".34"/></g>
+  <g data-layer="shoulder" data-part="vessel.shoulder"><path d="M177 90.9C167 111.9 159.68 100.05 147.68 119.05" class="highlight" stroke-width="2.4" opacity=".28"/><path d="M193 90.9C203 111.9 210.32 100.05 222.32 119.05" class="glass-edge" stroke-width="1.8" opacity=".38"/></g>
+  <g data-layer="neck" data-part="vessel.neck"><path d="M169 79.9V44Q169 38 175 38H195Q201 38 201 44V79.9" class="glass-fill"/><path d="M169 79.9V44Q169 38 175 38H195Q201 38 201 44V79.9" class="glass-edge" stroke-width="2.7"/></g>
+  <g data-layer="rim" data-part="vessel.rim"><ellipse cx="185" cy="38" rx="21" ry="8" fill="#dceff0" fill-opacity=".34" stroke="#719ba0" stroke-width="2.5"/><ellipse cx="185" cy="38" rx="15" ry="4.5" fill="#ffffff" fill-opacity=".18"/></g>
   <g data-layer="liquid" data-runtime="true" opacity="0"><desc>Liquid interior; supplied by RenderState at runtime.</desc></g>
   <g data-layer="meniscus" data-runtime="true" opacity="0"><desc>Meniscus; supplied by RenderState at runtime.</desc></g>
-  <g data-layer="body" data-part="vessel.body"><path d="M147.68 111.30000000000001Q185 143.3 222.32 111.30000000000001" fill="none" stroke="#9fc8ca" stroke-width="3" opacity=".32"/></g>
-  <g data-layer="neck" data-part="vessel.neck"><path d="M169 72V36Q169 31 174 31H196Q201 31 201 36V72" class="glass-fill edge" stroke-width="4.3"/><path d="M176 43v28" stroke="#ffffff" stroke-width="4.5" opacity=".50" class="highlight"/></g>
-  <g data-layer="rim" data-part="vessel.rim"><ellipse cx="185" cy="31" rx="21" ry="9" fill="#dff0f1" fill-opacity=".46" stroke="#315b64" stroke-width="3.5"/><ellipse cx="185" cy="31" rx="15" ry="5" fill="#ffffff" fill-opacity=".20" stroke="#96b9be" stroke-width="2"/></g>
-  <g data-layer="base" data-part="vessel.base"><path d="M136.68 151.3H233.32" stroke="#2d525b" stroke-width="9" stroke-linecap="round"/><path d="M146.68 157.3H223.32" stroke="#f1fbfb" stroke-width="3" stroke-linecap="round" opacity=".56"/></g>
-  <g data-layer="hardware"><path d="M151.68 152.3h66.63999999999999" stroke="#78969b" stroke-width="3" opacity=".62"/></g>
-  <g data-layer="glass-front"><path d="M152.68 99L140.68 131.3M217.32 99L229.32 131.3" stroke="#ffffff" stroke-width="2.8" opacity=".32" class="highlight"/></g>
-  <g data-layer="highlight"><path d="M173 80L153.68 114.30000000000001M197 80L216.32 114.30000000000001" stroke="#ffffff" stroke-width="3" opacity=".30" class="highlight"/></g>
-  <g data-layer="accessibility"><rect x="116.68" y="16" width="136.64" height="153.3" fill="none" stroke="#79d0d5" stroke-width="2" stroke-dasharray="8 8" opacity="0"/></g>
+  <g data-layer="contact-base" data-part="vessel.contact-foot"><path d="M149.68 158.05C176.68 164.05 193.32 164.05 220.32 158.05" class="glass-edge" stroke-width="6" opacity=".68"/><path d="M163.68 163.05H206.32" class="highlight" stroke-width="2.1" opacity=".38"/></g>
+  <g data-layer="glass-front" data-part="vessel.body"><path d="M161.68 118.05C183.68 98.05 173 145.9 177 111.9" class="highlight" stroke-width="3.2" opacity=".25"/></g>
+  <g data-layer="highlight"><path d="M175 129.9C157 159.9 141 96.05 132 114.05" class="highlight" stroke-width="1.8" opacity=".20"/></g>
+  <g data-layer="construction-detail"><path d="M149.68 117.95h70.64" class="glass-edge" stroke-width="1" opacity=".34"/><path d="M152.68 120h64.64" class="glass-edge" stroke-width="1" opacity=".34"/></g>
+  <g data-layer="accessibility"><rect x="116.68" y="20" width="136.64" height="151.05" fill="none" stroke="#79c5c8" stroke-width="2" stroke-dasharray="8 8" opacity="0"/></g>
 </svg>

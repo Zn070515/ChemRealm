@@ -187,6 +187,11 @@ directional highlights / contact shadows
 interaction overlay / accessibility outline
 ```
 
+This is a conceptual rendering order, not a universal required-layer list.
+Family-owned anatomy determines which structural layers exist; an asset must
+never invent a base, hardware, actuator or support layer solely to satisfy this
+ordering.
+
 Stable layer names are required whether the implementation uses SVG groups,
 Pixi objects or another approved adapter. Runtime values remain RenderState
 values; the renderer does not infer chemistry from a layer.
@@ -195,7 +200,7 @@ Apparatus geometry and phenomena are separate layers and separate contracts:
 
 ```text
 apparatus geometry
-  → body / rim / wall / base / hardware / ports
+  → family-owned body / rim / wall / contact surface / actuator / ports
 state overlays
   → liquid / meniscus / gas / solid / precipitate / bubbles / thermal cue
 explanatory overlays
@@ -277,7 +282,7 @@ variants that preserve semantic identity while changing only what is visible:
 | LOD | Must retain | May simplify/omit | Measurement use |
 |---|---|---|---|
 | `master` / `construction` | every structural surface, part, port, actuator, layer and QA marker | nothing except hidden QA guides | no |
-| `scene` | silhouette, rim/neck/base, spout/outlet, actuator, major liquid region, major graduations | micro seams, hidden construction guides, minor marks when unreadable | yes only through measurement presentation |
+| `scene` | silhouette, family-owned rim/neck/contact surface, spout/outlet, actuator, major liquid region, major graduations | micro seams, hidden construction guides, minor marks when unreadable | yes only through measurement presentation |
 | `preview` | recognizable silhouette, functional opening/neck, spout/outlet, actuator, detachable-part cues | fine graduations, tiny labels, noncritical shadows | **no** |
 | `thumbnail` | family silhouette plus the one or two identity-defining features (for example neck, spout, side arm or stopper) | minor graduations, labels, micro seams and subtle shadows | **no** |
 
@@ -346,7 +351,44 @@ the tube. The asset must preserve the top-zero/downward-increasing convention,
 the bottom-meniscus reading point and a two-decimal-millilitre display policy;
 the delivered volume is derived from the difference between readings upstream.
 
-## 4. Family geometry rules
+## 4. Family anatomy and landmark contract
+
+Gold Master tests must describe actual family anatomy, not force every asset
+through one universal layer list. A layer is required only when the physical
+family owns that structure. The package must never add a fictitious base or
+hardware group solely to satisfy a structural test.
+
+| Family | Required anatomy | Prohibited shortcut |
+|---|---|---|
+| Acid burette | graduated tube, open mouth/rim, PTFE stopcock body, rotary key, outlet tip, support interface and detachable actuator | capsule tube plus industrial-looking generic box |
+| Alkali burette | graduated tube, open mouth/rim, lower glass connector, rubber delivery tube, glass bead, pinch region, outlet tip and support interface | reusing the acid stopcock under a different label |
+| Beaker | straight-wall body, open rim, interior cavity, rim-continuous integrated spout, graduation marks and glass contact foot | oversized triangular bird-beak spout or a fake hardware/base layer |
+| Erlenmeyer flask | curved conical body, continuous shoulder transition, cylindrical neck, open mouth/rim and flat glass contact foot | hard trapezoid with a detached neck or decorative base |
+
+Every asset manifest records at least five measurable landmark anchors. Burettes
+record mouth/tube diameter, graduated length, actuator position, outlet tip
+length and support interface. Beakers record mouth diameter, wall height, rim
+thickness, spout maximum projection, flat contact width and graduation origin.
+Flasks record mouth and neck diameter, neck length, shoulder transition height,
+maximum body diameter, lower curvature/base radius and flat contact width.
+These are visual proportion anchors, not certified metrology.
+
+The beaker spout is a short continuous deformation of the open rim. Its
+maximum projection is bounded by the manifest and the spout layer must declare
+rim-continuity. It may not be a detached filled triangle.
+
+Material profiles are family-specific. Shared light direction and token ranges
+do not imply identical gradients: burette glass, open borosilicate vessels,
+curved borosilicate vessels, PTFE and rubber each need their own restrained
+response. Glass must not be drawn as a continuous equal-weight, high-contrast
+closed contour; use local rear/front edges, rim thickness and directional
+highlights so the object reads as glass rather than a dark icon.
+
+The master is construction truth and contains no scene shadow. Scene and later
+LODs may add a scene-owned contact shadow. Comparison sheets must embed the
+actual generated master geometry and may not use hand-authored proxy outlines.
+
+## 4.1 Family geometry rules
 
 ### Burette
 
@@ -440,6 +482,9 @@ M6 requires two separate comparison sheets for each represented family:
 
 Each sheet records the changed parameters, their provenance class, source or
 rationale, and whether the comparison is measurement-valid or visual-only.
+The comparison geometry must be embedded from the generated master SVG files
+and marked with the source asset ID and master LOD. Hand-authored proxy
+silhouettes, even when labelled with the correct asset ID, are not evidence.
 
 ## 6. Visual state and interaction separation
 

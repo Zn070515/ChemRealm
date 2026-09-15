@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "fixtureId": "m6-gold-master-static-review-v1",
+  "fixtureId": "m6-gold-master-static-review-v2",
   "renderMode": "asset-package-review",
   "source": "Gold Master manifest plus state manifest; no chemistry or runtime measurement values",
   "assetIds": [

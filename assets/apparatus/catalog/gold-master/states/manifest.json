@@ -5,10 +5,9 @@
     {
       "id": "empty",
       "visibleLayers": [
-        "glass",
-        "rim",
-        "graduation",
-        "hardware",
+        "apparatus-body",
+        "rim-or-mouth",
+        "contact-surface",
         "shadow"
       ],
       "description": "Geometry-only empty apparatus; no runtime quantity is baked into the master."
@@ -16,10 +15,10 @@
     {
       "id": "filled",
       "visibleLayers": [
-        "glass",
-        "rim",
-        "graduation",
-        "hardware",
+        "apparatus-body",
+        "rim-or-mouth",
+        "graduation-when-present",
+        "contact-surface",
         "liquid",
         "meniscus",
         "shadow"
@@ -29,17 +28,13 @@
     {
       "id": "connected",
       "visibleLayers": [
-        "glass",
-        "rim",
-        "graduation",
-        "hardware",
-        "liquid",
-        "meniscus",
+        "apparatus-body",
+        "connection-port",
         "detachable",
         "connection-highlight",
         "shadow"
       ],
-      "description": "Detachable-part connection state; currently declared for burette specifications."
+      "description": "Detachable-part connection state; declared only for burette specifications."
     }
   ],
   "assets": [

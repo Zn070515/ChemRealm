@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "assetVersionSource": "contracts/version-manifest.json#representation.apparatusAsset",
   "catalogVersionSource": "contracts/version-manifest.json#representation.apparatusCatalog",
   "visualFamily": "chemrealm-lab-v1",
@@ -41,19 +41,48 @@
         820,
         30
       ],
+      "materialProfile": "burette-glass-ptfe",
+      "anatomy": [
+        "graduated-tube",
+        "open-mouth",
+        "rim",
+        "ptfe-stopcock-body",
+        "rotary-key",
+        "outlet-tip",
+        "support-interface",
+        "detachable-actuator"
+      ],
+      "landmarksMm": {
+        "mouthOuterDiameter": 16,
+        "tubeOuterDiameter": 15,
+        "graduatedLength": 720,
+        "stopcockCenterFromBottom": 52,
+        "tipLength": 48,
+        "supportInterfaceHeight": 12
+      },
       "identityLayers": [
+        "body",
         "glass-back",
         "glass-front",
         "rim",
-        "base",
-        "hardware",
-        "highlight",
         "graduation",
-        "actuator"
+        "stopcock",
+        "stopcock-key",
+        "tip",
+        "support-interface",
+        "highlight",
+        "detachable"
       ],
+      "lodVisibility": {
+        "master": "full",
+        "scene": "scene",
+        "preview": "catalog",
+        "thumbnail": "identity"
+      },
       "actuatorKind": "rotary-valve",
       "provenanceRefs": [
         "duran-burette-25ml-class-as",
+        "duran-burette-ptfe-stopcock",
         "jy-t-0655-2025",
         "chemrealm-visual-proportion-anchor"
       ],
@@ -74,16 +103,48 @@
         900,
         36
       ],
+      "materialProfile": "burette-glass-rubber",
+      "anatomy": [
+        "graduated-tube",
+        "open-mouth",
+        "rim",
+        "lower-glass-connector",
+        "rubber-delivery-tube",
+        "glass-bead",
+        "pinch-region",
+        "outlet-tip",
+        "support-interface",
+        "detachable-actuator"
+      ],
+      "landmarksMm": {
+        "mouthOuterDiameter": 18,
+        "tubeOuterDiameter": 18,
+        "graduatedLength": 790,
+        "connectorCenterFromBottom": 60,
+        "tipLength": 56,
+        "supportInterfaceHeight": 12
+      },
       "identityLayers": [
+        "body",
         "glass-back",
         "glass-front",
         "rim",
-        "base",
-        "hardware",
-        "highlight",
         "graduation",
-        "actuator"
+        "lower-connector",
+        "rubber-tube",
+        "glass-bead",
+        "pinch-region",
+        "tip",
+        "support-interface",
+        "highlight",
+        "detachable"
       ],
+      "lodVisibility": {
+        "master": "full",
+        "scene": "scene",
+        "preview": "catalog",
+        "thumbnail": "identity"
+      },
       "actuatorKind": "pinch-valve",
       "provenanceRefs": [
         "jy-t-0655-2025",
@@ -106,15 +167,39 @@
         72,
         52
       ],
+      "materialProfile": "open-borosilicate-vessel",
+      "anatomy": [
+        "straight-wall-body",
+        "open-rim",
+        "integrated-pour-spout",
+        "interior-cavity",
+        "graduation-marks",
+        "flat-contact-foot"
+      ],
+      "landmarksMm": {
+        "mouthOuterDiameter": 52,
+        "wallHeight": 64,
+        "rimThickness": 2.4,
+        "spoutMaxProjection": 11,
+        "flatBaseWidth": 48,
+        "graduationStartHeight": 20
+      },
       "identityLayers": [
+        "body",
         "glass-back",
         "glass-front",
         "rim",
-        "base",
-        "hardware",
-        "highlight",
-        "spout"
+        "spout",
+        "graduation",
+        "contact-base",
+        "highlight"
       ],
+      "lodVisibility": {
+        "master": "full",
+        "scene": "scene",
+        "preview": "catalog",
+        "thumbnail": "identity"
+      },
       "provenanceRefs": [
         "jy-t-0655-2025",
         "chemrealm-visual-proportion-anchor"
@@ -136,15 +221,39 @@
         95,
         70
       ],
+      "materialProfile": "open-borosilicate-vessel",
+      "anatomy": [
+        "straight-wall-body",
+        "open-rim",
+        "integrated-pour-spout",
+        "interior-cavity",
+        "graduation-marks",
+        "flat-contact-foot"
+      ],
+      "landmarksMm": {
+        "mouthOuterDiameter": 70,
+        "wallHeight": 85,
+        "rimThickness": 2.6,
+        "spoutMaxProjection": 15,
+        "flatBaseWidth": 65,
+        "graduationStartHeight": 26
+      },
       "identityLayers": [
+        "body",
         "glass-back",
         "glass-front",
         "rim",
-        "base",
-        "hardware",
-        "highlight",
-        "spout"
+        "spout",
+        "graduation",
+        "contact-base",
+        "highlight"
       ],
+      "lodVisibility": {
+        "master": "full",
+        "scene": "scene",
+        "preview": "catalog",
+        "thumbnail": "identity"
+      },
       "provenanceRefs": [
         "jy-t-0655-2025",
         "chemrealm-visual-proportion-anchor"
@@ -166,15 +275,39 @@
         165,
         112
       ],
+      "materialProfile": "open-borosilicate-vessel",
+      "anatomy": [
+        "straight-wall-body",
+        "open-rim",
+        "integrated-pour-spout",
+        "interior-cavity",
+        "graduation-marks",
+        "flat-contact-foot"
+      ],
+      "landmarksMm": {
+        "mouthOuterDiameter": 112,
+        "wallHeight": 150,
+        "rimThickness": 3.2,
+        "spoutMaxProjection": 24,
+        "flatBaseWidth": 104,
+        "graduationStartHeight": 44
+      },
       "identityLayers": [
+        "body",
         "glass-back",
         "glass-front",
         "rim",
-        "base",
-        "hardware",
-        "highlight",
-        "spout"
+        "spout",
+        "graduation",
+        "contact-base",
+        "highlight"
       ],
+      "lodVisibility": {
+        "master": "full",
+        "scene": "scene",
+        "preview": "catalog",
+        "thumbnail": "identity"
+      },
       "provenanceRefs": [
         "jy-t-0655-2025",
         "chemrealm-visual-proportion-anchor"
@@ -196,16 +329,40 @@
         105,
         62
       ],
+      "materialProfile": "curved-borosilicate-vessel",
+      "anatomy": [
+        "flat-contact-foot",
+        "curved-conical-body",
+        "shoulder-transition",
+        "cylindrical-neck",
+        "open-mouth-rim",
+        "interior-cavity"
+      ],
+      "landmarksMm": {
+        "mouthOuterDiameter": 22,
+        "neckOuterDiameter": 18,
+        "neckLength": 34,
+        "shoulderTransitionHeight": 22,
+        "maxBodyDiameter": 54,
+        "bottomCornerRadius": 8,
+        "flatBaseWidth": 48
+      },
       "identityLayers": [
+        "body",
+        "shoulder",
+        "neck",
+        "rim",
+        "contact-base",
         "glass-back",
         "glass-front",
-        "rim",
-        "base",
-        "hardware",
-        "highlight",
-        "body",
-        "neck"
+        "highlight"
       ],
+      "lodVisibility": {
+        "master": "full",
+        "scene": "scene",
+        "preview": "catalog",
+        "thumbnail": "identity"
+      },
       "provenanceRefs": [
         "jy-t-0655-2025",
         "chemrealm-visual-proportion-anchor"
@@ -227,16 +384,40 @@
         145,
         85
       ],
+      "materialProfile": "curved-borosilicate-vessel",
+      "anatomy": [
+        "flat-contact-foot",
+        "curved-conical-body",
+        "shoulder-transition",
+        "cylindrical-neck",
+        "open-mouth-rim",
+        "interior-cavity"
+      ],
+      "landmarksMm": {
+        "mouthOuterDiameter": 28,
+        "neckOuterDiameter": 23,
+        "neckLength": 48,
+        "shoulderTransitionHeight": 30,
+        "maxBodyDiameter": 74,
+        "bottomCornerRadius": 10,
+        "flatBaseWidth": 65
+      },
       "identityLayers": [
+        "body",
+        "shoulder",
+        "neck",
+        "rim",
+        "contact-base",
         "glass-back",
         "glass-front",
-        "rim",
-        "base",
-        "hardware",
-        "highlight",
-        "body",
-        "neck"
+        "highlight"
       ],
+      "lodVisibility": {
+        "master": "full",
+        "scene": "scene",
+        "preview": "catalog",
+        "thumbnail": "identity"
+      },
       "provenanceRefs": [
         "duran-erlenmeyer-250ml",
         "jy-t-0655-2025",
@@ -259,16 +440,40 @@
         186,
         102
       ],
+      "materialProfile": "curved-borosilicate-vessel",
+      "anatomy": [
+        "flat-contact-foot",
+        "curved-conical-body",
+        "shoulder-transition",
+        "cylindrical-neck",
+        "open-mouth-rim",
+        "interior-cavity"
+      ],
+      "landmarksMm": {
+        "mouthOuterDiameter": 34,
+        "neckOuterDiameter": 28,
+        "neckLength": 62,
+        "shoulderTransitionHeight": 38,
+        "maxBodyDiameter": 88,
+        "bottomCornerRadius": 12,
+        "flatBaseWidth": 78
+      },
       "identityLayers": [
+        "body",
+        "shoulder",
+        "neck",
+        "rim",
+        "contact-base",
         "glass-back",
         "glass-front",
-        "rim",
-        "base",
-        "hardware",
-        "highlight",
-        "body",
-        "neck"
+        "highlight"
       ],
+      "lodVisibility": {
+        "master": "full",
+        "scene": "scene",
+        "preview": "catalog",
+        "thumbnail": "identity"
+      },
       "provenanceRefs": [
         "jy-t-0655-2025",
         "chemrealm-visual-proportion-anchor"

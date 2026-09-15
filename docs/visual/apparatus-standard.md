@@ -155,10 +155,12 @@ an upstream state overlay.
 
 ### Consistency rule
 
-All apparatus in one scene shares one light direction, one glass tint, one
-highlight side, and one stroke family. `AGENTS.md` §14 prohibits inconsistent
-apparatus perspective or material style. A burette and a flask that disagree
-about where the light comes from read as a collage, not a scene.
+All apparatus in one scene shares one light direction, highlight side and
+stroke family, while each declared material profile may have its own restrained
+glass tint and response. `AGENTS.md` §14 prohibits inconsistent apparatus
+perspective or material style. A burette and a flask that disagree about where
+the light comes from read as a collage, not a scene. Family-specific profiles
+must remain visually compatible; they are not a license for unrelated recipes.
 
 ## 3. Typography and readouts
 
@@ -253,8 +255,10 @@ Every item is pass/fail. Any fail blocks the stage (`GOAL.md` §16 Gate D).
       non-measurement.
 
 **Consistency**
-- [ ] Single light direction across all apparatus in the scene.
-- [ ] Single glass tint and highlight side.
+- [ ] Single light direction, highlight side and compatible stroke family across
+      all apparatus in the scene.
+- [ ] Family-specific glass/material profiles are declared and remain within
+      the shared visual language; a universal glass tint is not required.
 - [ ] Stroke weights follow the size-class rule.
 - [ ] Master/scene/preview/thumbnail LODs retain the required identity-defining
       structures and do not alter semantic dimensions or profile identity.
