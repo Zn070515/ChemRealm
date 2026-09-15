@@ -51,7 +51,7 @@ must(entry, /final apparatus asset package and semantic asset contract/i,
   "M6 asset contract is explicitly unverified at entry");
 must(entry, /PixiJS\/renderer implementation and layer ownership/i,
   "M6 renderer work is explicitly unverified at entry");
-const hasRecordedHostedAttestation = /Hosted attestation is now recorded for the exact committed baseline/i.test(entry);
+const hasRecordedHostedAttestation = /Hosted attestation is now recorded for the exact committed\s+baseline/i.test(entry);
 const hasPendingHostedAttestation = /A new hosted attestation must be recorded here only after/i.test(entry);
 if (!hasRecordedHostedAttestation && !hasPendingHostedAttestation) {
   failures.push("missing: M6 packet records either the post-push hosted evidence or an explicit pending-attestation state");

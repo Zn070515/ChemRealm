@@ -1,8 +1,9 @@
 # M6 Entry Gate
 
-**Status:** **Ready for owner authorization after current-round attestation** —
-the corrected optical baseline must pass hosted CI; this packet is an entry
-gate, not an M6 S3 claim.
+**Status:** **Ready for owner authorization** — the corrected optical baseline
+has passed the exact committed-baseline hosted attestation recorded below;
+owner acceptance of the applicable candidate amendments is still required.
+This packet is an entry gate, not an M6 S3 claim.
 
 **Purpose:** Record the prerequisites for beginning M6 final-quality apparatus
 realization. M6 is the first milestone that may introduce concrete apparatus
@@ -16,8 +17,8 @@ not implemented or accepted by this packet.
 |---|---|---|
 | Legacy M4 scientific core | PASS — accepted | [`M4.md`](M4.md), accepted TypeScript baseline and PHREEQC bounded non-equivalence disposition |
 | Native M4-B scientific backend | PASS locally and hosted — owner gate open | [`M4-native.md`](M4-native.md), native v2 REF/differential/domain/world/browser checks; commit `66b488a3e7483b776711d0e9d6ab723698dc3a35`, CI run #140 (`34868257380`), local release WASM `sha256:c03fc50d7fb8aa6bae79dd9638b14095f1cf919bdfb8e31c64bda93ce05c3887` |
-| M5 observable/composition contract | PASS locally and hosted — owner gate open | [`M5.md`](M5.md), World → ScientificFrame → ObservableModel → DOM path and refusal/in-coverage optical cases; current-round hosted attestation remains required for the corrected optical baseline |
-| Ordinary optical profile | PASS locally, current-round hosted attestation required | `phenolphthalein-ordinary-aqueous.profile.json`, source/review packets, exact profile hash `sha256:8d02fca6fbf715f9a15ee6366e981afde9a68b5062ac8f9cffae3bdcfb03a872`, full 380–780 nm/5 nm grid, blank-normalized CIE transform, focused in-coverage positive transform tests, and browser refusal evidence for the default 25 °C composition |
+| M5 observable/composition contract | PASS locally and hosted — owner gate open | [`M5.md`](M5.md), World → ScientificFrame → ObservableModel → DOM path and refusal/in-coverage optical cases; corrected baseline `bdef2366a2c34bd57604eb2825a57a5df15c2ed3`, hosted CI #143 (`34924905998`) |
+| Ordinary optical profile | PASS locally and hosted — owner gate open | `phenolphthalein-ordinary-aqueous.profile.json`, source/review packets, exact profile hash `sha256:8d02fca6fbf715f9a15ee6366e981afde9a68b5062ac8f9cffae3bdcfb03a872`, full 380–780 nm/5 nm grid, blank-normalized CIE transform, focused in-coverage positive transform tests, and browser refusal evidence for the default 25 °C composition; corrected baseline `bdef2366a2c34bd57604eb2825a57a5df15c2ed3`, hosted CI #143 (`34924905998`) |
 | Strong-acid phenolphthalein orange | REFUSAL-ONLY | Documented in [`ADR-0016`](../adr/0016-indicator-optical-observation-boundary.md) and optical research packets; no production positive path |
 | Active version distribution | PASS locally | `contracts/version-manifest.json` is the sole manually maintained source; generated version output is checked by `pnpm verify:versions` |
 | Canonical SPEC candidate | REVIEW REQUIRED | Current candidate revision 30 is read from the central version manifest; owner must review the optical correction and all candidate amendments before M6 authorization |
@@ -75,8 +76,11 @@ git diff --check
 ```
 
 The prior hosted attestation for the historical optical baseline is retained in
-M5 evidence. A new hosted attestation must be recorded here only after the
-corrected production CIE/profile path, regenerated version/schema artifacts,
-and all applicable checks pass on one committed baseline. This still does not
-silently promote a local candidate to M6 authorization; owner acceptance of the
-applicable SPEC amendments is the remaining gate.
+M5 evidence. **Hosted attestation is now recorded for the exact committed
+baseline** `bdef2366a2c34bd57604eb2825a57a5df15c2ed3` (`Keep M6 attestation gate
+honest before hosted CI`), CI #143 / run `34924905998`:
+<https://github.com/Zn070515/ChemRealm/actions/runs/34924905998>. The run passed
+the corrected production CIE/profile path, regenerated version/schema artifacts,
+and all repository checks. This still does not silently promote a local
+candidate to M6 authorization; owner acceptance of the applicable SPEC
+amendments is the remaining gate.

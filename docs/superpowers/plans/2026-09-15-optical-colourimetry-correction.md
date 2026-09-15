@@ -2,7 +2,8 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Status:** Implementation complete locally; current-round hosted attestation and owner acceptance of the candidate amendments remain open.
+**Status:** Implementation complete and attested on the committed baseline;
+owner acceptance of the candidate amendments remains open.
 
 **Goal:** Replace the invalid three-point production colour path with a source-attributed, full-visible-spectrum colourimetry transform whose optical constants and evidence cannot be mistaken for a test fixture.
 
@@ -141,7 +142,7 @@ This plan is complete only when the repository can demonstrate all of the follow
 
 - [x] Run focused render/schema/profile tests after each green implementation step.
 - [x] Run `pnpm typecheck`, `pnpm typecheck:tests`, `pnpm test`, `pnpm build`, `pnpm lint`, all repository guards, browser tests, and Python tests.
-- [ ] Run the optical profile and M6-entry gates; the M6 entry gate remains pending until the pushed committed-baseline attestation is recorded.
+- [x] Run the optical profile and M6-entry gates; `pnpm verify:indicator-optics`, `pnpm verify:indicator-profiles`, and `pnpm verify:m6-entry` pass locally.
 - [x] Inspect the complete diff for test-only data entering production, fake precision, duplicated versions, and stale M5/M6 claims.
-- [ ] Commit and push the completed round; record the exact hosted CI attestation only after the run succeeds.
-- [ ] Handoff must state that M6 is authorized only if owner accepts the candidate amendments; otherwise leave the repository at an honest entry-review state.
+- [x] Commit and push the completed round; exact committed baseline `bdef2366a2c34bd57604eb2825a57a5df15c2ed3` passed hosted CI #143 (`34924905998`).
+- [x] Handoff states that M6 is ready for owner authorization only after the attested baseline; owner acceptance of the candidate amendments remains required.
