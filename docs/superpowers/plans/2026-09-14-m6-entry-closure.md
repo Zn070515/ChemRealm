@@ -1,18 +1,20 @@
 # M6 Entry Closure Plan
 
-> Status: M6 entry gate — M4-B and M5 are locally and hosted verified
-> candidates; owner acceptance remains open and this plan does not implement
-> M6 itself.
+> Status: **Closed — M6 authorized / in progress**. M4-B and M5 evidence and
+> the applicable SPEC amendments were owner accepted on 2026-09-15. This plan
+> records authorization only; it does not implement M6 or claim M6 S3.
 
 ## Context
 
-The repository has a verified legacy M4 TypeScript baseline, a locally verified
-native M4-B candidate, and a locally verified M5 World → Scientific Core →
+The repository has a verified legacy M4 TypeScript baseline, an accepted M4-B
+evidence packet for the explicitly tested native v2 scope, and an accepted M5
+World → Scientific Core →
 ScientificFrame → Observable → DOM composition. One source-reviewed
 ordinary-aqueous phenolphthalein profile is admitted only inside its bounded
 coverage; all unsupported optical cases remain refusal-first. M6 is explicitly
-downstream of both M5 S3 and M4-B S3. The exact committed baseline has passed
-hosted CI; owner review remains required before authorization.
+downstream of both M5 S3 and M4-B S3. The implementation baseline
+`9b6f91873dcd240c9accd5d95be1cba71ee14a0a` passed hosted CI #148
+(`34929205212`), and owner authorization is recorded in the M6 entry packet.
 
 The current review also identified an authority conflict: visual reference
 swatches are useful qualitative QA material, but they must not be treated as
@@ -32,7 +34,7 @@ quantitative optical observation pipeline.
    chemistry fixture appear positive.
 3. Make the visual standard, canonical SPEC, evidence packets, and version
    manifest agree without silently weakening an accepted criterion.
-4. Leave the repository at an honest, owner-reviewable M6 authorization gate;
+4. Leave the repository at an honest **M6 authorized / in progress** boundary;
    do not implement PixiJS, final assets, pointer interaction, or screenshots
    as part of this closure.
 
@@ -255,7 +257,8 @@ exact CI/run claim is fabricated.
 
 ### Step 5 — Final closure and authorization record
 
-**Objective:** assemble a final owner-reviewable gate without starting M6.
+**Objective:** record the final owner authorization boundary without claiming
+M6 S3 or implementing M6.
 
 **Files/packages:**
 

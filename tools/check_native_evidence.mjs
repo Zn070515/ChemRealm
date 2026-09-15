@@ -28,8 +28,8 @@ function mustNot(text, pattern, message) {
   if (pattern.test(text)) failures.push(`forbidden: ${message}`);
 }
 
-must(nativeEvidence, /^\*\*Status:\*\* \*\*S3[\s\S]*verified locally and by hosted CI[\s\S]*owner supersession\s+acceptance[\s\S]*open\*\*/m,
-  "native evidence records hosted S3 verification while keeping owner acceptance open");
+must(nativeEvidence, /^\*\*Status:\*\* \*\*S3[\s\S]*verified locally and by hosted CI[\s\S]*M4-B S3 evidence accepted[\s\S]*native supersession[\s\S]*default rollout remains unapproved\*\*/m,
+  "native evidence records accepted M4-B evidence while keeping native rollout unapproved");
 must(nativeEvidence, /Native WASM ↔ PHREEQC oracle comparison/i,
   "native WASM-to-PHREEQC comparison evidence is recorded");
 must(nativeEvidence, /Language-neutral native model contract[^\n]*PASS locally/i,
@@ -48,6 +48,10 @@ mustNot(nativeEvidence, /default new-world path after the supersession gate/i,
   "native default rollout is not a circular supersession prerequisite");
 must(nativeEvidence, /no\s+silent\s+fallback/i,
   "native failure boundary is explicit");
+must(nativeEvidence, /M4-B S3 evidence accepted/i,
+  "native evidence records the owner acceptance of the M4-B evidence packet");
+must(nativeEvidence, /native supersession[\s\S]{0,160}default rollout remains unapproved/i,
+  "native default rollout remains explicitly unapproved");
 must(nativeSpec, /explicit v2 WorldCreated creation[\s\S]{0,100}replay/i,
   "native specification requires explicit v2 world creation and replay evidence");
 must(nativeSpec, /later owner-approved rollout amendment may[\s\S]{0,80}default/i,
@@ -68,7 +72,7 @@ mustNot(nativeAmendment, /34761350435/i,
   "native amendment does not attribute native work to the pre-native CI run");
 
 for (const [name, text] of [["native spec", nativeSpec], ["native plan", nativePlan]]) {
-  mustNot(text, /M4-B\s+S3\s+(?:verified|accepted|complete)/i,
+  mustNot(text, /M4-B\s+S3\s*\/\s*Accepted/i,
     `${name} does not claim native supersession S3`);
   mustNot(text, /M5\s+S3\s+(?:verified|accepted|complete)/i,
     `${name} does not claim M5 S3`);

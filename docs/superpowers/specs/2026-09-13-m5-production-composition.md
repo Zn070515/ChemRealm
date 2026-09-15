@@ -1,7 +1,8 @@
 # M5 Production Composition Specification
 
-**Status:** S2 composition slice and browser evidence locally verified; M5 S3
-and owner review remain open.
+**Status:** M5 S3 composition contract verified locally and by hosted CI;
+owner acceptance recorded 2026-09-15. M6 visual realization remains a separate
+downstream stage.
 
 **Authority:** This document is subordinate to `SPEC-0001` and the M5
 observable-state specification. It references canonical `AC-*` criteria; it

@@ -22,7 +22,9 @@ M3 owner decisions were accepted with M2 S3 at baseline `778fadbd` (CI run
 `34677042056`). Acceptance covers each ADR's *decision*; any remaining open
 question must be resolved before the milestone that names it.
 ADR-0011 and ADR-0012 were accepted by the owner with M4 S3 at implementation
-baseline `bb6a477d` (CI run `34747266204`).
+baseline `bb6a477d` (CI run `34747266204`). ADR-0014 is accepted as an
+architecture decision only; native supersession/default rollout remains
+unapproved.
 
 If an accepted decision is later found to be wrong, the ADR is **superseded by a
 new ADR**, not quietly edited.

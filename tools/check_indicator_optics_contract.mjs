@@ -35,10 +35,10 @@ function mustNot(text, pattern, message) {
 must(
   spec,
   new RegExp(
-    `\\*\\*Current revision:\\*\\* \\*\\*${manifest.spec.currentRevision} Candidate\\*\\*`,
+    `\\*\\*Current revision:\\*\\* \\*\\*${manifest.spec.currentRevision} — applicable amendments accepted`,
     "i",
   ),
-  "SPEC records the manifest-derived current candidate revision",
+  "SPEC records the manifest-derived current applicable amendment acceptance state",
 );
 must(
   spec,

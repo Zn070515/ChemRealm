@@ -38,10 +38,10 @@ function mustNot(text, pattern, message) {
   if (pattern.test(text)) failures.push(`stale: ${message}`);
 }
 
-must(adr0014, /^\*\*Status:\*\* \*\*Accepted — architecture decision only; native supersession is a local S3 candidate pending hosted\/owner acceptance\*\*/m,
-  "ADR-0014 is accepted as an architecture decision while native supersession remains a candidate");
-must(adr0014, /native supersession is a local S3 candidate pending hosted\/owner acceptance/i,
-  "ADR-0014 keeps native supersession separate from architecture acceptance");
+must(adr0014, /^\*\*Status:\*\* \*\*Accepted — architecture decision only; native supersession\/default rollout remains unapproved\*\*/m,
+  "ADR-0014 is accepted as an architecture decision while native rollout remains unapproved");
+must(adr0014, /native supersession\/default rollout remains unapproved/i,
+  "ADR-0014 keeps native rollout separate from architecture acceptance");
 must(adr0001, /TypeScript(?:\/pnpm|[^\n]{0,80}pnpm)[\s\S]{0,500}Python(?:\/uv|[^\n]{0,80}uv)[\s\S]{0,500}Rust\/Cargo/i,
   "ADR-0001 names all three toolchains and their boundary");
 mustNot(adr0001, /ChemRealm has two language ecosystems with a mandatory boundary/i,
@@ -83,8 +83,10 @@ for (const [name, text] of [
 ]) {
   must(text, new RegExp(`(?:M5 contract revision|current[\\s\\S]{0,80}SPEC-0001)[\\s\\S]{0,180}(?:revision )?${m5ContractRevision}|current[\\s\\S]{0,40}SPEC-0001[\\s\\S]{0,80}candidate revision`, "i"),
     `${name} references M5 contract revision ${m5ContractRevision}`);
-  mustNot(text, /SPEC-0001[\s\S]{0,180}revision 25 Candidate/i,
-    `${name} has no stale SPEC revision 25 reference`);
+  mustNot(text, new RegExp(
+    `SPEC-0001[\\s\\S]{0,180}revision ${m5ContractRevision} Candidate`,
+    "i",
+  ), `${name} has no stale M5 contract revision reference`);
 }
 
 if (failures.length > 0) {

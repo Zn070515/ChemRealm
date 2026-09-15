@@ -1,13 +1,13 @@
 # PLAN-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** **M0–M4 S3 Verified / Accepted; M5 and M4-B S3 verified locally and by hosted CI; owner acceptance and M6 authorization remain open** — the original plan was approved
-  on 2026-09-11 at `SPEC-0001` revision 6; revisions 13–20 were accepted
-  on 2026-09-13. The current optical candidate revision and native-backend
-  candidate are declared only by `contracts/version-manifest.json`; they remain
-  subject to owner review. The prior local/hosted baseline is commit
-  `66b488a3e7483b776711d0e9d6ab723698dc3a35`, CI run #140
-  (`34868257380`). The corrected optical colourimetry round requires a new
-  committed-baseline hosted attestation before M6 authorization.
+- **Status:** **M0–M5 and M4-B S3 Verified / Accepted; M6 authorized / in
+  progress** — the original plan was approved on 2026-09-11 at `SPEC-0001`
+  revision 6; revisions 13–20 were accepted on 2026-09-13, and the applicable
+  revisions 21–25, 27, 29, and 30 were accepted on 2026-09-15. Revision 26
+  remains Candidate for native supersession/default-backend rollout only. The
+  owner authorization uses the attested implementation baseline
+  `9b6f91873dcd240c9accd5d95be1cba71ee14a0a`, hosted CI #148
+  (`34929205212`).
 - **Completed:** `M0 — Repository foundation` reached **S3 — Verified** on
   2026-09-11. Evidence: `docs/evidence/M0.md`, commits `1f3dfee`/`565a2e8`,
   CI run `34595967023` (13/13 gate steps on a clean `ubuntu-latest` checkout).
@@ -19,11 +19,9 @@
   Event runtime and replay` is **S3 — Verified / Accepted** at baseline
   `778fadbd` with CI `34677042056` and evidence in `docs/evidence/M2.md`.
 - **M5 composition handoff:** the current local DOM composition and bounded
-  ordinary-aqueous optical-profile path are verified in `docs/evidence/M5.md`.
-  M5 is a local/hosted S3 candidate; owner acceptance remains open. The optical
-  correction is governed by candidate SPEC revision 30 and uses the
-  source-attributed 81-point CIE/Beer–Lambert path; strong-acid orange remains
-  refusal-only.
+  ordinary-aqueous optical-profile path are verified and accepted in
+  `docs/evidence/M5.md`. The optical correction uses the source-attributed
+  81-point CIE/Beer–Lambert path; strong-acid orange remains refusal-only.
   Contract-level AC-V3/AC-V4 evidence is an M5
   responsibility; M6 final assets and visual review are downstream realization
   evidence and do not gate M5 S3. Native backend work is governed by
@@ -780,15 +778,14 @@ If PHREEQC cannot be installed and driven in CI:
 ## M5 — Observable state
 
 **Target stage:** S3
-**Current stage:** S3 verified locally; replay/profile/frame closure, one
+**Current stage:** **S3 Verified / Accepted**; replay/profile/frame closure, one
 bounded ordinary-aqueous optical profile, and a deterministic DOM composition
-slice are locally verified, while hosted attestation and owner acceptance
-remain open. The governing scopes are
+slice are verified locally and by hosted CI. The governing scopes are
 `docs/superpowers/specs/2026-09-13-m5-contract-remediation.md` and
 `docs/superpowers/specs/2026-09-13-m5-production-composition.md`, subordinate to
 the M5 contract revision declared by `contracts/version-manifest.json` (revision 25)
-and not overrides of `SPEC-0001`; the native-backend amendment is a separate
-candidate.
+ and not overrides of `SPEC-0001`; applicable M5/optical amendments are
+ accepted, while the native-backend amendment remains a separate Candidate.
 **Addresses:** ADR-0006, ADR-0007, ADR-0016; `SPEC-0001` AC-V2..AC-V4, AC-V6, AC-V8, AC-V9, AC-V10, AC-V11, AC-O1..AC-O8
 
 ### M5/M6 acceptance ownership
@@ -943,6 +940,8 @@ decision is made in the web adapter.
 ## M6 — First final-quality apparatus slice
 
 **Target stage:** S3
+**Current stage:** **Authorized / in progress** — implementation and visual
+acceptance are not yet verified.
 **Addresses:** `GOAL.md` §5.7, §15; ADR-0006; `SPEC-0001` AC-V5, AC-F1, AC-X1, AC-X2
 
 ### M6/M5 boundary

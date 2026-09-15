@@ -34,7 +34,20 @@ export const VERSION_MANIFEST = deepFreeze({
   },
   "spec": {
     "currentRevision": 30,
-    "acceptedThroughRevision": 20,
+    "acceptedThroughRevision": 25,
+    "m5AmendmentRevisions": [
+      21,
+      22,
+      23,
+      24,
+      25
+    ],
+    "acceptedAmendmentRevisions": [
+      27,
+      28,
+      29,
+      30
+    ],
     "m5ContractRevision": 25
   },
   "representation": {

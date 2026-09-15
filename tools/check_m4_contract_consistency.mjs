@@ -81,7 +81,7 @@ must(
   new RegExp(
     "\\*\\*Status:\\*\\* \\*\\*Accepted through revision " +
       versionManifest.spec.acceptedThroughRevision +
-      "\\*\\*",
+      "; applicable revisions",
     "i",
   ),
   "SPEC records the accepted M4 semantic-evidence amendment boundary",
@@ -91,11 +91,35 @@ must(
   new RegExp(
     "\\| " +
       versionManifest.spec.acceptedThroughRevision +
-      " \\|[\\s\\S]{0,500}Owner, 2026-09-13",
+      " \\|[^\\n]*\\|\\s*Owner(?: accepted)?(?:,|\\s+\\d{4}-\\d{2}-\\d{2})",
     "i",
   ),
   "SPEC amendment history records owner acceptance of the current accepted boundary",
 );
+for (const revision of versionManifest.spec.acceptedAmendmentRevisions) {
+  must(
+    spec,
+    new RegExp(
+      "\\| " +
+        revision +
+        " \\|[^\\n]*\\|\\s*Owner(?: accepted)?(?:,|\\s+\\d{4}-\\d{2}-\\d{2})",
+      "i",
+    ),
+    `SPEC amendment history records owner acceptance of revision ${revision}`,
+  );
+}
+for (
+  let revision = versionManifest.spec.acceptedThroughRevision + 1;
+  revision <= versionManifest.spec.currentRevision;
+  revision += 1
+) {
+  if (versionManifest.spec.acceptedAmendmentRevisions.includes(revision)) continue;
+  must(
+    spec,
+    new RegExp("\\| " + revision + " \\|[^\\n]*Candidate", "i"),
+    `SPEC keeps unaccepted revision ${revision} explicitly candidate`,
+  );
+}
 mustNot(spec, /revisions 13–20 remain[\s\S]{0,80}pending owner review/i, "SPEC does not leave accepted M4 amendments pending");
 must(spec, /0\.09996461252716539 mol\/kg/, "SPEC records the current independently frozen envelope maximum");
 
@@ -145,7 +169,7 @@ must(quantityBoundaryGuard, /FORBIDDEN_DIMENSION_LITERALS/, "scientific quantity
 must(quantityBoundaryGuard, /isNoSubstitutionTemplateLiteral/, "scientific quantity guard checks template-literal dimension values");
 must(adr0011, /\*\*Status:\*\* \*\*Accepted\*\*/i, "ADR-0011 is accepted");
 must(adr0012, /\*\*Status:\*\* \*\*Accepted\*\*/i, "ADR-0012 is accepted");
-must(plan, /\*\*Status:\*\* \*\*M0–M4 S3 Verified \/ Accepted; M5\b[\s\S]{0,180}\bS3 verified locally\b/i, "PLAN records the locally verified M5 S3 candidate after M4 S3");
+must(plan, /\*\*Status:\*\* \*\*M0–M5 and M4-B S3 Verified \/ Accepted; M6 authorized\s*\/\s*in\s+progress/i, "PLAN records accepted M5/M4-B evidence and authorized M6 progress");
 must(v0Inputs, new RegExp(`"schemaVersion": ${versionManifest.oracle.v0Inputs}`), "v0 input manifest has the source-fidelity schema version");
 mustNot(v0Inputs, /expectedMaximum/, "v0 input manifest does not contain its own acceptance output");
 must(v0Inputs, /"sourceLiteral": "1 g\/cm³ \(25 °C\)"/, "NaOH source literal preserves reported precision");

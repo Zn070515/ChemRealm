@@ -1,11 +1,14 @@
 # M6 Entry Gate
 
-**Status:** **Ready for owner authorization** — the corrected optical baseline,
+**Status:** **M6 authorized / in progress** — the corrected optical baseline,
 raw-profile rebuild, independent colourimetry oracle, and common-k method
-cross-check have passed the exact committed-baseline hosted attestation
-recorded below; owner acceptance of the applicable candidate amendments is
-still required.
-This packet is an entry gate, not an M6 S3 claim.
+cross-check passed the exact committed-baseline hosted attestation recorded
+below. The owner accepted the applicable M5/M4-B and optical amendments on
+2026-09-15; revision 26 remains Candidate for native supersession/default
+rollout only. Owner acceptance of the applicable amendments is recorded below.
+This packet authorizes M6 work; it is not an M6 S3 claim.
+The hosted CI run for the exact committed baseline succeeded before this owner
+closure.
 
 **Purpose:** Record the prerequisites for beginning M6 final-quality apparatus
 realization. M6 is the first milestone that may introduce concrete apparatus
@@ -18,18 +21,18 @@ not implemented or accepted by this packet.
 | Prerequisite | Result | Evidence |
 |---|---|---|
 | Legacy M4 scientific core | PASS — accepted | [`M4.md`](M4.md), accepted TypeScript baseline and PHREEQC bounded non-equivalence disposition |
-| Native M4-B scientific backend | PASS locally and hosted — owner gate open | [`M4-native.md`](M4-native.md), native v2 REF/differential/domain/world/browser checks; commit `66b488a3e7483b776711d0e9d6ab723698dc3a35`, CI run #140 (`34868257380`), local release WASM `sha256:c03fc50d7fb8aa6bae79dd9638b14095f1cf919bdfb8e31c64bda93ce05c3887` |
-| M5 observable/composition contract | PASS locally and hosted — owner gate open | [`M5.md`](M5.md), World → ScientificFrame → ObservableModel → DOM path and refusal/in-coverage optical cases; corrected baseline `bdef2366a2c34bd57604eb2825a57a5df15c2ed3`, hosted CI #143 (`34924905998`) |
-| Ordinary optical profile | PASS locally and hosted — owner gate open | `phenolphthalein-ordinary-aqueous.profile.json`, raw digitisation CSV and reproducible builder, source/review packets, exact profile hash `sha256:8d02fca6fbf715f9a15ee6366e981afde9a68b5062ac8f9cffae3bdcfb03a872`, full 380–780 nm/5 nm grid, blank-normalized CIE transform, focused in-coverage positive transform tests, and browser refusal evidence for the default 25 °C composition; exact closure baseline `636ecfd32790d261d3f83248083f73ecc30130a8`, CI #145 (`34927373546`) |
-| Independent colourimetry oracle | PASS locally and hosted — owner gate open | `colourimetry-independent-oracle.json`, Python standard-library rebuild/check, method-level single-common-k CIE cross-check with frozen XYZ/chromaticity/sRGB deltas, and `colourimetry-oracle.test.ts` covering transparent white, neutral grey, narrow absorber, and the admitted phenolphthalein profile; exact closure baseline `1186479849d0c09b4113cc26108386897de1267d`, CI #147 (`34928786266`) |
+| Native M4-B scientific backend | PASS locally and hosted — M4-B evidence accepted; native rollout unapproved | [`M4-native.md`](M4-native.md), native v2 REF/differential/domain/world/browser checks; commit `66b488a3e7483b776711d0e9d6ab723698dc3a35`, CI run #140 (`34868257380`), local release WASM `sha256:c03fc50d7fb8aa6bae79dd9638b14095f1cf919bdfb8e31c64bda93ce05c3887` |
+| M5 observable/composition contract | PASS locally and hosted — owner accepted | [`M5.md`](M5.md), World → ScientificFrame → ObservableModel → DOM path and refusal/in-coverage optical cases; corrected baseline `bdef2366a2c34bd57604eb2825a57a5df15c2ed3`, hosted CI #143 (`34924905998`) |
+| Ordinary optical profile | PASS locally and hosted — owner accepted | `phenolphthalein-ordinary-aqueous.profile.json`, raw digitisation CSV and reproducible builder, source/review packets, exact profile hash `sha256:8d02fca6fbf715f9a15ee6366e981afde9a68b5062ac8f9cffae3bdcfb03a872`, full 380–780 nm/5 nm grid, blank-normalized CIE transform, focused in-coverage positive transform tests, and browser refusal evidence for the default 25 °C composition; exact closure baseline `636ecfd32790d261d3f83248083f73ecc30130a8`, CI #145 (`34927373546`) |
+| Independent colourimetry oracle | PASS locally and hosted — owner accepted | `colourimetry-independent-oracle.json`, Python standard-library rebuild/check, method-level single-common-k CIE cross-check with frozen XYZ/chromaticity/sRGB deltas, and `colourimetry-oracle.test.ts` covering transparent white, neutral grey, narrow absorber, and the admitted phenolphthalein profile; exact closure baseline `1186479849d0c09b4113cc26108386897de1267d`, CI #147 (`34928786266`) |
 | Strong-acid phenolphthalein orange | REFUSAL-ONLY | Documented in [`ADR-0016`](../adr/0016-indicator-optical-observation-boundary.md) and optical research packets; no production positive path |
 | Active version distribution | PASS locally | `contracts/version-manifest.json` is the sole manually maintained source; generated version output is checked by `pnpm verify:versions` |
-| Canonical SPEC candidate | REVIEW REQUIRED | Current candidate revision 30 is read from the central version manifest; owner must review the optical correction and all candidate amendments before M6 authorization |
+| Canonical SPEC amendments | ACCEPTED for M6 scope | Revisions 21–25, 27, 28, 29, and 30 are owner accepted; revision 26 remains Candidate for native supersession/default rollout and is not part of this M6 authorization |
 
 ## What M6 is authorized to start
 
-After the hosted CI run for the exact committed baseline succeeds and the
-owner accepts the applicable candidate amendments, M6 may begin:
+Following the hosted attestation for the implementation baseline and the owner
+acceptance recorded above, M6 may begin:
 
 - one final-quality apparatus slice built from the frozen M5 observable and
   profile/path contracts;
@@ -80,13 +83,12 @@ uv run python tools/check_acceptance_coverage.py
 git diff --check
 ```
 
-The prior hosted attestation for the historical optical baseline is retained in
-M5 evidence. **Hosted attestation is now recorded for the exact committed
-baseline** `1186479849d0c09b4113cc26108386897de1267d` (`Add common-k
-colourimetry method cross-check`), CI #147 / run `34928786266`:
-<https://github.com/Zn070515/ChemRealm/actions/runs/34928786266>. The run
+The prior hosted attestations for the historical optical baselines are retained
+in M5 evidence. **Hosted attestation is recorded for the exact committed
+baseline** `9b6f91873dcd240c9accd5d95be1cba71ee14a0a` (`Attest common-k
+colourimetry evidence`), CI #148 / run `34929205212`:
+<https://github.com/Zn070515/ChemRealm/actions/runs/34929205212>. The run
 passed the raw-profile rebuild, independent colourimetry oracle, common-k
 method cross-check, corrected production CIE/profile path, and repository
-verification workflow. This still does not silently promote a candidate to M6
-authorization; owner acceptance of the applicable SPEC amendments remains the
-separate gate.
+verification workflow. The owner acceptance record above authorizes M6 work;
+it does not claim M6 S3 or authorize native-default rollout.

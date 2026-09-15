@@ -47,10 +47,10 @@ must(
   new RegExp(
     "\\*\\*Current revision:\\*\\* \\*\\*" +
       versionManifest.spec.currentRevision +
-      " Candidate\\*\\*",
+      " — applicable amendments accepted[^*]*\\*\\*",
     "i",
   ),
-  "SPEC records the current candidate revision",
+  "SPEC records the current applicable amendment acceptance state",
 );
 must(spec, /AC-V3 \|[^\n]*declared[^\n]*provenance[^\n]*empirical[^\n]*palette/i, "canonical AC-V3 permits only declared provenance-bearing empirical palettes");
 mustNot(spec, /AC-V3 \| No hard-coded chemical colour literal exists in the render path/i, "old unqualified AC-V3 wording is removed");
@@ -58,10 +58,20 @@ must(spec, /Readout (?:labels|text)[^\n]*precision[^\n]*ObservableModel/i, "cano
 must(spec, /DOM\/Pixi[^\n]*Renderer|text drawing[^\n]*Renderer/i, "canonical ownership keeps actual drawing in Renderer");
 mustNot(spec, /Readout text, 2 dp formatting \| Renderer/i, "old readout ownership row is removed");
 must(spec, /projectScientificFrame|sourceStateHash[^\n]*projection/i, "canonical contract records source-identified projection frames");
-must(spec, /\| 21 \|[^\n]*(?:empirical indicator palettes|provenance-bearing)[^\n]*(?:provenance-bearing|empirical indicator palettes)/i, "revision 21 amendment records the representation clarification");
-must(spec, /\| 22 \|[\s\S]{0,700}volumeProfile[\s\S]{0,700}ScientificFrame/i, "revision 22 amendment records replayable geometry and frame identity");
-must(spec, /\| 23 \|[\s\S]{0,900}Observable[\s\S]{0,900}VolumeProfileSnapshot/i, "revision 23 amendment closes the executable profile seam at Observable");
-must(spec, /\| 24 \|[\s\S]{0,900}(?:content-address|profile hash|hash-excluded)[\s\S]{0,900}(?:tampered|executable|recomputed)/i, "revision 24 amendment closes profile payload hash authenticity");
+const m5AmendmentChecks = [
+  [/[^\n]*(?:empirical indicator palettes|provenance-bearing)[^\n]*(?:provenance-bearing|empirical indicator palettes)/i, "the representation clarification"],
+  [/volumeProfile[\s\S]{0,700}ScientificFrame/i, "replayable geometry and frame identity"],
+  [/Observable[\s\S]{0,900}VolumeProfileSnapshot/i, "the executable profile seam at Observable"],
+  [/(?:content-address|profile hash|hash-excluded)[\s\S]{0,900}(?:tampered|executable|recomputed)/i, "profile payload hash authenticity"],
+];
+for (const [index, [pattern, description]] of m5AmendmentChecks.entries()) {
+  const revision = versionManifest.spec.m5AmendmentRevisions[index];
+  must(
+    spec,
+    new RegExp("\\| " + revision + " \\|[\\s\\S]{0,1200}" + pattern.source, "i"),
+    `M5 revision ${revision} records ${description}`,
+  );
+}
 must(
   spec,
   new RegExp(

@@ -111,6 +111,47 @@ export function validateVersionManifest(value) {
   if (spec.m5ContractRevision > spec.currentRevision) {
     throw new TypeError("version manifest M5 contract revision cannot exceed current revision");
   }
+  if (!Array.isArray(spec.m5AmendmentRevisions) || spec.m5AmendmentRevisions.length === 0) {
+    throw new TypeError("version manifest field m5AmendmentRevisions must be a non-empty array");
+  }
+  const m5AmendmentRevisions = spec.m5AmendmentRevisions;
+  for (const revision of m5AmendmentRevisions) {
+    if (!Number.isInteger(revision) || revision <= 0 || revision > spec.m5ContractRevision) {
+      throw new TypeError(
+        "version manifest m5AmendmentRevisions must contain positive revisions no later than m5ContractRevision",
+      );
+    }
+  }
+  if (
+    new Set(m5AmendmentRevisions).size !== m5AmendmentRevisions.length ||
+    m5AmendmentRevisions.some(
+      (revision, index) => index > 0 && revision <= m5AmendmentRevisions[index - 1],
+    ) ||
+    !m5AmendmentRevisions.includes(spec.m5ContractRevision)
+  ) {
+    throw new TypeError(
+      "version manifest m5AmendmentRevisions must be strictly ascending, unique, and include m5ContractRevision",
+    );
+  }
+  if (!Array.isArray(spec.acceptedAmendmentRevisions) || spec.acceptedAmendmentRevisions.length === 0) {
+    throw new TypeError("version manifest field acceptedAmendmentRevisions must be a non-empty array");
+  }
+  const acceptedAmendmentRevisions = spec.acceptedAmendmentRevisions;
+  for (const revision of acceptedAmendmentRevisions) {
+    if (!Number.isInteger(revision) || revision <= spec.acceptedThroughRevision || revision > spec.currentRevision) {
+      throw new TypeError(
+        "version manifest acceptedAmendmentRevisions must contain unique revisions after acceptedThroughRevision and no later than currentRevision",
+      );
+    }
+  }
+  if (
+    new Set(acceptedAmendmentRevisions).size !== acceptedAmendmentRevisions.length ||
+    acceptedAmendmentRevisions.some(
+      (revision, index) => index > 0 && revision <= acceptedAmendmentRevisions[index - 1],
+    )
+  ) {
+    throw new TypeError("version manifest acceptedAmendmentRevisions must be strictly ascending and unique");
+  }
 
   const representation = requireObject(value, "representation");
   requirePositiveInteger(representation, "observableModel");
@@ -214,6 +255,8 @@ export function activeVersionLiterals(manifest) {
     String(manifest.schema.nativeBridge),
     String(manifest.spec.currentRevision),
     String(manifest.spec.acceptedThroughRevision),
+    ...manifest.spec.m5AmendmentRevisions.map(String),
+    ...manifest.spec.acceptedAmendmentRevisions.map(String),
     String(manifest.spec.m5ContractRevision),
     String(manifest.scientific.numericPolicyVersion),
     String(manifest.representation.observableModel),

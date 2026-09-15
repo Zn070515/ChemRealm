@@ -4,7 +4,10 @@
 
 **Status:** Implementation and common-k method evidence are attested on
 committed baseline `1186479849d0c09b4113cc26108386897de1267d` by hosted CI #147
-(`34928786266`); owner acceptance of the candidate amendments remains open.
+(`34928786266`), with the final implementation attestation on
+`9b6f91873dcd240c9accd5d95be1cba71ee14a0a` / hosted CI #148
+(`34929205212`). Applicable revisions 27, 29, and 30 were owner accepted on
+2026-09-15; revision 26 remains Candidate for native supersession.
 
 **Goal:** Replace the invalid three-point production colour path with a source-attributed, full-visible-spectrum colourimetry transform whose optical constants and evidence cannot be mistaken for a test fixture.
 
@@ -24,7 +27,9 @@ committed baseline `1186479849d0c09b4113cc26108386897de1267d` by hosted CI #147
 - Source conditions and uncertainty are not widened beyond the cited experiment without an explicit transfer-approximation label.
 - Strong-acid phenolphthalein orange is documented as a future/refusal boundary and is not emitted by the current production model.
 - `contracts/version-manifest.json` is the sole manually maintained version source; generated TypeScript/schema artifacts must be regenerated rather than hand-edited.
-- This correction does not promote any M5/M6 status. M6 remains an explicit owner-authorization gate until the corrected evidence is attested and the applicable candidate amendments are accepted.
+- This correction does not claim M6 S3. The corrected evidence and applicable
+  revisions are now accepted, so M6 is authorized/in progress; native-default
+  rollout and all final visual criteria remain unapproved/unverified.
 
 ## Acceptance Boundary
 
@@ -179,4 +184,5 @@ scientific model or implementing the documented strong-acid orange regime.
   XYZ, chromaticity, and encoded sRGB.
 - [x] Add CI/package gates and remove the stale M5 #140 current-status wording.
 - [x] Record the new exact committed-baseline hosted attestation after CI success: `1186479849d0c09b4113cc26108386897de1267d`, CI #147 (`34928786266`).
-- [ ] Owner reviews applicable candidate revisions before M6 authorization.
+- [x] Owner reviews applicable candidate revisions before M6 authorization;
+  revisions 27, 29, and 30 are accepted, while revision 26 remains Candidate.

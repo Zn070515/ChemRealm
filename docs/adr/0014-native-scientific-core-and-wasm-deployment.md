@@ -1,10 +1,11 @@
 # ADR-0014 — Native Scientific Core and WebAssembly deployment
 
-**Status:** **Accepted — architecture decision only; native supersession is a local S3 candidate pending hosted/owner acceptance**, 2026-09-13
+**Status:** **Accepted — architecture decision only; native supersession/default rollout remains unapproved**, 2026-09-15
 **Date:** 2026-09-13  
 **Deciders:** Project owner  
 **Related:** `GOAL.md` §5.1, §5.2, §6.1, §20; ADR-0003, ADR-0007, ADR-0012  
-**Blocks:** M4 backend supersession gate, M5 S3, M6
+**Blocks:** native supersession/default-backend rollout decision; it does not
+block the separately accepted M5 contract or authorized M6 entry.
 
 ## Context
 

@@ -1,10 +1,10 @@
 # M4-B — Native Scientific Core / WASM Evidence
 
-**Status:** **S3 — verified locally and by hosted CI; owner supersession
-acceptance remains open**
+**Status:** **S3 — verified locally and by hosted CI; M4-B S3 evidence accepted
+2026-09-15; native supersession/default rollout remains unapproved**
 
-**Authority:** `SPEC-0001` current candidate revision and ADR-0014. This packet
-is separate from [`M4.md`](M4.md), which records the accepted historical
+**Authority:** `SPEC-0001` applicable accepted revisions and revision 26
+Candidate, plus ADR-0014. This packet is separate from [`M4.md`](M4.md), which records the accepted historical
 TypeScript `1.0.0` M4 S3 baseline.
 
 ## Verified in this handoff
@@ -60,17 +60,18 @@ rows remain native S3 blockers.
 
 ## Still required for owner supersession acceptance
 
-The following final-packet prerequisite remains before any separate rollout
-decision. The paired v1/v2 WorldCreated test above is a local closure of the
-identity/replay behavior; the exact committed baseline has also passed hosted
-CI:
+The M4-B evidence packet is owner accepted for the explicitly tested native v2
+backend scope. The paired v1/v2 WorldCreated test above is a local closure of
+the identity/replay behavior; the exact committed baseline has also passed
+hosted CI:
 
 - hosted CI run #140 (`34868257380`) for commit
   `66b488a3e7483b776711d0e9d6ab723698dc3a35` passed all required gates,
   including the final native artifact identity;
-- owner review of this packet and the current canonical SPEC candidate;
-- an explicit rollout decision before changing the default backend for new
-  worlds.
+- the owner acceptance record is separate from revision 26's native
+  supersession/default-backend decision;
+- an explicit rollout decision is still required before changing the default
+  backend for new worlds.
 
 Only after those prerequisites pass may a subsequent owner decision choose a
 native-default rollout policy for new worlds. Default selection is an outcome
@@ -82,8 +83,8 @@ and non-equivalence disposition are recorded in the shared oracle report.
 
 Native initialization and solve failures remain explicit. There is no silent
 fallback to the accepted TypeScript backend. M4 legacy S3 is preserved; this
-packet records a locally verified M4-B S3 candidate and does not by itself
-promote M4-B, M5, or M6.
+packet records the owner-accepted M4-B S3 evidence, but does not authorize
+native supersession/default rollout or claim M6 S3.
 
 ## Reproduction
 

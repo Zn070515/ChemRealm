@@ -1,22 +1,25 @@
 # SPEC-0001 — World Foundation & Acid-Base Titration
 
-- **Status:** **Accepted through revision 20** — M4 S3 owner acceptance recorded
-  on 2026-09-13 against the committed implementation baseline and CI attestation.
+- **Status:** **Accepted through revision 25; applicable revisions 27–30 owner
+  accepted** — M5/M4-B evidence and the M6 entry decision were reviewed on
+  2026-09-15 against the committed implementation baseline and hosted CI
+  attestation. Revision 26 remains Candidate because native backend supersession
+  and native-default rollout are not authorized by this decision.
 - **Accepted baseline:** commit `8310c685`, `SPEC-0001` revision 6
-- **Current revision:** **30 Candidate** — corrected indicator optical
-  colourimetry admission and native M4-B/M5 closure evidence. Revisions 21–27
-  remain candidate amendments pending owner review; revision 28 is owner-
-  accepted only for the ordinary-aqueous three-form scope and retains the
-  strong-acid cation/orange case as refusal-only. Revision 29 records the
-  bounded, source-reviewed ordinary-aqueous phenolphthalein profile admission;
-  revision 30 corrects its production colourimetry to a source-attributed
-  380–780 nm/5 nm CIE D65/1931-2° table, blank XYZ normalization, and explicit
-  Napierian/decadic Beer–Lambert convention. The production profile remains a
-  bounded approximation and visual swatches remain qualitative QA material
-  rather than tint authority. Revisions 27–30 remain governed by the
-  candidate/accepted status recorded below.
-  Revisions 7–20 are accepted amendments; revisions 13–20 were accepted by
-  the owner on 2026-09-13.
+- **Current revision:** **30 — applicable amendments accepted; revision 26
+  remains Candidate** — corrected indicator optical colourimetry admission and
+  native M4-B/M5 closure evidence. Revisions 7–25 are accepted amendments;
+  revisions 21–25 were accepted by the owner on 2026-09-15. Revision 27 is the
+  accepted optical-observation authority boundary; revision 28 remains accepted
+  only for the ordinary-aqueous three-form scope and retains the strong-acid
+  cation/orange case as refusal-only. Revisions 29 and 30 record the bounded,
+  source-reviewed ordinary-aqueous phenolphthalein profile and its corrected
+  source-attributed 380–780 nm/5 nm CIE D65/1931-2° colourimetry, blank XYZ
+  normalization, and explicit Napierian/decadic Beer–Lambert convention. The
+  production profile remains a bounded approximation and visual swatches remain
+  qualitative QA material rather than tint authority. The accepted/non-accepted
+  status of revisions 21–30 is recorded below and distributed centrally by the
+  version manifest.
   See "Amendments since acceptance" below.
 - **Acceptance scope:** the specification and its acceptance criteria. Deferred
   items listed under Open questions remain open and must be resolved before the
@@ -51,17 +54,17 @@
 | 19 | 2026-09-13 | World Runtime numeric-semantics clarification: Strategy A quantizes each conserved transfer delta once and applies it as a paired zero-sum update; post-transfer runtime values and exact snapshot caches are not independently rounded, while the explicit replay-identity projection remains quantized. Snapshots carry a separate exact serialized-state checksum so semantic replay equality cannot mask cache corruption. | Owner, 2026-09-13 |
 | 20 | 2026-09-13 | M4 semantic-evidence closure: v0 provenance records distinguish source observations, derived values, and model approximations without inventing precision or pressure; the input manifest is separate from a digest-bound envelope reference; AC-S14 executes the complete family sweep through `Scenario → WorldCreated → WorldState → SolveRequest → SolverAdapter`; and an AST guard confines molarity construction to `ScientificProjection`. | Owner, 2026-09-13 |
 
-| 21 | 2026-09-13 | M5 contract remediation: `ScientificProjection` accepts only the solution volume and source-state identity needed for its conversion; the Scientific Core composition boundary creates a bound `ScientificFrame`; AC-V4 retains both declared `V(h)` and `h(V)` with a stated round-trip tolerance; burette state separates contained/delivered volume from graduated scale reading and displays the latter in `mL` at `0.01 mL`; empirical indicator palettes are keyed by identity and are the only permitted home for provenance-bearing colour literals; one hydrogen-ion convention is selected by a replaceable presentation policy; ObservableModel owns readout text/precision policy while DOM/Pixi drawing remains Renderer-owned; and scientific expressions carry schema-owned model/source identity. | Candidate — owner review pending |
-| 22 | 2026-09-13 | M5 replay/provenance closure: every authored and persisted vessel carries a serializable piecewise-linear `VolumeProfile`; persisted World/Event schema advances to v4 with an explicit v3→v4 migration that requires an explicit profile resolver for legacy geometry-only records; `ScientificFrame` binds sequence, liquid volume, and profile hash; Observable consumes that single frame-owned volume; the hydrogen-ion policy is a discriminated union; curve points carry source sequence/model identity; and ScientificExpression v2 records the Scientific Core producer. `sourceStateHash` is explicitly the quantized World Runtime replay-equivalence identity, not an exact floating-point checksum. | Candidate — owner review pending |
+| 21 | 2026-09-13 | M5 contract remediation: `ScientificProjection` accepts only the solution volume and source-state identity needed for its conversion; the Scientific Core composition boundary creates a bound `ScientificFrame`; AC-V4 retains both declared `V(h)` and `h(V)` with a stated round-trip tolerance; burette state separates contained/delivered volume from graduated scale reading and displays the latter in `mL` at `0.01 mL`; empirical indicator palettes are keyed by identity and are the only permitted home for provenance-bearing colour literals; one hydrogen-ion convention is selected by a replaceable presentation policy; ObservableModel owns readout text/precision policy while DOM/Pixi drawing remains Renderer-owned; and scientific expressions carry schema-owned model/source identity. | Owner accepted 2026-09-15 |
+| 22 | 2026-09-13 | M5 replay/provenance closure: every authored and persisted vessel carries a serializable piecewise-linear `VolumeProfile`; persisted World/Event schema advances to v4 with an explicit v3→v4 migration that requires an explicit profile resolver for legacy geometry-only records; `ScientificFrame` binds sequence, liquid volume, and profile hash; Observable consumes that single frame-owned volume; the hydrogen-ion policy is a discriminated union; curve points carry source sequence/model identity; and ScientificExpression v2 records the Scientific Core producer. `sourceStateHash` is explicitly the quantized World Runtime replay-equivalence identity, not an exact floating-point checksum. | Owner accepted 2026-09-15 |
 
-| 23 | 2026-09-13 | M5 executable-profile boundary closure: Observable receives only the replay-frozen serializable `VolumeProfileSnapshot` whose hash matches `ScientificFrame.physical.volumeProfileHash`; it reconstructs the runtime interpolation adapter internally and no longer accepts caller-supplied `heightAtVolume`/`volumeAtHeight` functions. This prevents a self-reported profile hash from authorizing executable geometry that was not derived from genesis truth. | Candidate — owner review pending |
-| 24 | 2026-09-13 | M5 profile content-address closure: the canonical schema owns the shared canonical JSON/SHA-256 helper; `VolumeProfileSnapshot` parsing recomputes and verifies `profileHash` over the hash-excluded payload before render or world code constructs an executable profile adapter. World and composition callers use the same helper, and tampered-but-structurally-valid profile payloads are rejected. | Candidate — owner review pending |
-| 25 | 2026-09-13 | M5 semantic composition closure: Scientific Core expressions are equation-bearing records with current numerical substitutions and explicit v0 omissions; acid-base component/mode/constant selection is owned by the Scientific Core request builder rather than web composition; curve x-values are cumulative committed source→target titrant delivery with an explicit initial zero point; burette derivation filters the same committed transfer relation; and the deterministic composition DOM exposes model/accuracy metadata from ObservableModel. | Candidate — owner review pending |
+| 23 | 2026-09-13 | M5 executable-profile boundary closure: Observable receives only the replay-frozen serializable `VolumeProfileSnapshot` whose hash matches `ScientificFrame.physical.volumeProfileHash`; it reconstructs the runtime interpolation adapter internally and no longer accepts caller-supplied `heightAtVolume`/`volumeAtHeight` functions. This prevents a self-reported profile hash from authorizing executable geometry that was not derived from genesis truth. | Owner accepted 2026-09-15 |
+| 24 | 2026-09-13 | M5 profile content-address closure: the canonical schema owns the shared canonical JSON/SHA-256 helper; `VolumeProfileSnapshot` parsing recomputes and verifies `profileHash` over the hash-excluded payload before render or world code constructs an executable profile adapter. World and composition callers use the same helper, and tampered-but-structurally-valid profile payloads are rejected. | Owner accepted 2026-09-15 |
+| 25 | 2026-09-13 | M5 semantic composition closure: Scientific Core expressions are equation-bearing records with current numerical substitutions and explicit v0 omissions; acid-base component/mode/constant selection is owned by the Scientific Core request builder rather than web composition; curve x-values are cumulative committed source→target titrant delivery with an explicit initial zero point; burette derivation filters the same committed transfer relation; and the deterministic composition DOM exposes model/accuracy metadata from ObservableModel. | Owner accepted 2026-09-15 |
 | 26 | 2026-09-13 | Native Scientific Core/WASM backend supersession candidate: Rust becomes the next production implementation for new worlds after a dedicated differential/oracle gate; the exact TypeScript 1.0.0 adapter remains the legacy replay/reference backend; no silent cross-version fallback is allowed; Scientific Core expressions must include the ionic-strength fixed point, Davies activity relation, and `activity = γ · m̂` alongside existing equations; and the M4 scientific matrix plus M5 production composition must be rerun against the native backend before supersession. | Candidate — owner review pending |
-| 27 | 2026-09-14 | Indicator optical observation authority: the future data-backed optical boundary is refusal-first with `OPTICAL_MODEL_OK`, `OPTICAL_MODEL_OUT_OF_COVERAGE`, and `OPTICAL_MODEL_DATA_MISSING`; endpoint-RGB fallback is prohibited; genesis freezes indicator dose, optical profile, and optical path identity; chemical-form coverage remains distinct from optical coverage; and the v0 monoprotic model cannot emit strong-acid phenolphthalein orange. AC-O1–AC-O8 define the candidate optical contract. | Candidate — owner review pending |
+| 27 | 2026-09-14 | Indicator optical observation authority: the future data-backed optical boundary is refusal-first with `OPTICAL_MODEL_OK`, `OPTICAL_MODEL_OUT_OF_COVERAGE`, and `OPTICAL_MODEL_DATA_MISSING`; endpoint-RGB fallback is prohibited; genesis freezes indicator dose, optical profile, and optical path identity; chemical-form coverage remains distinct from optical coverage; and the v0 monoprotic model cannot emit strong-acid phenolphthalein orange. AC-O1–AC-O8 define the candidate optical contract. | Owner accepted 2026-09-15 |
 | 28 | 2026-09-14 | Candidate multi-form indicator scientific boundary: the initial ordinary-aqueous phenolphthalein model names `H₂In`, `HIn⁻`, and `In²⁻` with distinct `Ka_In_1`/`Ka_In_2`, coupled charge and ionic-strength treatment, complete fraction/balance evidence, and explicit refusal for the strong-acid cation and strong-base-altered forms. No numerical constants, solver implementation, or optical profile are admitted by this amendment; implementation still requires separate source-backed constants and independent reference evidence. | Owner accepted 2026-09-14 for ordinary-aqueous scope; strong-acid cation/orange remains refusal-only |
-| 29 | 2026-09-14 | M4-B/M5 closure candidate: the native v2 backend has criterion-specific World → WASM → ScientificFrame → Observable evidence; one source-reviewed ordinary-aqueous phenolphthalein profile is admitted only within its explicit quantitative conditions and content hash; production tint is produced by chemical forms + concentration + path + Beer–Lambert + D65/CIE/sRGB; visual swatches are qualitative QA only; and strong-acid phenolphthalein orange remains documented and refusal-only. | Candidate — owner review pending |
-| 30 | 2026-09-15 | Optical scientific correction: production colourimetry uses the checked-in CIE D65/CIE 1931 2° 380–780 nm grid at 5 nm spacing rather than test-only vectors; transmitted XYZ is normalized against corresponding blank integrals and the IEC D65 white; every absorptivity spectrum declares Napierian or decadic Beer–Lambert convention; the ordinary phenolphthalein profile records faithful Kouderis et al. provenance, exact source conditions, derived-grid uncertainty, and a bounded pink/fuchsia evidence region; strong-acid orange remains refusal-only. | Candidate — owner review pending |
+| 29 | 2026-09-14 | M4-B/M5 closure candidate: the native v2 backend has criterion-specific World → WASM → ScientificFrame → Observable evidence; one source-reviewed ordinary-aqueous phenolphthalein profile is admitted only within its explicit quantitative conditions and content hash; production tint is produced by chemical forms + concentration + path + Beer–Lambert + D65/CIE/sRGB; visual swatches are qualitative QA only; and strong-acid phenolphthalein orange remains documented and refusal-only. | Owner accepted 2026-09-15; native-default rollout remains unapproved |
+| 30 | 2026-09-15 | Optical scientific correction: production colourimetry uses the checked-in CIE D65/CIE 1931 2° 380–780 nm grid at 5 nm spacing rather than test-only vectors; transmitted XYZ is normalized against corresponding blank integrals and the IEC D65 white; every absorptivity spectrum declares Napierian or decadic Beer–Lambert convention; the ordinary phenolphthalein profile records faithful Kouderis et al. provenance, exact source conditions, derived-grid uncertainty, and a bounded pink/fuchsia evidence region; strong-acid orange remains refusal-only. | Owner accepted 2026-09-15 |
 
 A revision bump is recorded here rather than only in the body because the header
 is what a reader checks before deciding whether the file they are reading is the
@@ -2052,11 +2055,14 @@ Only questions that genuinely need the owner.
 
 ## What this spec does not claim
 
-This specification is **Accepted through revision 20**. M4 S3 evidence verifies
-the current acid-base scientific slice and its bounded PHREEQC comparison; the
-bounded offset is explicitly not a claim of model equivalence. Future M5–M10
-work remains subject to its own stage gates, and the open questions below are
-limited to milestones that have not yet been authorized or accepted.
+This specification is **Accepted through revision 25, with applicable revisions
+27–30 also owner accepted; revision 26 remains Candidate**. M4 S3 evidence
+verifies the current acid-base scientific slice and its bounded PHREEQC
+comparison; the bounded offset is explicitly not a claim of model equivalence.
+M5 and M4-B evidence are accepted for their declared scopes, while native
+supersession/default rollout remains unapproved. Future M6–M10 work remains
+subject to its own stage gates, and the open questions below are limited to
+milestones that have not yet been authorized or accepted.
 
 ### What changed in the 2026-09-11 revision
 

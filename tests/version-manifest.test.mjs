@@ -30,6 +30,32 @@ describe("central version manifest", () => {
     expect(manifest.spec.acceptedThroughRevision).toBeLessThanOrEqual(
       manifest.spec.m5ContractRevision,
     );
+    expect(manifest.spec.acceptedThroughRevision).toBe(
+      manifest.spec.m5ContractRevision,
+    );
+    expect(manifest.spec.m5AmendmentRevisions).toEqual(
+      [...manifest.spec.m5AmendmentRevisions].sort((a, b) => a - b),
+    );
+    expect(new Set(manifest.spec.m5AmendmentRevisions).size).toBe(
+      manifest.spec.m5AmendmentRevisions.length,
+    );
+    expect(manifest.spec.m5AmendmentRevisions).toContain(
+      manifest.spec.m5ContractRevision,
+    );
+    for (const revision of manifest.spec.m5AmendmentRevisions) {
+      expect(revision).toBeGreaterThan(0);
+      expect(revision).toBeLessThanOrEqual(manifest.spec.m5ContractRevision);
+    }
+    expect(manifest.spec.acceptedAmendmentRevisions).toEqual(
+      [...manifest.spec.acceptedAmendmentRevisions].sort((a, b) => a - b),
+    );
+    expect(new Set(manifest.spec.acceptedAmendmentRevisions).size).toBe(
+      manifest.spec.acceptedAmendmentRevisions.length,
+    );
+    for (const revision of manifest.spec.acceptedAmendmentRevisions) {
+      expect(revision).toBeGreaterThan(manifest.spec.acceptedThroughRevision);
+      expect(revision).toBeLessThanOrEqual(manifest.spec.currentRevision);
+    }
     expect(manifest.scientific.acidBase.id).toBeTypeOf("string");
     expect(manifest.scientific.acidBase.legacyVersion).toBeTypeOf("string");
     expect(manifest.scientific.acidBase.nativeVersion).toBeTypeOf("string");

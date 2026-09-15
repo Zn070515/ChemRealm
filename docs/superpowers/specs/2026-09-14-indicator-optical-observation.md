@@ -1,8 +1,9 @@
 # Indicator Optical Observation Design
 
-> **Status:** Candidate boundary implemented through refusal-first and one
-> bounded ordinary-aqueous quantitative profile; local production evidence
-> includes `OPTICAL_MODEL_OK`, while M5 S3/owner acceptance remains open
+> **Status:** Accepted applicable optical boundary; one bounded
+> ordinary-aqueous quantitative profile is admitted and M5 S3/M6 entry
+> acceptance was recorded on 2026-09-15. Revision 26 native supersession
+> remains Candidate and this document does not claim M6 S3.
 > 
 > **Scope:** A data-backed replacement for endpoint-RGB indicator presentation.
 > 

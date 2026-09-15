@@ -4,7 +4,8 @@
  *
  * This is deliberately not a visual-quality or scientific-acceptance proof.
  * It prevents an M6 handoff from becoming true merely because a subordinate
- * document says so, while keeping hosted CI and owner review as explicit gates.
+ * document says so, while keeping the implementation and visual acceptance
+ * boundary explicit.
  */
 
 import { readFile } from "node:fs/promises";
@@ -35,14 +36,14 @@ function mustNot(text, pattern, message) {
   if (pattern.test(text)) failures.push(`forbidden: ${message}`);
 }
 
-must(entry, /^\*\*Status:\*\* \*\*Ready for owner authorization(?: after current-round attestation)?\*\*/m,
-  "M6 entry remains an authorization gate, not an automatic authorization claim");
+must(entry, /^\*\*Status:\*\* \*\*M6 authorized \/ in progress\*\*/m,
+  "M6 entry records explicit owner authorization while keeping implementation in progress");
 must(entry, /M6 is the first milestone[\s\S]{0,260}PixiJS renderer/i,
   "M6 scope includes final apparatus/rendering realization");
-must(entry, /hosted CI run for the exact committed baseline succeeds/i,
+must(entry, /hosted CI run for the exact committed baseline succeed(?:s|ed)/i,
   "M6 requires exact hosted-baseline attestation");
-must(entry, /owner accepts the applicable candidate amendments/i,
-  "M6 requires owner review of candidate amendments");
+must(entry, /owner acceptance of the applicable amendments is recorded/i,
+  "M6 entry records owner acceptance of the applicable amendments");
 must(entry, /strong-acid phenolphthalein orange[\s\S]{0,80}refusal-only/i,
   "strong-acid orange remains refusal-only");
 must(entry, /M6 must retain[\s\S]{0,120}refusal-first optical boundary/i,
@@ -51,7 +52,7 @@ must(entry, /final apparatus asset package and semantic asset contract/i,
   "M6 asset contract is explicitly unverified at entry");
 must(entry, /PixiJS\/renderer implementation and layer ownership/i,
   "M6 renderer work is explicitly unverified at entry");
-const hasRecordedHostedAttestation = /Hosted attestation is now recorded for the exact committed\s+baseline/i.test(entry);
+const hasRecordedHostedAttestation = /Hosted attestation is (?:now )?recorded for the exact committed\s+baseline/i.test(entry);
 const hasPendingHostedAttestation = /A new hosted attestation must be recorded here only after/i.test(entry);
 if (!hasRecordedHostedAttestation && !hasPendingHostedAttestation) {
   failures.push("missing: M6 packet records either the post-push hosted evidence or an explicit pending-attestation state");
@@ -61,15 +62,15 @@ if (hasPendingHostedAttestation) {
     "M6 pending state explicitly keeps the corrected hosted attestation open");
 }
 
-must(plan, /M5 and M4-B S3 verified locally and by hosted CI[\s\S]{0,180}owner acceptance/i,
-  "canonical plan records hosted-verified local S3 candidates and the open owner gate");
+must(plan, /M0–M5 and M4-B S3 Verified \/ Accepted[\s\S]{0,240}M6 authorized\s*\/\s*in\s+progress/i,
+  "canonical plan records accepted M5/M4-B evidence and active M6 authorization");
 must(plan, new RegExp(`\\| M6 \\|[^\\n]*\\|[^\\n]*M5 S3[^\\n]*M4-B S3[^\\n]*\\|`, "i"),
   "canonical M6 dependency remains M5 S3 plus M4-B S3");
 must(plan, /M5 S3 does\s+not wait for M6/i,
   "M5 contract acceptance is not circularly dependent on M6");
 
-must(m4Native, /S3[\s\S]{0,100}verified locally and by hosted CI[\s\S]{0,100}owner supersession\s+acceptance/i,
-  "native evidence is hosted-verified but not silently owner-accepted");
+must(m4Native, /S3[\s\S]{0,140}verified locally and by hosted CI[\s\S]{0,180}M4-B S3 evidence accepted/i,
+  "native evidence records accepted M4-B evidence separately from rollout");
 must(m4Native, /hosted CI run #140[\s\S]{0,180}66b488a3e7483b776711d0e9d6ab723698dc3a35/i,
   "native evidence binds hosted CI to the exact committed baseline");
 must(m4Native, /sha256:c03fc50d7fb8aa6bae79dd9638b14095f1cf919bdfb8e31c64bda93ce05c3887/i,
@@ -78,11 +79,11 @@ must(m4Native, /Native WASM ↔ PHREEQC oracle comparison/i,
   "native bounded oracle evidence is present");
 must(m4Native, /not a claim that the native model and PHREEQC are equivalent/i,
   "native oracle disposition remains bounded and non-equivalence");
-mustNot(m4Native, /M4-B\s+S3\s*\/\s*Accepted/i,
-  "native packet does not claim owner acceptance without attestation");
+must(m4Native, /native supersession[\s\S]{0,160}default rollout remains unapproved/i,
+  "native default rollout remains explicitly unapproved");
 
-must(m5, /S3[\s\S]{0,100}verified locally and by hosted CI[\s\S]{0,100}owner acceptance/i,
-  "M5 evidence is hosted-verified but not silently owner-accepted");
+must(m5, /S3[\s\S]{0,180}owner acceptance recorded/i,
+  "M5 evidence records owner acceptance after hosted verification");
 must(m5, /66b488a3e7483b776711d0e9d6ab723698dc3a35[\s\S]{0,180}hosted CI run #140/i,
   "M5 evidence binds hosted CI to the exact committed baseline");
 must(m5, /OPTICAL_MODEL_OK/i,
@@ -93,11 +94,21 @@ must(m5, /M5-COMPOSITION[^\n]*PASS locally/i,
   "M5 production composition evidence is attached");
 must(m5, /AC-O8[^\n]*PASS locally/i,
   "positive and refusal optical evidence is attached");
-must(m5, /hosted CI run #140[\s\S]{0,220}Owner acceptance remains a separate gate/i,
-  "M5 does not turn local evidence into final acceptance");
+const pendingSpecRevisions = Array.from(
+  { length: manifest.spec.currentRevision - manifest.spec.acceptedThroughRevision },
+  (_, index) => manifest.spec.acceptedThroughRevision + index + 1,
+).filter((revision) => !manifest.spec.acceptedAmendmentRevisions.includes(revision));
+must(m5, /owner accepted revisions/i, "M5 records the accepted non-native amendments");
+for (const revision of pendingSpecRevisions) {
+  must(
+    m5,
+    new RegExp(`revision ${revision} remains Candidate`, "i"),
+    `M5 keeps unaccepted revision ${revision} outside owner acceptance`,
+  );
+}
 
-must(spec, new RegExp(`\\*\\*Current revision:\\*\\* \\*\\*${manifest.spec.currentRevision} Candidate`, "i"),
-  "canonical SPEC uses the manifest-distributed current candidate revision");
+must(spec, new RegExp(`\\*\\*Current revision:\\*\\* \\*\\*${manifest.spec.currentRevision} — applicable amendments accepted`, "i"),
+  "canonical SPEC records the manifest-distributed applicable amendment acceptance state");
 must(opticalPlan, /one\s+source-reviewed ordinary-aqueous quantitative profile/i,
   "optical plan records the admitted bounded profile");
 must(adr, /ordinary-aqueous phenolphthalein profile[\s\S]{0,220}locally admitted/i,
@@ -111,8 +122,8 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log("ok    M6 entry prerequisites and dependency ownership are recorded");
-console.log("ok    local M4-B/M5 evidence is not silently promoted to hosted/owner acceptance");
+console.log("ok    M6 entry authorization, prerequisites, and dependency ownership are recorded");
+console.log("ok    M4-B/M5 evidence acceptance remains separate from native-default rollout");
 console.log(`ok    corrected hosted attestation is ${hasRecordedHostedAttestation ? "recorded" : "explicitly pending"}`);
 console.log("ok    M6 visual/asset work remains explicitly unverified and refusal-first optics are preserved");
 console.log("\nRESULT: PASS");
