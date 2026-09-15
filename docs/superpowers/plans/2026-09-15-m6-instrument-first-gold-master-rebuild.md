@@ -1,7 +1,7 @@
 # M6 Instrument-First Gold Master Rebuild — Implementation Plan
 
-> Status: S1 candidate. This is an ordered implementation argument, not evidence that M6 is complete.  
-> Spec: [M6 Instrument-First Gold Master Rebuild](../specs/2026-09-15-m6-instrument-first-gold-master-rebuild.md)  
+> Status: S1 candidate. This is an ordered implementation argument, not evidence that M6 is complete.
+> Spec: [M6 Instrument-First Gold Master Rebuild](../specs/2026-09-15-m6-instrument-first-gold-master-rebuild.md)
 > Prerequisite: owner accepts this spec/plan. M6 remains S2 visual NO-GO until `M6-S3` owner review succeeds.
 
 **Goal:** Rebuild M6 Gold Masters around source-backed instrument semantics and manually authored visual masters, then prove contract truth, instrument truth, render geometry, and visual quality independently.
