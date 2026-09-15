@@ -1,6 +1,40 @@
 # M6 visual review record
 
-**Status:** M6 S2 implementation evidence; owner visual acceptance is pending.
+**Status:** M6 S2 technical evidence; visual-system gate NO-GO; owner visual acceptance is pending.
+
+The governing production standard is
+[`m6-art-direction.md`](m6-art-direction.md). This review must assess an
+apparatus system, not only whether the current titration screenshot looks
+clean. A green asset/package test is not visual owner acceptance.
+
+## Current audit disposition
+
+The current first slice demonstrates a useful RenderState/Pixi boundary and a
+typed multi-spec catalog, but it is not yet the required final-quality family
+system. The following must be visibly proven before M6 S3:
+
+- no contour overlap, liquid bleed, stroke crossing or clipping;
+- correct beaker, Erlenmeyer, graduated-cylinder, burette and volumetric-flask
+  geometry;
+- visibly different capacity variants, not uniform scaling with changed labels;
+- coherent glass/liquid/metal/rubber material language;
+- explicit visual, state and interaction layers for detachable parts;
+- consistent non-cartoon style at full-size and thumbnail-size review;
+- accessible readouts and interaction targets at all named viewports.
+
+## Required comparison review
+
+Review a same-family comparison sheet at equal logical scale:
+
+| Family | Minimum comparison | Required visible differences |
+|---|---|---|
+| Burette | 25/50/100 mL | scale length/density, aspect ratio, capacity marking and support relation |
+| Beaker | 100/250/500/1000 mL | height/width, base/rim mass, spout scale and graduation rhythm |
+| Erlenmeyer | 100/250/500 mL | body/shoulder/neck proportions and base scale |
+| Graduated cylinder | 25/50/100/250 mL | slenderness, base, scale density and profile |
+| Volumetric flask | 50/100/250/500 mL | bulb/neck proportions, calibration placement and stopper relation |
+
+Labels alone do not count as a visible difference.
 
 This record deliberately does not call the candidate captures an approved
 visual baseline or claim M6 S3. The apparatus is an original, self-hosted
@@ -23,7 +57,7 @@ keeps essential readings in the DOM companion.
 
 | Criterion | Current result | Evidence |
 |---|---|---|
-| M6-ASSET | PASS locally | `assets/apparatus/titration-bench/`, asset manifest tests |
+| M6-ASSET | PASS locally at package level; visual gate NO-GO | `assets/apparatus/titration-bench/`, asset manifest tests, Art Direction review |
 | M6-CATALOG | PASS locally | multiple vessel specifications and detachable connection catalog |
 | M6-DETACH | PASS locally | typed ports, detachable state variants and compatibility tests |
 | M6-GEOMETRY | PASS locally at contract level | frozen profile-derived level, mm manifest, parts/ports/regions, render-state tests |
@@ -33,6 +67,21 @@ keeps essential readings in the DOM companion.
 | M6-PRIVACY | PASS on existing local checks | artifact scan and browser network-boundary test |
 | M6-PERF | NOT RUN | static first slice has no animation loop; scripted performance sample remains open |
 | M6-S3 | NOT RUN | originality, visual consistency, accessibility and final baseline require owner review |
+
+## Visual-system gate
+
+These are separate from the technical package rows above and are the blocking
+visual acceptance rows from `m6-art-direction.md`:
+
+| Gate | Result | Reason |
+|---|---|---|
+| V-P0-1 no overlap/bleed/clipping | BLOCKED | full-size and thumbnail review of family masters is not complete |
+| V-P0-2 defining geometry | BLOCKED | all required family construction sheets are not reviewed together |
+| V-P0-3 visible capacity differences | BLOCKED | catalog multiplicity exists; comparison-sheet geometry evidence is incomplete |
+| V-P0-4 state/semantic coverage | PARTIAL | refusal/readout state exists; complete family state coverage is not evidenced |
+| V-P0-5 interaction geometry | PARTIAL | parts/ports exist; complete anchors/hit/capability package is not evidenced |
+| V-P0-6 no cartoon/mixed style | BLOCKED | owner visual review is pending |
+| V-P0-7 coherent family language | BLOCKED | family comparison and material review are pending |
 
 Candidate captures are intentionally stored under
 `tests/visual/captures/m6/` and are not approved baselines. Regenerate them

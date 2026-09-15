@@ -11,11 +11,14 @@ research input, not a substitute for the canonical contracts.
 ## Context
 
 The existing M6 page proves the World → Science → Observable → RenderState →
-Pixi path, but its first SVG and renderer are still a low-detail single-demo
-asset. It cannot support the material abundance and parameterized apparatus
-requirements in `GOAL.md`, nor the experimental design pressure visible in
-recent Zhejiang chemistry examination analysis. It also has no typed catalog for
-multiple specifications or detachable components.
+Pixi path, and the first implementation now has a bounded typed catalog. A
+separate visual audit nevertheless found that technical package evidence is
+not equivalent to a professional apparatus system. The stricter production
+requirements—family construction rules, visibly distinct specifications,
+state/interaction completeness and owner visual review—are defined in
+[`docs/visual/m6-art-direction.md`](../../visual/m6-art-direction.md) and the
+M6 visual-system remediation specification. This document records the original
+technical slice; it does not override the stricter visual gate.
 
 The change is a Representation Engine change. It must improve visible fidelity
 without moving chemistry into render, adding world events for pointer noise, or

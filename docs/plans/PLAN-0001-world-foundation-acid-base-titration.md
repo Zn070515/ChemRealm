@@ -941,8 +941,18 @@ decision is made in the web adapter.
 
 **Target stage:** S3
 **Current stage:** **Authorized / in progress** — implementation and visual
-acceptance are not yet verified.
+acceptance are not yet verified. The existing first implementation is a
+technical baseline only; the current M6 visual-system gate is **NO-GO** until
+the Art Direction standard and remediation plan are satisfied.
 **Addresses:** `GOAL.md` §5.7, §15; ADR-0006; `SPEC-0001` AC-V5, AC-F1, AC-X1, AC-X2
+
+The governing visual documents are
+[`docs/visual/m6-art-direction.md`](../visual/m6-art-direction.md),
+[`2026-09-15-m6-visual-asset-system-redesign.md`](../superpowers/specs/2026-09-15-m6-visual-asset-system-redesign.md)
+and
+[`2026-09-15-m6-visual-asset-system-remediation.md`](../superpowers/plans/2026-09-15-m6-visual-asset-system-remediation.md).
+The first slice must not be used to claim the full family, variant, state or
+interaction visual gates.
 
 ### M6/M5 boundary
 
@@ -968,6 +978,8 @@ packages/render/src/pixi/tokens.ts    renderer-only material tokens
 tests/visual/captures/m6/             candidate screenshots (not approved baselines)
 tests/visual/capture.spec.ts          Playwright capture at the four named viewports
 docs/visual/review-m6.md              the completed checklist from the standard
+docs/visual/m6-art-direction.md       family geometry, material and interaction standard
+assets/apparatus/catalog/qa/          comparison sheets and package-level visual QA
 ```
 
 ### Contracts changed
@@ -977,9 +989,11 @@ is expected and is why M6 exists as a gate.
 
 ### Implementation
 
-1. Author assets against `docs/visual/apparatus-standard.md`. Orthographic, one
-   coordinates in **millimetres (a length)**. Self-host everything; any font or
-   texture is a bundled asset, never a runtime fetch (AC-P5).
+1. Author assets against `docs/visual/apparatus-standard.md` and
+   `docs/visual/m6-art-direction.md`. Use an orthographic construction with
+   coordinates in **millimetres (a length)** for semantic geometry. Self-host
+   everything; any font or texture is a bundled asset, never a runtime fetch
+   (AC-P5).
 2. **Every volumetric asset publishes `V(h)` and its inverse `h(V)`.** Assets
    without a profile are marked `non_volumetric` and accept approximate liquid
    level. `ObservableModel` obtains the level by calling `h(V)` — never by
@@ -988,7 +1002,10 @@ is expected and is why M6 exists as a gate.
 3. Renderer consumes `RenderState` only. Verify by inspection that no chemistry
    value (a `Ka`, a `pH` used as logic) crosses the boundary.
 4. Capture at `desktop-primary`, `desktop-compact`, `tablet`, `narrow`.
-5. Complete `docs/visual/review-m6.md` using the standard's checklist.
+5. Complete `docs/visual/review-m6.md` using both standards' checklist. The
+   review must include same-family comparison sheets, visual-state coverage,
+   interaction geometry and two independent audit passes; a package test alone
+   cannot close the visual gate.
 
 ### Tests and evidence
 
@@ -996,6 +1013,8 @@ is expected and is why M6 exists as a gate.
 |---|---|
 | Screenshots at all four viewports from a deterministic fixture world | AC-V5 |
 | Owner visual review against the standard, recorded in `review-m6.md` | `GOAL.md` §15 |
+| Family comparison sheet proves non-uniform specification differences | M6 Art Direction V-P0-3 |
+| Parts/ports/anchors/hit regions/capabilities are traceable | M6 Art Direction V-P0-5 |
 | Originality check: no traced or copied asset; side-by-side benchmark screenshot included | The standard's originality section |
 | 60 fps at `desktop-primary` over a 30 s scripted interaction | AC-F1 |
 | WCAG AA contrast on all readouts | AC-X1 |
@@ -1004,10 +1023,11 @@ is expected and is why M6 exists as a gate.
 
 ### Stop condition
 
-Owner has reviewed the baseline and accepted it as the v1 visual bar. **If
-PixiJS cannot reach the bar, stop and reconsider the renderer here** — this is
-the cheapest point at which that decision can be made, and it is why the gate
-exists.
+Owner has reviewed the complete family-system baseline and accepted it as the
+v1 visual bar. All M6 Art Direction P0/P1 rows must pass, not merely the first
+titration screenshot. **If PixiJS cannot reach the bar, stop and reconsider the
+renderer here** — this is the cheapest point at which that decision can be made,
+and it is why the gate exists.
 
 ---
 

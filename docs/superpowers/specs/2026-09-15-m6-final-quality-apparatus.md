@@ -2,6 +2,12 @@
 
 **Status:** M6 S1 specified / implementation authorized; not M6 S3.
 
+This document describes the original technical apparatus slice. Its visual
+quality and production-method requirements are now strengthened by
+[`docs/visual/m6-art-direction.md`](../../visual/m6-art-direction.md) and
+[`2026-09-15-m6-visual-asset-system-redesign.md`](2026-09-15-m6-visual-asset-system-redesign.md).
+The first implementation is not automatically final-quality evidence.
+
 **Authority:** subordinate to `GOAL.md`, `SPEC-0001`, ADR-0006, ADR-0013,
 `docs/visual/apparatus-standard.md`, and the M6 entry gate. The NOBOOK/web
 research brief is evidence-informed guidance, not a replacement for those
