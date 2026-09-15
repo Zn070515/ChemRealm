@@ -1,48 +1,26 @@
-# M6 Gold Master source record
+# Gold Master Candidate source record
 
-## Package identity
+This package is a bounded **Gold Master Candidate**, not an owner-approved Gold Master. The sole construction source is `packages/render/src/assets/gold-master-construction.json`. The generator reads that file and emits the typed catalog projection, manifests, SVG LODs and review sheets.
 
-This package is a bounded owner-review Gold Master candidate for ChemRealm's original apparatus family. It contains acid/alkali burettes, three beaker capacities and three Erlenmeyer flask capacities. Every file is generated from the checked-in construction source tools/create_gold_master_assets.mjs; the generated SVGs are static review assets, not runtime chemistry data.
+## Geometry contract
 
-Regenerate with: node tools/create_gold_master_assets.mjs
+All SVG master coordinates are true millimetres. `bodyEnvelopeMm` records the vessel body; `physicalEnvelopeMm` records the complete visible envelope, including a beaker spout. The generated viewBox is exactly the physical envelope. Landmarks are consumed by geometry constructors and checked against generated paths; they are not decorative metadata.
 
-## Originality boundary
+## Family anatomy
 
-The geometry, construction layers, gradients, proportions and comparison sheets are original ChemRealm work. NOBOOK and vendor references informed broad recognizability and apparatus structure only. No third-party asset, screenshot, icon, traced silhouette, texture, brand mark or distinctive layout is included.
+- Acid burette: continuous glass tube, open rim, Schellbach-style reading stripe, PTFE rotary stopcock, rotary key, glass outlet and tip.
+- Alkali burette: continuous glass tube, lower glass connector, one rubber delivery path, one glass bead, pinch region and glass tip.
+- Beaker: straight-wall open body, rim-continuous local pouring lip/spout, calibrated marks and an integrated rounded contact region.
+- Erlenmeyer flask: cylindrical neck, curved cubic shoulder, continuous conical body and an integrated rounded contact region.
 
-## Family anatomy and landmark contract
+Support ports, detachable semantics, liquid, meniscus, optical state, shadows and QA overlays are not clean-master pixels. A stand/clamp and scene shadow belong to composition.
 
-The package does not use universal required layers. Each family owns its real anatomy: acid burettes use a PTFE stopcock body and rotary key; alkali burettes use a lower glass connector, rubber delivery tube, glass bead and pinch region; beakers use a rim-continuous spout and glass contact foot; Erlenmeyer flasks use a curved shoulder, cylindrical neck and flat contact foot. Fictitious base and hardware layers are prohibited.
+## Source classes
 
-Manifest landmarks are review anchors for mouth/neck diameter, graduated length, shoulder transition, spout projection, flat contact and actuator placement. They are visual proportion contracts, not certified metrology.
+The source records retain official manufacturer anchors where available: DURAN 25 mL Class AS burette (820 mm, 0.05 mL interval), Corning PYREX VISTA 250 mL Griffin beaker (approximately 70 mm OD × 95 mm height, 25 mL marks), and DURAN 250 mL Erlenmeyer (85 mm × 145 mm). Other capacity variants are explicitly approximate visual family profiles and must not be presented as certified metrology.
 
-## Geometry provenance
+## LOD and review
 
-| Asset family | Source class | Anchors | Approximation boundary |
-|---|---|---|---|
-| Acid burette 25 mL | manufacturer-anchor + standard-family | DURAN 25 mL Class AS and PTFE stopcock records; JY/T 0655 family | SVG proportions are a visual master; calibration truth remains upstream |
-| Alkali burette 50 mL | standard-family | JY/T 0655 teaching-equipment family | pinch mechanism and proportions are approximate visual anchors |
-| Beakers 100/250/1000 mL | standard-family + approximate-visual | JY/T 0655 family and ChemRealm family proportions | capacity variants are visibly distinct but not certified drawings |
-| Erlenmeyer 100/250/500 mL | manufacturer-anchor + standard-family | DURAN 250 mL anchor; JY/T 0655 family | 100/500 mL proportions are approximate visual variants |
+The LOD manifest is semantic: master retains full construction and graduations, scene retains functional detail, preview retains recognition features, thumbnail retains identity features. All four LODs are shadow-free standalone geometry; scene shadows are added only when a scene relation supplies a bench/support.
 
-Declared dimensionsMm and landmarks are catalog geometry anchors. Runtime liquid level, meniscus, readings, optical observation and chemical colour never come from these SVGs.
-
-## Material and contour decisions
-
-- Glass profiles are family-specific: the light direction is shared, but tint, edge restraint and opacity are not blindly reused across burette glass, open vessels and curved vessels.
-- No master includes a scene shadow. Shadows are scene-owned and appear only in scene/preview/thumbnail LODs.
-- Glass does not use a continuous equal-weight high-contrast closed contour. Edge cues are local, low-contrast rear/front accents with a restrained directional highlight.
-- Burette graduations are geometry marks only; runtime values are not baked into any LOD.
-- The acid burette exposes a glass/PTFE rotary mechanism; the alkali burette exposes a rubber-tube/glass-bead pinch mechanism. These are not interchangeable hardware tokens.
-
-## LOD and comparison boundary
-
-Master, scene, preview and thumbnail preserve family identity while removing construction detail deterministically. The comparison sheets embed the actual generated master SVGs, so they cannot silently drift to a hand-authored proxy silhouette. The physical sheet is measurement-anchored for declared dimensions; the normalized sheet is visual-only.
-
-## State and fixture boundary
-
-The states/manifest.json record declares reusable state-layer coverage. The SVGs intentionally expose empty runtime liquid and meniscus layers; Observable/RenderState supplies their values and effects. The fixture fixes the first review set, four LODs, two neutral backgrounds and the review sheets without embedding chemistry, quantities or readings.
-
-## Review boundary
-
-This package is implementation evidence only. Dark/light background captures, owner visual review, accessibility review and final visual acceptance remain open in docs/evidence/M6.md. It does not claim M6 S3.
+The physical comparison sheet uses one shared millimetre-to-pixel factor and a ruler. The normalized sheet is visual-only. Dark/light full-size and thumbnail captures remain owner-review evidence and are not implied by package tests.

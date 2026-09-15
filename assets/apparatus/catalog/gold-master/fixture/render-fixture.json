@@ -1,13 +1,14 @@
 {
-  "schemaVersion": 1,
-  "fixtureId": "m6-gold-master-static-review-v2",
+  "schemaVersion": 2,
+  "fixtureId": "m6-gold-master-static-review-v3",
   "renderMode": "asset-package-review",
-  "source": "Gold Master manifest plus state manifest; no chemistry or runtime measurement values",
+  "source": "packages/render/src/assets/gold-master-construction.json",
   "assetIds": [
     "burette-acid-25ml-class-as",
     "burette-alkali-50ml-class-b",
     "beaker-100ml",
     "beaker-250ml",
+    "beaker-500ml",
     "beaker-1000ml",
     "conical-flask-100ml",
     "conical-flask-250ml",

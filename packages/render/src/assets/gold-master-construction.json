@@ -1,0 +1,314 @@
+{
+  "schemaVersion": 1,
+  "visualFamily": "chemrealm-lab-v1",
+  "coordinateUnit": "mm",
+  "specifications": [
+    {
+      "specificationId": "burette-acid-25ml-class-as",
+      "familyId": "burette",
+      "displayName": "Acid burette, Class AS, 25 mL",
+      "material": "borosilicate-glass",
+      "materialProfile": "clear-borosilicate-ptfe",
+      "capacityMl": 25,
+      "bodyEnvelopeMm": [15, 770, 15],
+      "physicalEnvelopeMm": [30, 820, 30],
+      "landmarksMm": {
+        "mouthOuterDiameter": 15,
+        "tubeOuterDiameter": 15,
+        "graduatedLength": 720,
+        "graduationStartY": 24,
+        "graduationEndY": 744,
+        "stopcockCenterY": 764,
+        "tipLength": 56,
+        "wallThickness": 0.8
+      },
+      "geometry": {
+        "kind": "burette",
+        "actuator": "rotary-valve",
+        "centerX": 15,
+        "tubeTopY": 0,
+        "tubeEndY": 744,
+        "stopcockTopY": 744,
+        "tipEndY": 820,
+        "graduationSide": "right"
+      },
+      "graduation": { "maximumMl": 25, "majorEveryMl": 1, "minorEveryMl": 0.05, "readingResolutionMl": 0.05 },
+      "anatomy": ["graduated-tube", "open-mouth", "rim", "ptfe-stopcock-body", "rotary-key", "outlet-tip", "detachable-actuator"],
+      "identityLayers": ["body", "glass-back", "glass-front", "rim", "graduation", "stopcock", "stopcock-key", "tip", "highlight"],
+      "parts": [
+        { "id": "burette.body", "role": "body", "boundsMm": [7.5, 0, 15, 744], "detachable": false, "portIds": ["burette.top-joint", "burette.bottom-joint"] },
+        { "id": "burette.scale", "role": "scale", "boundsMm": [7.5, 24, 20, 720], "detachable": false, "portIds": [] },
+        { "id": "burette.stopcock", "role": "stopcock", "boundsMm": [3, 744, 24, 30], "detachable": true, "portIds": ["burette.bottom-joint"] },
+        { "id": "burette.tip", "role": "tip", "boundsMm": [9, 774, 12, 46], "detachable": true, "portIds": ["burette.outlet"] }
+      ],
+      "ports": [
+        { "id": "burette.top-joint", "kind": "fluid-inlet", "direction": "in", "positionMm": [15, 0], "nominalDiameterMm": 6, "detachable": true },
+        { "id": "burette.bottom-joint", "kind": "joint", "direction": "bidirectional", "positionMm": [15, 744], "nominalDiameterMm": 6, "detachable": true },
+        { "id": "burette.outlet", "kind": "fluid-outlet", "direction": "out", "positionMm": [15, 820], "nominalDiameterMm": 4, "detachable": true }
+      ],
+      "provenance": [
+        { "sourceId": "duran-burette-25ml-class-as", "sourceRef": "https://www.dwk.com/duran-burette-class-as-with-schellbach-stripe-and-ptfe-key-25-ml-243303304", "sourceClass": "manufacturer-anchor", "claim": "25 mL Class AS, 820 mm height, 0.05 mL interval, ±0.03 mL tolerance", "reportedPrecision": "reported" },
+        { "sourceId": "jy-t-0655-2025", "sourceRef": "https://www.moe.gov.cn/srcsite/A06/s3732/202507/W020250701322477393561.pdf", "sourceClass": "standard-family", "claim": "High-school teaching-equipment family and acid/alkali burette use", "reportedPrecision": "not-stated" }
+      ],
+      "lodVisibility": {
+        "master": ["body", "glass-back", "glass-front", "rim", "graduation-major", "graduation-minor", "stopcock", "stopcock-key", "tip", "highlight"],
+        "scene": ["body", "glass-back", "glass-front", "rim", "graduation-major", "graduation-medium", "stopcock", "stopcock-key", "tip", "highlight"],
+        "preview": ["body", "rim", "graduation-major", "stopcock", "stopcock-key", "tip"],
+        "thumbnail": ["body", "rim", "stopcock", "tip"]
+      }
+    },
+    {
+      "specificationId": "burette-alkali-50ml-class-b",
+      "familyId": "burette",
+      "displayName": "Alkali burette, Class B, 50 mL",
+      "material": "borosilicate-glass",
+      "materialProfile": "clear-borosilicate-rubber",
+      "capacityMl": 50,
+      "bodyEnvelopeMm": [18, 830, 18],
+      "physicalEnvelopeMm": [36, 900, 36],
+      "landmarksMm": {
+        "mouthOuterDiameter": 18,
+        "tubeOuterDiameter": 18,
+        "graduatedLength": 790,
+        "graduationStartY": 24,
+        "graduationEndY": 814,
+        "connectorY": 830,
+        "tipLength": 52,
+        "wallThickness": 0.8
+      },
+      "geometry": {
+        "kind": "burette",
+        "actuator": "pinch-valve",
+        "centerX": 18,
+        "tubeTopY": 0,
+        "tubeEndY": 814,
+        "connectorTopY": 814,
+        "tipEndY": 900,
+        "graduationSide": "right"
+      },
+      "graduation": { "maximumMl": 50, "majorEveryMl": 1, "minorEveryMl": 0.1, "readingResolutionMl": 0.1 },
+      "anatomy": ["graduated-tube", "open-mouth", "rim", "lower-glass-connector", "rubber-delivery-tube", "glass-bead", "pinch-region", "outlet-tip", "detachable-actuator"],
+      "identityLayers": ["body", "glass-back", "glass-front", "rim", "graduation", "lower-connector", "rubber-tube", "glass-bead", "pinch-region", "tip", "highlight"],
+      "parts": [
+        { "id": "burette.body", "role": "body", "boundsMm": [9, 0, 18, 814], "detachable": false, "portIds": ["burette.top-joint", "burette.bottom-joint"] },
+        { "id": "burette.scale", "role": "scale", "boundsMm": [9, 24, 24, 790], "detachable": false, "portIds": [] },
+        { "id": "burette.rubber-tube", "role": "tube", "boundsMm": [12, 830, 16, 48], "detachable": true, "portIds": ["burette.bottom-joint"] },
+        { "id": "burette.glass-bead", "role": "connector", "boundsMm": [10, 842, 16, 18], "detachable": true, "portIds": [] },
+        { "id": "burette.tip", "role": "tip", "boundsMm": [12, 860, 12, 40], "detachable": true, "portIds": ["burette.outlet"] }
+      ],
+      "ports": [
+        { "id": "burette.top-joint", "kind": "fluid-inlet", "direction": "in", "positionMm": [18, 0], "nominalDiameterMm": 6, "detachable": true },
+        { "id": "burette.bottom-joint", "kind": "joint", "direction": "bidirectional", "positionMm": [18, 814], "nominalDiameterMm": 6, "detachable": true },
+        { "id": "burette.outlet", "kind": "fluid-outlet", "direction": "out", "positionMm": [18, 900], "nominalDiameterMm": 4, "detachable": true }
+      ],
+      "provenance": [
+        { "sourceId": "jy-t-0655-2025", "sourceRef": "https://www.moe.gov.cn/srcsite/A06/s3732/202507/W020250701322477393561.pdf", "sourceClass": "standard-family", "claim": "High-school teaching-equipment family and acid/alkali burette use", "reportedPrecision": "not-stated" },
+        { "sourceId": "chemrealm-alkali-burette-anchor", "sourceRef": "docs/research/m6-zhejiang-apparatus-and-visual-target.md", "sourceClass": "approximate-visual", "claim": "50 mL rubber-tube/glass-bead family construction; not a certified dimension", "reportedPrecision": "approximate" }
+      ],
+      "lodVisibility": {
+        "master": ["body", "glass-back", "glass-front", "rim", "graduation-major", "graduation-minor", "lower-connector", "rubber-tube", "glass-bead", "pinch-region", "tip", "highlight"],
+        "scene": ["body", "glass-back", "glass-front", "rim", "graduation-major", "graduation-medium", "lower-connector", "rubber-tube", "glass-bead", "pinch-region", "tip", "highlight"],
+        "preview": ["body", "rim", "graduation-major", "lower-connector", "rubber-tube", "glass-bead", "pinch-region", "tip"],
+        "thumbnail": ["body", "rim", "rubber-tube", "glass-bead", "tip"]
+      }
+    },
+    {
+      "specificationId": "beaker-100ml",
+      "familyId": "beaker",
+      "displayName": "Beaker, Griffin low form, 100 mL",
+      "material": "borosilicate-glass",
+      "materialProfile": "clear-borosilicate-open-vessel",
+      "capacityMl": 100,
+      "bodyEnvelopeMm": [52, 72, 52],
+      "physicalEnvelopeMm": [63, 72, 52],
+      "landmarksMm": { "mouthOuterDiameter": 52, "wallHeight": 64, "rimThickness": 2.4, "spoutMaxProjection": 11, "flatBaseWidth": 48, "graduationStartHeight": 20, "wallThickness": 1.2 },
+      "geometry": { "kind": "beaker", "bodyWidth": 52, "height": 72, "spoutRootX": 49, "spoutTipX": 63, "spoutRootY": 3, "baseRadius": 3 },
+      "graduation": { "maximumMl": 100, "majorEveryMl": 20, "minorEveryMl": 10, "readingResolutionMl": 10 },
+      "anatomy": ["straight-wall-body", "open-rim", "integrated-pour-spout", "interior-cavity", "graduation-marks", "flat-contact-foot"],
+      "identityLayers": ["body", "glass-back", "glass-front", "rim", "spout", "graduation", "highlight"],
+      "parts": [
+        { "id": "vessel.body", "role": "body", "boundsMm": [0, 0, 52, 72], "detachable": false, "portIds": ["vessel.mouth"] },
+        { "id": "vessel.rim", "role": "rim", "boundsMm": [0, 0, 52, 5], "detachable": false, "portIds": ["vessel.mouth"] },
+        { "id": "vessel.spout", "role": "spout", "boundsMm": [49, 2, 14, 12], "detachable": false, "portIds": ["vessel.spout"] },
+        { "id": "vessel.base", "role": "base", "boundsMm": [2, 68, 48, 4], "detachable": false, "portIds": [] }
+      ],
+      "ports": [
+        { "id": "vessel.mouth", "kind": "fluid-inlet", "direction": "in", "positionMm": [26, 0], "nominalDiameterMm": null, "detachable": false },
+        { "id": "vessel.spout", "kind": "fluid-outlet", "direction": "out", "positionMm": [63, 9], "nominalDiameterMm": null, "detachable": false }
+      ],
+      "provenance": [
+        { "sourceId": "jy-t-0655-2025", "sourceRef": "https://www.moe.gov.cn/srcsite/A06/s3732/202507/W020250701322477393561.pdf", "sourceClass": "standard-family", "claim": "High-school beaker family", "reportedPrecision": "not-stated" },
+        { "sourceId": "chemrealm-beaker-family-anchor", "sourceRef": "docs/research/m6-zhejiang-apparatus-and-visual-target.md", "sourceClass": "approximate-visual", "claim": "100 mL Griffin low-form proportions; visual approximation", "reportedPrecision": "approximate" }
+      ],
+      "lodVisibility": { "master": ["body", "glass-back", "glass-front", "rim", "spout", "graduation-major", "graduation-minor", "highlight"], "scene": ["body", "glass-back", "glass-front", "rim", "spout", "graduation-major", "graduation-medium", "highlight"], "preview": ["body", "rim", "spout", "graduation-major"], "thumbnail": ["body", "rim", "spout"] }
+    },
+    {
+      "specificationId": "beaker-250ml",
+      "familyId": "beaker",
+      "displayName": "Beaker, Griffin low form, 250 mL",
+      "material": "borosilicate-glass",
+      "materialProfile": "clear-borosilicate-open-vessel",
+      "capacityMl": 250,
+      "bodyEnvelopeMm": [70, 95, 70],
+      "physicalEnvelopeMm": [85, 95, 70],
+      "landmarksMm": { "mouthOuterDiameter": 70, "wallHeight": 85, "rimThickness": 2.6, "spoutMaxProjection": 15, "flatBaseWidth": 65, "graduationStartHeight": 26, "wallThickness": 1.5 },
+      "geometry": { "kind": "beaker", "bodyWidth": 70, "height": 95, "spoutRootX": 67, "spoutTipX": 85, "spoutRootY": 3, "baseRadius": 4 },
+      "graduation": { "maximumMl": 250, "majorEveryMl": 50, "minorEveryMl": 25, "readingResolutionMl": 25 },
+      "anatomy": ["straight-wall-body", "open-rim", "integrated-pour-spout", "interior-cavity", "graduation-marks", "flat-contact-foot"],
+      "identityLayers": ["body", "glass-back", "glass-front", "rim", "spout", "graduation", "highlight"],
+      "parts": [
+        { "id": "vessel.body", "role": "body", "boundsMm": [0, 0, 70, 95], "detachable": false, "portIds": ["vessel.mouth"] },
+        { "id": "vessel.rim", "role": "rim", "boundsMm": [0, 0, 70, 6], "detachable": false, "portIds": ["vessel.mouth"] },
+        { "id": "vessel.spout", "role": "spout", "boundsMm": [67, 2, 18, 13], "detachable": false, "portIds": ["vessel.spout"] },
+        { "id": "vessel.base", "role": "base", "boundsMm": [3, 91, 65, 4], "detachable": false, "portIds": [] }
+      ],
+      "ports": [
+        { "id": "vessel.mouth", "kind": "fluid-inlet", "direction": "in", "positionMm": [35, 0], "nominalDiameterMm": null, "detachable": false },
+        { "id": "vessel.spout", "kind": "fluid-outlet", "direction": "out", "positionMm": [85, 11], "nominalDiameterMm": null, "detachable": false }
+      ],
+      "provenance": [
+        { "sourceId": "corning-pyrex-vista-250", "sourceRef": "https://ecatalog.corning.com/life-sciences/b2b/MX/en/General-Labware/Beakers/Beakers%2C-Glass/PYREX%C2%AE-VISTA%E2%84%A2-Beakers%2C-Standard-Low-Griffin/p/70000-250", "sourceClass": "manufacturer-anchor", "claim": "250 mL Griffin low form, approximately 70 mm OD × 95 mm high, 25 mL graduation", "reportedPrecision": "reported" },
+        { "sourceId": "jy-t-0655-2025", "sourceRef": "https://www.moe.gov.cn/srcsite/A06/s3732/202507/W020250701322477393561.pdf", "sourceClass": "standard-family", "claim": "High-school beaker family", "reportedPrecision": "not-stated" }
+      ],
+      "lodVisibility": { "master": ["body", "glass-back", "glass-front", "rim", "spout", "graduation-major", "graduation-minor", "highlight"], "scene": ["body", "glass-back", "glass-front", "rim", "spout", "graduation-major", "graduation-medium", "highlight"], "preview": ["body", "rim", "spout", "graduation-major"], "thumbnail": ["body", "rim", "spout"] }
+    },
+    {
+      "specificationId": "beaker-500ml",
+      "familyId": "beaker",
+      "displayName": "Beaker, Griffin low form, 500 mL",
+      "material": "borosilicate-glass",
+      "materialProfile": "clear-borosilicate-open-vessel",
+      "capacityMl": 500,
+      "bodyEnvelopeMm": [88, 125, 88],
+      "physicalEnvelopeMm": [106, 125, 88],
+      "landmarksMm": { "mouthOuterDiameter": 88, "wallHeight": 114, "rimThickness": 2.9, "spoutMaxProjection": 18, "flatBaseWidth": 80, "graduationStartHeight": 34, "wallThickness": 1.7 },
+      "geometry": { "kind": "beaker", "bodyWidth": 88, "height": 125, "spoutRootX": 85, "spoutTipX": 106, "spoutRootY": 3, "baseRadius": 4.5 },
+      "graduation": { "maximumMl": 500, "majorEveryMl": 100, "minorEveryMl": 50, "readingResolutionMl": 50 },
+      "anatomy": ["straight-wall-body", "open-rim", "integrated-pour-spout", "interior-cavity", "graduation-marks", "flat-contact-foot"],
+      "identityLayers": ["body", "glass-back", "glass-front", "rim", "spout", "graduation", "highlight"],
+      "parts": [
+        { "id": "vessel.body", "role": "body", "boundsMm": [0, 0, 88, 125], "detachable": false, "portIds": ["vessel.mouth"] },
+        { "id": "vessel.rim", "role": "rim", "boundsMm": [0, 0, 88, 7], "detachable": false, "portIds": ["vessel.mouth"] },
+        { "id": "vessel.spout", "role": "spout", "boundsMm": [85, 2, 21, 14], "detachable": false, "portIds": ["vessel.spout"] },
+        { "id": "vessel.base", "role": "base", "boundsMm": [4, 121, 80, 4], "detachable": false, "portIds": [] }
+      ],
+      "ports": [
+        { "id": "vessel.mouth", "kind": "fluid-inlet", "direction": "in", "positionMm": [44, 0], "nominalDiameterMm": null, "detachable": false },
+        { "id": "vessel.spout", "kind": "fluid-outlet", "direction": "out", "positionMm": [106, 12], "nominalDiameterMm": null, "detachable": false }
+      ],
+      "provenance": [
+        { "sourceId": "chemrealm-beaker-family-anchor", "sourceRef": "docs/research/m6-zhejiang-apparatus-and-visual-target.md", "sourceClass": "approximate-visual", "claim": "500 mL Griffin low-form proportions; visual approximation", "reportedPrecision": "approximate" },
+        { "sourceId": "jy-t-0655-2025", "sourceRef": "https://www.moe.gov.cn/srcsite/A06/s3732/202507/W020250701322477393561.pdf", "sourceClass": "standard-family", "claim": "High-school beaker family", "reportedPrecision": "not-stated" }
+      ],
+      "lodVisibility": { "master": ["body", "glass-back", "glass-front", "rim", "spout", "graduation-major", "graduation-minor", "highlight"], "scene": ["body", "glass-back", "glass-front", "rim", "spout", "graduation-major", "highlight"], "preview": ["body", "rim", "spout", "graduation-major"], "thumbnail": ["body", "rim", "spout"] }
+    },
+    {
+      "specificationId": "beaker-1000ml",
+      "familyId": "beaker",
+      "displayName": "Beaker, Griffin low form, 1000 mL",
+      "material": "borosilicate-glass",
+      "materialProfile": "clear-borosilicate-open-vessel",
+      "capacityMl": 1000,
+      "bodyEnvelopeMm": [112, 165, 112],
+      "physicalEnvelopeMm": [136, 165, 112],
+      "landmarksMm": { "mouthOuterDiameter": 112, "wallHeight": 150, "rimThickness": 3.2, "spoutMaxProjection": 24, "flatBaseWidth": 104, "graduationStartHeight": 44, "wallThickness": 2 },
+      "geometry": { "kind": "beaker", "bodyWidth": 112, "height": 165, "spoutRootX": 109, "spoutTipX": 136, "spoutRootY": 3, "baseRadius": 5 },
+      "graduation": { "maximumMl": 1000, "majorEveryMl": 200, "minorEveryMl": 100, "readingResolutionMl": 100 },
+      "anatomy": ["straight-wall-body", "open-rim", "integrated-pour-spout", "interior-cavity", "graduation-marks", "flat-contact-foot"],
+      "identityLayers": ["body", "glass-back", "glass-front", "rim", "spout", "graduation", "highlight"],
+      "parts": [
+        { "id": "vessel.body", "role": "body", "boundsMm": [0, 0, 112, 165], "detachable": false, "portIds": ["vessel.mouth"] },
+        { "id": "vessel.rim", "role": "rim", "boundsMm": [0, 0, 112, 8], "detachable": false, "portIds": ["vessel.mouth"] },
+        { "id": "vessel.spout", "role": "spout", "boundsMm": [109, 2, 27, 15], "detachable": false, "portIds": ["vessel.spout"] },
+        { "id": "vessel.base", "role": "base", "boundsMm": [4, 160, 104, 5], "detachable": false, "portIds": [] }
+      ],
+      "ports": [
+        { "id": "vessel.mouth", "kind": "fluid-inlet", "direction": "in", "positionMm": [56, 0], "nominalDiameterMm": null, "detachable": false },
+        { "id": "vessel.spout", "kind": "fluid-outlet", "direction": "out", "positionMm": [136, 14], "nominalDiameterMm": null, "detachable": false }
+      ],
+      "provenance": [
+        { "sourceId": "corning-pyrex-vista-family", "sourceRef": "https://www.corning.com/catalog/cls/documents/product-information-sheets/CLS-GL-005_REV6_DL.pdf", "sourceClass": "manufacturer-anchor", "claim": "PYREX VISTA Griffin family includes a 1,000 mL double-graduated beaker", "reportedPrecision": "reported" },
+        { "sourceId": "chemrealm-beaker-family-anchor", "sourceRef": "docs/research/m6-zhejiang-apparatus-and-visual-target.md", "sourceClass": "approximate-visual", "claim": "1,000 mL body proportions; visual approximation", "reportedPrecision": "approximate" }
+      ],
+      "lodVisibility": { "master": ["body", "glass-back", "glass-front", "rim", "spout", "graduation-major", "graduation-minor", "highlight"], "scene": ["body", "glass-back", "glass-front", "rim", "spout", "graduation-major", "highlight"], "preview": ["body", "rim", "spout", "graduation-major"], "thumbnail": ["body", "rim", "spout"] }
+    },
+    {
+      "specificationId": "conical-flask-100ml",
+      "familyId": "conical-flask",
+      "displayName": "Erlenmeyer flask, 100 mL",
+      "material": "borosilicate-glass",
+      "materialProfile": "clear-borosilicate-curved-vessel",
+      "capacityMl": 100,
+      "bodyEnvelopeMm": [62, 105, 62],
+      "physicalEnvelopeMm": [62, 105, 62],
+      "landmarksMm": { "mouthOuterDiameter": 22, "neckOuterDiameter": 18, "neckLength": 34, "shoulderTransitionHeight": 38, "maxBodyDiameter": 62, "bottomCornerRadius": 8, "flatBaseWidth": 48, "wallThickness": 1 },
+      "geometry": { "kind": "erlenmeyer", "centerX": 31, "baseY": 105 },
+      "anatomy": ["curved-conical-body", "shoulder-transition", "cylindrical-neck", "open-mouth-rim", "interior-cavity", "flat-contact-foot"],
+      "identityLayers": ["body", "shoulder", "neck", "rim", "glass-back", "glass-front", "highlight"],
+      "parts": [
+        { "id": "vessel.body", "role": "body", "boundsMm": [0, 26, 62, 79], "detachable": false, "portIds": ["vessel.mouth"] },
+        { "id": "vessel.neck", "role": "neck", "boundsMm": [22, 0, 18, 38], "detachable": false, "portIds": ["vessel.mouth"] },
+        { "id": "vessel.rim", "role": "rim", "boundsMm": [20, 0, 22, 4], "detachable": false, "portIds": ["vessel.mouth"] },
+        { "id": "vessel.base", "role": "base", "boundsMm": [7, 101, 48, 4], "detachable": false, "portIds": [] }
+      ],
+      "ports": [{ "id": "vessel.mouth", "kind": "fluid-inlet", "direction": "in", "positionMm": [31, 0], "nominalDiameterMm": null, "detachable": false }],
+      "provenance": [
+        { "sourceId": "jy-t-0655-2025", "sourceRef": "https://www.moe.gov.cn/srcsite/A06/s3732/202507/W020250701322477393561.pdf", "sourceClass": "standard-family", "claim": "High-school conical flask family", "reportedPrecision": "not-stated" },
+        { "sourceId": "chemrealm-erlenmeyer-family-anchor", "sourceRef": "docs/research/m6-zhejiang-apparatus-and-visual-target.md", "sourceClass": "approximate-visual", "claim": "100 mL conical flask proportions; visual approximation", "reportedPrecision": "approximate" }
+      ],
+      "lodVisibility": { "master": ["body", "shoulder", "neck", "rim", "glass-back", "glass-front", "highlight"], "scene": ["body", "shoulder", "neck", "rim", "glass-back", "glass-front", "highlight"], "preview": ["body", "shoulder", "neck", "rim"], "thumbnail": ["body", "neck", "rim"] }
+    },
+    {
+      "specificationId": "conical-flask-250ml",
+      "familyId": "conical-flask",
+      "displayName": "Erlenmeyer flask, 250 mL",
+      "material": "borosilicate-glass",
+      "materialProfile": "clear-borosilicate-curved-vessel",
+      "capacityMl": 250,
+      "bodyEnvelopeMm": [85, 145, 85],
+      "physicalEnvelopeMm": [85, 145, 85],
+      "landmarksMm": { "mouthOuterDiameter": 28, "neckOuterDiameter": 23, "neckLength": 48, "shoulderTransitionHeight": 52, "maxBodyDiameter": 85, "bottomCornerRadius": 10, "flatBaseWidth": 65, "wallThickness": 1.2 },
+      "geometry": { "kind": "erlenmeyer", "centerX": 42.5, "baseY": 145 },
+      "anatomy": ["curved-conical-body", "shoulder-transition", "cylindrical-neck", "open-mouth-rim", "interior-cavity", "flat-contact-foot"],
+      "identityLayers": ["body", "shoulder", "neck", "rim", "glass-back", "glass-front", "highlight"],
+      "parts": [
+        { "id": "vessel.body", "role": "body", "boundsMm": [0, 34, 85, 111], "detachable": false, "portIds": ["vessel.mouth"] },
+        { "id": "vessel.neck", "role": "neck", "boundsMm": [31, 0, 23, 52], "detachable": false, "portIds": ["vessel.mouth"] },
+        { "id": "vessel.rim", "role": "rim", "boundsMm": [28.5, 0, 28, 4], "detachable": false, "portIds": ["vessel.mouth"] },
+        { "id": "vessel.base", "role": "base", "boundsMm": [10, 141, 65, 4], "detachable": false, "portIds": [] }
+      ],
+      "ports": [{ "id": "vessel.mouth", "kind": "fluid-inlet", "direction": "in", "positionMm": [42.5, 0], "nominalDiameterMm": null, "detachable": false }],
+      "provenance": [
+        { "sourceId": "duran-erlenmeyer-250ml", "sourceRef": "https://www.dwk.com/duran-erlenmeyer-flask-with-din-thread-without-cap-250-ml-218033604", "sourceClass": "manufacturer-anchor", "claim": "250 mL borosilicate Erlenmeyer, 85 mm diameter × 145 mm height", "reportedPrecision": "reported" },
+        { "sourceId": "jy-t-0655-2025", "sourceRef": "https://www.moe.gov.cn/srcsite/A06/s3732/202507/W020250701322477393561.pdf", "sourceClass": "standard-family", "claim": "High-school conical flask family", "reportedPrecision": "not-stated" }
+      ],
+      "lodVisibility": { "master": ["body", "shoulder", "neck", "rim", "glass-back", "glass-front", "highlight"], "scene": ["body", "shoulder", "neck", "rim", "glass-back", "glass-front", "highlight"], "preview": ["body", "shoulder", "neck", "rim"], "thumbnail": ["body", "neck", "rim"] }
+    },
+    {
+      "specificationId": "conical-flask-500ml",
+      "familyId": "conical-flask",
+      "displayName": "Erlenmeyer flask, 500 mL",
+      "material": "borosilicate-glass",
+      "materialProfile": "clear-borosilicate-curved-vessel",
+      "capacityMl": 500,
+      "bodyEnvelopeMm": [102, 186, 102],
+      "physicalEnvelopeMm": [102, 186, 102],
+      "landmarksMm": { "mouthOuterDiameter": 34, "neckOuterDiameter": 28, "neckLength": 62, "shoulderTransitionHeight": 66, "maxBodyDiameter": 102, "bottomCornerRadius": 12, "flatBaseWidth": 78, "wallThickness": 1.4 },
+      "geometry": { "kind": "erlenmeyer", "centerX": 51, "baseY": 186 },
+      "anatomy": ["curved-conical-body", "shoulder-transition", "cylindrical-neck", "open-mouth-rim", "interior-cavity", "flat-contact-foot"],
+      "identityLayers": ["body", "shoulder", "neck", "rim", "glass-back", "glass-front", "highlight"],
+      "parts": [
+        { "id": "vessel.body", "role": "body", "boundsMm": [0, 44, 102, 142], "detachable": false, "portIds": ["vessel.mouth"] },
+        { "id": "vessel.neck", "role": "neck", "boundsMm": [37, 0, 28, 66], "detachable": false, "portIds": ["vessel.mouth"] },
+        { "id": "vessel.rim", "role": "rim", "boundsMm": [34, 0, 34, 4], "detachable": false, "portIds": ["vessel.mouth"] },
+        { "id": "vessel.base", "role": "base", "boundsMm": [12, 182, 78, 4], "detachable": false, "portIds": [] }
+      ],
+      "ports": [{ "id": "vessel.mouth", "kind": "fluid-inlet", "direction": "in", "positionMm": [51, 0], "nominalDiameterMm": null, "detachable": false }],
+      "provenance": [
+        { "sourceId": "jy-t-0655-2025", "sourceRef": "https://www.moe.gov.cn/srcsite/A06/s3732/202507/W020250701322477393561.pdf", "sourceClass": "standard-family", "claim": "High-school conical flask family", "reportedPrecision": "not-stated" },
+        { "sourceId": "chemrealm-erlenmeyer-family-anchor", "sourceRef": "docs/research/m6-zhejiang-apparatus-and-visual-target.md", "sourceClass": "approximate-visual", "claim": "500 mL conical flask proportions; visual approximation", "reportedPrecision": "approximate" }
+      ],
+      "lodVisibility": { "master": ["body", "shoulder", "neck", "rim", "glass-back", "glass-front", "highlight"], "scene": ["body", "shoulder", "neck", "rim", "glass-back", "glass-front", "highlight"], "preview": ["body", "shoulder", "neck", "rim"], "thumbnail": ["body", "neck", "rim"] }
+    }
+  ]
+}

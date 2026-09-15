@@ -25,7 +25,8 @@
 ### Task 1: Freeze the canonical apparatus construction source
 
 **Files:**
-- Create: `assets/apparatus/catalog/gold-master/construction-source.json`
+- Create: `packages/render/src/assets/gold-master-construction.json`
+- Create: `packages/render/src/assets/apparatus-contracts.ts`
 - Modify: `contracts/version-manifest.json` only if the existing representation asset/catalog version must be bumped by the generated-source contract
 - Modify: `packages/render/src/assets/apparatus-catalog.ts`
 - Test: `packages/render/src/assets/apparatus-catalog.test.ts`
@@ -35,7 +36,7 @@
 - Consumes: existing `ApparatusSpecification`, `ApparatusPart`, `ApparatusPort`, `ApparatusGraduation` contracts and central version manifest.
 - Produces: `GoldMasterConstructionSource`, `readGoldMasterConstructionSource()`, `goldMasterSpecification(id)`, and a typed catalog projection used by both runtime code and the generator.
 
-- [ ] **Step 1: Write the failing source-integrity tests.**
+- [x] **Step 1: Write the failing source-integrity tests.**
 
 ```ts
 it("has one construction source for every first-wave Gold Master specification", () => {
@@ -53,30 +54,30 @@ it("derives catalog geometry identity from the construction source", () => {
 });
 ```
 
-- [ ] **Step 2: Run the focused tests to confirm the new source contract is absent.**
+- [x] **Step 2: Run the focused tests to confirm the new source contract is absent.**
 
 Run: `pnpm exec vitest run packages/render/src/assets/apparatus-catalog.test.ts packages/render/src/assets/gold-master.test.ts`
 
 Expected: FAIL because no canonical construction source and source-backed catalog projection exist.
 
-- [ ] **Step 3: Add the source schema and records.**
+- [x] **Step 3: Add the source schema and records.**
 
-Each record must contain `specificationId`, `familyId`, `capacityMl`, `bodyEnvelopeMm`, `physicalEnvelopeMm`, `landmarksMm`, `geometry`, `graduation`, `parts`, `ports`, `lodVisibility`, `materialProfile`, and datum-level provenance. The physical envelope is allowed to exceed the body diameter for a beaker spout, but both are named explicitly. The first wave records are the two burettes, three beakers and three Erlenmeyer flasks; all eight records must have explicit family proportions rather than a scale-only formula.
+Each record must contain `specificationId`, `familyId`, `capacityMl`, `bodyEnvelopeMm`, `physicalEnvelopeMm`, `landmarksMm`, `geometry`, `graduation`, `parts`, `ports`, `lodVisibility`, `materialProfile`, and datum-level provenance. The physical envelope is allowed to exceed the body diameter for a beaker spout, but both are named explicitly. The candidate source contains two burettes, four beakers and three Erlenmeyer flasks; the bounded first owner-review subset is the two burettes, three beakers and three Erlenmeyer flasks. Every record must have explicit family proportions rather than a scale-only formula.
 
-- [ ] **Step 4: Make the TypeScript catalog consume the source projection.**
+- [x] **Step 4: Make the TypeScript catalog consume the source projection.**
 
 The catalog module must expose immutable source-derived records. No first-wave `dimensions`, `parts`, `ports`, `graduation`, landmark or material-profile literals may remain in a second array in `apparatus-catalog.ts`.
 
-- [ ] **Step 5: Run source and catalog tests.**
+- [x] **Step 5: Run source and catalog tests.**
 
 Run: `pnpm exec vitest run packages/render/src/assets/apparatus-catalog.test.ts packages/render/src/assets/gold-master.test.ts`
 
 Expected: PASS, with every first-wave specification mapped exactly once and all nested source/catalog records frozen.
 
-- [ ] **Step 6: Commit the canonical source boundary.**
+- [x] **Step 6: Commit the canonical source boundary.**
 
 ```powershell
-git add assets/apparatus/catalog/gold-master/construction-source.json packages/render/src/assets/apparatus-catalog.ts packages/render/src/assets/apparatus-catalog.test.ts packages/render/src/assets/gold-master.test.ts contracts/version-manifest.json
+git add packages/render/src/assets/gold-master-construction.json packages/render/src/assets/gold-master-source.ts packages/render/src/assets/apparatus-catalog.ts packages/render/src/assets/apparatus-catalog.test.ts packages/render/src/assets/gold-master.test.ts contracts/version-manifest.json
 git commit -m "refactor: centralize M6 apparatus construction source"
 ```
 
@@ -95,7 +96,7 @@ git commit -m "refactor: centralize M6 apparatus construction source"
 - Consumes: `construction-source.json` records and typed profile geometry.
 - Produces: `generateGoldMasterSvg(specification, lod)`, true-mm SVG documents, and measured geometry metadata.
 
-- [ ] **Step 1: Write failing geometry tests for the actual generated SVG.**
+- [x] **Step 1: Write failing geometry tests for the actual generated SVG.**
 
 ```ts
 it("keeps declared body and physical envelopes equal to measured SVG geometry", async () => {
@@ -112,13 +113,13 @@ it("constrains flask landmarks to the generated silhouette", async () => {
 });
 ```
 
-- [ ] **Step 2: Run the geometry tests to record the current false-mm failures.**
+- [x] **Step 2: Run the geometry tests to record the current false-mm failures.**
 
 Run: `pnpm exec vitest run packages/render/src/assets/gold-master.test.ts`
 
 Expected: FAIL on current multiplier-based beaker/flask geometry and detached metadata landmarks.
 
-- [ ] **Step 3: Replace arbitrary art-space multipliers with profile constructors.**
+- [x] **Step 3: Replace arbitrary art-space multipliers with profile constructors.**
 
 Use explicit construction functions:
 
@@ -130,21 +131,21 @@ function buildErlenmeyerGeometry(specification, lod) {}
 
 Their path coordinates must be direct millimetres in the source profile. A master `viewBox` starts at the source physical origin and spans `physicalEnvelopeMm`; no `width * 1.52`, `width * .86` or equivalent hidden scale is permitted. The beaker spout must be a local deformation of the rim with shared root points/tangent, not a detached triangle. The flask body must use continuous cubic shoulder and bottom curves. The burette must use one continuous glass-to-actuator-to-tip flow path for each mechanism.
 
-- [ ] **Step 4: Remove false visual content from clean masters.**
+- [x] **Step 4: Remove false visual content from clean masters.**
 
 Clean masters must not contain visible `shadow`, `support-interface` hardware, detachable QA circles, construction-detail guides, fake bases or unconnected cones. Ports and support interfaces remain manifest semantics. Scene composition may add a relation-owned shadow or clamp; master/preview/thumbnail assets do not bake a bench contact shadow.
 
-- [ ] **Step 5: Use family-specific neutral material profiles.**
+- [x] **Step 5: Use family-specific neutral material profiles.**
 
 Glass uses low-saturation neutral clear values with localized edges/highlights rather than a blue/cyan outline. Burette Schellbach stripe, PTFE, rubber and glass bead are family-owned constructions. Unused family definitions are not emitted into unrelated SVGs.
 
-- [ ] **Step 6: Regenerate and run geometry tests.**
+- [x] **Step 6: Regenerate and run geometry tests.**
 
 Run: `node tools/create_gold_master_assets.mjs; pnpm exec vitest run packages/render/src/assets/gold-master.test.ts`
 
 Expected: PASS for measured bounds, attached landmarks, continuous family anatomy and clean-master forbidden-content checks.
 
-- [ ] **Step 7: Commit the geometry generation boundary.**
+- [x] **Step 7: Commit the geometry generation boundary.**
 
 ```powershell
 git add tools/create_gold_master_assets.mjs assets/apparatus/catalog/gold-master packages/render/src/assets/svg-geometry.ts packages/render/src/assets/gold-master.test.ts
@@ -154,7 +155,7 @@ git commit -m "fix: generate M6 apparatus geometry in physical millimetres"
 ### Task 3: Derive calibrated graduations and continuous burette mechanisms
 
 **Files:**
-- Modify: `assets/apparatus/catalog/gold-master/construction-source.json`
+- Modify: `packages/render/src/assets/gold-master-construction.json`
 - Modify: `tools/create_gold_master_assets.mjs`
 - Modify: `packages/render/src/assets/gold-master.test.ts`
 - Modify: `docs/visual/apparatus-standard.md`
@@ -164,7 +165,7 @@ git commit -m "fix: generate M6 apparatus geometry in physical millimetres"
 - Consumes: canonical `graduation.maximumMl`, `majorEveryMl`, `minorEveryMl`, `readingResolutionMl`, tube bounds and mechanism profile.
 - Produces: graduation marks attached to the tube, LOD visibility derived from the same scale, and mechanism-specific continuous geometry.
 
-- [ ] **Step 1: Write failing scale/mechanism tests.**
+- [x] **Step 1: Write failing scale/mechanism tests.**
 
 ```ts
 it("renders the canonical 25 mL acid scale at 0.05 mL intervals", async () => {
@@ -175,24 +176,24 @@ it("renders the canonical 25 mL acid scale at 0.05 mL intervals", async () => {
 });
 ```
 
-- [ ] **Step 2: Implement scale generation from canonical values only.**
+- [x] **Step 2: Implement scale generation from canonical values only.**
 
 The generator must compute `intervalCount = maximumMl / minorEveryMl`; it may not contain a hardcoded `50`, `10`, or independent label interval. Master emits the full scale; preview/thumbnail use the source-derived LOD policy to omit unreadable minor marks without inventing a different calibration.
 
-- [ ] **Step 3: Implement continuous flow paths.**
+- [x] **Step 3: Implement continuous flow paths.**
 
 Acid: graduated glass tube → PTFE stopcock body → glass outlet/tip. Alkali: lower glass connector → one rubber tube → one glass bead → pinch region → glass tip. The bead has one visual layer and one semantic part. A support port is metadata only in a standalone asset; a stand/clamp is composition-owned.
 
-- [ ] **Step 4: Run scale and mechanism tests.**
+- [x] **Step 4: Run scale and mechanism tests.**
 
 Run: `node tools/create_gold_master_assets.mjs; pnpm exec vitest run packages/render/src/assets/gold-master.test.ts`
 
 Expected: PASS for 500 intervals on the 25 mL source, 500 intervals on the 50 mL source, tube attachment, no duplicate bead and continuous endpoints.
 
-- [ ] **Step 5: Commit the calibrated apparatus marks.**
+- [x] **Step 5: Commit the calibrated apparatus marks.**
 
 ```powershell
-git add assets/apparatus/catalog/gold-master/construction-source.json tools/create_gold_master_assets.mjs packages/render/src/assets/gold-master.test.ts docs/visual/apparatus-standard.md docs/visual/m6-art-direction.md
+git add packages/render/src/assets/gold-master-construction.json tools/create_gold_master_assets.mjs packages/render/src/assets/gold-master.test.ts docs/visual/apparatus-standard.md docs/visual/m6-art-direction.md
 git commit -m "fix: derive apparatus graduations from calibrated profiles"
 ```
 
@@ -210,7 +211,7 @@ git commit -m "fix: derive apparatus graduations from calibrated profiles"
 - Consumes: source `lodVisibility`, physical envelopes and generated master SVGs.
 - Produces: explicit visibility-role matrices and a single-factor physical comparison sheet.
 
-- [ ] **Step 1: Write failing semantic LOD and common-scale tests.**
+- [x] **Step 1: Write failing semantic LOD and common-scale tests.**
 
 ```ts
 it("uses semantic LOD visibility rather than path count as the acceptance proof", async () => {
@@ -227,25 +228,25 @@ it("uses one millimetre-to-pixel scale for the physical sheet", async () => {
 });
 ```
 
-- [ ] **Step 2: Generate explicit role visibility.**
+- [x] **Step 2: Generate explicit role visibility.**
 
-The manifest declares roles such as `silhouette`, `rim`, `spout`, `actuator`, `graduation-major`, `graduation-minor`, `highlight`, `port-semantic`, `shadow`, and `qa-overlay` per LOD. The generator decides visibility from this map; path count is diagnostic only and cannot be used as proof.
+The source may declare family-specific structural roles such as `silhouette`, `rim`, `spout`, `actuator`, `graduation-major`, `graduation-minor` and `highlight` per LOD. Runtime-only/support/selection/shadow/QA roles are explicitly absent or hidden from clean-master geometry; the generator decides visibility from the source map. Path count is diagnostic only and cannot be used as proof.
 
-- [ ] **Step 3: Rebuild comparison sheets.**
+- [x] **Step 3: Rebuild comparison sheets.**
 
 The physical sheet embeds every master using one declared `mmToPx` factor, a real ruler and physical envelopes; it must not independently fit each asset into a cell. The normalized sheet may fit each item, but declares `data-review-mode="visual-only"` and never supplies dimensional evidence.
 
-- [ ] **Step 4: Update evidence honestly.**
+- [x] **Step 4: Update evidence honestly.**
 
 `M6-LOD` and visual geometry rows remain `PARTIAL` until owner dual-background review; package-level semantic tests may be marked PASS only for their narrow contract. Rename package headings and manifests to `Gold Master Candidate`.
 
-- [ ] **Step 5: Run the focused evidence tests.**
+- [x] **Step 5: Run the focused evidence tests.**
 
 Run: `node tools/create_gold_master_assets.mjs; pnpm exec vitest run packages/render/src/assets/gold-master.test.ts`
 
 Expected: PASS for role matrices and common scale; evidence no longer claims visual acceptance.
 
-- [ ] **Step 6: Commit LOD/evidence generation.**
+- [x] **Step 6: Commit LOD/evidence generation.**
 
 ```powershell
 git add tools/create_gold_master_assets.mjs packages/render/src/assets/gold-master.test.ts assets/apparatus/catalog/gold-master docs/evidence/M6.md
@@ -269,7 +270,7 @@ git commit -m "test: make M6 LOD and scale evidence semantic"
 - Consumes: generated package manifest and canonical source IDs.
 - Produces: one consistent M6 contract with explicit candidate status, no stale visual claims and reproducible review commands.
 
-- [ ] **Step 1: Add a contract test for forbidden semantic drift.**
+- [x] **Step 1: Add a contract test for forbidden semantic drift.**
 
 ```js
 assert.match(artDirection, /true millimetre|physical millimetre/i);
@@ -278,17 +279,17 @@ assert.match(evidence, /Gold Master Candidate/);
 assert.doesNotMatch(evidence, /M6-LOD\s*\|\s*PASS locally\s*\|/i);
 ```
 
-- [ ] **Step 2: Align every document.**
+- [x] **Step 2: Align every document.**
 
 State that profile geometry is serialized/source-backed, SVG master coordinates are actual mm, shadow/support/QA overlays are not clean master content, standard-backed product dimensions are distinct from approximate visual proportions, and owner visual review is still required. Keep the strong-acid phenolphthalein orange requirement documented as out of scope for implementation.
 
-- [ ] **Step 3: Record external sources without claiming unsupported precision.**
+- [x] **Step 3: Record external sources without claiming unsupported precision.**
 
 Retain official DWK/Corning and Zhejiang/Chinese education-equipment references in source records. Each datum states whether it is reported, a family anchor, or an approximate visual construction. Do not turn a catalog marketing dimension into an unqualified metrology claim.
 
-- [ ] **Step 4: Run contract checks.**
+- [x] **Step 4: Run contract checks.**
 
-Run: `pnpm verify:m6-entry; pnpm verify:m6-renderer; pnpm exec vitest run packages/render/src/assets/gold-master.test.ts`
+Run: `pnpm verify:m6-entry; pnpm verify:m6-gold-master; pnpm verify:m6-renderer; pnpm exec vitest run packages/render/src/assets/gold-master.test.ts`
 
 Expected: PASS with all M6 package/evidence claims scoped to verified local contracts.
 
@@ -304,15 +305,15 @@ Expected: PASS with all M6 package/evidence claims scoped to verified local cont
 - Consumes: all generated artifacts, source records, M6 docs and existing M4/M5 verification commands.
 - Produces: a two-round audit record with findings, resolutions and exact commands.
 
-- [ ] **Step 1: Perform Audit A — source/contract/invariant review.**
+- [x] **Step 1: Perform Audit A — source/contract/invariant review.**
 
 Check source-to-catalog-to-manifest-to-SVG identity, central version references, true-mm bounds, profile hashes, no duplicate catalog entries, LOD role matrix, clean-master overlays, graduation derivation and unchanged M4/M5 imports/guards.
 
-- [ ] **Step 2: Perform Audit B — rendered visual/acceptance review.**
+- [x] **Step 2: Perform Audit B — rendered visual/acceptance review.**
 
 Render representative acid burette, alkali burette, 250 mL beaker and 250 mL flask at full and thumbnail sizes on dark-neutral and light-neutral backgrounds. Review silhouette, real apparatus anatomy, transparent material, continuous connections, rim/spout continuity, graduation placement, scale-sheet common factor and absence of QA overlays. Record any remaining visual judgment as owner-blocked, not PASS.
 
-- [ ] **Step 3: Run the complete local verification set.**
+- [x] **Step 3: Run the complete local verification set.**
 
 Run:
 
@@ -326,6 +327,7 @@ pnpm depcruise
 pnpm guards
 pnpm verify:versions
 pnpm verify:m6-entry
+pnpm verify:m6-gold-master
 pnpm verify:m6-renderer
 pnpm verify:world
 pnpm artifacts
@@ -336,11 +338,11 @@ git diff --check
 
 Expected: all commands pass; generated artifacts are unchanged after the second generation; M4 remains S3 and M6 remains S2 candidate.
 
-- [ ] **Step 4: Commit the audit handoff and push.**
+- [x] **Step 4: Commit the audit handoff and push.**
 
 ```powershell
-git add docs/evidence/M6.md docs/research/m6-gold-master-self-audit.md
-git commit -m "docs: record M6 Gold Master self-audit handoff"
+git add .github/workflows/ci.yml assets/apparatus/catalog packages/render/src/assets docs/evidence/M6.md docs/research/m6-gold-master-self-audit.md docs/superpowers/plans/2026-09-15-m6-gold-master-contract-remediation.md docs/superpowers/specs/2026-09-15-m6-visual-asset-system-redesign.md docs/visual package.json tests/m6-gold-master-contract.test.mjs tools/create_gold_master_assets.mjs tools/check_m6_gold_master_contract.mjs
+git commit -m "fix: close M6 Gold Master package contract"
 git push
 ```
 

@@ -154,10 +154,11 @@ cylindrical neck, open rim and flat contact foot. Fictitious base or hardware
 layers are forbidden. Each asset records a material profile, at least five
 landmark anchors and deterministic LOD visibility.
 
-The master SVG is construction truth and contains no scene shadow. Later LODs
-may add a scene-owned contact shadow but may not change family anatomy,
-capacity, declared dimensions, profile identity or actuator identity. Physical
-and normalized comparison sheets must be generated from the actual master
+All standalone SVG LODs are construction/identity assets and contain no scene
+shadow. A composed experiment scene may add a scene-owned contact shadow when
+a bench/support relation exists; it may not change family anatomy, capacity,
+declared dimensions, profile identity or actuator identity. Physical and
+normalized comparison sheets must be generated from the actual master
 geometry, never from hand-authored proxy outlines.
 
 ## Learning design

@@ -73,6 +73,7 @@
     "burette-alkali-50ml-class-b",
     "beaker-100ml",
     "beaker-250ml",
+    "beaker-500ml",
     "beaker-1000ml",
     "conical-flask-100ml",
     "conical-flask-250ml",
@@ -87,6 +88,11 @@
     "duran-cylinder-25ml-class-b",
     "duran-cylinder-100ml-class-a",
     "fisher-two-hole-stoppers",
-    "chemrealm-visual-proportion-anchor"
+    "chemrealm-visual-proportion-anchor",
+    "chemrealm-alkali-burette-anchor",
+    "chemrealm-beaker-family-anchor",
+    "corning-pyrex-vista-250",
+    "corning-pyrex-vista-family",
+    "chemrealm-erlenmeyer-family-anchor"
   ]
 }

@@ -1,26 +1,9 @@
-# Gold Master QA
+# Gold Master Candidate QA
 
-## Required matrix
+This is an implementation candidate. It is not a visual acceptance record.
 
-Every asset is reviewed in master, scene, preview and thumbnail LOD at both dark-neutral and light-neutral backgrounds. The current package records deterministic family anatomy and LOD source; owner captures are still pending.
+Regenerate with `node tools/create_gold_master_assets.mjs`. The generator is deterministic, local-only and reads the single construction source.
 
-| Check | Rule | Current package evidence |
-|---|---|---|
-| Family anatomy | real family-owned layers; no fictitious universal base/hardware | SVG data-layer records + manifest |
-| Landmark contract | mouth/neck/shoulder/spout/foot/actuator anchors are explicit | manifest landmarks + source record |
-| LOD identity | capacity, dimensions, family and actuator identity do not change | manifest + four LOD files per asset |
-| Material | family-specific restrained glass/PTFE/rubber values, local contour cues, no halo | candidate token checks; not visual acceptance |
-| Background | dark-neutral and light-neutral remain legible | manifest matrix; owner captures pending |
-| Runtime separation | no pH, reagent, reading, liquid quantity or chemical colour baked in | SVG package test |
-| Originality | no NOBOOK/vendor artwork or external references | source record + self-contained SVGs |
-| State coverage | declared empty/filled/connected variants remain RenderState-owned | states/manifest.json + deterministic fixture |
-| Comparison | physical and normalized sheets are derived from actual master SVGs | data-source-asset-id + data-source-lod=master |
-| Reproducibility | bounded asset set, LODs, backgrounds and review sheets are fixed | fixture/render-fixture.json |
+Required review: dark-neutral and light-neutral backgrounds; full-size and thumbnail LODs; clean master without shadows, QA overlays or detached support hardware; continuous family anatomy; common physical-scale sheet; owner visual review against `docs/visual/apparatus-standard.md`.
 
-## Gold Master set
-
-burette-acid-25ml-class-as, burette-alkali-50ml-class-b, beaker-100ml, beaker-250ml, beaker-1000ml, conical-flask-100ml, conical-flask-250ml, conical-flask-500ml.
-
-## Reproduction
-
-Run node tools/create_gold_master_assets.mjs, then run the Gold Master package test from the repository root. The generator is deterministic and does not fetch external assets.
+Structural tests prove source/catalog/SVG identity, measured millimetre bounds, attached landmarks, calibrated graduation derivation, semantic LOD visibility and common comparison scale. They cannot approve taste, realism or visual quality by themselves.

@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "source": "RenderState apparatus state contract",
   "variants": [
     {
@@ -7,10 +7,9 @@
       "visibleLayers": [
         "apparatus-body",
         "rim-or-mouth",
-        "contact-surface",
-        "shadow"
+        "contact-surface"
       ],
-      "description": "Geometry-only empty apparatus; no runtime quantity is baked into the master."
+      "description": "Clean geometry with no runtime quantity baked into the asset."
     },
     {
       "id": "filled",
@@ -20,8 +19,7 @@
         "graduation-when-present",
         "contact-surface",
         "liquid",
-        "meniscus",
-        "shadow"
+        "meniscus"
       ],
       "description": "State-derived liquid and meniscus overlays supplied by Observable/RenderState."
     },
@@ -31,10 +29,9 @@
         "apparatus-body",
         "connection-port",
         "detachable",
-        "connection-highlight",
-        "shadow"
+        "connection-highlight"
       ],
-      "description": "Detachable-part connection state; declared only for burette specifications."
+      "description": "Semantic detachable connection state; scene composition owns visible clamps."
     }
   ],
   "assets": [
@@ -63,6 +60,13 @@
     },
     {
       "assetId": "beaker-250ml",
+      "supportedVariants": [
+        "empty",
+        "filled"
+      ]
+    },
+    {
+      "assetId": "beaker-500ml",
       "supportedVariants": [
         "empty",
         "filled"

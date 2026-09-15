@@ -15,7 +15,8 @@
 The first owner-reviewed visual baseline is intentionally bounded:
 
 - acid 25 mL and alkali 50 mL burettes;
-- 100, 250 and 1000 mL beakers;
+- 100, 250 and 1000 mL beakers (the candidate package also contains a 500 mL
+  family variant for size-class review);
 - 100, 250 and 500 mL Erlenmeyer flasks.
 
 These families exercise scale reading, meniscus, two different valve
@@ -194,6 +195,10 @@ must remain visually compatible; they are not a license for unrelated recipes.
   but the apparatus must not gain a black cartoon outline, white halo or changed
   chemical meaning. Thin anti-aliased marks receive visual review in addition to
   a numeric contrast check.
+- Standalone apparatus assets remain free of scene-owned contact shadows, bench
+  shadows, clamps and selection/debug overlays. A composition may add a shadow
+  or support relation only when that scene relation exists; it must not be baked
+  into reusable Gold Master geometry.
 - Colour must never be the sole channel carrying scientific information.
   Indicator colour is accompanied by a numeric pH readout and a species view,
   which is a genuine accessibility requirement as well as a pedagogical one.

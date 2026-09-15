@@ -55,8 +55,10 @@ normalized-shape sheet is visual-only and fits variants to a common artboard:
 
 The first owner-reviewed Gold Master set is intentionally bounded to acid and
 alkali burettes, 100/250/1000 mL beakers and 100/250/500 mL Erlenmeyer flasks.
-The rest of the catalog remains required production scope, but catalog count is
-not a substitute for visual approval of this representative set.
+The candidate package also includes a 500 mL beaker variant for family
+comparison, but it is not a substitute for owner approval of the bounded first
+set. The rest of the catalog remains required production scope, but catalog
+count is not a substitute for visual approval of this representative set.
 
 Labels alone do not count as a visible difference. Every changed geometry
 parameter must name its provenance class and source, or be explicitly marked

@@ -1,113 +1,40 @@
 import { VERSION_MANIFEST } from "@chemrealm/schema";
+import type {
+  ApparatusCatalog,
+  ApparatusConnection,
+  ApparatusFamilyId,
+  ApparatusPart,
+  ApparatusPort,
+  ApparatusPortDirection,
+  ApparatusPortKind,
+  ApparatusProvenance,
+  ApparatusSourceClass,
+  ApparatusSpecification,
+  ApparatusStateVariant,
+} from "./apparatus-contracts.js";
+import {
+  assertGoldMasterCatalogSource,
+  replaceGoldMasterSpecifications,
+} from "./gold-master-source.js";
+
+export type {
+  ApparatusCatalog,
+  ApparatusConnection,
+  ApparatusFamilyId,
+  ApparatusGraduation,
+  ApparatusMaterial,
+  ApparatusPart,
+  ApparatusPort,
+  ApparatusPortDirection,
+  ApparatusPortKind,
+  ApparatusProvenance,
+  ApparatusSourceClass,
+  ApparatusSpecKind,
+  ApparatusSpecification,
+  ApparatusStateVariant,
+} from "./apparatus-contracts.js";
 
 export const APPARATUS_CATALOG_VERSION = VERSION_MANIFEST.representation.apparatusCatalog;
-
-export type ApparatusSpecKind = "vessel" | "support" | "connector" | "closure";
-export type ApparatusFamilyId =
-  | "burette"
-  | "conical-flask"
-  | "beaker"
-  | "volumetric-flask"
-  | "graduated-cylinder"
-  | "test-tube"
-  | "glass-tube"
-  | "rubber-tube"
-  | "connector"
-  | "rubber-stopper";
-export type ApparatusMaterial =
-  | "borosilicate-glass"
-  | "soda-lime-glass"
-  | "natural-rubber"
-  | "silicone-rubber"
-  | "stainless-steel"
-  | "coated-metal"
-  | "ceramic";
-export type ApparatusSourceClass =
-  | "standard-family"
-  | "manufacturer-anchor"
-  | "approximate-visual";
-export type ApparatusPortKind =
-  | "fluid-inlet"
-  | "fluid-outlet"
-  | "gas-inlet"
-  | "gas-outlet"
-  | "support-contact"
-  | "joint";
-export type ApparatusPortDirection = "in" | "out" | "bidirectional";
-
-export interface ApparatusProvenance {
-  readonly sourceId: string;
-  /** Canonical URL or repository-relative source record. */
-  readonly sourceRef: string;
-  readonly sourceClass: ApparatusSourceClass;
-  readonly claim: string;
-  readonly reportedPrecision: "reported" | "not-stated" | "approximate";
-}
-
-export interface ApparatusGraduation {
-  readonly maximumMl: number;
-  readonly majorEveryMl: number;
-  readonly minorEveryMl: number;
-  readonly readingResolutionMl: number;
-}
-
-export interface ApparatusPort {
-  readonly id: string;
-  readonly kind: ApparatusPortKind;
-  readonly direction: ApparatusPortDirection;
-  readonly positionMm: readonly [number, number];
-  readonly nominalDiameterMm: number | undefined;
-  readonly detachable: boolean;
-}
-
-export interface ApparatusPart {
-  readonly id: string;
-  readonly role: "body" | "neck" | "rim" | "base" | "scale" | "stopcock" |
-    "tip" | "clamp" | "rod" | "knob" | "tube" | "stopper" | "connector" | "spout";
-  readonly boundsMm: readonly [number, number, number, number];
-  readonly detachable: boolean;
-  readonly portIds: readonly string[];
-}
-
-export interface ApparatusStateVariant {
-  readonly id: "empty" | "filled" | "connected" | "disconnected" | "open" | "closed";
-  readonly visibleLayers: readonly string[];
-  readonly description: string;
-}
-
-export interface ApparatusSpecification {
-  readonly specificationId: string;
-  readonly familyId: ApparatusFamilyId;
-  readonly displayName: string;
-  readonly kind: ApparatusSpecKind;
-  readonly material: ApparatusMaterial;
-  readonly dimensionsMm: readonly [number, number, number];
-  readonly capacityMl: number | undefined;
-  readonly graduation: ApparatusGraduation | undefined;
-  readonly sourceClass: ApparatusSourceClass;
-  readonly claimScope: string;
-  readonly provenance: readonly ApparatusProvenance[];
-  readonly parts: readonly ApparatusPart[];
-  readonly ports: readonly ApparatusPort[];
-  readonly detachable: boolean;
-  readonly stateVariants: readonly ApparatusStateVariant[];
-}
-
-export interface ApparatusConnection {
-  readonly fromSpecificationId: string;
-  readonly fromPortId: string;
-  readonly toPortKind: ApparatusPortKind;
-  readonly connectionType: "slip-fit" | "stopper-seat" | "clamp-seat";
-  readonly nominalDiameterToleranceMm: number | undefined;
-}
-
-export interface ApparatusCatalog {
-  readonly version: string;
-  readonly visualFamily: "chemrealm-lab-v1";
-  readonly coordinateUnit: "mm";
-  readonly specifications: readonly ApparatusSpecification[];
-  readonly connections: readonly ApparatusConnection[];
-}
 
 const source = (
   sourceId: string,
@@ -181,22 +108,6 @@ const standardFamilySource = source(
   "not-stated",
 );
 
-const buretteSource = source(
-  "duran-burette-25ml-class-as",
-  "https://www.dwk.com/duran-burette-class-as-with-schellbach-stripe-and-ptfe-key-25-ml-243303304",
-  "manufacturer-anchor",
-  "25 mL Class AS burette, 820 mm height, 0.05 mL graduation interval and stated tolerance",
-  "reported",
-);
-
-const flaskSource = source(
-  "duran-erlenmeyer-250ml",
-  "https://www.dwk.com/duran-erlenmeyer-flask-with-din-thread-without-cap-250-ml-218033604",
-  "manufacturer-anchor",
-  "250 mL borosilicate Erlenmeyer flask, approximately 85 mm diameter by 145 mm height",
-  "reported",
-);
-
 const volumetricSource = source(
   "duran-volumetric-250ml-class-a",
   "https://www.dwk.com/duran-volumetric-flask-class-a-amber-with-ukas-certificate-250-ml-246743658",
@@ -264,81 +175,7 @@ function vessel(
   };
 }
 
-function beaker(
-  specificationId: string,
-  displayName: string,
-  dimensionsMm: readonly [number, number, number],
-  capacityMl: number,
-  provenance: readonly ApparatusProvenance[],
-  graduation: ApparatusGraduation,
-): ApparatusSpecification {
-  const mouth = port("vessel.mouth", "fluid-inlet", "in", [dimensionsMm[0] / 2, 0], undefined, false);
-  const spout = port("vessel.spout", "fluid-outlet", "out", [dimensionsMm[0], dimensionsMm[1] * 0.2], undefined, false);
-  return vessel(specificationId, "beaker", displayName, dimensionsMm, capacityMl, provenance, {
-    graduation,
-    parts: [
-      part("vessel.body", "body", bounds(0, 20, dimensionsMm[0], dimensionsMm[1] - 20), false),
-      part("vessel.rim", "rim", bounds(dimensionsMm[0] * 0.2, 0, dimensionsMm[0] * 0.6, 8), false, [mouth.id]),
-      part("vessel.spout", "spout", bounds(dimensionsMm[0] * 0.78, 8, dimensionsMm[0] * 0.22, dimensionsMm[1] * 0.18), false, [spout.id]),
-      part("vessel.base", "base", bounds(0, dimensionsMm[1] - 8, dimensionsMm[0], 8), false),
-    ],
-    ports: [mouth, spout],
-  });
-}
-
-const specifications: ApparatusSpecification[] = [
-  {
-    specificationId: "burette-acid-25ml-class-as",
-    familyId: "burette",
-    displayName: "Acid burette, Class AS, 25 mL",
-    kind: "vessel",
-    material: "borosilicate-glass",
-    dimensionsMm: dimensions(30, 820, 30),
-    capacityMl: 25,
-    graduation: { maximumMl: 25, majorEveryMl: 1, minorEveryMl: 0.05, readingResolutionMl: 0.05 },
-    sourceClass: "manufacturer-anchor",
-    claimScope: "Manufacturer dimensional anchor for a high-accuracy titration burette",
-    provenance: [buretteSource, standardFamilySource],
-    parts: [
-      part("burette.body", "body", bounds(0, 0, 30, 760), false, ["burette.top-joint", "burette.bottom-joint"]),
-      part("burette.scale", "scale", bounds(30, 0, 22, 760), false),
-      part("burette.stopcock", "stopcock", bounds(0, 760, 48, 25), true, ["burette.bottom-joint"]),
-      part("burette.tip", "tip", bounds(16, 785, 12, 35), true, ["burette.outlet"]),
-    ],
-    ports: [
-      port("burette.top-joint", "fluid-inlet", "in", [15, 0], 6),
-      port("burette.bottom-joint", "joint", "bidirectional", [15, 760], 6),
-      port("burette.outlet", "fluid-outlet", "out", [22, 820], 4),
-    ],
-    detachable: true,
-    stateVariants: stateVariants(empty(), filled(), connected()),
-  },
-  {
-    specificationId: "burette-alkali-50ml-class-b",
-    familyId: "burette",
-    displayName: "Alkali burette, Class B, 50 mL",
-    kind: "vessel",
-    material: "borosilicate-glass",
-    dimensionsMm: dimensions(36, 900, 36),
-    capacityMl: 50,
-    graduation: { maximumMl: 50, majorEveryMl: 1, minorEveryMl: 0.1, readingResolutionMl: 0.1 },
-    sourceClass: "approximate-visual",
-    claimScope: "Teaching-family variant; dimensions are an explicitly approximate visual anchor",
-    provenance: [standardFamilySource, approximateSource("50 mL burette proportions are an approximate visual variant")],
-    parts: [
-      part("burette.body", "body", bounds(0, 0, 36, 835), false, ["burette.top-joint", "burette.bottom-joint"]),
-      part("burette.scale", "scale", bounds(36, 0, 24, 835), false),
-      part("burette.stopcock", "stopcock", bounds(0, 835, 55, 28), true, ["burette.bottom-joint"]),
-      part("burette.tip", "tip", bounds(19, 863, 14, 37), true, ["burette.outlet"]),
-    ],
-    ports: [
-      port("burette.top-joint", "fluid-inlet", "in", [18, 0], 6),
-      port("burette.bottom-joint", "joint", "bidirectional", [18, 835], 6),
-      port("burette.outlet", "fluid-outlet", "out", [25, 900], 4),
-    ],
-    detachable: true,
-    stateVariants: stateVariants(empty(), filled(), connected()),
-  },
+const legacySpecifications: ApparatusSpecification[] = [
   {
     specificationId: "burette-v0-100ml",
     familyId: "burette",
@@ -365,13 +202,6 @@ const specifications: ApparatusSpecification[] = [
     detachable: true,
     stateVariants: stateVariants(empty(), filled(), connected()),
   },
-  vessel("conical-flask-100ml", "conical-flask", "Conical flask, 100 mL", dimensions(62, 105, 62), 100, [standardFamilySource, approximateSource("100 mL conical flask proportions")]),
-  vessel("conical-flask-250ml", "conical-flask", "Conical flask, 250 mL", dimensions(85, 145, 85), 250, [flaskSource, standardFamilySource]),
-  vessel("conical-flask-500ml", "conical-flask", "Conical flask, 500 mL", dimensions(102, 186, 102), 500, [standardFamilySource, approximateSource("500 mL conical flask proportions anchored to a 102 × 186 mm glass flask")]),
-  beaker("beaker-100ml", "Beaker, 100 mL", dimensions(52, 72, 52), 100, [standardFamilySource, approximateSource("100 mL beaker proportions")], { maximumMl: 100, majorEveryMl: 25, minorEveryMl: 10, readingResolutionMl: 10 }),
-  beaker("beaker-250ml", "Beaker, 250 mL", dimensions(70, 95, 70), 250, [standardFamilySource, approximateSource("250 mL beaker proportions")], { maximumMl: 250, majorEveryMl: 50, minorEveryMl: 25, readingResolutionMl: 25 }),
-  beaker("beaker-500ml", "Beaker, 500 mL", dimensions(88, 125, 88), 500, [standardFamilySource, approximateSource("500 mL beaker proportions")], { maximumMl: 500, majorEveryMl: 100, minorEveryMl: 50, readingResolutionMl: 50 }),
-  beaker("beaker-1000ml", "Beaker, 1000 mL", dimensions(112, 165, 112), 1000, [standardFamilySource, approximateSource("1000 mL beaker proportions")], { maximumMl: 1000, majorEveryMl: 200, minorEveryMl: 100, readingResolutionMl: 100 }),
   vessel("volumetric-flask-50ml", "volumetric-flask", "Volumetric flask, Class B, 50 mL", dimensions(46, 140, 46), 50, [standardFamilySource, approximateSource("50 mL volumetric flask proportions")]),
   vessel("volumetric-flask-100ml", "volumetric-flask", "Volumetric flask, Class B, 100 mL", dimensions(61, 170, 61), 100, [standardFamilySource, approximateSource("100 mL volumetric flask proportions anchored to a manufacturer blank")]),
   vessel("volumetric-flask-250ml", "volumetric-flask", "Volumetric flask, Class A, 250 mL", dimensions(80, 210, 80), 250, [volumetricSource, standardFamilySource]),
@@ -589,9 +419,11 @@ export const APPARATUS_CATALOG: ApparatusCatalog = freezeDeep({
   version: APPARATUS_CATALOG_VERSION,
   visualFamily: "chemrealm-lab-v1",
   coordinateUnit: "mm",
-  specifications,
+  specifications: replaceGoldMasterSpecifications(legacySpecifications),
   connections,
 });
+
+assertGoldMasterCatalogSource(APPARATUS_CATALOG);
 
 export const APPARATUS_SPECIFICATION_IDS = Object.freeze({
   burette: "burette-v0-100ml",

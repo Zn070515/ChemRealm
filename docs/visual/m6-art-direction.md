@@ -219,8 +219,9 @@ regions; an unsupported effect remains absent or explicitly refused.
 - Rims, necks, bases and walls are structural surfaces, not unclosed strokes.
 - Every line terminates at its owning surface; crossings need an explicit
   refraction/overlap reason.
-- Glass has body tint, rear edge, front edge, rim/base thickness, directional
-  highlight and restrained contact shadow.
+- Glass has body tint, rear edge, front edge, rim/base thickness and directional
+  highlight. Contact shadows are scene-owned relations, never standalone asset
+  pixels.
 - Liquid is clipped to its declared interior region and has a state-provided
   meniscus. Optical refusal uses neutral liquid material, never invented color.
 - Metal uses neutral value steps and real hardware edges; rubber/plastic uses
@@ -384,9 +385,10 @@ response. Glass must not be drawn as a continuous equal-weight, high-contrast
 closed contour; use local rear/front edges, rim thickness and directional
 highlights so the object reads as glass rather than a dark icon.
 
-The master is construction truth and contains no scene shadow. Scene and later
-LODs may add a scene-owned contact shadow. Comparison sheets must embed the
-actual generated master geometry and may not use hand-authored proxy outlines.
+All standalone SVG LODs are construction/identity assets and contain no scene
+shadow. A composed experiment scene may add a scene-owned contact shadow when
+a bench/support relation exists. Comparison sheets must embed the actual
+generated master geometry and may not use hand-authored proxy outlines.
 
 ## 4.1 Family geometry rules
 
