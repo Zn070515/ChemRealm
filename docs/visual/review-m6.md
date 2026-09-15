@@ -24,17 +24,21 @@ system. The following must be visibly proven before M6 S3:
 
 ## Required comparison review
 
-Review a same-family comparison sheet at equal logical scale:
+Review two separate same-family comparison sheets. The physical-scale sheet is
+measurement-valid and preserves declared millimetre dimensions; the
+normalized-shape sheet is visual-only and fits variants to a common artboard:
 
 | Family | Minimum comparison | Required visible differences |
 |---|---|---|
-| Burette | 25/50/100 mL | scale length/density, aspect ratio, capacity marking and support relation |
+| Acid/alkali/v0 burette | acid 25 mL / alkali 50 mL / v0 100 mL | scale length/density, aspect ratio, capacity marking, support relation and rotary-vs-pinch actuator |
 | Beaker | 100/250/500/1000 mL | height/width, base/rim mass, spout scale and graduation rhythm |
 | Erlenmeyer | 100/250/500 mL | body/shoulder/neck proportions and base scale |
 | Graduated cylinder | 25/50/100/250 mL | slenderness, base, scale density and profile |
 | Volumetric flask | 50/100/250/500 mL | bulb/neck proportions, calibration placement and stopper relation |
 
-Labels alone do not count as a visible difference.
+Labels alone do not count as a visible difference. Every changed geometry
+parameter must name its provenance class and source, or be explicitly marked
+`approximate-visual` with a rationale and non-measurement limitation.
 
 This record deliberately does not call the candidate captures an approved
 visual baseline or claim M6 S3. The apparatus is an original, self-hosted
@@ -82,6 +86,10 @@ visual acceptance rows from `m6-art-direction.md`:
 | V-P0-5 interaction geometry | PARTIAL | parts/ports exist; complete anchors/hit/capability package is not evidenced |
 | V-P0-6 no cartoon/mixed style | BLOCKED | owner visual review is pending |
 | V-P0-7 coherent family language | BLOCKED | family comparison and material review are pending |
+| V-P0-8 strict measurement view / labelled 2.5D preview | BLOCKED | view-mode separation and captures are not owner-reviewed |
+| V-P0-9 token ranges / forbidden visual patterns | BLOCKED | token QA and forbidden-pattern review are not complete |
+| V-P0-10 geometry provenance or approximation rationale | BLOCKED | per-parameter source review is not complete |
+| V-P0-11 acid/alkali actuator mapping | PARTIAL | actuator contract is specified; asset/catalog evidence is not complete |
 
 Candidate captures are intentionally stored under
 `tests/visual/captures/m6/` and are not approved baselines. Regenerate them

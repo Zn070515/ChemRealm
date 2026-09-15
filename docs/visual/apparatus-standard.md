@@ -4,7 +4,9 @@
   condition this line named, so the M6 gate in §6 is now a real gate rather than
   a proposal. Repointed from "Proposed" during the M1 contract remediation's
   document audit.
-- **Scope:** 2D / 2.5D experiment view. Governs all apparatus entering a release path.
+- **Scope:** strict 2D orthographic experiment/measurement view plus explicitly
+  labelled bounded 2.5D catalog/inspector/construction previews. Governs all
+  apparatus entering a release path.
 - **Related:** `GOAL.md` §5.7, §15; `CLAUDE.md` §4.7, §10; `AGENTS.md` §14; `ADR-0006`
 
 ## Why this document exists before the art
@@ -27,10 +29,16 @@ originality check in its review checklist.
 
 | Property | Rule | Rationale |
 |---|---|---|
-| Projection | **Orthographic, straight-on.** No perspective convergence. | Volumetric readings (burette graduations, meniscus position) must be readable as a true side elevation. Perspective makes a reading ambiguous. |
+| Experiment projection | **Strict orthographic, straight-on.** No perspective convergence. | Volumetric readings (burette graduations, meniscus position) must be readable as a true side elevation. Perspective makes a reading ambiguous. |
 | Camera | Fixed. No orbiting in the core experiment view. | A student reading a burette cannot be looking at it from an angle. Orbit belongs in a separate inspection view if ever used. |
 | Up axis | Screen up = world up. | Meniscus, liquid surface, and gravity must agree. |
 | **Coordinate unit** | **Millimetre (mm) — a LENGTH.** | Geometry coordinates are lengths. See the correction note below. |
+
+The experiment and measurement view is the only view used for graduations,
+meniscus reading, scale comparison or quantitative evidence. Catalog, inspector
+and construction-preview surfaces may use a bounded 2.5D/axonometric projection
+to reveal mouths, wall thickness, ports and detachable parts, but they must be
+labelled as non-measurement views and must not be used to certify a reading.
 
 ### Correction: geometry coordinates are lengths, not volumes
 
@@ -70,6 +78,20 @@ height. The first cannot support a liquid-level readout at all. The second can,
 and the difference is invisible until someone checks the curve against a real
 titration — which is exactly the kind of failure `GOAL.md` §17 says must be
 caught, not shipped.
+
+### Apparatus actuator distinction
+
+Actuators are part of apparatus identity and future command mapping. In
+particular, an acid burette is not interchangeable with an alkali burette:
+
+| Apparatus | Physical mechanism | Representation actuator | Future intent |
+|---|---|---|---|
+| acid burette | glass/PTFE rotary stopcock | `rotary-valve` | `rotate-valve` |
+| alkali burette | rubber tube, glass bead and pinch region | `pinch-valve` | `pinch-tube` |
+
+Press bulb, grip, open/close, clamp adjustment and meniscus reading receive
+the same explicit mapping when present. A static M6 package may declare these
+records without persisting pointer gestures or implementing M7 commands.
 
 ## 2. Materials
 
@@ -160,7 +182,9 @@ Every item is pass/fail. Any fail blocks the stage (`GOAL.md` §16 Gate D).
 - [ ] No coordinate, stroke, or offset carries a volume; all are `mm`.
 - [ ] Liquid level is obtained by calling `h(V)`, never by scaling a volume.
 - [ ] Meniscus concave and read at the bottom.
-- [ ] Projection is orthographic; no perspective convergence.
+- [ ] Experiment/measurement projection is strict orthographic with no
+      perspective convergence; any 2.5D catalog/inspector/construction preview
+      is labelled non-measurement.
 
 **Consistency**
 - [ ] Single light direction across all apparatus in the scene.

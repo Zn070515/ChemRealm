@@ -188,6 +188,29 @@ NOBOOK 页面给出产品表面能力，但不能证明其科学内核。M6 因�
 - 用真实连接/拆卸操作进入 M7 World command boundary；
 - 用截图、可访问 DOM、原创性检查和 owner visual review 形成 S3 证据。
 
+## 文档闭合补充：器材机构、视图与视觉 token
+
+本轮视觉标准把此前容易混淆的六项边界正式写入 M6 文档：
+
+1. 酸式滴定管和碱式滴定管不是同一资产换标签。酸式使用玻璃/PTFE
+   旋塞，碱式使用橡胶管、玻璃珠和夹 pinch 区域；两者必须有不同的
+   `ApparatusActuator` 与未来 command intent。教学参考可见
+   [酸式/碱式滴定管结构与使用说明](https://www.muhn.edu.cn/ecmd/info/1481/14785.htm)，
+   但该页面只作结构线索，不替代尺寸或精度来源。
+2. 实验/测量视图固定为严格正交侧视；目录、检查器和构造预览可以用有界
+   2.5D/轴测视图展示接口和可拆部件，但必须标为非测量视图。
+3. 视觉 token 现在以相对描边层级、透明度、高光/阴影范围、材质明度跨度
+   和最小文字尺寸约束；黑色粗描边、糖果玻璃、气刷发光、液体溢出、玩具化
+   比例、混合光向和无语义装饰连接件列为禁用模式。
+4. NOBOOK 只允许学习产品层的可发现性、器材目录、信息分面、组合反馈和
+   状态可读性；禁止复制其资产、截图、布局、独特 UI 编排、像素细节或可识别
+   的整场景构图。
+5. 同族规格的每个几何差异都必须标注 `reported`、`manufacturer-anchor`、
+   `standard-family` 或 `approximate-visual`，并能追溯来源或近似理由。QA
+   同时使用物理尺度比较表和归一化形状比较表，避免把视觉归一化图误作尺寸证据。
+6. 导管、塞、旋塞、夹具和量取动作以部件、端口、hit region、capability 和
+   actuator 显式建模；静态 M6 可以只交付契约，不把指针噪声伪装成 World event。
+
 ## Sources
 
 ### Zhejiang examination and education standards

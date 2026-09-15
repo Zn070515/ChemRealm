@@ -19,7 +19,10 @@ production method.
 The research record combines official NOBOOK surface/API evidence, Zhejiang
 chemistry-examination pressure, education-equipment standards, manufacturer
 anchors and virtual-lab learning research. It supports clarity and affordance
-density as a benchmark, not copying or claims about NOBOOK internals.
+density as a benchmark, not copying or claims about NOBOOK internals. The
+binding visual standard separately defines permitted pattern learning,
+orthographic measurement views, non-measurement 2.5D previews, token ranges,
+forbidden visual patterns and source-backed geometry variation.
 
 ## Goal
 
@@ -42,6 +45,12 @@ density as a benchmark, not copying or claims about NOBOOK internals.
 - no strong-acid phenolphthalein orange implementation;
 - no claim that catalog count equals mature product completeness.
 
+NOBOOK may inform broad product patterns—catalog discoverability, a dominant
+experiment stage, separated inspection, reusable parts and legible feedback.
+It may not supply assets, screenshots, icons, layout, distinctive interaction
+choreography, recognizable full-scene composition or pixel-level details. All
+geometry and visual identity must be original and source-recorded.
+
 ## User experience
 
 Users should recognize a burette, beaker, Erlenmeyer flask, graduated cylinder
@@ -55,6 +64,17 @@ The first page remains a read-only committed-world presentation. M6 does not
 turn the page into a catalog editor or persist pointer movement. Future M7
 commands consume the same parts/ports/capabilities instead of inventing a
 second interaction model.
+
+The required burette variants are mechanically distinct:
+
+| Type | Specification | Actuator |
+|---|---|---|
+| acid burette | 25 mL, `burette-acid-25ml-class-as` | glass/PTFE `rotary-valve` |
+| alkali burette | 50 mL, `burette-alkali-50ml-class-b` | rubber tube/bead `pinch-valve` |
+| v0/other declared type | 100 mL, `burette-v0-100ml` | explicitly named mechanism; no implied stopcock |
+
+The catalog must also carry the remaining required capacity families and
+detachable tube/stopper/connector parts defined by the binding art direction.
 
 ## Architecture
 
@@ -94,8 +114,12 @@ snapshot integrity remain authoritative.
 
 The detailed contract is [`m6-art-direction.md`](../../visual/m6-art-direction.md).
 The existing `ApparatusSpecification` is extended, where needed, with typed
-anchors, hit regions, capabilities and state coverage. A normalized geometry
-signature tests visible variant differences; labels alone do not qualify.
+anchors, hit regions, capabilities, state coverage and `ApparatusActuator`
+records. Acid and alkali burettes have distinct actuator kinds and future
+command intents. A normalized geometry signature tests visible variant
+differences; labels alone do not qualify. Every changed geometry parameter is
+linked to a provenance class (`reported`, `manufacturer-anchor`,
+`standard-family` or `approximate-visual`) and its source or rationale.
 
 The production unit is an asset package with master, state variants, manifest,
 source/license records, QA and deterministic fixture. Visual and interaction
@@ -138,6 +162,9 @@ ScientificState, WorldState, chemistry constants or event semantics.
 - missing state coverage is reported unsupported, never invented;
 - optical refusal cannot receive a fallback chemical swatch;
 - profile/hash mismatch rejects executable geometry;
+- an acid/alkali actuator mismatch rejects the apparatus command mapping;
+- a geometry difference without provenance or an explicit approximation rationale
+  fails the package review;
 - out-of-bounds interaction geometry fails QA;
 - Sci/World renderer imports, network access or active version literals fail
   existing guards;
@@ -159,7 +186,9 @@ Tests must be written before each implementation change and observed failing.
    states where declared.
 6. Interaction tests prove traceability without creating World events.
 7. Browser captures cover all four named viewports and accessible readouts.
-8. Two independent audits compare code, catalog, SVG, screenshots, standard,
+8. Physical-scale and normalized-shape comparison sheets cover every family
+   variation and list changed parameters with source/rationale.
+9. Two independent audits compare code, catalog, SVG, screenshots, standard,
    research and prior M4/M5/world/replay/optical/quantity invariants.
 
 ## Acceptance criteria
@@ -169,9 +198,12 @@ Tests must be written before each implementation change and observed failing.
 | M6-VISUAL-SYSTEM | Art direction, layers, family rules and forbidden patterns are applied | spec review + QA |
 | M6-FAMILY-VARIANTS | Required specifications have ≥3 visible normalized geometry differences | catalog signature test + comparison sheet |
 | M6-STRUCTURE | Core vessels expose correct rims, bases, mouths, spouts, scales, stopcocks and calibration marks | asset tests + owner review |
+| M6-VIEW-MODE | Measurement views are strict orthographic and 2.5D previews are explicitly non-measurement | view-mode contract + captures |
 | M6-STATE | Declared state variants are traceable to Observable/RenderState or explicitly unsupported | fixture/source review |
-| M6-INTERACTION | Parts, ports, anchors, hit regions and capabilities are explicit and compatible | catalog/interaction tests |
-| M6-MATERIAL | Glass, liquid, metal, rubber, shadow and highlight language is coherent and non-cartoon | four screenshots + owner review |
+| M6-INTERACTION | Parts, ports, anchors, hit regions, capabilities and actuator intents are explicit and compatible | catalog/interaction tests |
+| M6-MATERIAL | Glass, liquid, metal, rubber, shadow and highlight language is coherent, token-bounded and non-cartoon | token QA + four screenshots + owner review |
+| M6-PROVENANCE | Every changed geometry parameter has a citable source class or explicit approximate-visual rationale | manifest/source records + comparison sheets |
+| M6-ACTUATOR | Acid and alkali burette mechanisms map to distinct future command intents | catalog/actuator tests |
 | M6-RENDER | Pixi remains RenderState-only and chemistry-blind | dependency/source guards |
 | M6-REPLAY | Geometry/profile identity and hash boundaries remain intact | world/profile/replay suite |
 | M6-ACCESSIBILITY | DOM readouts, names, focus targets and contrast work at all viewports | browser/accessibility evidence |
@@ -191,4 +223,3 @@ a visual refresh must not silently reinterpret a historical world.
 Deferred until the visual system exists: the first M7 connect/detach command,
 later Canvas/SVG/WebGL/WASM acceleration choices, and which flow/gas/precipitate/
 thermal states receive scientifically modelled effects.
-

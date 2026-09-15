@@ -18,6 +18,10 @@
 - No new chemistry, optical, WorldState, DomainEvent, replay or persistence semantics.
 - No copying, tracing, scraping or runtime fetching of NOBOOK/vendor artwork.
 - A chemical color is valid only when supplied by the optical-observation contract; refusal stays refusal.
+- Experiment/measurement views are strict orthographic; catalog, inspector and
+  construction previews may be bounded 2.5D only when labelled non-measurement.
+- Visual tokens use the declared hierarchy/ranges and every changed geometry
+  parameter carries source provenance or an explicit approximate-visual rationale.
 - A visual or interaction failure keeps M6 at S2 and blocks M7 authorization.
 
 ---
@@ -90,7 +94,9 @@ git commit -m "Define M6 apparatus art direction and visual gate"
 
 **Interfaces:**
 - Consumes: existing apparatus specification, part, port, provenance, profile and central-version types.
-- Produces: `ApparatusAnchor`, `ApparatusHitRegion`, `ApparatusCapability`, `ApparatusStateVariant` and normalized geometry signatures.
+- Produces: `ApparatusAnchor`, `ApparatusHitRegion`, `ApparatusCapability`,
+  `ApparatusStateVariant`, `ApparatusActuator` and normalized geometry
+  signatures.
 
 - [ ] **Step 1: Write failing catalog tests.**
 
@@ -139,11 +145,32 @@ interface ApparatusCapability {
   readonly partId: string;
   readonly action: "hold" | "pour" | "connect" | "detach" | "inspect";
 }
+
+interface ApparatusActuator {
+  readonly id: string;
+  readonly partId: string;
+  readonly kind: "rotary-valve" | "pinch-valve" | "press-bulb" | "grip" | "open-close" | "adjust-clamp" | "read-meniscus";
+  readonly intent: "rotate-valve" | "pinch-tube" | "press-bulb" | "grip" | "open" | "close" | "adjust-clamp" | "read-meniscus";
+}
 ```
 
 Include dimensions, aspect ratio, structural marker positions, graduation
 metadata and profile identity in normalized geometry signatures. Labels alone
-cannot qualify a variant. Detachable parts need anchors and hit regions.
+cannot qualify a variant. Detachable parts need anchors and hit regions. Acid
+and alkali burettes must use distinct actuator records (`rotary-valve` versus
+`pinch-valve`) and map to distinct future command intents. Geometry changes
+must include a provenance class or an explicit `approximate-visual` rationale.
+
+Add a failing regression for the semantic distinction:
+
+```ts
+it("does not treat acid and alkali burettes as the same actuator", () => {
+  expect(specFor("burette-acid-25ml-class-as").actuators[0].kind)
+    .toBe("rotary-valve");
+  expect(specFor("burette-alkali-50ml-class-b").actuators[0].kind)
+    .toBe("pinch-valve");
+});
+```
 
 - [ ] **Step 4: Run focused and existing catalog tests.**
 
@@ -169,7 +196,9 @@ git commit -m "Add apparatus interaction and variant contracts"
 - Create/modify: `assets/apparatus/catalog/master/burette.svg`, `beaker.svg`, `erlenmeyer-flask.svg`, `graduated-cylinder.svg`, `volumetric-flask.svg`, `test-tube.svg`, `connectors.svg`
 - Create/modify: `assets/apparatus/catalog/states/burette-empty.svg`, `burette-loaded.svg`, `beaker-empty.svg`, `beaker-loaded.svg`, `connector-disconnected.svg`, `connector-connected.svg`
 - Create/modify: `assets/apparatus/catalog/qa/geometry-review.md`
-- Create/modify: `assets/apparatus/catalog/qa/comparison-sheet.svg`
+- Create/modify: `assets/apparatus/catalog/qa/comparison-sheet-physical-scale.svg`
+- Create/modify: `assets/apparatus/catalog/qa/comparison-sheet-normalized-shape.svg`
+- Create/modify: `assets/apparatus/catalog/qa/visual-token-review.md`
 - Create/modify: `assets/apparatus/catalog/qa/screenshots/*`
 
 **Interfaces:**
@@ -188,6 +217,14 @@ it("requires core family masters to expose structural data layers", () => {
 it("requires comparison evidence to contain non-uniform family variants", () => {
   expect(readGeometrySignatures()).toSatisfy(containsVisibleVariantDifferences);
 });
+
+it("rejects masters outside the visual-token contract", () => {
+  expect(validateVisualTokens(outOfBandTokens())).toThrow("visual token");
+});
+
+it("rejects forbidden visual-pattern markers", () => {
+  expect(validateVisualQa(forbiddenCandyGlassFixture())).toThrow("forbidden visual pattern");
+});
 ```
 
 - [ ] **Step 2: Run QA tests and observe missing construction evidence.**
@@ -202,13 +239,18 @@ Each master separates silhouette, rim/mouth, wall/base, liquid, meniscus,
 calibration/scale, hardware, highlights, contact shadow and interaction overlay.
 Include burette, beaker, Erlenmeyer, graduated-cylinder, volumetric-flask,
 test-tube and connector families. Keep runtime pH, liquid amount, optical color
-and readouts out of baked art.
+and readouts out of baked art. Acid burettes must visibly expose a glass/PTFE
+rotary stopcock; alkali burettes must visibly expose the rubber-tube/glass-bead
+pinch mechanism. Do not use a generic stopcock for both families.
 
 - [ ] **Step 4: Add QA records and comparison sheet.**
 
-Record source class, approximation scope, structural checks, variant dimensions
-and visual limitations. Show same-family variants side by side at equal logical
-scale with a legend of intentionally changed dimensions.
+Record source class, approximation scope, structural checks, variant dimensions,
+changed-parameter provenance and visual limitations. Produce two sheets: one at
+declared physical scale with measurement-valid labels, and one at normalized
+shape scale with a legend of intentionally changed dimensions. Mark the latter
+visual-only. Run the visual-token ranges and forbidden-pattern checklist over
+every master and state variant.
 
 - [ ] **Step 5: Run package/source QA.**
 
@@ -241,7 +283,7 @@ git commit -m "Create M6 family construction masters and visual QA"
 
 **Interfaces:**
 - Consumes: validated catalog specs, ScientificFrame, ObservableModel and RenderState.
-- Produces: one deterministic RenderState-only renderer using family construction data and state-provided liquid/profile values.
+- Produces: one deterministic RenderState-only renderer using family construction data and state-provided liquid/profile values. Actuator metadata is mapped to future command intents but does not create M7 events.
 
 - [ ] **Step 1: Write failing render/state tests.**
 
@@ -254,6 +296,11 @@ it("renders 25 mL and 100 mL burettes with different normalized construction", (
 it("does not invent an optical color when the observable is refused", () => {
   expect(renderStateForRefusal().inspection.tint).toEqual("neutral");
 });
+
+it("keeps measurement projection strict and marks 2.5D previews non-measurement", () => {
+  expect(viewSpec("experiment").projection).toBe("orthographic");
+  expect(viewSpec("catalog-preview").measurementQualified).toBe(false);
+});
 ```
 
 - [ ] **Step 2: Run focused tests and observe static v0 limitations.**
@@ -265,9 +312,11 @@ pnpm exec vitest run packages/render/src/pixi/renderer.test.ts packages/render/s
 - [ ] **Step 3: Implement minimal RenderState-only binding.**
 
 Select geometry by specification ID and use only Observable fields for liquid,
-meniscus, readout and optical result. Keep hit regions/anchors in representation
-data and do not create World events. Reuse central tokens and avoid chemistry
-name branches.
+meniscus, readout and optical result. Keep hit regions/anchors and actuator
+records in representation data and do not create World events. Reuse central
+tokens and avoid chemistry-name branches. Enforce strict orthographic camera
+metadata for experiment/measurement views; any 2.5D catalog/inspector preview
+must be labelled non-measurement.
 
 - [ ] **Step 4: Run boundaries.**
 
