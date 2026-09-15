@@ -1,10 +1,11 @@
 import {
   SCIENTIFIC_MODEL_HYDROGEN_ION_POLICY,
   TAUGHT_HYDROGEN_ION_POLICY,
-  toRenderState,
+  toTitrationRenderState,
   type RenderNode,
 } from "@chemrealm/render";
-import { useEffect, useState, type ReactElement } from "react";
+import { mountPixiExperiment } from "@chemrealm/render/pixi";
+import { useEffect, useMemo, useRef, useState, type ReactElement } from "react";
 
 import {
   composeNativeProductionTitration,
@@ -72,7 +73,10 @@ function selectedPolicy(id: PolicyId) {
 export function App({ schemaVersion }: { schemaVersion: number }): ReactElement {
   const [composition, setComposition] = useState<ProductionTitrationComposition>();
   const [failure, setFailure] = useState<string>();
+  const [rendererFailure, setRendererFailure] = useState<string>();
+  const [rendererReady, setRendererReady] = useState(false);
   const [policyId, setPolicyId] = useState<PolicyId>("taught");
+  const pixiHost = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let active = true;
@@ -89,9 +93,39 @@ export function App({ schemaVersion }: { schemaVersion: number }): ReactElement 
     };
   }, []);
 
-  const scene = composition === undefined
-    ? undefined
-    : toRenderState(composition.observable, selectedPolicy(policyId));
+  const scene = useMemo(
+    () => composition === undefined
+      ? undefined
+      : toTitrationRenderState(composition.observable, selectedPolicy(policyId)),
+    [composition, policyId],
+  );
+
+  useEffect(() => {
+    if (scene === undefined || pixiHost.current === null) return;
+    let active = true;
+    let mount: Awaited<ReturnType<typeof mountPixiExperiment>> | undefined;
+    setRendererFailure(undefined);
+    setRendererReady(false);
+    void mountPixiExperiment({ host: pixiHost.current, renderState: scene }).then(
+      (value) => {
+        if (!active) {
+          value.destroy();
+          return;
+        }
+        mount = value;
+        setRendererReady(true);
+      },
+      (error: unknown) => {
+        if (active) {
+          setRendererFailure(error instanceof Error ? error.message : String(error));
+        }
+      },
+    );
+    return () => {
+      active = false;
+      mount?.destroy();
+    };
+  }, [scene]);
   const pHNode = scene?.nodes.find((node) => node.id.endsWith("-ph-readout"));
   const levelNode = scene?.nodes.find((node) => node.id === "liquid-level");
   const buretteNode = scene?.nodes.find((node) => node.id === "burette-reading");
@@ -111,6 +145,20 @@ export function App({ schemaVersion }: { schemaVersion: number }): ReactElement 
       {composition !== undefined && scene !== undefined ? (
         <section aria-label="Committed world inspection">
           <h2 data-testid="composition-status">Committed world</h2>
+          <section aria-label="Titration apparatus visual" data-testid="m6-visual-surface">
+            <div
+              ref={pixiHost}
+              className="pixi-host"
+              data-testid="m6-pixi-host"
+              role="img"
+              aria-label="ChemRealm titration bench visual; essential readings are available below in the inspection panel"
+            />
+            <p data-testid="m6-renderer-status" role="status">
+              {rendererFailure !== undefined
+                ? `Apparatus visual unavailable: ${rendererFailure}`
+                : rendererReady ? "Ready" : "Loading apparatus visual…"}
+            </p>
+          </section>
           <dl>
             <div><dt>World ID</dt><dd data-testid="world-id">{composition.worldId}</dd></div>
             <div><dt>Committed sequence</dt><dd data-testid="world-sequence">{composition.frame.sequence}</dd></div>

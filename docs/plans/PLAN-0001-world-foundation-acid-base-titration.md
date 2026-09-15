@@ -962,10 +962,10 @@ the product is built on it.
 
 ```
 packages/render/src/pixi/             PixiJS renderer consuming RenderState
-apps/web/src/scene/                   wiring
+apps/web/src/App.tsx                  composition-root wiring and DOM companion
 assets/apparatus/                     burette, conical flask, beaker, stand, clamp
-assets/tokens/                        colour tokens
-tests/visual/baselines/               approved screenshots
+packages/render/src/pixi/tokens.ts    renderer-only material tokens
+tests/visual/captures/m6/             candidate screenshots (not approved baselines)
 tests/visual/capture.spec.ts          Playwright capture at the four named viewports
 docs/visual/review-m6.md              the completed checklist from the standard
 ```

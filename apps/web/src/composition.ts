@@ -19,7 +19,7 @@ import {
 import {
   buildObservableModel,
   deriveBuretteState,
-  toRenderState,
+  toTitrationRenderState,
   type BuretteInput,
   type ObservableModel,
   type RenderState,
@@ -331,7 +331,7 @@ export async function composeProductionTitration(
     state,
     frame: finalFrame,
     observable,
-    renderState: toRenderState(observable),
+    renderState: toTitrationRenderState(observable),
   });
 }
 

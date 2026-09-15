@@ -7,6 +7,8 @@ below. The owner accepted the applicable M5/M4-B and optical amendments on
 2026-09-15; revision 26 remains Candidate for native supersession/default
 rollout only. Owner acceptance of the applicable amendments is recorded below.
 This packet authorizes M6 work; it is not an M6 S3 claim.
+It is an entry-time record; current implementation evidence is maintained in
+[`M6.md`](M6.md).
 The hosted CI run for the exact committed baseline succeeded before this owner
 closure.
 

@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 190" role="img" aria-labelledby="title desc">
+  <title id="title">Original ChemRealm titration bench master</title>
+  <desc id="desc">Orthographic side elevation of a burette held by a stand above a conical flask and beaker.</desc>
+  <defs>
+    <linearGradient id="glass" x1="0" x2="1">
+      <stop offset="0" stop-color="#e4edf0" stop-opacity=".36"/>
+      <stop offset=".5" stop-color="#ffffff" stop-opacity=".14"/>
+      <stop offset="1" stop-color="#a8bbc0" stop-opacity=".32"/>
+    </linearGradient>
+    <linearGradient id="metal" x1="0" x2="1">
+      <stop offset="0" stop-color="#39454b"/>
+      <stop offset=".5" stop-color="#879399"/>
+      <stop offset="1" stop-color="#273238"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke="#253238" stroke-width="1.5" stroke-linejoin="round">
+    <path fill="url(#metal)" d="M2 170h60l8 8H0z"/>
+    <rect fill="url(#metal)" x="26" y="18" width="8" height="152" rx="2"/>
+    <path fill="url(#metal)" d="M29 40h51v10H29z"/>
+    <path fill="url(#glass)" d="M75 20h12v124H75z"/>
+    <path fill="url(#metal)" d="M70 145h24v9H70z"/>
+    <path fill="url(#glass)" d="M79 154h4v20h-4z"/>
+    <path fill="url(#glass)" d="M160 48h18v56l-8 7-8-7z"/>
+    <path fill="url(#glass)" d="M160 104l-28 23-4 29h80l-4-29-28-23z"/>
+    <path fill="url(#metal)" d="M122 160h92l-4 10h-84z"/>
+    <path fill="url(#glass)" d="M221 112h29v58h-29z"/>
+  </g>
+  <g fill="none" stroke="#ffffff" stroke-linecap="round" opacity=".72">
+    <path stroke-width="1.1" d="M77 25v108"/>
+    <path stroke-width="1.4" d="M164 55v43"/>
+    <path stroke-width="1.2" d="M139 130l-5 18"/>
+    <path stroke-width="1" d="M224 118v43"/>
+  </g>
+</svg>

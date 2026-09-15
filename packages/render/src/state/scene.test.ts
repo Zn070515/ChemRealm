@@ -15,6 +15,7 @@ import {
   type HydrogenIonPresentationPolicy,
   toRenderState,
 } from "./scene.js";
+import { toTitrationRenderState } from "./titration.js";
 import { scientificState } from "../../test/fixtures.js";
 
 const volumeProfileSnapshot: VolumeProfileSnapshot = {
@@ -130,5 +131,27 @@ describe("renderer-neutral scene state", () => {
     expect(scene.nodes.some((node) => node.id === "model-ph-readout")).toBe(true);
     expect(scene.nodes.some((node) => node.id === "taught-ph-readout")).toBe(false);
     expect(TAUGHT_HYDROGEN_ION_POLICY.id).not.toBe(SCIENTIFIC_MODEL_HYDROGEN_ION_POLICY.id);
+  });
+
+  it("adds one coherent apparatus family without changing the observable source", () => {
+    const source = model();
+    const scene = toTitrationRenderState(source);
+    expect(scene.nodes.map((node) => node.id)).toEqual(expect.arrayContaining([
+      "titration-bench",
+      "stand-apparatus",
+      "burette-apparatus",
+      "flask-apparatus",
+      "beaker-apparatus",
+    ]));
+    expect(scene.nodes.find((node) => node.id === "flask-apparatus")?.data).toMatchObject({
+      fillHeightMm: source.liquidLevel.height,
+      semanticPorts: ["flask.mouth"],
+    });
+    expect(scene.nodes.find((node) => node.id === "titration-bench")?.data.interactionRegions)
+      .toHaveLength(3);
+    expect(scene.nodes.every((node) => Object.isFrozen(node.data))).toBe(true);
+    const burette = scene.nodes.find((node) => node.id === "burette-apparatus");
+    expect(Object.isFrozen(burette?.data.partIds)).toBe(true);
+    expect(Object.isFrozen(burette?.data.graduation)).toBe(true);
   });
 });

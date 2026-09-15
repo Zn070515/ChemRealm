@@ -10,6 +10,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./pixi": {
+      "types": "./dist/pixi/index.d.ts",
+      "import": "./dist/pixi/index.js"
     }
   },
   "files": [
@@ -19,6 +23,7 @@
     "build": "tsc -b"
   },
   "dependencies": {
-    "@chemrealm/schema": "workspace:*"
+    "@chemrealm/schema": "workspace:*",
+    "pixi.js": "8.16.0"
   }
 }

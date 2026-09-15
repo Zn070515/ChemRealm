@@ -10,7 +10,11 @@ import { defineConfig, devices } from "@playwright/test";
  * Playwright flows; this is the smallest thing that can honestly carry AC-P5.
  */
 export default defineConfig({
-  testDir: "./tests/browser",
+  testDir: "./tests",
+  // The repository also contains Vitest files under tests/. Keep Playwright
+  // limited to browser specs so a unit-test module cannot be imported as a
+  // browser test (and so the M6 capture spec can live beside them safely).
+  testMatch: /.*\.spec\.[jt]sx?$/,
   forbidOnly: Boolean(process.env.CI),
   retries: 0,
   reporter: process.env.CI ? "github" : "list",

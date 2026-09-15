@@ -1,0 +1,132 @@
+:root {
+  color: #26333c;
+  background: #e9eef2;
+  font-family: Arial, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
+
+main {
+  width: min(1440px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 24px 0 56px;
+}
+
+h1, h2, h3 { color: #1e2b33; }
+
+code, dd, li { overflow-wrap: anywhere; }
+
+button {
+  min-block-size: 44px;
+  padding: 8px 16px;
+  border: 1px solid #60737f;
+  border-radius: 8px;
+  color: #1e2b33;
+  background: #ffffff;
+  font: inherit;
+  cursor: pointer;
+}
+
+button:focus-visible,
+.pixi-host:focus-visible {
+  outline: 3px solid #005fcc;
+  outline-offset: 3px;
+}
+
+[aria-label="Committed world inspection"] {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(280px, 0.75fr);
+  gap: 20px 28px;
+  align-items: start;
+  padding: 20px;
+  border: 1px solid #c9d4da;
+  border-radius: 18px;
+  background: #f7f9fb;
+}
+
+[aria-label="Committed world inspection"] > h2,
+[aria-label="Committed world inspection"] > dl,
+[aria-label="Committed world inspection"] > section:not([aria-label="Titration apparatus visual"]) {
+  grid-column: 2;
+}
+
+[aria-label="Titration apparatus visual"] {
+  grid-column: 1;
+  grid-row: 1 / span 5;
+  min-width: 0;
+}
+
+.pixi-host {
+  width: 100%;
+  min-height: 440px;
+  aspect-ratio: 1200 / 760;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #e9eef2;
+  box-shadow: 0 14px 36px rgb(37 58 70 / 14%);
+}
+
+.pixi-host canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+[aria-label="Committed world inspection"] dl {
+  margin: 0;
+  padding: 16px;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+[aria-label="Committed world inspection"] dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 0;
+  border-bottom: 1px solid #e2e8ec;
+}
+
+[aria-label="Committed world inspection"] dl > div:last-child { border-bottom: 0; }
+
+[aria-label="Committed world inspection"] dt { font-weight: 700; }
+[aria-label="Committed world inspection"] dd { margin: 0; text-align: right; }
+
+[aria-label="Hydrogen ion presentation"],
+[aria-label="Physical observables"],
+[aria-label="Scientific inspection"] {
+  padding: 16px;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+[data-testid="m6-renderer-status"] {
+  margin: 10px 4px 0;
+  color: #4b616d;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 900px) {
+  [aria-label="Committed world inspection"] { grid-template-columns: 1fr; }
+  [aria-label="Committed world inspection"] > h2,
+  [aria-label="Committed world inspection"] > dl,
+  [aria-label="Committed world inspection"] > section:not([aria-label="Titration apparatus visual"]),
+  [aria-label="Titration apparatus visual"] {
+    grid-column: 1;
+    grid-row: auto;
+  }
+  .pixi-host { min-height: 300px; }
+}
+
+@media (max-width: 520px) {
+  main { width: min(100% - 20px, 1440px); padding-top: 12px; }
+  [aria-label="Committed world inspection"] { padding: 12px; }
+  .pixi-host { min-height: 220px; }
+}

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "assetId": "chemrealm.titration-bench",
+  "assetVersionSource": "contracts/version-manifest.json#representation.apparatusAsset",
+  "visualFamily": "chemrealm-lab-v1",
+  "coordinateUnit": "mm",
+  "view": "orthographic-side-elevation",
+  "dimensionsMm": [260, 190],
+  "parts": [
+    { "id": "stand.base", "role": "base", "boundsMm": [0, 170, 62, 20], "capabilities": ["support-apparatus"] },
+    { "id": "stand.vertical", "role": "support", "boundsMm": [26, 18, 8, 152], "capabilities": ["support-apparatus"] },
+    { "id": "stand.clamp", "role": "clamp", "boundsMm": [28, 38, 52, 16], "capabilities": ["support-apparatus"] },
+    { "id": "burette.body", "role": "body", "boundsMm": [74, 20, 14, 126], "capabilities": ["contain-liquid", "deliver-liquid", "read-scale", "inspect-state"] },
+    { "id": "burette.stopcock", "role": "stopcock", "boundsMm": [70, 144, 24, 12], "capabilities": ["deliver-liquid"] },
+    { "id": "burette.tip", "role": "tip", "boundsMm": [78, 156, 6, 18], "capabilities": ["deliver-liquid"] },
+    { "id": "flask.body", "role": "body", "boundsMm": [128, 96, 80, 70], "capabilities": ["contain-liquid", "receive-liquid", "inspect-state"] },
+    { "id": "flask.neck", "role": "neck", "boundsMm": [157, 48, 22, 58], "capabilities": ["receive-liquid"] },
+    { "id": "flask.base", "role": "base", "boundsMm": [122, 160, 92, 10], "capabilities": ["support-apparatus"] },
+    { "id": "beaker.body", "role": "body", "boundsMm": [220, 112, 32, 58], "capabilities": ["contain-liquid", "receive-liquid", "inspect-state"] }
+  ],
+  "ports": [
+    { "id": "burette.outlet", "kind": "fluid-outlet", "positionMm": [81, 174], "orientationDeg": 180 },
+    { "id": "flask.mouth", "kind": "fluid-inlet", "positionMm": [168, 48], "orientationDeg": 270 },
+    { "id": "stand.base-contact", "kind": "support-contact", "positionMm": [31, 180], "orientationDeg": 0 }
+  ],
+  "interactionRegions": [
+    { "id": "region.burette-body", "partId": "burette.body", "boundsMm": [70, 16, 22, 134], "accessibleLabel": "Burette body; M7 interaction target reserved" },
+    { "id": "region.flask-body", "partId": "flask.body", "boundsMm": [124, 92, 88, 80], "accessibleLabel": "Conical flask body; M7 interaction target reserved" },
+    { "id": "region.beaker-body", "partId": "beaker.body", "boundsMm": [216, 108, 40, 64], "accessibleLabel": "Beaker body; M7 interaction target reserved" }
+  ],
+  "volumetric": true,
+  "volumeProfileIds": ["m5-burette-100ml-profile", "m5-conical-flask-250ml-profile"],
+  "graduation": { "maximumVolumeL": 0.1, "majorEveryL": 0.01, "minorEveryL": 0.001 },
+  "accessibilityLabel": "ChemRealm titration bench with burette, conical flask, stand and beaker"
+}
