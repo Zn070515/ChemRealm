@@ -2,8 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Status:** Refusal-first boundary and one source-reviewed ordinary-aqueous
-quantitative profile are implemented. The production path uses the admitted
+**Status:** Refusal-first boundary and one source-reviewed ordinary-aqueous quantitative profile are implemented. The production path uses the admitted
 81-point CIE colourimetry grid and the profile's explicit Napierian convention;
 strong-acid phenolphthalein orange remains documented and refusal-only. This
 plan records the optical correction evidence; the corrected committed baseline,

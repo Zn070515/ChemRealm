@@ -35,7 +35,7 @@ function mustNot(text, pattern, message) {
   if (pattern.test(text)) failures.push(`forbidden: ${message}`);
 }
 
-must(entry, /^\*\*Status:\*\* \*\*Ready for owner authorization\*\*/m,
+must(entry, /^\*\*Status:\*\* \*\*Ready for owner authorization(?: after current-round attestation)?\*\*/m,
   "M6 entry remains an authorization gate, not an automatic authorization claim");
 must(entry, /M6 is the first milestone[\s\S]{0,260}PixiJS renderer/i,
   "M6 scope includes final apparatus/rendering realization");
@@ -51,8 +51,15 @@ must(entry, /final apparatus asset package and semantic asset contract/i,
   "M6 asset contract is explicitly unverified at entry");
 must(entry, /PixiJS\/renderer implementation and layer ownership/i,
   "M6 renderer work is explicitly unverified at entry");
-must(entry, /Hosted attestation is now recorded for the exact committed baseline/i,
-  "M6 packet records the post-push hosted evidence");
+const hasRecordedHostedAttestation = /Hosted attestation is now recorded for the exact committed baseline/i.test(entry);
+const hasPendingHostedAttestation = /A new hosted attestation must be recorded here only after/i.test(entry);
+if (!hasRecordedHostedAttestation && !hasPendingHostedAttestation) {
+  failures.push("missing: M6 packet records either the post-push hosted evidence or an explicit pending-attestation state");
+}
+if (hasPendingHostedAttestation) {
+  must(entry, /current-round hosted attestation required/i,
+    "M6 pending state explicitly keeps the corrected hosted attestation open");
+}
 
 must(plan, /M5 and M4-B S3 verified locally and by hosted CI[\s\S]{0,180}owner acceptance/i,
   "canonical plan records hosted-verified local S3 candidates and the open owner gate");
@@ -106,5 +113,6 @@ if (failures.length > 0) {
 
 console.log("ok    M6 entry prerequisites and dependency ownership are recorded");
 console.log("ok    local M4-B/M5 evidence is not silently promoted to hosted/owner acceptance");
+console.log(`ok    corrected hosted attestation is ${hasRecordedHostedAttestation ? "recorded" : "explicitly pending"}`);
 console.log("ok    M6 visual/asset work remains explicitly unverified and refusal-first optics are preserved");
 console.log("\nRESULT: PASS");
