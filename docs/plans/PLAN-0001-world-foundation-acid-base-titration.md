@@ -943,14 +943,14 @@ decision is made in the web adapter.
 **Current stage:** **Authorized / in progress** — implementation and visual
 acceptance are not yet verified. The existing first implementation is a
 technical baseline only; the current M6 visual-system gate is **NO-GO** until
-the Art Direction standard and remediation plan are satisfied.
+the current M6 visual production standard and specifications are satisfied.
 **Addresses:** `GOAL.md` §5.7, §15; ADR-0006; `SPEC-0001` AC-V5, AC-F1, AC-X1, AC-X2
 
 The governing visual documents are
 [`docs/visual/m6-art-direction.md`](../visual/m6-art-direction.md),
 [`2026-09-15-m6-visual-asset-system-redesign.md`](../superpowers/specs/2026-09-15-m6-visual-asset-system-redesign.md)
-and
-[`2026-09-15-m6-visual-asset-system-remediation.md`](../superpowers/plans/2026-09-15-m6-visual-asset-system-remediation.md).
+and the companion M6 apparatus specifications in
+`docs/superpowers/specs/2026-09-15-m6-*.md`.
 The first slice must not be used to claim the full family, variant, state or
 interaction visual gates.
 

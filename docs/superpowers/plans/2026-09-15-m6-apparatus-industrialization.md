@@ -3,11 +3,11 @@
 > 目标是完成 M6 S2 的高保真资产与验证准备，不提前宣称 S3。直接在当前
 > 工作树集成；每一步先有可失败的测试，再实现最小正确行为。
 
-> This is the original technical-slice plan. The stricter visual-system work is
-> governed by [`docs/visual/m6-art-direction.md`](../../visual/m6-art-direction.md)
-> and tracked in
-> [`2026-09-15-m6-visual-asset-system-remediation.md`](2026-09-15-m6-visual-asset-system-remediation.md).
-> A green technical slice does not close the M6 visual gate.
+> This is the original technical-slice plan. It is retained as historical
+> context only and is not an active implementation authority. Current M6 work
+> follows [`docs/visual/m6-art-direction.md`](../../visual/m6-art-direction.md)
+> and the current M6 specifications; a green technical slice does not close
+> the M6 visual gate.
 
 ## Step 1 — 研究与版本入口
 

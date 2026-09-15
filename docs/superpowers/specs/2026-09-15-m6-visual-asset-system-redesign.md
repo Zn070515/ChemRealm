@@ -1,7 +1,7 @@
 # M6 Visual Asset System Remediation
 
-**Status:** M6 S1 specified; implementation requires the companion plan and
-does not claim M6 S3.
+**Status:** M6 S1 specified; implementation follows this specification and the
+current M6 visual production standard, and does not claim M6 S3.
 
 **Authority:** subordinate to `GOAL.md`, `SPEC-0001`, ADR-0006, ADR-0013,
 `docs/visual/apparatus-standard.md` and
