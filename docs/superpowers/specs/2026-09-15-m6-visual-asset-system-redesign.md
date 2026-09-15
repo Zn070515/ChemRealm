@@ -21,8 +21,9 @@ chemistry-examination pressure, education-equipment standards, manufacturer
 anchors and virtual-lab learning research. It supports clarity and affordance
 density as a benchmark, not copying or claims about NOBOOK internals. The
 binding visual standard separately defines permitted pattern learning,
-orthographic measurement views, non-measurement 2.5D previews, token ranges,
-forbidden visual patterns and source-backed geometry variation.
+  orthographic-camera experiment worlds, strict frontal measurement views,
+  non-measurement 2.5D previews, size-class/LOD token ranges, forbidden visual
+  patterns and source-backed geometry variation.
 
 ## Goal
 
@@ -39,17 +40,21 @@ forbidden visual patterns and source-backed geometry variation.
 ## Non-goals
 
 - no chemistry, optical, WorldState, DomainEvent, replay or persistence change;
-- no NOBOOK/vendor asset, screenshot, layout or distinctive expression reuse;
-- no catalog editor/search/player UI;
+- no NOBOOK/vendor asset, screenshot, exact layout or distinctive expression
+  reuse;
+- no catalog editor/search/player UI implementation; only the future surface
+  mode boundary is specified;
 - no broad M7 interaction implementation;
 - no strong-acid phenolphthalein orange implementation;
 - no claim that catalog count equals mature product completeness.
 
 NOBOOK may inform broad product patterns—catalog discoverability, a dominant
-experiment stage, separated inspection, reusable parts and legible feedback.
-It may not supply assets, screenshots, icons, layout, distinctive interaction
-choreography, recognizable full-scene composition or pixel-level details. All
-geometry and visual identity must be original and source-recorded.
+experiment stage, separated inspection, reusable parts, legible feedback and a
+denser editor surface beside a clean demo/player surface. It may not supply
+assets, screenshots, icons, exact panel positions or widths, toolbar order,
+card system, distinctive interaction choreography, recognizable full-scene
+composition or pixel-level details. All geometry and visual identity must be
+original and source-recorded.
 
 ## User experience
 
@@ -61,9 +66,20 @@ scale, readout and optical refusal remain legible without implying chemistry
 not supplied upstream.
 
 The first page remains a read-only committed-world presentation. M6 does not
-turn the page into a catalog editor or persist pointer movement. Future M7
-commands consume the same parts/ports/capabilities instead of inventing a
-second interaction model.
+turn the page into a catalog editor or persist pointer movement. The asset
+contract nevertheless names five future/present surface modes so a later UI
+does not create a second geometry contract:
+
+| Mode | Projection | Measurement-qualified | M6 role |
+|---|---|---:|---|
+| `experiment-world` | fixed orthographic camera with bounded 2.5D cues | no by default | read-only process composition |
+| `measurement` | strict frontal orthographic/side elevation | yes | scale, meniscus and calibration evidence |
+| `catalog-preview` | bounded 2.5D | no | future discovery and variant comparison |
+| `inspector` / `construction` | bounded 2.5D | no | parts, ports, actuator and QA inspection |
+| `demo-player` | orthographic world presentation | only through an explicit measurement subview | future clean demonstration surface |
+
+Future M7 commands consume the same parts/ports/capabilities instead of
+inventing a second interaction model.
 
 The required burette variants are mechanically distinct:
 
@@ -101,7 +117,10 @@ palettes are source-labelled representation records, not equilibrium logic.
 
 Geometry is scientific-adjacent representation: capacity, `h(V)`, `V(h)`,
 graduations and reading direction remain consistent with frozen profile and
-apparatus data. Visual assets cannot change amount or volume.
+apparatus data. Visual assets cannot change amount or volume. Phenomena such as
+liquid, bubbles, precipitate, gas, thermal cues and optical appearance are
+state/effect overlays over reusable apparatus geometry; they are not copied
+into chemistry-specific vessel masters.
 
 ## World/event design
 
@@ -148,6 +167,11 @@ Planned Representation Engine additions are:
 - typed anchors and hit regions linked to parts;
 - capability and state-coverage records;
 - family-level visual-token and construction-template identity;
+- deterministic size-class/LOD selection for master, scene, preview and
+  thumbnail surfaces;
+- explicit experiment-world, measurement, catalog-preview, inspector and
+  construction view-mode metadata;
+- dual-background QA records for dark and light neutral conditions;
 - deterministic fixture and visual-QA references.
 
 The active version remains distributed only from
@@ -163,6 +187,10 @@ ScientificState, WorldState, chemistry constants or event semantics.
 - optical refusal cannot receive a fallback chemical swatch;
 - profile/hash mismatch rejects executable geometry;
 - an acid/alkali actuator mismatch rejects the apparatus command mapping;
+- a measurement value supplied by a non-measurement 2.5D view fails the view
+  contract;
+- a preview/thumbnail that changes semantic dimensions, profile identity or
+  actuator kind fails LOD validation;
 - a geometry difference without provenance or an explicit approximation rationale
   fails the package review;
 - out-of-bounds interaction geometry fails QA;
@@ -179,7 +207,7 @@ Tests must be written before each implementation change and observed failing.
 2. Asset tests cover layers, bounds, no external references, provenance,
    license and central version source.
 3. Geometry tests cover profile round-trip, liquid clipping, graduation
-   direction and family construction markers.
+   direction, family construction markers and profile-preserving LOD variants.
 4. Render tests prove Pixi consumes only RenderState and dynamic values come
    from Observable output.
 5. Fixtures cover empty, loaded, selected, refusal and supported observation
@@ -188,7 +216,10 @@ Tests must be written before each implementation change and observed failing.
 7. Browser captures cover all four named viewports and accessible readouts.
 8. Physical-scale and normalized-shape comparison sheets cover every family
    variation and list changed parameters with source/rationale.
-9. Two independent audits compare code, catalog, SVG, screenshots, standard,
+9. Size-class and thumbnail tests cover identity-defining features at small
+   rendered heights; dual-background captures cover dark and light neutral
+   conditions.
+10. Two independent audits compare code, catalog, SVG, screenshots, standard,
    research and prior M4/M5/world/replay/optical/quantity invariants.
 
 ## Acceptance criteria
@@ -196,20 +227,22 @@ Tests must be written before each implementation change and observed failing.
 | Criterion | Binary requirement | Required evidence |
 |---|---|---|
 | M6-VISUAL-SYSTEM | Art direction, layers, family rules and forbidden patterns are applied | spec review + QA |
+| M6-GOLD-MASTER | Acid/alkali burettes, 100/250/1000 mL beakers and 100/250/500 mL Erlenmeyer flasks pass owner review at full and thumbnail size on dark/light neutral backgrounds | Gold Master captures + owner review |
 | M6-FAMILY-VARIANTS | Required specifications have ≥3 visible normalized geometry differences | catalog signature test + comparison sheet |
+| M6-LOD | Master, scene, preview and thumbnail retain semantic identity while reducing detail deterministically | LOD manifest/tests + captures |
 | M6-STRUCTURE | Core vessels expose correct rims, bases, mouths, spouts, scales, stopcocks and calibration marks | asset tests + owner review |
-| M6-VIEW-MODE | Measurement views are strict orthographic and 2.5D previews are explicitly non-measurement | view-mode contract + captures |
+| M6-VIEW-MODE | The experiment world uses bounded orthographic 2.5D cues; quantitative evidence uses strict frontal measurement presentation; other 2.5D views are explicitly non-measurement | view-mode contract + captures |
 | M6-STATE | Declared state variants are traceable to Observable/RenderState or explicitly unsupported | fixture/source review |
 | M6-INTERACTION | Parts, ports, anchors, hit regions, capabilities and actuator intents are explicit and compatible | catalog/interaction tests |
-| M6-MATERIAL | Glass, liquid, metal, rubber, shadow and highlight language is coherent, token-bounded and non-cartoon | token QA + four screenshots + owner review |
+| M6-MATERIAL | Glass, liquid, metal, rubber, shadow and highlight language is coherent, size-class/LOD token-bounded, dual-background legible and non-cartoon | token QA + full/thumbnail dual-background captures + owner review |
 | M6-PROVENANCE | Every changed geometry parameter has a citable source class or explicit approximate-visual rationale | manifest/source records + comparison sheets |
 | M6-ACTUATOR | Acid and alkali burette mechanisms map to distinct future command intents | catalog/actuator tests |
 | M6-RENDER | Pixi remains RenderState-only and chemistry-blind | dependency/source guards |
-| M6-REPLAY | Geometry/profile identity and hash boundaries remain intact | world/profile/replay suite |
+| M6-REPLAY | Geometry/profile identity, LOD identity and hash boundaries remain intact | world/profile/replay/LOD suite |
 | M6-ACCESSIBILITY | DOM readouts, names, focus targets and contrast work at all viewports | browser/accessibility evidence |
 | M6-PRIVACY | No external asset/network/telemetry behavior is added | artifact/network checks |
 | M6-S2 | Local evidence passes while visual owner acceptance remains explicit | M6 packet |
-| M6-S3 | All P0/P1 visual gates, owner review, reproducible baseline and accessibility/originality evidence pass | final matrix |
+| M6-S3 | Gold Master families pass all P0/P1 visual gates, owner review, reproducible full/thumbnail dual-background baseline and accessibility/originality evidence | final matrix |
 
 ## Rollout/migration
 
@@ -222,4 +255,6 @@ a visual refresh must not silently reinterpret a historical world.
 
 Deferred until the visual system exists: the first M7 connect/detach command,
 later Canvas/SVG/WebGL/WASM acceleration choices, and which flow/gas/precipitate/
-thermal states receive scientifically modelled effects.
+thermal states receive scientifically modelled effects. Strong-acid
+phenolphthalein orange remains documented but is not implemented in this M6
+visual package.

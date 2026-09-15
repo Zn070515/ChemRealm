@@ -1,7 +1,7 @@
 # Agent visual asset production playbook
 
 > **中文定位：面向 Agent 的 ChemRealm 美术资产生产手册**
-> Research date: 2026-09-12
+> Research date: 2026-09-15 (updated with M6 visual-system audit)
 > Status: Research / M6-M7 implementation guidance
 > Scope: ChemRealm 的实验器材、试剂、现象、缩略图和教学插图
 > Normative relationship: 本文件是研究与生产方法，不替代已生效的视觉标准、ADR 或 SPEC。
@@ -36,13 +36,17 @@ Representation Engine 集成
 
 > **不要让 Agent 直接“画一个漂亮的器材”。要让它在一组明确的视觉、几何、交互和科学约束内，生产一件属于 ChemRealm 资产系统的器材。**
 
-本手册吸收 NOBOOK 的资源库、编辑器、演示态和器材操作思路，但不复制其具体模型、贴图、图标、布局或品牌风格。NOBOOK 研究原文见 [`from-nobook.md`](./from-nobook.md)；当前 ChemRealm 的器材几何、材质和验收硬标准见 [`apparatus-standard.md`](../visual/apparatus-standard.md)。
+本手册吸收 NOBOOK 的资源库、编辑器、演示态和器材操作思路，但不复制其具体模型、贴图、图标、布局或品牌风格。NOBOOK 研究原文见 [`from-nobook.md`](./from-nobook.md)；当前 ChemRealm 的器材几何、材质和验收硬标准见 [`apparatus-standard.md`](../visual/apparatus-standard.md)。M6 的绑定视觉标准优先于本研究手册。
 
 ---
 
 ## 1. NOBOOK 给 Agent 美术生产的真正启示
 
 公开资料显示，NOBOOK 的强项不是单个实验的装饰，而是把器材库、场景编辑、器材属性、拖拽装配、演示模式和教材资源组织成一个长期可扩展的系统。[官方化学界面说明](https://nobook-doc-cdn.nobook.com/chem/NB%E5%8C%96%E5%AD%A6%E5%AE%9E%E9%AA%8C%E7%95%8C%E9%9D%A2%E5%8F%8A%E7%9B%B8%E5%BA%94%E5%8A%9F%E8%83%BD%E7%89%B9%E6%80%A7%E8%AF%B4%E6%98%8E.html)和 [NOBOOK 化学产品说明](https://www.nobook.com/nb_huaxue_ziyuan.html)共同支持以下提炼。
+
+NOBOOK 是比较“完成度、清晰度和可发现性”的产品下限，不是 ChemRealm 要复制的视觉圣经，也不是 CAD/工业测量软件的准确性证明。M6 的目标是在相同任务范围内达到或超过其可见的器材辨识、状态可读和交互提示质量；具体通过原创并列截图、器材结构审查和可重放 fixture 认定。
+
+允许借鉴 `stage + catalog + inspector`、编辑态/演示态分层和可拆部件的可发现性；禁止复制具体面板位置、宽度、图标、卡片、工具栏顺序、场景构图、截图像素和独特交互编排。
 
 ### 1.1 资产库先于场景数量
 
@@ -57,7 +61,7 @@ Representation Engine 集成
 
 ### 1.2 编辑态和演示态必须分开
 
-同一件资产应能服务于教师编辑、课堂演示和学生探索，但不应为每种模式重画一套视觉对象。模式是对同一 World 和 Render State 的展示策略，而不是三套互相漂移的场景。
+同一件资产应能服务于教师编辑、课堂演示和学生探索，但不应为每种模式重画一套视觉对象。模式是对同一 World 和 Render State 的展示策略，而不是三套互相漂移的场景。建议明确区分：`experiment-world`（固定正交相机、可有界 2.5D 深度）、`measurement`（严格正面/侧立面、唯一可作读数证据）、`catalog-preview`/`inspector`/`construction`（有界 2.5D、非测量）和 `demo-player`（干净演示面）。
 
 ### 1.3 “好看”首先是状态可读
 
@@ -126,7 +130,7 @@ whole object
 
 **结论：** 适合后续分子查看器、复杂装配和多视角检查，不应成为 v0 交付所有器材的前置条件。
 
-### 3.3 推荐：AI 概念探索 + 参数化/矢量/2.5D master
+### 3.3 推荐：AI 概念探索 + 参数化/矢量/正交 2.5D master
 
 ```text
 生成模型
@@ -136,7 +140,7 @@ whole object
   → 运行时生成液面、刻度、连接态和现象
 ```
 
-这是 ChemRealm v0 的推荐路径。它保留生成模型的审美探索能力，同时把以下内容交还给确定性资产和代码：
+这是 ChemRealm v0 的推荐路径。正交 2.5D 允许表达口沿、壁厚、后方硬件和可拆接口，但不得出现透视汇聚、远近缩放或把测量面转成斜视。它保留生成模型的审美探索能力，同时把以下内容交还给确定性资产和代码：
 
 - 几何比例；
 - 刻度与单位文字；
@@ -145,7 +149,9 @@ whole object
 - 透明层顺序；
 - 颜色状态；
 - 交互状态；
-- 化学现象。
+- 化学现象；
+- LOD 选择与缩略图身份特征；
+- 背景适配、对比度与焦点状态。
 
 ### 3.4 分工规则
 
@@ -172,7 +178,10 @@ whole object
 assetId: apparatus.conical-flask.v1
 assetType: apparatus
 purpose: titration-receiving-vessel
-view: orthographic-side-elevation
+viewModes:
+  experiment: orthographic-world-2.5d-bounded
+  measurement: frontal-orthographic-qualified
+  preview: 2.5d-non-measurement
 coordinateUnit: mm
 visualFamily: chemrealm-lab-v1
 requiredParts:
@@ -197,6 +206,7 @@ states:
   - invalid-operation
 mustNot:
   - perspective-convergence
+  - measurement-from-preview
   - unreadable-labels
   - hard-coded-chemical-colour
   - decorative-liquid-motion-without-state
@@ -360,8 +370,10 @@ Return three controlled silhouette/material variations with the same geometry.
 
 ```text
 asset-id/
-├─ master/                 原创 master 几何或矢量资产
-├─ preview/                缩略图和固定背景预览
+├─ master/                 原创 construction/master 几何或矢量资产
+├─ scene/                  实验世界 LOD
+├─ preview/                非测量的目录/检查器 LOD
+├─ thumbnail/              小尺寸识别 LOD
 ├─ states/                 由 master 派生的状态定义或图层
 ├─ manifest.json           尺寸、部件、端口、能力、可访问名称
 ├─ source-record.md        参考、生成工具、prompt、seed、作者记录
@@ -376,7 +388,12 @@ type ApparatusAssetManifest = {
   assetId: string;
   visualFamily: string;
   coordinateUnit: "mm";
-  view: "orthographic-side-elevation";
+  viewModes: {
+    experiment: "orthographic-world-2.5d-bounded";
+    measurement: "frontal-orthographic-qualified";
+    preview: "2.5d-non-measurement";
+  };
+  lod: readonly ("master" | "scene" | "preview" | "thumbnail")[];
   dimensions: {
     widthMm: number;
     heightMm: number;
@@ -399,6 +416,18 @@ type ApparatusAssetManifest = {
 ```
 
 这段是生产所需的语义示意，不是现在就要冻结的 TypeScript API。正式接口仍需在 M6 Representation Engine spec 中确定。
+
+每个 Gold Master 还必须有一份 LOD 记录：`master` 不省略结构；`scene`
+保留实验世界所需的主要结构；`preview` 可隐藏细刻度、微小标签和非关键
+阴影；`thumbnail` 可合并 minor/micro 细节，但必须保留能区分家族的开口、颈、
+倒液嘴、侧支管、塞子或执行器。所有 LOD 共享尺寸、parts/ports、profile 和
+actuator identity。LOD 的选择由渲染尺寸级别和 view mode 决定，不由试剂名称
+分支决定。
+
+Gold Master 要在 `dark-neutral` 和 `light-neutral` 两种背景上各留全尺寸与
+缩略图证据。对比度、线宽、玻璃边缘和中性/拒绝状态必须在两种背景下都能读，
+不能靠黑色粗描边或白色光晕解决。气泡、沉淀、气体、热效应和指示剂光学外观
+都是可复用的 state/effect overlay；不能为每种现象复制一份器材 master。
 
 ### 6.2 文字和数字永远分层
 
@@ -438,8 +467,12 @@ Owner visual review
 ### 7.1 Art Director checklist
 
 - 100% 缩放时是否干净，缩略图时是否仍清楚；
+- 缩略图是否仍保留开口/颈/倒液嘴/侧支管/塞子/执行器等身份特征；
 - 玻璃、液体、金属是否看起来属于同一个视觉系统；
 - 高光、阴影、描边是否统一；
+- size class 与 LOD 是否由渲染高度确定，而不是固定 1440px 线宽；
+- Gold Master 在 dark-neutral/light-neutral 两种背景上是否都保持边缘、液面和
+  读数可见；
 - 场景是否有明确视觉焦点；
 - 装饰是否遮挡科学信息；
 - 资产是否像可操作的实验器材，而非商品渲染图；
@@ -544,6 +577,8 @@ Owner visual review
 ### 9.2 第一批不做
 
 - 200 个器材的铺量；
+- 没有 Gold Master 审查就批量生成整个目录；首批先完成酸/碱式滴定管、
+  100/250/1000 mL 烧杯和 100/250/500 mL 锥形瓶；
 - 每个实验单独一套风格；
 - 复杂粒子特效库；
 - 直接从 NOBOOK 截图描摹；
@@ -559,6 +594,7 @@ Owner visual review
 | Criterion | Result | Evidence |
 |---|---|---|
 | Silhouette readable at thumbnail | PASS/FAIL | thumbnail fixture |
+| Master/scene/preview/thumbnail share identity | PASS/FAIL | LOD manifest + profile/parts/actuator comparison |
 | Geometry and proportions are approved | PASS/FAIL | master dimensions + review image |
 | View/light/material family is consistent | PASS/FAIL | side-by-side asset sheet |
 | Parts/ports/capabilities are declared | PASS/FAIL | manifest test |
@@ -567,11 +603,24 @@ Owner visual review
 | Labels and readings are runtime-generated | PASS/FAIL | layer inspection |
 | Editor/demo/student modes reuse the same asset | PASS/FAIL | mode screenshots |
 | Four named viewports remain usable | PASS/FAIL | baseline screenshots |
+| Gold Master passes light/dark neutral backgrounds | PASS/FAIL | full-size + thumbnail captures and contrast record |
 | Accessibility checks pass | PASS/FAIL | contrast and interaction evidence |
 | Originality/licensing record exists | PASS/FAIL | source-record + license record |
 | No prototype art or watermark ships | PASS/FAIL | release capture |
 
 任何科学、几何、运行时状态、许可证或原创性项目为 FAIL 时，资产不得标记为 release-ready。视觉上“差不多”的资产只能标记为 concept 或 prototype。
+
+---
+
+## 10.1 研究来源与使用边界
+
+- [NOBOOK 化学实验界面与功能说明](https://nobook-doc-cdn.nobook.com/chem/NB%E5%8C%96%E5%AD%A6%E5%AE%9E%E9%AA%8C界面及相应功能特性说明.html)、[NOBOOK 开放平台实验 API](https://open.nobook.com/docs/2.0/tutorial-integration/experimental-integration/phy-or-chem-integration/)：用于编辑/演示/器材库/检查器等产品表面分层；不作为素材、布局或科学正确性来源。
+- [教育部 JY/T 0655—2025 普通高中化学教学装备配置标准](https://www.moe.gov.cn/srcsite/A06/s3732/202507/W020250701322477393561.pdf)：用于高中器材族覆盖压力；不自动证明具体厂家尺寸。
+- [国家标准信息公共服务平台 GB/T 12805—2011 滴定管](https://std.samr.gov.cn/gb/search/gbDetailed?id=71F772D7FD44D3A7E05397BE0A0AB82A)、[酸式/碱式滴定管教学参考](https://www.muhn.edu.cn/ecmd/info/1481/14785.htm)：用于结构和读数操作审查。
+- [W3C WCAG 2.2 non-text contrast](https://www.w3.org/WAI/WCAG22/understanding/non-text-contrast.html)：用于重要非文本图形/状态对比度参考。
+- [MDN SVG `viewBox`](https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Attribute/viewBox)、[`preserveAspectRatio`](https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Attribute/preserveAspectRatio)、[`vector-effect`](https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Attribute/vector-effect)：用于逻辑坐标、比例保持和局部非缩放线条判断。
+- [MDN `prefers-reduced-motion`](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/%40media/prefers-reduced-motion)：用于后续动态状态的可访问性约束。
+- [Unity Level of Detail](https://docs.unity3d.com/es/2020.2/Manual/LevelOfDetail.html)：用于 LOD 的通用表现/性能理由，不作为器材或化学事实。
 
 ---
 

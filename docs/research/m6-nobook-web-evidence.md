@@ -43,6 +43,18 @@ converge on six implementation rules for M6:
 6. The first slice should prove the reusable path from committed world to
    apparatus view, not claim the mature catalog breadth or the M7 interactive
    titration loop.
+7. A visual benchmark must be checked at more than one rendered size. The
+   master, scene, preview and thumbnail are deterministic LOD roles; small
+   views may hide micro-detail but must retain identity-defining structure.
+8. An orthographic camera can provide restrained 2.5D depth cues without
+   introducing perspective convergence. Only a separate frontal measurement
+   presentation may certify a graduation, meniscus or calibration reading.
+9. Visual effects belong above reusable apparatus geometry. Bubbles,
+   precipitates, gas, thermal cues and optical appearance must be state/effect
+   overlays rather than duplicated chemistry-specific vessel assets.
+10. Visual quality must survive both dark-neutral and light-neutral backgrounds;
+    a heavy black outline or white halo is not a substitute for material
+    contrast.
 
 ## External web evidence
 
@@ -93,6 +105,21 @@ or a spacing/equivalent exception. M6 uses this as an interaction-target
 floor for future apparatus controls and keeps important readouts in accessible
 DOM text rather than relying on canvas pixels. [W3C Target Size (Minimum)](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html)
 
+WCAG's non-text-contrast guidance sets a 3:1 target for meaningful graphics and
+user-interface states, and warns that thin anti-aliased strokes can be harder to
+perceive in practice. This supports dual-background screenshot review rather
+than a single numerical sample. [W3C Non-text Contrast](https://www.w3.org/WAI/WCAG22/understanding/non-text-contrast.html)
+
+SVG `viewBox` and `preserveAspectRatio` define a logical coordinate system and
+uniform fitting behavior; they do not provide physical volume semantics. A
+`non-scaling-stroke` is a local device-legibility tool, not a replacement for
+size-class token selection. [MDN `viewBox`](https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Attribute/viewBox), [MDN `preserveAspectRatio`](https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Attribute/preserveAspectRatio), and [MDN `vector-effect`](https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Attribute/vector-effect)
+
+LOD is a standard way to reduce detail/renderer cost for smaller or more distant
+representations. ChemRealm strengthens that idea with a semantic constraint:
+LOD may remove micro-detail but may not change capacity, profile, part or
+actuator identity. [Unity LOD guidance](https://docs.unity3d.com/es/2020.2/Manual/LevelOfDetail.html)
+
 ## M6 decisions derived from the evidence
 
 | Evidence | ChemRealm decision | What it does not authorize |
@@ -100,6 +127,10 @@ DOM text rather than relying on canvas pixels. [W3C Target Size (Minimum)](https
 | NOBOOK separates equipment library, settings, player and info surfaces | M6 uses a world-dominant apparatus stage plus a separate inspection panel | A full catalog, authoring editor or M7 interaction loop |
 | NOBOOK exposes serializable experiment data | M6 preserves the existing committed-world/frame identity path | Treating a scene document as an event log |
 | NOBOOK shows high apparatus/state density | M6 ships one coherent original asset family and a package contract | Copying NOBOOK assets, layout or brand language |
+| Small previews and thumbnails must remain recognizable | M6 uses size classes and identity-preserving LODs, with Gold Master full/thumbnail review | Treating `preview.svg` as an arbitrary scaled master |
+| Orthographic depth can show structure while measurement needs a frontal plane | M6 separates experiment-world, measurement and non-measurement preview modes | Reading a scale from an oblique 2.5D preview |
+| Phenomena change over a reusable apparatus | M6 models effects/state overlays over shared geometry | `bubbling-beaker.svg` or another phenomenon-specific vessel copy |
+| WCAG non-text contrast and SVG scaling guidance | M6 checks light/dark neutral backgrounds and size-class strokes | Solving readability with a universal black outline or white halo |
 | PhET uses iterative research and multiple representations | M6 keeps canvas and DOM inspection views synchronized | Claiming that visual interaction alone teaches |
 | PixiJS v8 is async and resize-aware | M6 mounts Pixi asynchronously and fits a fixed logical scene to named viewports | Allowing renderer timing into WorldState |
 | WCAG target-size guidance | Future controls use explicit hit regions and equivalent DOM controls | Pixel-perfect dragging as the only operation path |
@@ -109,6 +140,7 @@ DOM text rather than relying on canvas pixels. [W3C Target Size (Minimum)](https
 The research is sufficient for the first slice when the implementation can be
 reviewed against: original silhouette and material language, semantic asset
 manifest, frozen geometry/profile identity, RenderState-only drawing,
-accessible readouts, four named viewports, and reproducible local captures.
+accessible readouts, four named viewports, size-class/LOD identity,
+dual-background legibility and reproducible local captures.
 Further NOBOOK feature inventory should not expand this slice; it belongs to
 the later catalog/content-production track.

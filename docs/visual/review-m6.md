@@ -13,13 +13,22 @@ The current first slice demonstrates a useful RenderState/Pixi boundary and a
 typed multi-spec catalog, but it is not yet the required final-quality family
 system. The following must be visibly proven before M6 S3:
 
+The owner target is parity with or better than the comparable NOBOOK product
+surface in apparatus recognizability, state legibility and affordance clarity;
+this is a visual comparison target, not a claim that NOBOOK is a scientific or
+asset source.
+
 - no contour overlap, liquid bleed, stroke crossing or clipping;
 - correct beaker, Erlenmeyer, graduated-cylinder, burette and volumetric-flask
   geometry;
 - visibly different capacity variants, not uniform scaling with changed labels;
 - coherent glass/liquid/metal/rubber material language;
 - explicit visual, state and interaction layers for detachable parts;
-- consistent non-cartoon style at full-size and thumbnail-size review;
+- consistent non-cartoon style at full-size and thumbnail-size review, with
+  size-class stroke tokens and deterministic LODs;
+- readable Gold Masters on both dark-neutral and light-neutral backgrounds;
+- experiment-world depth cues remain orthographic, while quantitative readings
+  use the separate frontal measurement presentation;
 - accessible readouts and interaction targets at all named viewports.
 
 ## Required comparison review
@@ -35,6 +44,11 @@ normalized-shape sheet is visual-only and fits variants to a common artboard:
 | Erlenmeyer | 100/250/500 mL | body/shoulder/neck proportions and base scale |
 | Graduated cylinder | 25/50/100/250 mL | slenderness, base, scale density and profile |
 | Volumetric flask | 50/100/250/500 mL | bulb/neck proportions, calibration placement and stopper relation |
+
+The first owner-reviewed Gold Master set is intentionally bounded to acid and
+alkali burettes, 100/250/1000 mL beakers and 100/250/500 mL Erlenmeyer flasks.
+The rest of the catalog remains required production scope, but catalog count is
+not a substitute for visual approval of this representative set.
 
 Labels alone do not count as a visible difference. Every changed geometry
 parameter must name its provenance class and source, or be explicitly marked
@@ -52,10 +66,13 @@ World → ScientificFrame → ObservableModel → RenderState path.
 The candidate surface follows the local NOBOOK research synthesis: the world
 stage is dominant, inspection remains a separate readable surface, and the
 apparatus is represented as reusable parts/ports rather than a single image.
-This is an architectural/product interpretation, not a claim about NOBOOK's
-internal scientific implementation. The stage also follows the M6 web
-evidence brief's separation of visual representation from scientific truth and
-keeps essential readings in the DOM companion.
+Broad patterns such as `stage + catalog + inspector` and editor/demo density
+separation are allowed references; exact panel positions, widths, icons,
+toolbar order and recognizable scene composition are not. This is an
+architectural/product interpretation, not a claim about NOBOOK's internal
+scientific implementation. The stage also follows the M6 web evidence brief's
+separation of visual representation from scientific truth and keeps essential
+readings in the DOM companion.
 
 ## Candidate evidence
 
@@ -86,10 +103,11 @@ visual acceptance rows from `m6-art-direction.md`:
 | V-P0-5 interaction geometry | PARTIAL | parts/ports exist; complete anchors/hit/capability package is not evidenced |
 | V-P0-6 no cartoon/mixed style | BLOCKED | owner visual review is pending |
 | V-P0-7 coherent family language | BLOCKED | family comparison and material review are pending |
-| V-P0-8 strict measurement view / labelled 2.5D preview | BLOCKED | view-mode separation and captures are not owner-reviewed |
-| V-P0-9 token ranges / forbidden visual patterns | BLOCKED | token QA and forbidden-pattern review are not complete |
+| V-P0-8 orthographic world / strict measurement view / labelled 2.5D preview | BLOCKED | view-mode separation and captures are not owner-reviewed |
+| V-P0-9 size-class LOD tokens / forbidden visual patterns | BLOCKED | size-class token QA, LOD identity review and forbidden-pattern review are not complete |
 | V-P0-10 geometry provenance or approximation rationale | BLOCKED | per-parameter source review is not complete |
 | V-P0-11 acid/alkali actuator mapping | PARTIAL | actuator contract is specified; asset/catalog evidence is not complete |
+| V-P0-12 Gold Master full/thumbnail dual-background review | BLOCKED | first representative family set and both neutral background captures are not owner-reviewed |
 
 Candidate captures are intentionally stored under
 `tests/visual/captures/m6/` and are not approved baselines. Regenerate them
@@ -108,7 +126,11 @@ The normal browser suite skips capture generation unless `M6_CAPTURE=1`.
 |---|---|
 | Original, self-hosted package and source record | Candidate implementation; owner originality review pending |
 | One orthographic family and coherent material tokens | Candidate implementation; owner visual review pending |
+| Orthographic world / frontal measurement presentation / non-measurement 2.5D labels | Contract specified; view captures pending |
+| Master/scene/preview/thumbnail LOD identity | Contract specified; full LOD review pending |
+| Gold Master dark/light background readability | Not run; dual-background captures pending |
 | Geometry and liquid level remain profile-derived | PASS locally at RenderState boundary |
+| Apparatus geometry versus phenomenon/effect overlays | Contract specified; reusable-state visual evidence pending |
 | Runtime text/graduations/liquid are not baked into the master | PASS locally |
 | Optical refusal is not replaced by an invented tint | PASS locally; default fixture displays refusal in DOM and canvas uses neutral liquid |
 | Essential readings remain available without canvas pixels | PASS locally; DOM companion |

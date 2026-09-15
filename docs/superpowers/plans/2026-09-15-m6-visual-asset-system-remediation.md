@@ -18,10 +18,21 @@
 - No new chemistry, optical, WorldState, DomainEvent, replay or persistence semantics.
 - No copying, tracing, scraping or runtime fetching of NOBOOK/vendor artwork.
 - A chemical color is valid only when supplied by the optical-observation contract; refusal stays refusal.
-- Experiment/measurement views are strict orthographic; catalog, inspector and
-  construction previews may be bounded 2.5D only when labelled non-measurement.
-- Visual tokens use the declared hierarchy/ranges and every changed geometry
-  parameter carries source provenance or an explicit approximate-visual rationale.
+- The experiment world uses a fixed orthographic camera with bounded 2.5D depth
+  cues; quantitative evidence uses a strict frontal orthographic measurement
+  presentation; catalog, inspector and construction previews may use bounded
+  2.5D only with an explicit `non-measurement` label.
+- Visual tokens use rendered-height size classes and deterministic LOD rules;
+  every changed geometry parameter carries source provenance or an explicit
+  approximate-visual rationale.
+- Gold Master review starts with acid/alkali burettes, 100/250/1000 mL beakers
+  and 100/250/500 mL Erlenmeyer flasks. The remaining catalog families are not
+  allowed to conceal an unreviewed first visual system.
+- Apparatus geometry is reusable; liquid, gas, bubbles, precipitate, thermal and
+  optical effects are upstream state overlays, never chemistry-specific vessel
+  copies.
+- Every Gold Master is reviewed at full-size and thumbnail scale on both dark
+  and light neutral backgrounds.
 - A visual or interaction failure keeps M6 at S2 and blocks M7 authorization.
 
 ---
@@ -61,9 +72,10 @@ pnpm verify:m6-visual-docs
 
 - [ ] **Step 3: Write the standard/spec and downgrade stale claims.**
 
-Define family geometry, material language, state/interaction separation,
-asset-package contents, no-copy boundary, P0/P1 gates and two-round evidence.
-Keep local catalog/renderer passes as technical evidence only.
+Define family geometry, material language, state/interaction/effect separation,
+surface view modes, size-class/LOD rules, Gold Master scope, asset-package
+contents, no-copy boundary, P0/P1 gates and two-round evidence. Keep local
+catalog/renderer passes as technical evidence only.
 
 - [ ] **Step 4: Verify documentation consistency.**
 
@@ -81,7 +93,9 @@ git add docs/visual docs/evidence/M6.md docs/superpowers/specs
 git commit -m "Define M6 apparatus art direction and visual gate"
 ```
 
-**Stop/go:** GO only when no document calls the rough first slice final-quality and every visual claim points to a binary gate.
+**Stop/go:** GO only when no document calls the rough first slice final-quality,
+every visual claim points to a binary gate, and the planned Gold Master/LOD/
+background evidence is explicit.
 
 ### Task 2: Extend the catalog for construction and interaction semantics
 
@@ -205,6 +219,13 @@ git commit -m "Add apparatus interaction and variant contracts"
 - Consumes: art-direction geometry/material rules and typed catalog specifications.
 - Produces: original layered masters whose semantic parts correspond to catalog IDs and whose specifications have visibly different construction.
 
+The first visual owner gate is a bounded Gold Master set, not the whole
+catalog: acid 25 mL and alkali 50 mL burettes; 100/250/1000 mL beakers; and
+100/250/500 mL Erlenmeyer flasks. Graduated cylinders, volumetric flasks, test
+tubes and connector families remain required catalog work, but cannot be used
+to declare the Gold Master visual language accepted before these first families
+pass.
+
 - [ ] **Step 1: Add failing asset QA tests.**
 
 ```ts
@@ -225,6 +246,16 @@ it("rejects masters outside the visual-token contract", () => {
 it("rejects forbidden visual-pattern markers", () => {
   expect(validateVisualQa(forbiddenCandyGlassFixture())).toThrow("forbidden visual pattern");
 });
+
+it("keeps identity-defining structure in preview and thumbnail LODs", () => {
+  expect(visibleLayers("beaker-250ml", "thumbnail"))
+    .toEqual(expect.arrayContaining(["rim", "spout", "base"]));
+});
+
+it("requires Gold Masters to pass both neutral background fixtures", () => {
+  expect(backgroundQa("burette-acid-25ml-class-as"))
+    .toEqual(expect.arrayContaining(["light-neutral", "dark-neutral"]));
+});
 ```
 
 - [ ] **Step 2: Run QA tests and observe missing construction evidence.**
@@ -237,11 +268,20 @@ pnpm exec vitest run packages/render/src/assets/titration-bench.test.ts
 
 Each master separates silhouette, rim/mouth, wall/base, liquid, meniscus,
 calibration/scale, hardware, highlights, contact shadow and interaction overlay.
-Include burette, beaker, Erlenmeyer, graduated-cylinder, volumetric-flask,
-test-tube and connector families. Keep runtime pH, liquid amount, optical color
-and readouts out of baked art. Acid burettes must visibly expose a glass/PTFE
-rotary stopcock; alkali burettes must visibly expose the rubber-tube/glass-bead
-pinch mechanism. Do not use a generic stopcock for both families.
+Phenomena remain reusable state/effect overlays; do not create
+`bubbling-beaker.svg` or `precipitate-flask.svg`. First produce the Gold Master
+families, then extend the same construction system to graduated-cylinder,
+volumetric-flask, test-tube and connector families. Keep runtime pH, liquid
+amount, optical color and readouts out of baked art. Acid burettes must visibly
+expose a glass/PTFE rotary stopcock; alkali burettes must visibly expose the
+rubber-tube/glass-bead pinch mechanism. Do not use a generic stopcock for both
+families.
+
+For each Gold Master produce deterministic `master`, `scene`, `preview` and
+`thumbnail` LODs. Preview/thumbnail may omit minor graduations, tiny labels,
+micro seams and noncritical shadows, but must retain silhouette, opening/neck,
+spout/outlet, actuator and detachable-part cues. All LODs share semantic
+dimensions, profile identity, parts and actuator kind.
 
 - [ ] **Step 4: Add QA records and comparison sheet.**
 
@@ -249,8 +289,10 @@ Record source class, approximation scope, structural checks, variant dimensions,
 changed-parameter provenance and visual limitations. Produce two sheets: one at
 declared physical scale with measurement-valid labels, and one at normalized
 shape scale with a legend of intentionally changed dimensions. Mark the latter
-visual-only. Run the visual-token ranges and forbidden-pattern checklist over
-every master and state variant.
+visual-only. Run size-class visual-token ranges and forbidden-pattern checks over
+every master, LOD and state variant. Capture every Gold Master at full-size and
+thumbnail scale on both dark-neutral and light-neutral backgrounds; record
+contrast, token class, viewport and reviewer disposition.
 
 - [ ] **Step 5: Run package/source QA.**
 
@@ -268,7 +310,10 @@ git add assets/apparatus
 git commit -m "Create M6 family construction masters and visual QA"
 ```
 
-**Stop/go:** GO only when an owner can identify main apparatus and capacity differences from the comparison sheet without reading code.
+**Stop/go:** GO only when an owner can identify main apparatus and capacity
+differences from the comparison sheet without reading code, every Gold Master
+retains identity at thumbnail size, and neither neutral background requires an
+unapproved visual workaround.
 
 ### Task 4: Bind runtime rendering to the family system
 
@@ -297,9 +342,17 @@ it("does not invent an optical color when the observable is refused", () => {
   expect(renderStateForRefusal().inspection.tint).toEqual("neutral");
 });
 
-it("keeps measurement projection strict and marks 2.5D previews non-measurement", () => {
-  expect(viewSpec("experiment").projection).toBe("orthographic");
+it("keeps experiment depth orthographic and measurement presentation frontal", () => {
+  expect(viewSpec("experiment-world").projection).toBe("orthographic");
+  expect(viewSpec("measurement").measurementQualified).toBe(true);
   expect(viewSpec("catalog-preview").measurementQualified).toBe(false);
+});
+
+it("selects a smaller LOD without changing semantic identity", () => {
+  expect(assetLod("beaker-250ml", "thumbnail").profileHash)
+    .toBe(assetLod("beaker-250ml", "master").profileHash);
+  expect(visibleLayers("beaker-250ml", "thumbnail"))
+    .toEqual(expect.arrayContaining(["rim", "spout", "base"]));
 });
 ```
 
@@ -314,9 +367,12 @@ pnpm exec vitest run packages/render/src/pixi/renderer.test.ts packages/render/s
 Select geometry by specification ID and use only Observable fields for liquid,
 meniscus, readout and optical result. Keep hit regions/anchors and actuator
 records in representation data and do not create World events. Reuse central
-tokens and avoid chemistry-name branches. Enforce strict orthographic camera
-metadata for experiment/measurement views; any 2.5D catalog/inspector preview
-must be labelled non-measurement.
+tokens and avoid chemistry-name branches. Use a fixed orthographic camera with
+bounded 2.5D depth cues for the experiment world; route quantitative readings
+through a strict frontal `measurement` presentation. Any
+catalog/inspector/construction 2.5D preview must be labelled non-measurement.
+Select LOD by rendered size class, retain identity-defining features in
+thumbnails, and keep liquid/effect layers separate from apparatus geometry.
 
 - [ ] **Step 4: Run boundaries.**
 
@@ -361,8 +417,9 @@ test("each viewport keeps apparatus and accessible readouts legible", async ({ p
 });
 ```
 
-Also assert refusal copy, one pH convention per view, core labels, focus targets
-and no external requests.
+Also assert refusal copy, one pH convention per view, core labels, focus targets,
+no external requests, the `measurement` versus non-measurement view label and
+the fact that the DOM companion remains available when the canvas is reduced.
 
 - [ ] **Step 2: Run browser tests and observe incomplete composition evidence.**
 
@@ -384,6 +441,10 @@ pnpm exec playwright test tests/visual/capture.spec.ts --project=chromium
 
 Review each capture twice: first for clipping/overlap/state correctness, then
 for proportion/material/variant/typography/originality/accessibility quality.
+Repeat the visual pass against a dark-neutral and a light-neutral background.
+Capture at least one full-size and one thumbnail-size Gold Master per family;
+the preview/thumbnail must retain the identity-defining structure and may not
+be a merely scaled construction master.
 
 - [ ] **Step 5: Commit.**
 
@@ -392,7 +453,9 @@ git add tests/visual docs/evidence/M6.md docs/visual/review-m6.md apps/web
 git commit -m "Add M6 visual state and viewport evidence"
 ```
 
-**Stop/go:** GO only when captures are reproducible and no viewport hides apparatus, scale, liquid state or DOM readout.
+**Stop/go:** GO only when captures are reproducible, both background conditions
+remain legible, no viewport hides apparatus/scale/liquid state/DOM readout, and
+the experiment surface is not silently replaced by an editor/catalog layout.
 
 ### Task 6: Two-round cross-system audit and handoff
 
@@ -434,13 +497,19 @@ git diff --check
 Audit specifically for central version distribution, Sci/World renderer imports,
 molality/molarity bypass, optical refusal fallback, profile/hash mismatch,
 snapshot hashes, full-transfer conservation, event/replay drift and false PASS.
+Also audit orthographic-camera versus measurement-view ownership, forbidden
+perspective convergence, size-class token selection, preview/thumbnail semantic
+identity, dual-background legibility, effect-layer separation, actuator
+distinction and NOBOOK layout/originality boundaries.
 
 - [ ] **Step 2: Run independent visual/source audit.**
 
 Check each family against the art direction, apparatus standard, Zhejiang
-research matrix and source records. Inspect masters, comparison sheets, state
-fixtures, hit geometry, screenshots and accessibility copy without relying on
-the test summary.
+research matrix and source records. Inspect Gold Masters first, then remaining
+family masters, comparison sheets, every LOD, state fixtures, hit geometry,
+screenshots and accessibility copy without relying on the test summary. Check
+both dark/light neutral backgrounds and verify that measurement evidence uses
+the frontal presentation only.
 
 - [ ] **Step 3: Update evidence without upgrading unsupported rows.**
 
@@ -464,9 +533,12 @@ git commit -m "Record M6 visual system audit handoff"
 | M6-VISUAL-SYSTEM | Art direction and forbidden-pattern contract | S1/S2 |
 | M6-FAMILY-VARIANTS | normalized geometry signatures differ | S2 |
 | M6-STRUCTURE | construction details and comparison sheet | S2 + owner review |
+| M6-GOLD-MASTER | acid/alkali burettes, 100/250/1000 mL beakers and 100/250/500 mL Erlenmeyer flasks pass full/thumbnail dual-background review | S2 + owner review |
+| M6-LOD | master/scene/preview/thumbnail retain semantic identity while allowing deterministic detail reduction | S2 |
+| M6-VIEW-MODE | experiment world is bounded orthographic 2.5D; quantitative evidence is strict frontal measurement presentation; other 2.5D views are labelled non-measurement | S2 + owner review |
 | M6-STATE | Observable-driven state fixtures | S2 |
 | M6-INTERACTION | parts/ports/anchors/hit/capability tests | S2 |
-| M6-MATERIAL | screenshots and material review | S2 + owner review |
+| M6-MATERIAL | screenshots, size-class tokens, dual-background and material review | S2 + owner review |
 | M6-REPLAY | existing world/profile/hash suite green | regression |
 | M6-ACCESSIBILITY | browser/DOM/focus/contrast evidence | S2 + owner review |
 | M6-PRIVACY | artifact/network checks | S2 |

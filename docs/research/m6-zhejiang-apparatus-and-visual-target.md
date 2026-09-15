@@ -122,6 +122,65 @@ catalog → instantiate → configure → assemble → inspect → observe → s
 3. M6 只落地 Representation Engine 的资产包和静态 composition，不声称
    已经实现 NOBOOK 的完整交互、教学、音效或化学覆盖。
 
+### NOBOOK product-surface audit and the correct benchmark
+
+The official integration surface exposes independent visibility/configuration
+for top, left, right and bottom toolbars, settings, save, player controls,
+information and the equipment library. The official chemistry UI material also
+distinguishes a construction/editor surface from a cleaner demo/player surface:
+the former exposes search, category, equipment properties, zoom and rotation;
+the latter prioritizes the experiment stage and hides authoring chrome. This is
+useful evidence for **surface separation**, not permission to reproduce the
+same toolbar order, panel widths, icon shapes or scene arrangement.
+
+NOBOOK should be treated as a lower-bound product benchmark for clarity,
+discoverability, recognizability and feedback density—not as an industrial CAD
+or photorealistic rendering target, and not as ChemRealm's design bible. The
+ChemRealm target is therefore:
+
+```text
+credible physical structure
+  + clean, low-saturation material language
+  + readable at thumbnail and scene scale
+  + reusable parts/ports and detachable relations
+  + explicit state/effect overlays
+  + measurement-qualified frontal presentation
+  + original layout and visual identity
+```
+
+The main world may use an orthographic camera with restrained 2.5D depth cues
+for rims, walls, rear hardware and ports. Only the separate measurement
+presentation is qualified for readings. Catalog, inspector and construction
+previews may use bounded 2.5D and must say `non-measurement view`. This avoids
+the false choice between a flat engineering diagram and a perspective-heavy
+game scene.
+
+The asset production unit is consequently not one PNG/SVG:
+
+```text
+master/construction
+  → scene LOD
+  → preview LOD
+  → thumbnail LOD
+  → state/effect overlays
+  → manifest + parts/ports + profile + provenance + QA
+```
+
+The preview and thumbnail retain the silhouette and identity-defining features
+(opening/neck, spout/outlet, actuator, side arm, stopper or detachable cue),
+but may omit minor graduations, tiny labels, micro seams and noncritical
+shadows. They share semantic dimensions and profile identity with the master;
+they are not simply the construction artboard scaled down and they are never
+measurement evidence.
+
+The visual QA baseline uses four rendered-size classes rather than a fixed
+1440-pixel stroke recipe. This follows the general purpose of LOD—reducing
+detail and rendering cost for smaller/distant representations—while preserving
+ChemRealm's stronger requirement that every LOD remain semantically
+recognizable. A dual-background review is required: dark neutral and light
+neutral. A black outline on a light background or a white halo on a dark
+background is not an acceptable substitute for material contrast.
+
 ## 首批资产包的完整性定义
 
 同一种器材不是一个 `assetId` 加一个可变 label，而是：
@@ -171,6 +230,15 @@ familyId
 - 颜色信息始终来自 Observable/OpticalObservation；几何材质色不能冒充
   指示剂化学颜色；
 - 窄视口保留 DOM 读数，不以缩小画布掩盖重要状态。
+- Gold Master 先覆盖酸式/碱式滴定管、100/250/1000 mL 烧杯和
+  100/250/500 mL 锥形瓶；其余器材族在同一构造系统中继续扩展，但不能以
+  “目录数量多”替代首批视觉验收。
+- 同一器材 geometry 复用 empty/loaded/gas/precipitate/bubble/thermal/optical
+  state；现象是 Observable/RenderState 的 overlay，不生成
+  `bubbling-beaker.svg` 等按化学现象复制的器材资产。
+- 计量读数必须进入 measurement view；滴定管刻度 0 在上、向下递增，凹液面
+  读最低点，读数以 mL 和声明精度呈现。剩余液量和滴定管刻度读数不是同一
+  个量。
 
 M6 的截图只能称为 candidate capture，达到 NOBOOK 或超过 NOBOOK 的判断
 必须由 owner 对四个命名视口逐张审阅；若细节在 tablet/narrow 中不可辨识，
@@ -187,6 +255,20 @@ NOBOOK 页面给出产品表面能力，但不能证明其科学内核。M6 因�
 - 对高频实验器材做逐件 source review；
 - 用真实连接/拆卸操作进入 M7 World command boundary；
 - 用截图、可访问 DOM、原创性检查和 owner visual review 形成 S3 证据。
+
+## 研究结论如何转成可验收的资产规则
+
+| 研究观察 | ChemRealm 规则 | 证据形式 |
+|---|---|---|
+| NOBOOK 将工具栏、器材库、属性/信息区、播放器表面分层 | 允许 `experiment-world`、`measurement`、`catalog-preview`、`inspector`、`construction`、`demo-player` 模式；禁止复制具体布局 | view-mode metadata、截图、原创性审查 |
+| 小尺寸器材仍需可识别 | thumbnail LOD 保留开口/颈/嘴/阀/侧管等身份特征；minor/micro detail 可合并 | 32–96 px capture + layer assertion |
+| SVG 有逻辑 viewBox/比例保持机制 | viewBox 只管逻辑画布，保留 mm 语义；不得让 SVG 缩放掩盖错误的物理 profile | manifest + profile round-trip |
+| 细线抗锯齿会损失可读性 | size-class stroke clamp + 双背景人工 review；重要非文本图形目标至少 3:1 | token QA + contrast record |
+| 浙江选考强调实验设计、操作和迁移 | 目录覆盖定量、承接、分离/制备/检验与连接件，首批 Gold Master 先验证代表性家族 | Zhejiang coverage matrix + family comparison sheets |
+
+上述规则仍然不把产品界面或器材外形宣称成国家标准事实。尺寸来源是
+`manufacturer-anchor` 或 `reported` 时才可作为尺寸证据；标准只证明标准族或
+教学配置；统一视图所需的近似必须标注 `approximate-visual`。
 
 ## 文档闭合补充：器材机构、视图与视觉 token
 
@@ -240,3 +322,10 @@ NOBOOK 页面给出产品表面能力，但不能证明其科学内核。M6 因�
 17. [DWK/DURAN 25 mL Class B measuring cylinder](https://www.dwk.com/duran-measuring-cylinder-with-hexagonal-base-class-b-25-ml-213961403)。用于小规格量筒的直径、高度和刻度族锚点。
 18. [Corning/PYREX laboratory glassware selection guide](https://www.corning.com/catalog/cls/documents/selection-guides/CLS-GL-001.pdf)。用于多容量玻璃器材族和识别特征的交叉参考。
 19. [Fisher rubber stopper assortment](https://www.fishersci.com/shop/products/rubber-stopper-assortment/s67823)。用于锥形橡胶塞和多孔塞的结构/材质参考。
+20. [国家标准信息公共服务平台：GB/T 12805—2011 玻璃仪器 滴定管](https://std.samr.gov.cn/gb/search/gbDetailed?id=71F772D7FD44D3A7E05397BE0A0AB82A)。用于滴定管标准族/计量语境，不替代具体资产尺寸。
+21. [教学实验参考：酸式与碱式滴定管](https://www.muhn.edu.cn/ecmd/info/1481/14785.htm)。用于玻璃旋塞与橡胶管/玻璃珠机构、刻度方向和读数操作线索。
+22. [DWK/PYREX 25 mL burette reference](https://www.dwk.com/pyrex-automatic-burette-class-as-schellbach-stripe-with-ptfe-key-and-intermediate-stopcock-25-ml-349604as)。用于 Schellbach 条纹、PTFE 旋塞、容量/刻度和制造商规格锚点。
+23. [W3C WCAG 2.2 non-text contrast](https://www.w3.org/WAI/WCAG22/understanding/non-text-contrast.html)。用于有意义非文本图形和控件状态对比度参考。
+24. [MDN SVG `viewBox`](https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Attribute/viewBox) 与 [`preserveAspectRatio`](https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Attribute/preserveAspectRatio)。用于 SVG 逻辑坐标和比例保持边界。
+25. [MDN SVG `vector-effect`](https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Attribute/vector-effect)。用于 `non-scaling-stroke` 的适用范围判断，不替代尺寸级 token。
+26. [Unity Level of Detail guidance](https://docs.unity3d.com/es/2020.2/Manual/LevelOfDetail.html)。用于 LOD 的通用表现/性能 rationale，不作为 ChemRealm 科学或器材事实来源。
