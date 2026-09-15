@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Status:** Implementation is locally complete; the common-k method cross-check
-requires a new exact committed-baseline hosted attestation. Owner acceptance of
-the candidate amendments remains open.
+**Status:** Implementation and common-k method evidence are attested on
+committed baseline `1186479849d0c09b4113cc26108386897de1267d` by hosted CI #147
+(`34928786266`); owner acceptance of the candidate amendments remains open.
 
 **Goal:** Replace the invalid three-point production colour path with a source-attributed, full-visible-spectrum colourimetry transform whose optical constants and evidence cannot be mistaken for a test fixture.
 
@@ -178,5 +178,5 @@ scientific model or implementing the documented strong-acid orange regime.
 - [x] Add a common-k CIE method cross-check and record bounded differences for
   XYZ, chromaticity, and encoded sRGB.
 - [x] Add CI/package gates and remove the stale M5 #140 current-status wording.
-- [ ] Record the new exact committed-baseline hosted attestation after CI success.
+- [x] Record the new exact committed-baseline hosted attestation after CI success: `1186479849d0c09b4113cc26108386897de1267d`, CI #147 (`34928786266`).
 - [ ] Owner reviews applicable candidate revisions before M6 authorization.
