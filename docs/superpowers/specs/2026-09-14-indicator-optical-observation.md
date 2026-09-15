@@ -27,14 +27,24 @@ single function of a label or a pH threshold. Under the dilute-solution
 Beer–Lambert approximation, wavelength-specific absorbance is
 
 \[
-A(\lambda) = \ell\sum_i \epsilon_i(\lambda)c_i,
-\qquad T(\lambda)=10^{-A(\lambda)},
+\alpha_N(\lambda) = \ell\sum_i \epsilon_{N,i}(\lambda)c_i,
+\qquad T(\lambda)=\exp[-\alpha_N(\lambda)],
 \]
 
-where \(\epsilon_i\) is the molar absorptivity of each optical species,
-\(c_i\) its concentration, and \(\ell\) a declared optical path length. The
-transmission spectrum must then be combined with an illuminant and observer
-convention before a display-space colour can be derived.
+or, for a profile that explicitly declares decadic absorptivity,
+
+\[
+A_{10}(\lambda) = \ell\sum_i \epsilon_{10,i}(\lambda)c_i,
+\qquad T(\lambda)=10^{-A_{10}(\lambda)}.
+\]
+
+Here the profile-declared epsilon convention is either Napierian \(\epsilon_N\)
+or decadic \(\epsilon_{10}\), \(c_i\) is the concentration of each optical
+species, and \(\ell\) is a declared optical path length. A Napierian value is
+converted to the equivalent decadic value only by the explicit factor
+\(\epsilon_{10}=\epsilon_N/\ln(10)\). The transmission spectrum must then be
+combined with an illuminant and observer convention before a display-space
+colour can be derived.
 
 Phenolphthalein is the required adversarial case. Its neutral lactone is
 colourless through ordinary acidic and near-neutral aqueous conditions; the
@@ -224,18 +234,25 @@ illuminant, observer, colour-space conversion convention
 review status and known limitations
 ```
 
-At runtime, all covered forms are combined wavelength-by-wavelength:
+At runtime, all covered forms are combined wavelength-by-wavelength using the
+convention declared by every spectrum:
 
 \[
-A(\lambda) = \ell\sum_i \epsilon_i(\lambda)c_{\mathrm{total}}f_i,
-\quad T(\lambda)=10^{-A(\lambda)}.
+\alpha_N(\lambda) = \ell\sum_i \epsilon_{N,i}(\lambda)c_{\mathrm{total}}f_i,
+\quad T(\lambda)=\exp[-\alpha_N(\lambda)],
 \]
 
-The model uses a fixed declared illuminant and observer (initially D65 and CIE
-1931 2°), integrates transmitted spectral power into XYZ, then uses a pinned
-sRGB transform. These conventions are part of optical profile provenance and
-replay identity. The result is a **presentation tint**, never a literal claim
-about bulk liquid opacity.
+with the equivalent decadic expression used only for spectra declaring
+\(\epsilon_{10}\). The UCRL-965470 anchor used by the admitted ordinary
+phenolphthalein profile is Napierian.
+
+The model uses the admitted CIE D65 and CIE 1931 2° table on a checked-in
+380–780 nm, 5 nm grid. It integrates transmitted spectral power into XYZ,
+normalizes each component against the corresponding blank D65/observer
+integral, scales to the IEC D65 reference white, then uses the pinned sRGB
+transform. These conventions are part of optical profile provenance and replay
+identity. The result is a **presentation tint**, never a literal claim about
+bulk liquid opacity.
 
 The initial implementation may only include forms for which complete numerical
 spectral data and conditions are checked in. A source that gives a colour word
@@ -384,11 +401,12 @@ equilibrium equations. It consumes only the validated chemical form fractions,
 conserved dose/volume-derived concentration, declared path length, and frozen
 spectral profile.
 
-`Yblank` and `Ytransmitted` are the same pinned observer/illuminant integration
-with, respectively, unit and calculated transmission. `tintStrength` is thus a
-deterministic display aid derived from the optical calculation, not an arbitrary
-opacity knob. The renderer may apply its material policy to that value but must
-not substitute a different chemistry-dependent strength.
+`Xblank`, `Yblank`, and `Zblank` and their transmitted counterparts are the same
+pinned observer/illuminant integrations with, respectively, unit and calculated
+transmission. `tintStrength` uses the normalized transmitted Y component and is
+thus a deterministic display aid derived from the optical calculation, not an
+arbitrary opacity knob. The renderer may apply its material policy to that
+value but must not substitute a different chemistry-dependent strength.
 
 ## Learning design
 
@@ -506,7 +524,7 @@ implementation claims completion:
 | ID | Criterion |
 |---|---|
 | AC-O1 | Every optical profile resolves to checked-in spectral data, conditions, source provenance, review record, and content hash. |
-| AC-O2 | Display tint is derived from declared species fractions, total indicator concentration, path length, spectral absorptivity, and pinned illuminant/observer conversion; no endpoint RGB fallback is used. |
+| AC-O2 | Display tint is derived from declared species fractions, total indicator concentration, path length, a full checked-in 380–780 nm/≤5 nm spectral profile, its declared Napierian or decadic Beer–Lambert convention, blank-normalized CIE D65/1931-2° integration, and pinned IEC sRGB conversion; no test-only table or endpoint RGB fallback is used. |
 | AC-O3 | A state without a covered form/profile/condition returns a tagged optical refusal and no display colour. |
 | AC-O4 | Phenolphthalein ordinary lactone, alkaline quinoid, and extreme-acid cation are distinct cases; the extreme-acid orange case cannot be emitted by the v0 monoprotic model. |
 | AC-O5 | Doubling concentration or path length has the declared Beer–Lambert absorbance effect inside the profile domain. |

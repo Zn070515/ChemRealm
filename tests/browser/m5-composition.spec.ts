@@ -14,7 +14,7 @@ test.describe("M5 production composition", () => {
     await expect(page.getByTestId("burette-reading")).toHaveText(/mL$/);
     await expect(page.getByTestId("indicator-id")).toHaveText("phenolphthalein");
     await expect(page.getByTestId("indicator-optical-status")).toHaveText(
-      "OPTICAL_MODEL_OK",
+      "OPTICAL_MODEL_OUT_OF_COVERAGE",
     );
     await expect(page.getByTestId("indicator-amount")).toHaveText("0.000002505 mol");
     await expect(page.getByTestId("indicator-concentration")).toHaveText("0.00005 mol/L");
@@ -25,12 +25,10 @@ test.describe("M5 production composition", () => {
     await expect(page.getByTestId("indicator-profile-hash")).toHaveText(
       /^sha256:[0-9a-f]{64}$/,
     );
-    await expect(page.getByTestId("indicator-tint-strength")).toHaveText(/^0\.[0-9]+$/);
-    expect(Number(await page.getByTestId("indicator-tint-strength").textContent())).toBeGreaterThan(0);
-    await expect(page.getByTestId("indicator-transmittance-samples")).toHaveText("3");
-    await expect(page.getByTestId("indicator-swatch")).toHaveCount(1);
-    await expect(page.getByTestId("indicator-swatch")).toHaveAttribute("data-optical-model", "true");
-    await expect(page.getByTestId("indicator-optical-limitation")).toHaveCount(0);
+    await expect(page.getByTestId("indicator-swatch")).toHaveCount(0);
+    await expect(page.getByTestId("indicator-optical-limitation")).toContainText(
+      "temperature is outside optical profile coverage",
+    );
     await expect(page.getByTestId("symbolic-expression")).toContainText("Scientific Core");
     await expect(page.getByTestId("symbolic-expression")).toContainText("m(H+)");
     expect(await page.getByTestId("curve-point").count()).toBeGreaterThanOrEqual(4);

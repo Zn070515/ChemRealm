@@ -1,17 +1,26 @@
 {
   "referenceId": "colourimetry-d65-cie-srgb",
-  "status": "reference-only",
-  "wavelengthIntervalNanometres": 1,
-  "wavelengthRangeNanometres": {
-    "min": 380,
-    "max": 780
-  },
+  "status": "production",
+  "artifact": "packages/render/src/observable/colourimetry-cie-d65-1931-2deg-5nm.json",
+  "wavelengthIntervalNanometres": 5,
+  "wavelengthRangeNanometres": { "min": 380, "max": 780 },
   "illuminant": "CIE D65",
   "observer": "CIE 1931 2-degree",
   "transform": "sRGB IEC 61966-2-1",
-  "normalisation": "relative spectral integration; no indicator spectrum admitted",
-  "dataUrl": "https://registry.color.org/colorimetry-data/",
+  "normalisation": "Each transmitted XYZ component is divided by the corresponding blank D65/1931-2° integral and scaled to the IEC D65 reference white (Xn=0.95047, Yn=1, Zn=1.08883) before XYZ-to-sRGB encoding.",
+  "sourceDatasets": {
+    "illuminant": {
+      "dataset": "CIE_std_illum_D65.csv",
+      "url": "https://files.cie.co.at/Publications-datasets/CIE_std_illum_D65.csv",
+      "md5": "03d4eb9b837c60671627c946fb534deb"
+    },
+    "observer": {
+      "dataset": "CIE_xyz_1931_2deg.csv",
+      "url": "https://files.cie.co.at/Publications-datasets/CIE_xyz_1931_2deg.csv",
+      "md5": "17cca777db64b17170f06f67ce9d3ab7"
+    }
+  },
   "sourceRecord": "colourimetry-d65-cie-srgb.source.md",
-  "sourcePrecision": "reference metadata only; source arrays are not copied into a production indicator profile",
-  "admissionReason": "colourimetry transform/reference packet only; it cannot substitute for indicator-specific spectra"
+  "sourcePrecision": "The local table selects exact 1 nm source rows at 5 nm intervals; it is a derived numerical quadrature artifact, not an indicator spectrum.",
+  "admissionReason": "Production colourimetry transform/reference data only; it supplies D65/observer integration and sRGB encoding, never missing indicator absorptivity."
 }

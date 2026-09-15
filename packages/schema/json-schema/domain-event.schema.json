@@ -275,6 +275,13 @@
                             "items": {
                               "additionalProperties": false,
                               "properties": {
+                                "epsilonConvention": {
+                                  "enum": [
+                                    "decadic",
+                                    "napierian"
+                                  ],
+                                  "type": "string"
+                                },
                                 "epsilonUnit": {
                                   "const": "L mol^-1 cm^-1",
                                   "type": "string"
@@ -315,6 +322,7 @@
                                 "formId",
                                 "spectrumId",
                                 "epsilonUnit",
+                                "epsilonConvention",
                                 "samples"
                               ],
                               "type": "object"
@@ -342,7 +350,7 @@
                             "type": "string"
                           },
                           "profileVersion": {
-                            "const": "1.0.0",
+                            "const": "2.0.0",
                             "type": "string"
                           },
                           "provenance": {

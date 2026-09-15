@@ -1,42 +1,54 @@
-# CIE D65 / CIE 1931 2° / sRGB reference packet
+# CIE D65 / CIE 1931 2° / sRGB production reference packet
 
 ## Status
 
-- candidate: `colourimetry-d65-cie-srgb`
-- review status: `reference-only`
-- quantitative indicator profile: **NOT ADMITTED**
+- candidate: colourimetry-d65-cie-srgb
+- review status: admitted production colourimetry artifact
+- indicator spectra: not supplied by this packet
+- local artifact: packages/render/src/observable/colourimetry-cie-d65-1931-2deg-5nm.json
 
-## Citation and source
+This packet admits only the colourimetry transform. It does not turn a colour
+word, a swatch, or a reported wavelength maximum into an indicator spectrum.
+The indicator-specific profile remains a separate, source-reviewed artifact.
 
-- Citation: Commission Internationale de l'Éclairage, *Colorimetry — 4th
-  Edition* (CIE 015:2018), and the CIE Color Data Registry.
-- Source URL: <https://www.cie.co.at/publications/colorimetry-4th-edition>
-- Machine-readable registry URL:
-  <https://registry.color.org/colorimetry-data/>
-- Accessed on: 2026-09-14.
+## Citation and source data
 
-The registry is the reference for the CIE D65 relative spectral power
-distribution and CIE 1931 2° colour-matching-function data used by a future
-optical integration. The sRGB IEC 61966-2-1 encoding is a declared output
-transform, not an indicator spectrum.
+The local table is derived from the CIE machine-readable data sets:
 
-## Extraction and precision
+- CIE, CIE standard illuminant D65, DOI 10.25039/CIE.DS.hjfjmt59,
+  https://files.cie.co.at/Publications-datasets/CIE_std_illum_D65.csv;
+  source MD5 03d4eb9b837c60671627c946fb534deb.
+- CIE, CIE 1931 standard colorimetric observer colour-matching functions,
+  DOI 10.25039/CIE.DS.xvudnb9b,
+  https://files.cie.co.at/Publications-datasets/CIE_xyz_1931_2deg.csv;
+  source MD5 17cca777db64b17170f06f67ce9d3ab7.
+- The output encoding is the IEC 61966-2-1 sRGB D65 transform.
 
-No source array is copied into a production profile in this packet. The
-reference JSON records wavelength interval and transform metadata only. No
-source precision is promoted, no digitisation is performed, and no colour
-value is inferred for an indicator without an indicator-specific spectrum.
+The source data was accessed on 2026-09-15. The repository artifact selects
+the exact 1 nm source rows at a uniform 5 nm interval from 380 through 780 nm
+(81 rows). It does not interpolate the CIE arrays and does not copy any
+indicator spectrum.
 
-## Rights and conditions
+## Numerical convention
 
-The external registry remains the source of the reference arrays. Reusable
-rights for copied arrays have not been admitted here. Indicator concentration,
-optical path length, solvent, temperature, and acidity conditions are not
-supplied by this colourimetry packet.
+For transmittance T(lambda), the Representation Engine integrates
+T(lambda) times D65(lambda) times each CIE 1931 colour-matching function with
+trapezoidal quadrature. Each transmitted component is normalized by the
+corresponding blank integral from the same table, then scaled to the IEC D65
+reference white (0.95047, 1, 1.08883) before the standard XYZ-to-linear-sRGB
+matrix and sRGB transfer function. Therefore a transparent blank is white
+within the declared quadrature/transform tolerance.
 
-## Review decision
+This packet is a numerical reference for a deterministic local transform. It
+does not claim that the 5 nm quadrature is identical to a 1 nm integration;
+the source datasets and local sampling interval are explicit so the difference
+can be reproduced.
 
-This packet can define the transform boundary after a future review, but it
-cannot promote a `lambdaMax`, a palette swatch, or any missing indicator
-spectrum into a quantitative observation. The production policy remains
-refusal-first.
+## Rights and boundary
+
+The CIE files remain the external source records. The local artifact records
+dataset identifiers and checksums and is used only as the checked-in
+colourimetry reference. A quantitative indicator profile must separately
+declare its source conditions, absorptivity convention, uncertainty, and
+content hash. Missing indicator data remains a refusal, never a colourimetry
+fallback.

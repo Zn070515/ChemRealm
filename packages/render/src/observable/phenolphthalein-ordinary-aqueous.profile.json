@@ -1,85 +1,1078 @@
 {
   "profileId": "phenolphthalein-ordinary-aqueous",
-  "profileVersion": "1.0.0",
-  "profileHash": "sha256:5f9682e38f9b6608bf3c6dc6d58afa8c7b9becd83b7bd137a8b4833dc10d9975",
+  "profileVersion": "2.0.0",
+  "profileHash": "sha256:8d02fca6fbf715f9a15ee6366e981afde9a68b5062ac8f9cffae3bdcfb03a872",
   "indicatorId": "phenolphthalein",
   "representation": "spectral-molar-absorptivity",
   "formSpectra": [
     {
       "formId": "neutral-lactone",
-      "spectrumId": "phenolphthalein-neutral-lactone-visible-derived-v1",
+      "spectrumId": "phenolphthalein-neutral-lactone-visible-below-sensitivity-v2",
       "epsilonUnit": "L mol^-1 cm^-1",
+      "epsilonConvention": "napierian",
       "samples": [
-        { "wavelengthNanometres": 500, "epsilon": 0 },
-        { "wavelengthNanometres": 510, "epsilon": 0 },
-        { "wavelengthNanometres": 520, "epsilon": 0 }
+        {
+          "wavelengthNanometres": 380,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 385,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 390,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 395,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 400,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 405,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 410,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 415,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 420,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 425,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 430,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 435,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 440,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 445,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 450,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 455,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 460,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 465,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 470,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 475,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 480,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 485,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 490,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 495,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 500,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 505,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 510,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 515,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 520,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 525,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 530,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 535,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 540,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 545,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 550,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 555,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 560,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 565,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 570,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 575,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 580,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 585,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 590,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 595,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 600,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 605,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 610,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 615,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 620,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 625,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 630,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 635,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 640,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 645,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 650,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 655,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 660,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 665,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 670,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 675,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 680,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 685,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 690,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 695,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 700,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 705,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 710,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 715,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 720,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 725,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 730,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 735,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 740,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 745,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 750,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 755,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 760,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 765,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 770,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 775,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 780,
+          "epsilon": 0
+        }
       ]
     },
     {
       "formId": "intermediate-monoanion",
-      "spectrumId": "phenolphthalein-intermediate-monoanion-visible-derived-v1",
+      "spectrumId": "phenolphthalein-intermediate-monoanion-visible-below-sensitivity-v2",
       "epsilonUnit": "L mol^-1 cm^-1",
+      "epsilonConvention": "napierian",
       "samples": [
-        { "wavelengthNanometres": 500, "epsilon": 0 },
-        { "wavelengthNanometres": 510, "epsilon": 0 },
-        { "wavelengthNanometres": 520, "epsilon": 0 }
+        {
+          "wavelengthNanometres": 380,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 385,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 390,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 395,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 400,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 405,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 410,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 415,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 420,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 425,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 430,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 435,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 440,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 445,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 450,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 455,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 460,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 465,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 470,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 475,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 480,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 485,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 490,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 495,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 500,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 505,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 510,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 515,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 520,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 525,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 530,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 535,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 540,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 545,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 550,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 555,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 560,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 565,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 570,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 575,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 580,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 585,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 590,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 595,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 600,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 605,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 610,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 615,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 620,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 625,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 630,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 635,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 640,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 645,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 650,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 655,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 660,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 665,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 670,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 675,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 680,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 685,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 690,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 695,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 700,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 705,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 710,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 715,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 720,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 725,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 730,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 735,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 740,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 745,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 750,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 755,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 760,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 765,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 770,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 775,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 780,
+          "epsilon": 0
+        }
       ]
     },
     {
       "formId": "quinoid-base",
-      "spectrumId": "phenolphthalein-quinoid-base-visible-derived-v1",
+      "spectrumId": "phenolphthalein-quinoid-base-visible-digitized-v2",
       "epsilonUnit": "L mol^-1 cm^-1",
+      "epsilonConvention": "napierian",
       "samples": [
-        { "wavelengthNanometres": 500, "epsilon": 4000 },
-        { "wavelengthNanometres": 510, "epsilon": 5500 },
-        { "wavelengthNanometres": 520, "epsilon": 8500 }
+        {
+          "wavelengthNanometres": 380,
+          "epsilon": 5224.3
+        },
+        {
+          "wavelengthNanometres": 385,
+          "epsilon": 4519.9
+        },
+        {
+          "wavelengthNanometres": 390,
+          "epsilon": 3962.25
+        },
+        {
+          "wavelengthNanometres": 395,
+          "epsilon": 2509.43
+        },
+        {
+          "wavelengthNanometres": 400,
+          "epsilon": 1743.39
+        },
+        {
+          "wavelengthNanometres": 405,
+          "epsilon": 1256.18
+        },
+        {
+          "wavelengthNanometres": 410,
+          "epsilon": 906.92
+        },
+        {
+          "wavelengthNanometres": 415,
+          "epsilon": 766.04
+        },
+        {
+          "wavelengthNanometres": 420,
+          "epsilon": 698.53
+        },
+        {
+          "wavelengthNanometres": 425,
+          "epsilon": 766.04
+        },
+        {
+          "wavelengthNanometres": 430,
+          "epsilon": 836.48
+        },
+        {
+          "wavelengthNanometres": 435,
+          "epsilon": 1044.86
+        },
+        {
+          "wavelengthNanometres": 440,
+          "epsilon": 1185.74
+        },
+        {
+          "wavelengthNanometres": 445,
+          "epsilon": 1429.35
+        },
+        {
+          "wavelengthNanometres": 450,
+          "epsilon": 1602.51
+        },
+        {
+          "wavelengthNanometres": 455,
+          "epsilon": 1951.78
+        },
+        {
+          "wavelengthNanometres": 460,
+          "epsilon": 2509.43
+        },
+        {
+          "wavelengthNanometres": 465,
+          "epsilon": 2929.13
+        },
+        {
+          "wavelengthNanometres": 470,
+          "epsilon": 3345.9
+        },
+        {
+          "wavelengthNanometres": 475,
+          "epsilon": 3976.93
+        },
+        {
+          "wavelengthNanometres": 480,
+          "epsilon": 4813.4
+        },
+        {
+          "wavelengthNanometres": 485,
+          "epsilon": 5376.92
+        },
+        {
+          "wavelengthNanometres": 490,
+          "epsilon": 6550.92
+        },
+        {
+          "wavelengthNanometres": 495,
+          "epsilon": 7739.59
+        },
+        {
+          "wavelengthNanometres": 500,
+          "epsilon": 9201.23
+        },
+        {
+          "wavelengthNanometres": 505,
+          "epsilon": 10254.89
+        },
+        {
+          "wavelengthNanometres": 510,
+          "epsilon": 12062.85
+        },
+        {
+          "wavelengthNanometres": 515,
+          "epsilon": 13113.58
+        },
+        {
+          "wavelengthNanometres": 520,
+          "epsilon": 14780.66
+        },
+        {
+          "wavelengthNanometres": 525,
+          "epsilon": 17152.14
+        },
+        {
+          "wavelengthNanometres": 530,
+          "epsilon": 19793.64
+        },
+        {
+          "wavelengthNanometres": 535,
+          "epsilon": 22388.18
+        },
+        {
+          "wavelengthNanometres": 540,
+          "epsilon": 25308.5
+        },
+        {
+          "wavelengthNanometres": 545,
+          "epsilon": 27412.9
+        },
+        {
+          "wavelengthNanometres": 550,
+          "epsilon": 29350
+        },
+        {
+          "wavelengthNanometres": 555,
+          "epsilon": 29350
+        },
+        {
+          "wavelengthNanometres": 560,
+          "epsilon": 26708.5
+        },
+        {
+          "wavelengthNanometres": 565,
+          "epsilon": 23568.05
+        },
+        {
+          "wavelengthNanometres": 570,
+          "epsilon": 15702.25
+        },
+        {
+          "wavelengthNanometres": 575,
+          "epsilon": 11211.7
+        },
+        {
+          "wavelengthNanometres": 580,
+          "epsilon": 7190.75
+        },
+        {
+          "wavelengthNanometres": 585,
+          "epsilon": 4666.65
+        },
+        {
+          "wavelengthNanometres": 590,
+          "epsilon": 2905.65
+        },
+        {
+          "wavelengthNanometres": 595,
+          "epsilon": 1849.05
+        },
+        {
+          "wavelengthNanometres": 600,
+          "epsilon": 1174
+        },
+        {
+          "wavelengthNanometres": 605,
+          "epsilon": 763.1
+        },
+        {
+          "wavelengthNanometres": 610,
+          "epsilon": 587
+        },
+        {
+          "wavelengthNanometres": 615,
+          "epsilon": 293.5
+        },
+        {
+          "wavelengthNanometres": 620,
+          "epsilon": 88.05
+        },
+        {
+          "wavelengthNanometres": 625,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 630,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 635,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 640,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 645,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 650,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 655,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 660,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 665,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 670,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 675,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 680,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 685,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 690,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 695,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 700,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 705,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 710,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 715,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 720,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 725,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 730,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 735,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 740,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 745,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 750,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 755,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 760,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 765,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 770,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 775,
+          "epsilon": 0
+        },
+        {
+          "wavelengthNanometres": 780,
+          "epsilon": 0
+        }
       ]
     }
   ],
   "conditions": {
     "solvent": "water",
     "temperature": {
-      "min": { "value": 293.15, "unit": "K" },
-      "max": { "value": 298.15, "unit": "K" }
+      "min": {
+        "value": 293.15,
+        "unit": "K"
+      },
+      "max": {
+        "value": 293.15,
+        "unit": "K"
+      }
     },
     "concentration": {
-      "min": { "value": 0.000049, "unit": "mol/L" },
-      "max": { "value": 0.000051, "unit": "mol/L" }
+      "min": {
+        "value": 0.00005,
+        "unit": "mol/L"
+      },
+      "max": {
+        "value": 0.00005,
+        "unit": "mol/L"
+      }
     },
     "pathLength": {
-      "min": { "value": 10, "unit": "mm" },
-      "max": { "value": 10, "unit": "mm" }
+      "min": {
+        "value": 10,
+        "unit": "mm"
+      },
+      "max": {
+        "value": 10,
+        "unit": "mm"
+      }
     },
     "ionicStrengthMolal": {
-      "min": { "value": 0, "unit": "mol/kg" },
-      "max": { "value": 0.12, "unit": "mol/kg" }
+      "min": {
+        "value": 0.02,
+        "unit": "mol/kg"
+      },
+      "max": {
+        "value": 0.06,
+        "unit": "mol/kg"
+      }
     },
-    "ph": { "min": 9.5, "max": 10.5 }
+    "ph": {
+      "min": 9.5,
+      "max": 10.5
+    }
   },
   "illuminant": "D65",
   "observer": "CIE-1931-2deg",
   "transform": "sRGB-IEC-61966-2-1",
   "provenance": {
-    "source": "Alim et al. Figure 1 visible-spectrum shape with an independent UCRL-965470 epsilon-552 nm anchor",
+    "source": "Kouderis et al. Figure 1 visible-spectrum shape, scaled with the independent UCRL-965470 epsilon(552 nm) anchor",
     "reference": "docs/research/indicator-optics/phenolphthalein-ordinary-aqueous.source.md",
     "category": "pedagogicalApproximation",
-    "uncertainty": "Derived visible-grid values are approximately 20% relative; the ordinary 20–25 °C transfer and transparent non-quinoid forms are bounded approximations, not universal chemistry data."
+    "uncertainty": "The Figure 1 trace is digitized at 5 nm and the derived absorptivity scale retains approximately 20% relative uncertainty; neutral and intermediate visible absorption are treated as below-sensitivity for this bounded observation."
   },
   "source": {
-    "citation": "Alim et al., Molecules 28 (2023) 1147, Figure 1; UCRL-965470, epsilon at 552 nm anchor",
-    "sourceUrl": "https://www.mdpi.com/1420-3049/28/3/1147",
-    "accessedOn": "2026-09-14",
+    "citation": "Kouderis, Tsigoias, Siafarika, and Kalampounias, The Effect of Alkali Iodide Salts in the Inclusion Process of Phenolphthalein in β-Cyclodextrin: A Spectroscopic and Theoretical Study, Molecules 28 (2023) 1147, Figure 1; UCRL-965470 epsilon(552 nm) anchor",
+    "sourceUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9920586/",
+    "accessedOn": "2026-09-15",
     "licenseOrPermission": "open",
     "extractionMethod": "digitized",
-    "rawDataLocation": "Figure 1 grey 0 microlitre beta-cyclodextrin trace; derived samples are recorded directly in this profile",
-    "reportedPrecision": "Graphical source; samples are not source-tabulated. Approximately 20% relative digitisation/transfer uncertainty is retained. The epsilon-552 nm scale is anchored independently at 2.935e4 L mol^-1 cm^-1.",
-    "digitisationUncertainty": "approximately 20% relative for the derived 500/510/520 nm shape",
+    "rawDataLocation": "Figure 1 grey 0 μl β-cyclodextrin trace; values sampled every 5 nm from 380–780 nm and scaled by the UCRL 552 nm anchor",
+    "reportedPrecision": "Graphical source, not tabulated: digitized shape approximately 20% relative uncertainty; 552 nm scale anchor is Napierian epsilon = 2.935e4 L mol^-1 cm^-1",
+    "digitisationUncertainty": "approximately 20% relative for the digitized visible trace and cross-source scaling",
     "conditions": {
-      "solvent": "aqueous solution",
-      "temperature": "20.00 ± 0.01 °C source measurement; 20–25 °C production transfer is bounded and labelled approximate",
-      "concentration": "5e-5 mol/L phenolphthalein source solution",
+      "solvent": "aqueous phenolphthalein solution with sodium carbonate medium",
+      "temperature": "20.00 ± 0.01 °C",
+      "concentration": "5e-5 mol/L phenolphthalein",
       "pathLength": "1 cm quartz cell",
-      "acidityOrIonicStrength": "ordinary coloured form around pH 10; no strong-acid cation data admitted"
+      "acidityOrIonicStrength": "sodium carbonate approximately 0.02 mol/L; pH approximately 10; no strong-acid cation data"
     }
   },
   "reviewStatus": "quantitative"

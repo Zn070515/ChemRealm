@@ -54,7 +54,7 @@ describe("indicator optical source-review boundary", () => {
       expect(entry.reviewStatus).toMatch(/^(qualitative-only|quantitative)$/);
       expect(entry.source.citation).not.toMatch(/TODO|TBD|placeholder/i);
       expect(entry.source.sourceUrl).toMatch(/^https:\/\//);
-      expect(entry.source.accessedOn).toMatch(/^2026-09-14$/);
+      expect(entry.source.accessedOn).toMatch(/^\d{4}-\d{2}-\d{2}$/);
       expect(entry.source.conditions.solvent).toBeTruthy();
       expect(entry.source.conditions.temperature).toBeTruthy();
       expect(entry.source.conditions.concentration).toBeTruthy();

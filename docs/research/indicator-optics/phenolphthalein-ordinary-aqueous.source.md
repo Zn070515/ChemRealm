@@ -1,53 +1,64 @@
 # phenolphthalein-ordinary-aqueous source packet
 
-**Review status:** quantitative profile: **ADMITTED** for the explicitly
-bounded ordinary-aqueous pedagogical observation path only.
+Review status: quantitative profile: **ADMITTED** for the explicitly bounded
+ordinary-aqueous pedagogical observation path only.
 
 ## Source records
 
-The primary open source is Alim et al., *The Effect of Alkali Iodide Salts in
+The primary open source is Constantine Kouderis, Stefanos Tsigoias, Panagiota
+Siafarika, and Angelos G. Kalampounias, The Effect of Alkali Iodide Salts in
 the Inclusion Process of Phenolphthalein in beta-Cyclodextrin: A Spectroscopic
-and Theoretical Study*, **Molecules 28 (2023) 1147**, Figure 1:
+and Theoretical Study, Molecules 28 (2023) 1147, Figure 1:
 
-<https://www.mdpi.com/1420-3049/28/3/1147>
+https://pmc.ncbi.nlm.nih.gov/articles/PMC9920586/
 
-The article reports a UV–Vis measurement with a 1 cm quartz cell, an aqueous
-phenolphthalein solution at `5e-5 mol/L`, and a measurement temperature of
-`20.00 ± 0.01 °C`. Its visible phenolphthalein trace has a principal peak near
-`552.1 nm`. The article is published under an open licence. This repository
-stores derived numeric samples only; it does not redistribute the source
-figure.
+The cited measurement used approximately 5×10^-5 mol/L phenolphthalein in an
+aqueous sodium-carbonate medium of approximately 0.02 mol/L, around pH 10, at
+20.00 ± 0.01 °C, in a 1 cm quartz cell. The ordinary coloured trace has a
+visible maximum near 552 nm. These are the source conditions; they are not
+evidence for arbitrary temperature, concentration, pH, or ionic-strength
+transfer.
 
 An independent UCRL-965470 report provides the scale anchor
-`epsilon(552 nm) = 2.935e4 L mol^-1 cm^-1` with its own uncertainty statement:
+epsilon_N(552 nm) = 2.935×10^4 L mol^-1 cm^-1 and defines attenuation with the
+Napierian relation ln(I/I0) = -epsilon_N c L:
 
-<https://www.osti.gov/servlets/purl/965470>
+https://www.osti.gov/servlets/purl/965470
 
-The two sources are not treated as the same experiment. The profile review
-records the cross-source calibration and bounds it as an approximation.
+The two sources are not treated as the same experiment. The review records the
+cross-source calibration and its uncertainty as an explicit approximation.
 
 ## Extraction and limits
 
-The checked-in 500/510/520 nm values are digitised/derived from the ordinary
-visible trace in Figure 1 and scaled with the independent 552 nm anchor. They
-are not source-tabulated values. The retained uncertainty is approximately
-20% relative for the visible-grid shape, plus the limits of transferring the
-20 °C source observation to the declared 20–25 °C production range.
+The local profile contains 81 samples from 380 through 780 nm at 5 nm spacing.
+The visible shape is a reviewed digitisation/derivation from the ordinary
+trace in Figure 1, scaled so the 550/555 nm neighbourhood represents the
+independent 552 nm UCRL anchor. The values are derived, not source-tabulated
+values; the retained shape/transfer uncertainty is approximately 20% relative.
+The profile declares epsilonConvention = napierian, so runtime attenuation uses
+exp(-epsilon_N c l).
 
-The neutral lactone and intermediate monoanion are represented as zero visible
-absorptivity in this bounded profile because the cited ordinary visible
-observation treats the coloured quinoid form as the visible absorber. This is a
-below-sensitivity approximation, not a claim that their physical absorption
-is mathematically zero.
+Neutral lactone and intermediate monoanion visible absorptivities are recorded
+as below-sensitivity zero only within this narrow model. This is an explicit
+approximation, not a claim that their physical absorption is exactly zero.
 
-The profile is admitted only for ordinary aqueous phenolphthalein around
-`pH 9.5–10.5`, approximately `5e-5 mol/L`, a 10 mm path, and
-`I_m <= 0.12 mol/kg`. It must refuse outside those conditions. Strong-acid
-phenolphthalein cation/orange is a documented scientific boundary and remains
-**not implemented** and **refusal-only**.
+The admitted envelope is intentionally narrow:
+
+- solvent: water with the cited sodium-carbonate medium;
+- temperature: exactly 293.15 K (the cited 20 °C condition);
+- phenolphthalein concentration: exactly 5×10^-5 mol/L;
+- optical path: exactly 10 mm (the cited 1 cm cell);
+- ionic strength: 0.02–0.06 mol/kg as a labelled transfer-approximation range
+  around the cited medium;
+- model pH: 9.5–10.5 as a labelled transfer-approximation range around the
+  cited pH.
+
+The extreme-acid phenolphthalein cation/orange regime is documented as a future
+scientific boundary and remains not implemented and refusal-only. The ordinary
+profile cannot emit orange merely because a generic acidic pH was provided.
 
 ## Quantitative profile
 
 The quantitative profile is admitted only through the content-addressed
-artifact and its review record. A colour swatch is not a substitute for this
+artifact and review record. A colour swatch is not a substitute for the
 profile, and no render component may override an optical refusal.

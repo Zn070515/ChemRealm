@@ -14,11 +14,12 @@ import { readVersionManifest } from "./version-manifest.mjs";
 const root = new URL("../", import.meta.url);
 const document = (relativePath) => readFile(new URL(relativePath, root), "utf8");
 
-const [spec, design, adr, opticsSource] = await Promise.all([
+const [spec, design, adr, opticsSource, colourimetry] = await Promise.all([
   document("docs/specs/SPEC-0001-world-foundation-acid-base-titration.md"),
   document("docs/superpowers/specs/2026-09-14-indicator-optical-observation.md"),
   document("docs/adr/0016-indicator-optical-observation-boundary.md"),
   document("packages/render/src/observable/optics.ts"),
+  document("packages/render/src/observable/colourimetry-cie-d65-1931-2deg-5nm.json"),
 ]);
 const manifest = await readVersionManifest();
 const failures = [];
@@ -99,6 +100,36 @@ mustNot(
   spec,
   /fallback[\s\S]{0,120}(?:pink|red|yellow|RGB|palette)[\s\S]{0,120}(?:when|if)\s+(?:profile|spectrum|data)\s+(?:is )?missing/i,
   "SPEC does not authorize a missing-data palette fallback",
+);
+must(
+  opticsSource,
+  /colourimetry-cie-d65-1931-2deg-5nm\.json/,
+  "production optics imports the admitted CIE colourimetry artifact",
+);
+mustNot(
+  opticsSource,
+  /optics-reference-vectors\.json/,
+  "production optics does not import the test-only optical vectors",
+);
+must(
+  opticsSource,
+  /epsilonConvention/,
+  "production optics branches on the declared Beer–Lambert logarithm convention",
+);
+must(
+  opticsSource,
+  /blankX[\s\S]{0,500}blankY[\s\S]{0,500}blankZ/,
+  "production optics normalizes all transmitted XYZ components against blank integrals",
+);
+must(
+  opticsSource,
+  /deterministicExp\(-napierianAttenuation\)/,
+  "production optics uses the deterministic exponential attenuation path",
+);
+must(
+  colourimetry,
+  /"status":\s*"production"[\s\S]{0,1000}"wavelengthIntervalNanometres":\s*5[\s\S]{0,1000}"min":\s*380[\s\S]{0,500}"max":\s*780/,
+  "admitted colourimetry artifact has the required production grid",
 );
 
 const forbiddenOpticalPathPatterns = [

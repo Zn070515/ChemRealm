@@ -63,13 +63,14 @@ describe("production composition vertical path", () => {
     expect(composition.renderState.nodes.some((node) => node.id === "taught-ph-readout")).toBe(true);
     const optical = composition.observable.indicators[0]?.opticalObservation;
     expect(optical).toMatchObject({
-      status: "OPTICAL_MODEL_OK",
-      profileId: "phenolphthalein-ordinary-aqueous",
+      status: "OPTICAL_MODEL_OUT_OF_COVERAGE",
+      reason: "temperature is outside optical profile coverage",
     });
-    if (optical?.status !== "OPTICAL_MODEL_OK") throw new Error("expected optical success");
-    expect(optical.tintStrength).toBeGreaterThan(0);
+    if (optical?.status !== "OPTICAL_MODEL_OUT_OF_COVERAGE") {
+      throw new Error("expected optical coverage refusal");
+    }
     expect(composition.renderState.nodes.find((node) => node.id === "indicator-0")?.data).toMatchObject({
-      opticalStatus: "OPTICAL_MODEL_OK",
+      opticalStatus: "OPTICAL_MODEL_OUT_OF_COVERAGE",
     });
   });
 

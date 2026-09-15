@@ -33,14 +33,14 @@ export const VERSION_MANIFEST = deepFreeze({
     "nativeBridge": 1
   },
   "spec": {
-    "currentRevision": 29,
+    "currentRevision": 30,
     "acceptedThroughRevision": 20,
     "m5ContractRevision": 25
   },
   "representation": {
     "observableModel": 2,
     "volumeProfile": "1.0.0",
-    "indicatorOpticalProfile": "1.0.0",
+    "indicatorOpticalProfile": "2.0.0",
     "opticalPath": "1.0.0"
   },
   "content": {

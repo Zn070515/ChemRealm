@@ -3,17 +3,18 @@
 - **Status:** **Accepted through revision 20** — M4 S3 owner acceptance recorded
   on 2026-09-13 against the committed implementation baseline and CI attestation.
 - **Accepted baseline:** commit `8310c685`, `SPEC-0001` revision 6
-- **Current revision:** **29 Candidate** — indicator optical observation
-  admission and native M4-B/M5 closure evidence. Revisions 21–27 remain
-  candidate amendments pending owner review; revision 28 is owner-accepted only
-  for the ordinary-aqueous three-form scope and retains the strong-acid
-  cation/orange case as refusal-only. Revision 29 records the bounded,
-  source-reviewed ordinary-aqueous phenolphthalein profile admission, the
-  production `OPTICAL_MODEL_OK` path, and the rule that visual swatches remain
-  qualitative QA material rather than tint authority. Revision 27 adds the
-  data-backed optical statuses and frozen optical inputs; revision 28 adds the
-  ordinary-aqueous multi-form model and explicit strong-acid refusal boundary;
-  both remain governed by the candidate/accepted status recorded below.
+- **Current revision:** **30 Candidate** — corrected indicator optical
+  colourimetry admission and native M4-B/M5 closure evidence. Revisions 21–27
+  remain candidate amendments pending owner review; revision 28 is owner-
+  accepted only for the ordinary-aqueous three-form scope and retains the
+  strong-acid cation/orange case as refusal-only. Revision 29 records the
+  bounded, source-reviewed ordinary-aqueous phenolphthalein profile admission;
+  revision 30 corrects its production colourimetry to a source-attributed
+  380–780 nm/5 nm CIE D65/1931-2° table, blank XYZ normalization, and explicit
+  Napierian/decadic Beer–Lambert convention. The production profile remains a
+  bounded approximation and visual swatches remain qualitative QA material
+  rather than tint authority. Revisions 27–30 remain governed by the
+  candidate/accepted status recorded below.
   Revisions 7–20 are accepted amendments; revisions 13–20 were accepted by
   the owner on 2026-09-13.
   See "Amendments since acceptance" below.
@@ -60,6 +61,7 @@
 | 27 | 2026-09-14 | Indicator optical observation authority: the future data-backed optical boundary is refusal-first with `OPTICAL_MODEL_OK`, `OPTICAL_MODEL_OUT_OF_COVERAGE`, and `OPTICAL_MODEL_DATA_MISSING`; endpoint-RGB fallback is prohibited; genesis freezes indicator dose, optical profile, and optical path identity; chemical-form coverage remains distinct from optical coverage; and the v0 monoprotic model cannot emit strong-acid phenolphthalein orange. AC-O1–AC-O8 define the candidate optical contract. | Candidate — owner review pending |
 | 28 | 2026-09-14 | Candidate multi-form indicator scientific boundary: the initial ordinary-aqueous phenolphthalein model names `H₂In`, `HIn⁻`, and `In²⁻` with distinct `Ka_In_1`/`Ka_In_2`, coupled charge and ionic-strength treatment, complete fraction/balance evidence, and explicit refusal for the strong-acid cation and strong-base-altered forms. No numerical constants, solver implementation, or optical profile are admitted by this amendment; implementation still requires separate source-backed constants and independent reference evidence. | Owner accepted 2026-09-14 for ordinary-aqueous scope; strong-acid cation/orange remains refusal-only |
 | 29 | 2026-09-14 | M4-B/M5 closure candidate: the native v2 backend has criterion-specific World → WASM → ScientificFrame → Observable evidence; one source-reviewed ordinary-aqueous phenolphthalein profile is admitted only within its explicit quantitative conditions and content hash; production tint is produced by chemical forms + concentration + path + Beer–Lambert + D65/CIE/sRGB; visual swatches are qualitative QA only; and strong-acid phenolphthalein orange remains documented and refusal-only. | Candidate — owner review pending |
+| 30 | 2026-09-15 | Optical scientific correction: production colourimetry uses the checked-in CIE D65/CIE 1931 2° 380–780 nm grid at 5 nm spacing rather than test-only vectors; transmitted XYZ is normalized against corresponding blank integrals and the IEC D65 white; every absorptivity spectrum declares Napierian or decadic Beer–Lambert convention; the ordinary phenolphthalein profile records faithful Kouderis et al. provenance, exact source conditions, derived-grid uncertainty, and a bounded pink/fuchsia evidence region; strong-acid orange remains refusal-only. | Candidate — owner review pending |
 
 A revision bump is recorded here rather than only in the body because the header
 is what a reader checks before deciding whether the file they are reading is the
@@ -1857,7 +1859,7 @@ documented/refusal-only.
 | ID | Criterion | Evidence |
 |---|---|---|
 | AC-O1 | Every optical profile resolves to checked-in spectral data, conditions, source provenance, review record, and content hash. | profile source packet, parser/hash test, and profile review record |
-| AC-O2 | Display tint is derived from declared species fractions, total indicator concentration, path length, spectral absorptivity, and pinned illuminant/observer conversion; no endpoint RGB fallback is used. | Beer–Lambert reference vectors and representation-engine test |
+| AC-O2 | Display tint is derived from declared species fractions, total indicator concentration, path length, a full checked-in 380–780 nm/≤5 nm spectral profile, its declared Napierian or decadic Beer–Lambert convention, blank-normalized CIE D65/1931-2° integration, and pinned IEC sRGB conversion; no test-only table or endpoint RGB fallback is used. | production CIE/profile evidence, Beer–Lambert reference vectors, and Representation Engine test |
 | AC-O3 | A state without a covered form/profile/condition returns a tagged optical refusal and no display colour. | refusal matrix and observable boundary test |
 | AC-O4 | Phenolphthalein ordinary lactone, alkaline quinoid, and extreme-acid cation are distinct cases; the extreme-acid orange case cannot be emitted by the v0 monoprotic model. | chemical-form coverage test and v0 refusal test |
 | AC-O5 | Doubling concentration or path length has the declared Beer–Lambert absorbance effect inside the profile domain. | deterministic optical scaling test |

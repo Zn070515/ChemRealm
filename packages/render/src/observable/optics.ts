@@ -10,7 +10,7 @@ import {
   type OpticalProfileSnapshot,
   type Ph,
 } from "@chemrealm/schema";
-import referenceData from "./optics-reference-vectors.json" with { type: "json" };
+import referenceData from "./colourimetry-cie-d65-1931-2deg-5nm.json" with { type: "json" };
 
 export interface IndicatorOpticalObservationInput {
   readonly chemical: IndicatorChemicalObservation;
@@ -30,7 +30,7 @@ interface ColourimetryReference {
   readonly xBar: readonly number[];
   readonly yBar: readonly number[];
   readonly zBar: readonly number[];
-  readonly whitePoint: readonly [number, number, number];
+  readonly sRgbD65WhitePoint: readonly [number, number, number];
 }
 
 const COLOURIMETRY_REFERENCE: ColourimetryReference = Object.freeze({
@@ -39,7 +39,7 @@ const COLOURIMETRY_REFERENCE: ColourimetryReference = Object.freeze({
   xBar: Object.freeze([...referenceData.cie1931XBar]),
   yBar: Object.freeze([...referenceData.cie1931YBar]),
   zBar: Object.freeze([...referenceData.cie1931ZBar]),
-  whitePoint: Object.freeze([...referenceData.sRgbD65WhitePoint]) as unknown as [
+  sRgbD65WhitePoint: Object.freeze([...referenceData.transform.sRgbD65WhitePoint]) as unknown as [
     number,
     number,
     number,
@@ -93,11 +93,6 @@ function deterministicExp(value: number): number {
     for (let index = 0; index > exponent; index -= 1) scale /= 2;
   }
   return scale;
-}
-
-/** Deterministic 10^x used by Beer–Lambert, without native transcendental APIs. */
-function deterministicPow10(value: number): number {
-  return deterministicExp(value * LN_10);
 }
 
 function deterministicPow(value: number, exponent: number): number {
@@ -171,14 +166,10 @@ function xyzToSrgb(
   y: number,
   z: number,
 ): readonly [number, number, number] {
-  const white = COLOURIMETRY_REFERENCE.whitePoint;
-  const xn = x / white[0]!;
-  const yn = y / white[1]!;
-  const zn = z / white[2]!;
   return [
-    clamp(linearSrgb(3.2406 * xn - 1.5372 * yn - 0.4986 * zn), 0, 1),
-    clamp(linearSrgb(-0.9689 * xn + 1.8758 * yn + 0.0415 * zn), 0, 1),
-    clamp(linearSrgb(0.0557 * xn - 0.2040 * yn + 1.0570 * zn), 0, 1),
+    clamp(linearSrgb(3.2406 * x - 1.5372 * y - 0.4986 * z), 0, 1),
+    clamp(linearSrgb(-0.9689 * x + 1.8758 * y + 0.0415 * z), 0, 1),
+    clamp(linearSrgb(0.0557 * x - 0.2040 * y + 1.0570 * z), 0, 1),
   ] as const;
 }
 
@@ -304,23 +295,29 @@ export function observeIndicatorOptics(
   const concentration = chemical.totalAmount / input.liquidVolume;
   const pathLengthCm = path.pathLength.value / 10;
   const transmittance = COLOURIMETRY_REFERENCE.wavelengths.map((wavelength) => {
-    const absorbance = chemical.forms.reduce((total, form) => {
+    const napierianAttenuation = chemical.forms.reduce((total, form) => {
       const spectrum = profile.formSpectra.find((candidate) => candidate.formId === form.formId)!;
-      return total + interpolateEpsilon(spectrum.samples, wavelength) * concentration * form.fraction;
+      const epsilon = interpolateEpsilon(spectrum.samples, wavelength);
+      const napierianEpsilon = spectrum.epsilonConvention === "napierian"
+        ? epsilon
+        : epsilon * LN_10;
+      return total + napierianEpsilon * concentration * form.fraction;
     }, 0) * pathLengthCm;
-    return deterministicPow10(-absorbance);
+    return deterministicExp(-napierianAttenuation);
   });
   const blank = COLOURIMETRY_REFERENCE.wavelengths.map(() => 1);
-  const x = integrate(transmittance, COLOURIMETRY_REFERENCE.xBar);
-  const y = integrate(transmittance, COLOURIMETRY_REFERENCE.yBar);
-  const z = integrate(transmittance, COLOURIMETRY_REFERENCE.zBar);
+  const blankX = integrate(blank, COLOURIMETRY_REFERENCE.xBar);
   const blankY = integrate(blank, COLOURIMETRY_REFERENCE.yBar);
+  const blankZ = integrate(blank, COLOURIMETRY_REFERENCE.zBar);
+  const x = integrate(transmittance, COLOURIMETRY_REFERENCE.xBar) / blankX * COLOURIMETRY_REFERENCE.sRgbD65WhitePoint[0];
+  const y = integrate(transmittance, COLOURIMETRY_REFERENCE.yBar) / blankY * COLOURIMETRY_REFERENCE.sRgbD65WhitePoint[1];
+  const z = integrate(transmittance, COLOURIMETRY_REFERENCE.zBar) / blankZ * COLOURIMETRY_REFERENCE.sRgbD65WhitePoint[2];
 
   return {
     status: "OPTICAL_MODEL_OK",
     indicatorId,
     tintSrgb: [...xyzToSrgb(x, y, z)] as [number, number, number],
-    tintStrength: clamp(1 - y / blankY, 0, 1),
+    tintStrength: clamp(1 - y, 0, 1),
     transmittanceSamples: transmittance.map((value, index) => ({
       wavelengthNanometres: COLOURIMETRY_REFERENCE.wavelengths[index]!,
       transmittance: value,

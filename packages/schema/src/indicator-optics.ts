@@ -81,6 +81,7 @@ export const OpticalFormSpectrumSchema = z.strictObject({
   formId: z.string().min(1),
   spectrumId: z.string().min(1),
   epsilonUnit: z.literal("L mol^-1 cm^-1"),
+  epsilonConvention: z.enum(["decadic", "napierian"]),
   samples: z.array(OpticalSpectrumSampleSchema).min(2),
 });
 export type OpticalFormSpectrum = z.infer<typeof OpticalFormSpectrumSchema>;

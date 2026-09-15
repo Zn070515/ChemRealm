@@ -4,9 +4,10 @@
   on 2026-09-11 at `SPEC-0001` revision 6; revisions 13–20 were accepted
   on 2026-09-13. The current optical candidate revision and native-backend
   candidate are declared only by `contracts/version-manifest.json`; they remain
-  subject to owner review. The exact local/hosted baseline is commit
+  subject to owner review. The prior local/hosted baseline is commit
   `66b488a3e7483b776711d0e9d6ab723698dc3a35`, CI run #140
-  (`34868257380`).
+  (`34868257380`). The corrected optical colourimetry round requires a new
+  committed-baseline hosted attestation before M6 authorization.
 - **Completed:** `M0 — Repository foundation` reached **S3 — Verified** on
   2026-09-11. Evidence: `docs/evidence/M0.md`, commits `1f3dfee`/`565a2e8`,
   CI run `34595967023` (13/13 gate steps on a clean `ubuntu-latest` checkout).
@@ -19,7 +20,10 @@
   `778fadbd` with CI `34677042056` and evidence in `docs/evidence/M2.md`.
 - **M5 composition handoff:** the current local DOM composition and bounded
   ordinary-aqueous optical-profile path are verified in `docs/evidence/M5.md`.
-  M5 is a local/hosted S3 candidate; owner acceptance remains open.
+  M5 is a local/hosted S3 candidate; owner acceptance remains open. The optical
+  correction is governed by candidate SPEC revision 30 and uses the
+  source-attributed 81-point CIE/Beer–Lambert path; strong-acid orange remains
+  refusal-only.
   Contract-level AC-V3/AC-V4 evidence is an M5
   responsibility; M6 final assets and visual review are downstream realization
   evidence and do not gate M5 S3. Native backend work is governed by

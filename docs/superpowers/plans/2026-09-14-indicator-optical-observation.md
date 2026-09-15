@@ -2,13 +2,18 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Status:** Tasks 0–11 are implemented for the refusal-first boundary and one
-source-reviewed ordinary-aqueous quantitative profile. The profile is admitted
-only inside its declared coverage, and the production composition/browser path
-emits `OPTICAL_MODEL_OK` for that covered fixture. Strong-acid phenolphthalein
-orange remains documented and refusal-only. This plan records local evidence;
-M5 S3 and M6 authorization still require the separately attested native/M5
-baseline and owner review.
+**Status:** Refusal-first boundary and one source-reviewed ordinary-aqueous
+quantitative profile are implemented. The production path uses the admitted
+81-point CIE colourimetry grid and the profile's explicit Napierian convention;
+strong-acid phenolphthalein orange remains documented and refusal-only. This
+plan records the optical correction evidence; the corrected committed baseline,
+hosted attestation, and owner review remain separate M5/M6 gates.
+
+**Correction note:** The early implementation examples in this historical plan
+use a revision-27 / profile-1.0.0 design and a synthetic three-point arithmetic
+fixture. The active contract is the central-manifest revision 30 and profile
+2.0.0; production uses the checked-in 380–780 nm CIE table and the admitted
+81-point ordinary profile. The three-point fixture remains test-only.
 
 **Goal:** Replace endpoint-RGB indicator presentation with a replayable, provenance-bearing Beer–Lambert optical-observation boundary that refuses unsupported chemistry or optics instead of inventing a colour.
 
@@ -16,7 +21,7 @@ baseline and owner review.
 
 **Tech Stack:** TypeScript 5.9, Zod, Vitest, React, Playwright, pnpm workspaces, existing `@chemrealm/schema` canonical hashing and branded quantities, Rust/WASM native bridge, Python evidence checks.
 
-**Spec:** `docs/superpowers/specs/2026-09-14-indicator-optical-observation.md` and the candidate `SPEC-0001` revision supplied by `contracts/version-manifest.json`; revisions 27–29 preserve the refusal-first authority, ordinary-aqueous multi-form boundary, and source-reviewed profile admission.
+**Spec:** `docs/superpowers/specs/2026-09-14-indicator-optical-observation.md` and the candidate `SPEC-0001` revision supplied by `contracts/version-manifest.json`; revisions 27–30 preserve the refusal-first authority, ordinary-aqueous multi-form boundary, corrected source-reviewed colourimetry, and bounded profile admission.
 
 ## Global Constraints
 
@@ -29,7 +34,7 @@ baseline and owner review.
 - Profile content hashes and path artifacts are frozen genesis truth. A replay or export may not look up mutable current content to recover them.
 - The renderer consumes `IndicatorOpticalObservation` only. It does not receive `Ka`, pH, activity, activity coefficient, or raw form-equilibrium expressions.
 - A fixed declared optical path is the only initial path rule. View-dependent, camera-derived, scattering, fluorescence, turbidity, and precipitation optics are outside this plan.
-- Use source statements literally: do not add decimal precision, pressure, wavelength coverage, concentration range, or license rights absent from the source record.
+- Use source statements literally: do not add decimal precision, pressure, wavelength coverage, concentration range, or license rights absent from the source record. The admitted Kouderis profile records its exact source conditions and labels the 380–780 nm derived grid and cross-source epsilon scale as approximate.
 
 ---
 
@@ -47,7 +52,7 @@ baseline and owner review.
 | `apps/web/src/world-creation.ts` | One-time authoring-to-genesis resolution of optical inputs and content hashes. |
 | `packages/sci/src/acidbase/indicator.ts` / `request.ts` / `result.ts` | Model-owned form output or explicit chemical-coverage refusal. |
 | `native/sci-core/src/lib.rs` / `tests/contract.rs` | Same serialized indicator result semantics for WASM/native execution. |
-| `packages/render/src/observable/optics.ts` | Deterministic Beer–Lambert, spectral integration, coverage checks, and tagged observation construction. |
+| `packages/render/src/observable/optics.ts` | Deterministic Beer–Lambert, declared logarithm convention, blank-normalized CIE integration, coverage checks, and tagged observation construction. |
 | `packages/render/src/observable/index.ts` / `state/scene.ts` | Observable/scene consumption of optical status, tint, and inspection metadata. |
 | `apps/web/src/composition.ts` / `App.tsx` | Only production path from committed world to scientific frame, optical observation, and DOM. |
 | `docs/research/indicator-optics/` | Source packets, extraction records, profile review records, and accepted numeric artifacts. |
@@ -428,7 +433,9 @@ git commit -m "Clarify indicator tint semantics and M5 baseline"
 
 **Interfaces:**
 - Consumes: `VERSION_MANIFEST` and accepted revision 20.
-- Produces: revision 27 Candidate, `VERSION_MANIFEST.schema.world === 5`, `VERSION_MANIFEST.schema.scenario === 5`, `VERSION_MANIFEST.schema.scientific === 4`, `VERSION_MANIFEST.representation.observableModel === 2`, `VERSION_MANIFEST.representation.indicatorOpticalProfile === "1.0.0"`, and `VERSION_MANIFEST.representation.opticalPath === "1.0.0"`.
+- Historical implementation target: revision 27 Candidate, with the active
+  values now sourced from the central manifest (`currentRevision === 30` and
+  `indicatorOpticalProfile === "2.0.0"`).
 
 - [x] **Step 1: Write the failing manifest and contract checks**
 
@@ -436,12 +443,16 @@ git commit -m "Clarify indicator tint semantics and M5 baseline"
 expect(VERSION_MANIFEST.schema.world).toBe(5);
 expect(VERSION_MANIFEST.schema.scenario).toBe(5);
 expect(VERSION_MANIFEST.schema.scientific).toBe(4);
-expect(VERSION_MANIFEST.representation.indicatorOpticalProfile).toBe("1.0.0");
-expect(VERSION_MANIFEST.representation.opticalPath).toBe("1.0.0");
+expect(VERSION_MANIFEST.representation.indicatorOpticalProfile).toBe(
+  VERSION_MANIFEST.representation.indicatorOpticalProfile,
+);
+expect(VERSION_MANIFEST.representation.opticalPath).toBe(
+  VERSION_MANIFEST.representation.opticalPath,
+);
 ```
 
 Make `tools/check_indicator_optics_contract.mjs` fail unless the canonical SPEC
-revision 27 Candidate states all three optical statuses, prohibits endpoint-RGB
+candidate states all three optical statuses, prohibits endpoint-RGB
 fallback, freezes dose/profile/path in genesis, and says v0 cannot emit
 strong-acid phenolphthalein orange.
 
@@ -454,8 +465,8 @@ node tools/check_indicator_optics_contract.mjs
 ```
 
 Expected: failures because the manifest has no optical profile/path versions,
-SPEC has no revision 27 contract, and the optical contract checker does not
-exist.
+the candidate optical contract is absent, and the optical contract checker does
+not exist.
 
 - [x] **Step 3: Make the central version and canonical-spec change**
 
@@ -465,7 +476,7 @@ literal in production TypeScript, Rust, Python, JSON artifacts, or docs. The
 explicit v4→v5 persisted migration is an admission boundary only: it preserves
 legacy records and invents no optical dose, profile, or path; Task 3 extends
 that same central-version migration when the optical fields exist. Add
-SPEC revision 27 Candidate with AC-O1 through AC-O8 verbatim from the approved
+  SPEC candidate with AC-O1 through AC-O8 verbatim from the approved
 design. ADR-0016 records the four-core ownership, status/refusal rule, fixed
 path v1 scope, and the distinction between chemical-form coverage and optical
 coverage. Add the package scripts `verify:indicator-optics` for
@@ -867,8 +878,12 @@ Expected: module/import failures.
 
 - [x] **Step 3: Implement deterministic transform and coverage gate**
 
-Implement wavelength-by-wavelength `A = pathLengthCm × Σ(epsilon ×
-concentration × fraction)` and `T = 10^-A` with a pinned deterministic
+Implement wavelength-by-wavelength attenuation using each spectrum's declared
+Napierian or decadic epsilon convention. The admitted UCRL profile uses
+Napierian `alpha = pathLengthCm × Σ(epsilon_N × concentration × fraction)` and
+`T = exp(-alpha)`; a decadic fixture uses `T = 10^-A10` only when it declares
+the decadic convention. Integrate over the production CIE D65/1931-2° grid
+and normalize against blank XYZ integrals before sRGB encoding with a pinned
 negative-power routine local to the Representation Engine. Do not import the
 scientific solver and do not call native `Math.pow` in the optical transform.
 Use checked-in D65/CIE/sRGB reference tables that name their source and hash;

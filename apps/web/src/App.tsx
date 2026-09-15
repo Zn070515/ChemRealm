@@ -170,11 +170,13 @@ export function App({ schemaVersion }: { schemaVersion: number }): ReactElement 
                     {indicator.opticalContext.profileId}
                   </span>
                 )}
+                {indicator.opticalContext.profileHash === undefined ? undefined : (
+                  <span data-testid="indicator-profile-hash">
+                    {indicator.opticalContext.profileHash}
+                  </span>
+                )}
                 {indicator.opticalObservation.status === "OPTICAL_MODEL_OK" ? (
                   <>
-                    <span data-testid="indicator-profile-hash">
-                      {indicator.opticalObservation.profileHash}
-                    </span>
                     <span data-testid="indicator-tint-strength">
                       {indicator.opticalObservation.tintStrength}
                     </span>

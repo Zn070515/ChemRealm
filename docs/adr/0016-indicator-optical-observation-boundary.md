@@ -6,7 +6,8 @@
   maintainers for implementation review
 - **Scope:** The data-backed indicator optical observation pipeline. One
   ordinary-aqueous phenolphthalein profile is locally admitted inside its
-  bounded source conditions; M5 S3 and owner acceptance remain separate gates.
+  bounded source conditions; M5 S3, hosted attestation, and owner acceptance
+  remain separate gates.
 - **Supersedes:** The implication that the M5 qualitative palette is a
   spectrophotometric model. It does not supersede the historical M5 palette
   evidence.
@@ -16,10 +17,10 @@
 The original M5 indicator tint was an identity-keyed qualitative presentation
 contract. It was intentionally not a measurement model: it had no
 wavelength-dependent absorptivity, indicator dose, optical path, illuminant,
-observer convention, or coverage declaration. Treating an endpoint RGB token as
-chemistry would make a missing model look like a result. One ordinary-aqueous
-phenolphthalein profile is now locally admitted under this ADR's bounded
-production contract; the historical palettes remain qualitative QA material.
+  observer convention, or coverage declaration. Treating an endpoint RGB token as
+  chemistry would make a missing model look like a result. One ordinary-aqueous
+  phenolphthalein profile is now locally admitted under this ADR's bounded
+  production contract; the historical palettes remain qualitative QA material.
 
 The next optical work must therefore be admitted as a versioned, local,
 content-addressed contract. Its implementation is subordinate to the
@@ -89,10 +90,14 @@ permission to emit orange.
 ### Deterministic and privacy boundary
 
 The Representation Engine consumes checked-in profile data and pinned
-illuminant/observer/colour-transform data. Beer–Lambert transmission and the
-display transform are deterministic and local. No camera sampling, display
-calibration upload, network lookup, learner image, account, or telemetry is
-needed. Any such feature requires a separate privacy decision.
+illuminant/observer/colour-transform data. The admitted production path uses the
+CIE D65 and CIE 1931 2° table on the full 380–780 nm, 5 nm grid. Beer–Lambert
+profiles declare Napierian or decadic absorptivity; the UCRL phenolphthalein
+anchor is Napierian and is evaluated with exp(-epsilon_N c l). Transmitted XYZ
+is normalized against the corresponding blank integrals before IEC sRGB
+encoding. These operations are deterministic and local. No camera sampling,
+display calibration upload, network lookup, learner image, account, or
+telemetry is needed. Any such feature requires a separate privacy decision.
 
 ## Consequences
 
@@ -111,6 +116,10 @@ Costs and limitations:
 
 - A quantitative `OPTICAL_MODEL_OK` result requires reviewed spectra and
   colourimetry data; a colour word or lone wavelength maximum is insufficient.
+- The current quantitative profile is a derived 81-point visible-grid record
+  with approximately 20% shape/transfer uncertainty under the exact cited
+  20 °C, 5e-5 mol/L, 1 cm quartz-cell conditions. Its bounded transfer range is
+  explicit and is not a universal phenolphthalein spectrum.
 - M5's qualitative palette and swatches may support visual QA and historical
   fixtures, but they cannot supply production tint or quantitative optical
   claims.

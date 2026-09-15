@@ -50,6 +50,7 @@ const profilePayload = {
       formId: "form-a",
       spectrumId: "form-a-spectrum",
       epsilonUnit: "L mol^-1 cm^-1" as const,
+      epsilonConvention: "decadic" as const,
       samples: [
         { wavelengthNanometres: 500, epsilon: 10 },
         { wavelengthNanometres: 510, epsilon: 20 },
@@ -107,6 +108,42 @@ const validPath = {
 describe("content-addressed indicator optical artifacts", () => {
   it("accepts a reviewed quantitative profile with a common wavelength grid", () => {
     expect(parseOpticalProfileSnapshot(validProfile)).toEqual(validProfile);
+  });
+
+  it("requires every spectrum to declare its Beer-Lambert logarithm convention", () => {
+    const withConvention = {
+      ...validProfile,
+      formSpectra: [{
+        ...validProfile.formSpectra[0]!,
+        epsilonConvention: "napierian" as const,
+      }],
+    };
+    const profile = {
+      ...withConvention,
+      profileHash: opticalProfileHash(withConvention),
+    };
+
+    expect(parseOpticalProfileSnapshot(profile)).toEqual(profile);
+  });
+
+  it("rejects a spectrum with no Beer-Lambert logarithm convention", () => {
+    const { epsilonConvention: _epsilonConvention, ...spectrumWithoutConvention } =
+      validProfile.formSpectra[0]!;
+
+    expect(() => OpticalProfileSnapshotSchema.parse({
+      ...validProfile,
+      formSpectra: [spectrumWithoutConvention],
+    })).toThrow();
+  });
+
+  it("rejects an unknown Beer-Lambert logarithm convention", () => {
+    expect(() => OpticalProfileSnapshotSchema.parse({
+      ...validProfile,
+      formSpectra: [{
+        ...validProfile.formSpectra[0]!,
+        epsilonConvention: "unknown" as never,
+      }],
+    })).toThrow();
   });
 
   it("rejects a profile whose payload changed while retaining its old hash", () => {

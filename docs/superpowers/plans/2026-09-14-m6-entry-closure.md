@@ -25,7 +25,11 @@ quantitative optical observation pipeline.
    the real v2 World → WASM → ScientificFrame → Observable → DOM path.
 2. Admit one quantitative indicator spectrum only when its source, conditions,
    extraction, uncertainty, content hash, and review record are reproducible;
-   drive one positive `OPTICAL_MODEL_OK` result through the production path.
+   drive a positive in-coverage `OPTICAL_MODEL_OK` transform through the
+   admitted representation path and drive the default 25 °C production
+   composition through an explicit out-of-temperature-coverage refusal. The
+   source-bounded 20 °C optical profile must not be widened to make the 25 °C
+   chemistry fixture appear positive.
 3. Make the visual standard, canonical SPEC, evidence packets, and version
    manifest agree without silently weakening an accepted criterion.
 4. Leave the repository at an honest, owner-reviewable M6 authorization gate;
@@ -90,9 +94,11 @@ quantitative optical observation pipeline.
 
 ## Representation design
 
-- The production scenario emits `OPTICAL_MODEL_OK` only for the admitted,
-  covered ordinary form and only after the browser checks the status, profile
-  identity/hash, transmittance context, concentration, and non-zero tint.
+- The admitted ordinary profile emits `OPTICAL_MODEL_OK` only for covered
+  inputs. The default production titration fixture uses the 25 °C acid-base
+  model and is intentionally refused by the profile's source-bounded 20 °C
+  temperature condition; the positive in-coverage transform is covered by the
+  focused optical suite. Browser evidence must verify the refusal has no tint.
 - The visual reference swatches remain checked-in qualitative QA/sanity
   material. They cannot provide production RGB values or override an optical
   refusal.
@@ -208,13 +214,15 @@ optical model and browser.
 - Add negative tests for out-of-coverage temperature/concentration/path/form
   and strong-acid cation refusal; no negative path may silently fall back to a
   swatch.
-- Extend browser evidence to require `OPTICAL_MODEL_OK`, the admitted profile
-  identity/hash, non-zero tint, and the optical conditions while retaining the
-  refusal fixture.
+- Extend browser evidence to require the committed profile identity/hash and
+  explicit no-tint refusal for the default 25 °C composition. Keep the positive
+  in-coverage `OPTICAL_MODEL_OK` assertion in the focused transform suite; do
+  not widen the empirical profile solely to satisfy a browser assertion.
 
-**Evidence/stop condition:** AC-O1 and AC-O8 have positive production and
-browser evidence for the admitted profile, while refusal/coverage rows remain
-explicit and the optical report does not claim model equivalence with PHREEQC.
+**Evidence/stop condition:** AC-O1 and AC-O8 have positive in-coverage
+transform evidence plus browser refusal evidence for the default composition,
+while refusal/coverage rows remain explicit and the optical report does not
+claim model equivalence with PHREEQC.
 
 ### Step 4 — Authority and governance reconciliation
 
@@ -282,7 +290,7 @@ criteria; it does not claim M6 S3.
 | AC-O1 | PASS for one admitted quantitative profile | source packet, profile hash, review, checker |
 | AC-O2/O5 | PASS for the admitted profile | Beer–Lambert and colourimetry tests |
 | AC-O3/O4/O6/O7 | PASS/refusal boundaries | negative tests, replay, dependency/optical guards |
-| AC-O8 | PASS with positive production tint and refusal coverage | production composition + browser |
+| AC-O8 | PASS with focused in-coverage transform and default-composition refusal coverage | focused optical transform tests + production composition/browser |
 | Visual authority | PASS | apparatus standard/ADR/spec consistency test or review |
 | Governance | PASS only after owner review | version manifest, canonical SPEC revision, evidence attestation |
 | M6 authorization | GO only after M4-B and M5 S3 | PLAN/evidence status and exact baseline |
