@@ -15,7 +15,8 @@ The registry is refusal-first:
   machine-readable or reviewed digitised data, precision/uncertainty metadata,
   at least two samples per chemical form, and a content hash;
 - production colourimetry is a separate checked-in CIE D65 / CIE 1931 2° /
-  sRGB transform artifact. It cannot supply missing indicator spectra;
+  sRGB transform artifact. It is explicitly an abridged-grid D65
+  whitepoint-corrected transform, and cannot supply missing indicator spectra;
 - the strong-acid phenolphthalein cation is recorded as a research candidate,
   not silently promoted to the ordinary aqueous endpoint model.
 
@@ -39,8 +40,9 @@ indicator observation.
 1. Indicator form evidence: molecular form and qualitative colour behaviour.
 2. Quantitative optical profile: wavelength/concentration/path-length samples,
    with an explicit Beer–Lambert logarithm convention and uncertainty.
-3. Production colourimetry transform: CIE D65, CIE 1931 2° integration, blank
-   normalization, and IEC sRGB encoding.
+3. Production colourimetry transform: CIE D65, CIE 1931 2° integration,
+   per-channel blank normalization, and IEC sRGB encoding; the independent
+   oracle also records a single-common-k CIE method cross-check.
 4. Independent numerical oracle: frozen XYZ/sRGB/transmittance vectors derived
    by a separate Python standard-library implementation. This validates the
    transform; it does not admit a spectrum or claim PHREEQC equivalence.

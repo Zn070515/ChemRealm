@@ -437,7 +437,7 @@
   ],
   "transform": {
     "name": "sRGB IEC 61966-2-1",
-    "normalization": "Transmitted XYZ components are divided by their corresponding blank D65/1931-2° integrals and scaled to the IEC D65 reference white (Xn=0.95047, Yn=1, Zn=1.08883) before the XYZ-to-linear-sRGB transform.",
+    "normalization": "Abridged-grid D65 whitepoint-corrected transform: transmitted XYZ components are divided by their corresponding blank D65/1931-2° integrals and scaled to the IEC D65 reference white (Xn=0.95047, Yn=1, Zn=1.08883) before the XYZ-to-linear-sRGB transform. A common-k CIE method cross-check is recorded separately in the independent oracle artifact.",
     "sRgbD65WhitePoint": [0.95047, 1, 1.08883],
     "matrix": "IEC 61966-2-1 D65 XYZ-to-linear-sRGB matrix"
   }

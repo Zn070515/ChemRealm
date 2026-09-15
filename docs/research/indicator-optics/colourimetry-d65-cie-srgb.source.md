@@ -33,11 +33,29 @@ indicator spectrum.
 
 For transmittance T(lambda), the Representation Engine integrates
 T(lambda) times D65(lambda) times each CIE 1931 colour-matching function with
-trapezoidal quadrature. Each transmitted component is normalized by the
-corresponding blank integral from the same table, then scaled to the IEC D65
-reference white (0.95047, 1, 1.08883) before the standard XYZ-to-linear-sRGB
-matrix and sRGB transfer function. Therefore a transparent blank is white
-within the declared quadrature/transform tolerance.
+trapezoidal quadrature. The admitted production method is explicitly named an
+**abridged-grid D65 whitepoint-corrected transform**: each transmitted
+component is divided by its corresponding blank integral from the same table,
+then scaled to the IEC D65 reference white (0.95047, 1, 1.08883) before the
+standard XYZ-to-linear-sRGB matrix and sRGB transfer function. Therefore a
+transparent blank is white within the declared quadrature/transform
+tolerance.
+
+This per-channel blank correction is not silently described as the classical
+single-common-k CIE normalization. The independent oracle also calculates a
+common-k result from the same D65/observer grid, using one
+`k = Yn / blank-Y-integral` for X, Y, and Z. Across its transparent, neutral
+grey, narrow-band, and phenolphthalein vectors, the maximum absolute
+production-minus-common-k differences are:
+
+- XYZ: `0.0001049657309100116`;
+- chromaticity x/y: `0.000017477921710418176`;
+- encoded sRGB: `0.00005637158019111688`.
+
+These are a bounded method-difference record for the checked-in 5 nm grid;
+they do not claim equivalence to a 1 nm library or make common-k an untested
+production fallback. The exact vectors and input hashes are checked by
+`tools/research/build_indicator_colourimetry_oracle.py --check`.
 
 This packet is a numerical reference for a deterministic local transform. It
 does not claim that the 5 nm quadrature is identical to a 1 nm integration;
@@ -48,7 +66,8 @@ An independent numerical oracle is recorded in
 `colourimetry-independent-oracle.json` and described in
 `colourimetry-independent-oracle.source.md`. Its Python standard-library
 derivation is separate from the TypeScript Representation Engine and covers
-transparent, neutral-grey, narrow-band, and admitted phenolphthalein vectors.
+transparent, neutral-grey, narrow-band, and admitted phenolphthalein vectors,
+plus the common-k method cross-check described above.
 
 ## Rights and boundary
 

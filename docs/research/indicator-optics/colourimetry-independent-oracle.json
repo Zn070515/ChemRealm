@@ -3,7 +3,20 @@
   "method": {
     "implementation": "Python 3 standard library; no TypeScript or ChemRealm runtime imports",
     "integration": "trapezoidal quadrature on the checked-in 380–780 nm / 5 nm grid",
-    "normalization": "each transmitted XYZ component divided by its blank integral and scaled to IEC D65 white",
+    "normalization": "production method: each transmitted XYZ component divided by its blank integral and scaled to IEC D65 white",
+    "commonKCrossCheck": {
+      "normalization": "single common k = Yn / blank Y integral",
+      "referenceWhitePoint": [
+        0.95047,
+        1.0,
+        1.08883
+      ],
+      "deltaDefinition": "commonK minus production per-channel blank-normalized value",
+      "status": "bounded-method-difference-recorded",
+      "maxAbsoluteDeltaXyz": 0.0001049657309100116,
+      "maxAbsoluteDeltaChromaticity": 1.7477921710418176e-05,
+      "maxAbsoluteDeltaSrgb": 5.637158019111688e-05
+    },
     "encoding": "IEC 61966-2-1 sRGB D65 matrix and transfer function",
     "beerLambert": "Napierian exp(-epsilon_N * concentration * pathLengthCm) for the phenolphthalein vector",
     "independenceBoundary": "expected vectors are frozen outputs; production tests do not call this implementation"
@@ -11,7 +24,7 @@
   "inputArtifacts": [
     {
       "path": "packages/render/src/observable/colourimetry-cie-d65-1931-2deg-5nm.json",
-      "sha256": "73b7556516af2874e7aff98b670746c45539cd09dd14f79620c913e668ff1d62"
+      "sha256": "31c1fff003c20d486b943a017f06ef9b18edca80628c7083f13e19a0124bbf10"
     },
     {
       "path": "packages/render/src/observable/phenolphthalein-ordinary-aqueous.profile.json",
@@ -117,7 +130,43 @@
         0.9999999999999999,
         0.9999999999999999,
         0.9999272406103893
-      ]
+      ],
+      "commonK": {
+        "xyz": [
+          0.9504135247229524,
+          1.0,
+          1.08872503426909
+        ],
+        "sRgb": [
+          0.9999436284198088,
+          0.9999999999999999,
+          0.9998770800790725
+        ],
+        "deltaXyz": [
+          -5.6475277047662864e-05,
+          0.0,
+          -0.0001049657309100116
+        ],
+        "deltaSrgb": [
+          -5.637158019111688e-05,
+          0.0,
+          -5.016053131678966e-05
+        ],
+        "chromaticity": {
+          "production": [
+            0.3127266146810121,
+            0.32902313032606195
+          ],
+          "commonK": [
+            0.3127246442617495,
+            0.32904060824777237
+          ],
+          "delta": [
+            -1.9704192625868977e-06,
+            1.7477921710418176e-05
+          ]
+        }
+      }
     },
     {
       "id": "neutral-grey-half-transmission",
@@ -217,7 +266,43 @@
         0.735357787898737,
         0.7353820308854648,
         0.7353024750982681
-      ]
+      ],
+      "commonK": {
+        "xyz": [
+          0.4752067623614762,
+          0.5,
+          0.544362517134545
+        ],
+        "sRgb": [
+          0.7353147520836817,
+          0.7353986151581132,
+          0.7352648971587421
+        ],
+        "deltaXyz": [
+          -2.8237638523831432e-05,
+          0.0,
+          -5.24828654550058e-05
+        ],
+        "deltaSrgb": [
+          -4.30358150552701e-05,
+          1.658427264839002e-05,
+          -3.7577939525967885e-05
+        ],
+        "chromaticity": {
+          "production": [
+            0.3127266146810121,
+            0.32902313032606195
+          ],
+          "commonK": [
+            0.3127246442617495,
+            0.32904060824777237
+          ],
+          "delta": [
+            -1.9704192625868977e-06,
+            1.7477921710418176e-05
+          ]
+        }
+      }
     },
     {
       "id": "synthetic-narrow-550nm-absorber",
@@ -318,7 +403,43 @@
         0.9999999999999999,
         0.9935668886373071,
         0.9999999999999999
-      ]
+      ],
+      "commonK": {
+        "xyz": [
+          0.9460247199590346,
+          0.9899258443969177,
+          1.0886364380154159
+        ],
+        "sRgb": [
+          0.9999999999999999,
+          0.9935891054777536,
+          0.9999999999999999
+        ],
+        "deltaXyz": [
+          -5.62144863933689e-05,
+          -1.1102230246251565e-16,
+          -0.00010495718920267016
+        ],
+        "deltaSrgb": [
+          0.0,
+          2.2216840446454e-05,
+          0.0
+        ],
+        "chromaticity": {
+          "production": [
+            0.31278006630866667,
+            0.32727545813258424
+          ],
+          "commonK": [
+            0.31277814763381656,
+            0.3272928977148899
+          ],
+          "delta": [
+            -1.9186748501098805e-06,
+            1.743958230565612e-05
+          ]
+        }
+      }
     },
     {
       "id": "phenolphthalein-quinoid-profile",
@@ -422,7 +543,43 @@
         0.9999999999999999,
         0.6481706063504727,
         0.9702672817738797
-      ]
+      ],
+      "commonK": {
+        "xyz": [
+          0.7404916985539475,
+          0.5627743434431893,
+          0.9528400582573864
+        ],
+        "sRgb": [
+          0.9999999999999999,
+          0.6482007196204246,
+          0.9702217319947607
+        ],
+        "deltaXyz": [
+          -4.400134545590184e-05,
+          0.0,
+          -9.186484190892852e-05
+        ],
+        "deltaSrgb": [
+          0.0,
+          3.011326995183694e-05,
+          -4.5549779118969624e-05
+        ],
+        "chromaticity": {
+          "production": [
+            0.32821643729428285,
+            0.24942996000144838
+          ],
+          "commonK": [
+            0.3282166997688667,
+            0.24944498105816024
+          ],
+          "delta": [
+            2.6247458384531797e-07,
+            1.502105671186138e-05
+          ]
+        }
+      }
     }
   ]
 }

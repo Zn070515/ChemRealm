@@ -1,9 +1,9 @@
 # M6 Entry Gate
 
-**Status:** **Ready for owner authorization** — the corrected optical baseline,
-raw-profile rebuild, and independent colourimetry oracle have passed the exact
-committed-baseline hosted attestation recorded below; owner acceptance of the
-applicable candidate amendments is still required.
+**Status:** **Ready for owner authorization after current-round attestation** —
+the common-k colourimetry method cross-check has been added to the optical
+oracle and now requires a new exact committed-baseline hosted attestation;
+owner acceptance of the applicable candidate amendments is still required.
 This packet is an entry gate, not an M6 S3 claim.
 
 **Purpose:** Record the prerequisites for beginning M6 final-quality apparatus
@@ -20,7 +20,7 @@ not implemented or accepted by this packet.
 | Native M4-B scientific backend | PASS locally and hosted — owner gate open | [`M4-native.md`](M4-native.md), native v2 REF/differential/domain/world/browser checks; commit `66b488a3e7483b776711d0e9d6ab723698dc3a35`, CI run #140 (`34868257380`), local release WASM `sha256:c03fc50d7fb8aa6bae79dd9638b14095f1cf919bdfb8e31c64bda93ce05c3887` |
 | M5 observable/composition contract | PASS locally and hosted — owner gate open | [`M5.md`](M5.md), World → ScientificFrame → ObservableModel → DOM path and refusal/in-coverage optical cases; corrected baseline `bdef2366a2c34bd57604eb2825a57a5df15c2ed3`, hosted CI #143 (`34924905998`) |
 | Ordinary optical profile | PASS locally and hosted — owner gate open | `phenolphthalein-ordinary-aqueous.profile.json`, raw digitisation CSV and reproducible builder, source/review packets, exact profile hash `sha256:8d02fca6fbf715f9a15ee6366e981afde9a68b5062ac8f9cffae3bdcfb03a872`, full 380–780 nm/5 nm grid, blank-normalized CIE transform, focused in-coverage positive transform tests, and browser refusal evidence for the default 25 °C composition; exact closure baseline `636ecfd32790d261d3f83248083f73ecc30130a8`, CI #145 (`34927373546`) |
-| Independent colourimetry oracle | PASS locally and hosted — owner gate open | `colourimetry-independent-oracle.json`, Python standard-library rebuild/check, and `colourimetry-oracle.test.ts` covering transparent white, neutral grey, narrow absorber, and the admitted phenolphthalein profile; exact closure baseline `636ecfd32790d261d3f83248083f73ecc30130a8`, CI #145 (`34927373546`) |
+| Independent colourimetry oracle | PASS locally — hosted attestation pending | `colourimetry-independent-oracle.json`, Python standard-library rebuild/check, method-level single-common-k CIE cross-check with frozen XYZ/chromaticity/sRGB deltas, and `colourimetry-oracle.test.ts` covering transparent white, neutral grey, narrow absorber, and the admitted phenolphthalein profile; current-round hosted attestation required |
 | Strong-acid phenolphthalein orange | REFUSAL-ONLY | Documented in [`ADR-0016`](../adr/0016-indicator-optical-observation-boundary.md) and optical research packets; no production positive path |
 | Active version distribution | PASS locally | `contracts/version-manifest.json` is the sole manually maintained source; generated version output is checked by `pnpm verify:versions` |
 | Canonical SPEC candidate | REVIEW REQUIRED | Current candidate revision 30 is read from the central version manifest; owner must review the optical correction and all candidate amendments before M6 authorization |
@@ -80,11 +80,8 @@ git diff --check
 ```
 
 The prior hosted attestation for the historical optical baseline is retained in
-M5 evidence. **Hosted attestation is now recorded for the exact committed
-baseline** `636ecfd32790d261d3f83248083f73ecc30130a8` (`Add auditable optical
-evidence pipeline`), CI #145 / run `34927373546`:
-<https://github.com/Zn070515/ChemRealm/actions/runs/34927373546>. The run passed
-the raw-profile rebuild, independent colourimetry oracle, corrected production
-CIE/profile path, and repository verification workflow. This still does not
-silently promote a candidate to M6 authorization; owner acceptance of the
-applicable SPEC amendments remains the separate gate.
+M5 evidence. A new hosted attestation must be recorded here only after the
+common-k method cross-check is present on the exact pushed baseline; current-
+round hosted attestation required. This still does not silently promote a
+candidate to M6 authorization; owner acceptance of the applicable SPEC
+amendments remains the separate gate.

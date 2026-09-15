@@ -161,6 +161,13 @@ describe("independent colourimetry oracle", () => {
   it("contains independent vectors for blank, grey, narrow-band, and production profile cases", () => {
     expect(oracle.method.implementation).toMatch(/Python 3 standard library/);
     expect(oracle.method.independenceBoundary).toMatch(/frozen outputs/);
+    expect(oracle.method.commonKCrossCheck).toMatchObject({
+      normalization: "single common k = Yn / blank Y integral",
+      status: "bounded-method-difference-recorded",
+    });
+    expect(oracle.method.commonKCrossCheck.maxAbsoluteDeltaXyz).toBeCloseTo(0.0001049657309100116, 16);
+    expect(oracle.method.commonKCrossCheck.maxAbsoluteDeltaChromaticity).toBeCloseTo(1.7477921710418176e-05, 20);
+    expect(oracle.method.commonKCrossCheck.maxAbsoluteDeltaSrgb).toBeCloseTo(5.637158019111688e-05, 20);
     expect(oracle.vectors.map((candidate) => candidate.id)).toEqual([
       "transparent-white",
       "neutral-grey-half-transmission",

@@ -59,6 +59,34 @@ def xyz_from_transmittance(
     ]
 
 
+def xyz_from_transmittance_common_k(
+    transmittance: list[float],
+    cie: dict[str, Any],
+) -> list[float]:
+    """Calculate transmitting-object XYZ with one CIE normalization constant.
+
+    The common-k form uses the same illuminant/observer integrals as the
+    production method, but derives one k from the blank Y integral.  It does
+    not apply an independent correction to X and Z.  This is intentionally a
+    method-level cross-check, not a replacement chosen without measuring the
+    difference on the admitted grid.
+    """
+    wavelengths = cie["wavelengthNanometres"]
+    illuminant = cie["d65RelativePower"]
+    blank_y = trapz(
+        [1.0] * len(wavelengths),
+        cie["cie1931YBar"],
+        illuminant,
+        wavelengths,
+    )
+    common_k = WHITE_POINT[1] / blank_y
+    return [
+        common_k * trapz(transmittance, cie["cie1931XBar"], illuminant, wavelengths),
+        common_k * trapz(transmittance, cie["cie1931YBar"], illuminant, wavelengths),
+        common_k * trapz(transmittance, cie["cie1931ZBar"], illuminant, wavelengths),
+    ]
+
+
 def srgb_channel(value: float) -> float:
     bounded = min(1.0, max(0.0, value))
     if bounded <= 0.0031308:
@@ -75,6 +103,13 @@ def srgb_from_xyz(xyz: list[float]) -> list[float]:
     ]
 
 
+def chromaticity_from_xyz(xyz: list[float]) -> list[float]:
+    total = sum(xyz)
+    if not math.isfinite(total) or total <= 0:
+        raise ValueError("chromaticity requires a positive finite XYZ sum")
+    return [xyz[0] / total, xyz[1] / total]
+
+
 def make_vector(
     vector_id: str,
     transmittance: list[float],
@@ -82,12 +117,28 @@ def make_vector(
     input_record: dict[str, Any],
 ) -> dict[str, Any]:
     xyz = xyz_from_transmittance(transmittance, cie)
+    production_srgb = srgb_from_xyz(xyz)
+    common_k_xyz = xyz_from_transmittance_common_k(transmittance, cie)
+    common_k_srgb = srgb_from_xyz(common_k_xyz)
+    production_chromaticity = chromaticity_from_xyz(xyz)
+    common_k_chromaticity = chromaticity_from_xyz(common_k_xyz)
     return {
         "id": vector_id,
         "input": input_record,
         "transmittance": transmittance,
         "xyz": xyz,
-        "sRgb": srgb_from_xyz(xyz),
+        "sRgb": production_srgb,
+        "commonK": {
+            "xyz": common_k_xyz,
+            "sRgb": common_k_srgb,
+            "deltaXyz": [common - production for common, production in zip(common_k_xyz, xyz)],
+            "deltaSrgb": [common - production for common, production in zip(common_k_srgb, production_srgb)],
+            "chromaticity": {
+                "production": production_chromaticity,
+                "commonK": common_k_chromaticity,
+                "delta": [common - production for common, production in zip(common_k_chromaticity, production_chromaticity)],
+            },
+        },
     }
 
 
@@ -105,12 +156,74 @@ def build_oracle() -> dict[str, Any]:
         for wavelength in wavelengths
     ]
 
+    vectors = [
+        make_vector(
+            "transparent-white",
+            [1.0] * len(wavelengths),
+            cie,
+            {"kind": "constant-transmittance", "value": 1.0},
+        ),
+        make_vector(
+            "neutral-grey-half-transmission",
+            [0.5] * len(wavelengths),
+            cie,
+            {"kind": "constant-transmittance", "value": 0.5},
+        ),
+        make_vector(
+            "synthetic-narrow-550nm-absorber",
+            narrow_transmittance,
+            cie,
+            {
+                "kind": "decadic-single-form",
+                "absorbingWavelengthNanometres": 550,
+                "absorbanceAtPeak": 0.1,
+            },
+        ),
+        make_vector(
+            "phenolphthalein-quinoid-profile",
+            phenolphthalein_transmittance,
+            cie,
+            {
+                "kind": "profile-single-form",
+                "profileId": profile["profileId"],
+                "profileHash": profile["profileHash"],
+                "formId": "quinoid-base",
+                "concentrationMolPerLitre": 5e-5,
+                "pathLengthCentimetres": 1.0,
+            },
+        ),
+    ]
+    deltas_xyz = [
+        component
+        for vector in vectors
+        for component in vector["commonK"]["deltaXyz"]
+    ]
+    deltas_chromaticity = [
+        component
+        for vector in vectors
+        for component in vector["commonK"]["chromaticity"]["delta"]
+    ]
+    deltas_srgb = [
+        component
+        for vector in vectors
+        for component in vector["commonK"]["deltaSrgb"]
+    ]
+
     return {
         "oracleId": "chemrealm-indicator-colourimetry-independent-v1",
         "method": {
             "implementation": "Python 3 standard library; no TypeScript or ChemRealm runtime imports",
             "integration": "trapezoidal quadrature on the checked-in 380–780 nm / 5 nm grid",
-            "normalization": "each transmitted XYZ component divided by its blank integral and scaled to IEC D65 white",
+            "normalization": "production method: each transmitted XYZ component divided by its blank integral and scaled to IEC D65 white",
+            "commonKCrossCheck": {
+                "normalization": "single common k = Yn / blank Y integral",
+                "referenceWhitePoint": list(WHITE_POINT),
+                "deltaDefinition": "commonK minus production per-channel blank-normalized value",
+                "status": "bounded-method-difference-recorded",
+                "maxAbsoluteDeltaXyz": max(abs(delta) for delta in deltas_xyz),
+                "maxAbsoluteDeltaChromaticity": max(abs(delta) for delta in deltas_chromaticity),
+                "maxAbsoluteDeltaSrgb": max(abs(delta) for delta in deltas_srgb),
+            },
             "encoding": "IEC 61966-2-1 sRGB D65 matrix and transfer function",
             "beerLambert": "Napierian exp(-epsilon_N * concentration * pathLengthCm) for the phenolphthalein vector",
             "independenceBoundary": "expected vectors are frozen outputs; production tests do not call this implementation",
@@ -119,43 +232,7 @@ def build_oracle() -> dict[str, Any]:
             {"path": "packages/render/src/observable/colourimetry-cie-d65-1931-2deg-5nm.json", "sha256": sha256_file(CIE_PATH)},
             {"path": "packages/render/src/observable/phenolphthalein-ordinary-aqueous.profile.json", "sha256": sha256_file(PROFILE_PATH)},
         ],
-        "vectors": [
-            make_vector(
-                "transparent-white",
-                [1.0] * len(wavelengths),
-                cie,
-                {"kind": "constant-transmittance", "value": 1.0},
-            ),
-            make_vector(
-                "neutral-grey-half-transmission",
-                [0.5] * len(wavelengths),
-                cie,
-                {"kind": "constant-transmittance", "value": 0.5},
-            ),
-            make_vector(
-                "synthetic-narrow-550nm-absorber",
-                narrow_transmittance,
-                cie,
-                {
-                    "kind": "decadic-single-form",
-                    "absorbingWavelengthNanometres": 550,
-                    "absorbanceAtPeak": 0.1,
-                },
-            ),
-            make_vector(
-                "phenolphthalein-quinoid-profile",
-                phenolphthalein_transmittance,
-                cie,
-                {
-                    "kind": "profile-single-form",
-                    "profileId": profile["profileId"],
-                    "profileHash": profile["profileHash"],
-                    "formId": "quinoid-base",
-                    "concentrationMolPerLitre": 5e-5,
-                    "pathLengthCentimetres": 1.0,
-                },
-            ),
-        ],
+        "vectors": vectors,
     }
 
 

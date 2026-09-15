@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Status:** Implementation and evidence closure are attested on committed
-baseline `636ecfd32790d261d3f83248083f73ecc30130a8` by hosted CI #145
-(`34927373546`); owner acceptance of the candidate amendments remains open.
+**Status:** Implementation is locally complete; the common-k method cross-check
+requires a new exact committed-baseline hosted attestation. Owner acceptance of
+the candidate amendments remains open.
 
 **Goal:** Replace the invalid three-point production colour path with a source-attributed, full-visible-spectrum colourimetry transform whose optical constants and evidence cannot be mistaken for a test fixture.
 
@@ -167,11 +167,16 @@ scientific model or implementing the documented strong-acid orange regime.
 - The Node builder validates the raw trace, performs anchor normalization, and
   reproduces the profile content hash.
 - The Python oracle uses no ChemRealm runtime imports and freezes XYZ/sRGB and
-  81-point transmittance vectors for four independent numerical cases.
+  81-point transmittance vectors for four independent numerical cases. It also
+  independently calculates a single-common-k CIE result on the same grid and
+  freezes the XYZ/chromaticity/sRGB method differences instead of repeating
+  the production per-channel blank correction as its only method.
 - CI runs both rebuild/check gates before the final M6 attestation.
 
 - [x] Add raw trace, reproducible profile builder, and source packet references.
 - [x] Add independent standard-library oracle and production comparison tests.
+- [x] Add a common-k CIE method cross-check and record bounded differences for
+  XYZ, chromaticity, and encoded sRGB.
 - [x] Add CI/package gates and remove the stale M5 #140 current-status wording.
-- [x] Record the new exact committed-baseline hosted attestation after CI success: `636ecfd32790d261d3f83248083f73ecc30130a8`, CI #145 (`34927373546`).
+- [ ] Record the new exact committed-baseline hosted attestation after CI success.
 - [ ] Owner reviews applicable candidate revisions before M6 authorization.
