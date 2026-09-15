@@ -1,8 +1,9 @@
 # M6 Entry Closure Plan
 
-> Status: **Closed — M6 authorized / in progress**. M4-B and M5 evidence and
-> the applicable SPEC amendments were owner accepted on 2026-09-15. This plan
-> records authorization only; it does not implement M6 or claim M6 S3.
+> Status: **Historical authorization record — not an active implementation
+> authority.** M4-B and M5 evidence and the applicable SPEC amendments were
+> owner accepted on 2026-09-15. This plan records authorization only; it does
+> not implement M6 or claim M6 S3.
 
 ## Context
 

@@ -2,7 +2,8 @@
 
 > Status: research input for M6 implementation; not a replacement for
 > `SPEC-0001`, an ADR, or the M6 visual acceptance record.
-> Research date: 2026-09-15.
+> Research date: 2026-09-16.
+> Active visual authority: [M6 hybrid apparatus asset pipeline](../superpowers/specs/2026-09-15-m6-hybrid-apparatus-asset-pipeline.md)
 
 ## Question
 
@@ -23,7 +24,7 @@ replay contracts.
 
 The canonical NOBOOK research in [`from-nobook.md`](./from-nobook.md) and the
 asset playbook in [`agent-visual-asset-production.md`](./agent-visual-asset-production.md)
-converge on six implementation rules for M6:
+converge on ten implementation rules for M6:
 
 1. A mature experiment view is not only a canvas. Catalog/discovery, setup,
    world interaction, entity inspection and presentation are distinct surfaces
@@ -37,9 +38,11 @@ converge on six implementation rules for M6:
 4. Geometry proposes an interaction; world semantics commit it. M6 may expose
    visual regions and future targets, but it must not mutate WorldState or
    infer chemistry from a drag.
-5. Generated imagery may explore silhouettes and material direction, but
-   deterministic vector/2.5D layers own dimensions, graduations, text, liquid
-   level, ports and runtime state.
+5. Generated imagery may explore silhouettes and material direction, but the
+   admitted package may combine a high-resolution authored raster body with
+   deterministic vector/mask/2.5D layers. Dimensions, graduations, text,
+   liquid level, ports and runtime state remain explicit data or runtime-owned
+   layers rather than being trusted from pixels.
 6. The first slice should prove the reusable path from committed world to
    apparatus view, not claim the mature catalog breadth or the M7 interactive
    titration loop.
@@ -93,17 +96,18 @@ a systematic literature review](https://doi.org/10.1016/j.caeo.2021.100053)
 ### Renderer and accessibility evidence
 
 PixiJS v8 uses asynchronous `Application.init()`, supports resize-aware
-renderers, and recommends WebGL for production while WebGPU remains less
-mature. M6 consequently uses a self-hosted PixiJS v8 adapter with a fixed
-logical scene coordinate system and a DOM-readable companion surface; it does
-not let Pixi own scientific state. [PixiJS Application guide](https://pixijs.com/8.x/guides/components/application),
+renderers, and documents renderer choices including WebGL and WebGPU. The
+repository currently has a self-hosted PixiJS v8 adapter with a fixed logical
+scene coordinate system and a DOM-readable companion surface; it does not let
+Pixi own scientific state. [PixiJS Application guide](https://pixijs.com/8.x/guides/components/application),
 [PixiJS renderers](https://pixijs.com/8.x/guides/components/renderers), and
 [PixiJS v8 migration guide](https://pixijs.com/8.x/guides/migrations/v8)
 
 WCAG 2.2 Success Criterion 2.5.8 sets a 24×24 CSS pixel minimum target size
-or a spacing/equivalent exception. M6 uses this as an interaction-target
-floor for future apparatus controls and keeps important readouts in accessible
-DOM text rather than relying on canvas pixels. [W3C Target Size (Minimum)](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html)
+or a spacing/equivalent exception. The M6 contract uses this as an
+interaction-target floor for future apparatus controls and keeps important
+readouts in accessible DOM text rather than relying on canvas pixels. [W3C
+Target Size (Minimum)](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html)
 
 WCAG's non-text-contrast guidance sets a 3:1 target for meaningful graphics and
 user-interface states, and warns that thin anti-aliased strokes can be harder to
@@ -126,8 +130,8 @@ actuator identity. [Unity LOD guidance](https://docs.unity3d.com/es/2020.2/Manua
 |---|---|---|
 | NOBOOK separates equipment library, settings, player and info surfaces | M6 uses a world-dominant apparatus stage plus a separate inspection panel | A full catalog, authoring editor or M7 interaction loop |
 | NOBOOK exposes serializable experiment data | M6 preserves the existing committed-world/frame identity path | Treating a scene document as an event log |
-| NOBOOK shows high apparatus/state density | M6 ships one coherent original asset family and a package contract | Copying NOBOOK assets, layout or brand language |
-| Small previews and thumbnails must remain recognizable | M6 uses size classes and identity-preserving LODs, with Gold Master full/thumbnail review | Treating `preview.svg` as an arbitrary scaled master |
+| NOBOOK shows high apparatus/state density | M6 establishes one coherent original asset family and a package contract before scaling | Copying NOBOOK assets, layout or brand language |
+| Small previews and thumbnails must remain recognizable | M6 uses size classes and identity-preserving LODs, with Gold Master full/thumbnail review | Treating a legacy preview.svg or arbitrary downscale as the master |
 | Orthographic depth can show structure while measurement needs a frontal plane | M6 separates experiment-world, measurement and non-measurement preview modes | Reading a scale from an oblique 2.5D preview |
 | Phenomena change over a reusable apparatus | M6 models effects/state overlays over shared geometry | `bubbling-beaker.svg` or another phenomenon-specific vessel copy |
 | WCAG non-text contrast and SVG scaling guidance | M6 checks light/dark neutral backgrounds and size-class strokes | Solving readability with a universal black outline or white halo |
@@ -138,9 +142,11 @@ actuator identity. [Unity LOD guidance](https://docs.unity3d.com/es/2020.2/Manua
 ## M6 research stop condition
 
 The research is sufficient for the first slice when the implementation can be
-reviewed against: original silhouette and material language, semantic asset
-manifest, frozen geometry/profile identity, RenderState-only drawing,
-accessible readouts, four named viewports, size-class/LOD identity,
-dual-background legibility and reproducible local captures.
+reviewed against: original silhouette and material language, a complete
+hybrid asset package, semantic asset manifest, frozen geometry/profile
+identity, RenderState-only drawing, accessible readouts, four named viewports,
+size-class/LOD identity, dual-background legibility and reproducible local
+captures. A single bitmap or a legacy SVG wrapper may be evidence input, but
+cannot be admitted as the production package.
 Further NOBOOK feature inventory should not expand this slice; it belongs to
 the later catalog/content-production track.

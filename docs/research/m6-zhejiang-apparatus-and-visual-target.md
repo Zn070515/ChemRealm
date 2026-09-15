@@ -293,6 +293,29 @@ NOBOOK 页面给出产品表面能力，但不能证明其科学内核。M6 因�
 6. 导管、塞、旋塞、夹具和量取动作以部件、端口、hit region、capability 和
    actuator 显式建模；静态 M6 可以只交付契约，不把指针噪声伪装成 World event。
 
+## 运行时可落地性补充
+
+把 NOBOOK 的公开产品表面能力转换成 ChemRealm 的完整 GOAL，关键不是把
+所有器材做成同一种 SVG，而是让同一资产在不同投影中可复用：
+
+| 后续 GOAL 能力 | M6 资产包必须提供 |
+|---|---|
+| 器材库/目录 | family、variant、容量、可访问名称、thumbnail、source/licence |
+| 场景编辑/组合 | parts、ports、anchors、capabilities、可拆部件和兼容关系 |
+| 实验态/播放器 | scene runtime export、动态液面/现象 overlay、固定 frame identity |
+| 检查器/测量 | physical dimensions、graduation semantics、V(h)/h(V)、measurement view |
+| 多规格器材 | 独立 variant silhouette、profile identity、规格来源与比较表 |
+| 后续 WebGL/Pixi/WASM | backend-neutral manifest、纹理回退、结构化 mask、稳定 Observable 边界 |
+
+因此当前采用分层源文件、高分辨率视觉主体、可选 SVG/path/mask 和运行时
+Observable layer 的 hybrid package。它同时满足真实器材的细节表现与后续
+交互所需的可寻址结构。single bitmap、embedded-raster SVG 或没有来源记录
+的外部 ZIP 只能作为参考/概念输入，不能成为 Gold Master。
+
+这条结论与浙江教学压力是一致的：器材必须支持正确的读数、连接、承接、
+配制和操作语义；视觉层不能用漂亮的近似掩盖缺少刻度、旋塞、导管、夹具、
+容量差异或可拆关系。
+
 ## Sources
 
 ### Zhejiang examination and education standards

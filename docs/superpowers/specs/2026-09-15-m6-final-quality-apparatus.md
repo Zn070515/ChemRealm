@@ -1,6 +1,9 @@
 # M6 Final-quality apparatus slice
 
-**Status:** M6 S1 specified / implementation authorized; not M6 S3.
+**Status:** Historical technical slice; not an active implementation authority;
+not M6 S3.
+**Lifecycle:** Historical technical slice; superseded as active M6 asset
+materialization authority by the hybrid apparatus asset-pipeline specification.
 
 This document describes the original technical apparatus slice. Its visual
 quality and production-method requirements are now strengthened by

@@ -1,8 +1,14 @@
 # M6 Gold Master Contract Remediation Implementation Plan
 
+> Status: Historical plan; not an active implementation authority. Superseded
+> by the M6 hybrid apparatus asset-pipeline plan.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace the current structurally plausible but geometrically untrustworthy Gold Master package with source-backed, true-millimetre, replayable apparatus assets whose catalog, SVG, LOD, comparison evidence and tests share one construction source.
+**Lifecycle:** Historical contract-remediation plan. Superseded as the active
+M6 asset-materialization plan by the hybrid apparatus asset-pipeline plan.
+
+**Goal:** Replace the current structurally plausible but geometrically untrustworthy Gold Master package with source-backed, true-millimetre, replayable apparatus assets whose catalog, LOD, comparison evidence and tests share one construction source. The current active plan additionally admits high-resolution authored raster bodies and optional structured runtime layers.
 
 **Architecture:** A checked-in JSON construction source is the only authoring source for the first Gold Master families. A generator consumes it to produce the typed Representation Engine catalog, manifests, SVG LODs and comparison sheets; generated artifacts are drift-checked. SVG master coordinates are physical millimetres, while runtime scene scaling and shadows remain composition-owned. Geometry is built from typed landmarks and profile parameters, so tests measure the generated paths instead of trusting metadata.
 

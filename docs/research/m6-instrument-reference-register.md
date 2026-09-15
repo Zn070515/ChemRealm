@@ -1,6 +1,8 @@
 # M6 instrument reference register
 
 **Status:** implementation evidence register; not owner visual acceptance.
+The active materialization contract is the M6 hybrid asset pipeline; the
+existing procedural SVG family is a rejected structural candidate.
 
 This register separates facts about laboratory instruments from ChemRealm's
 derived visual construction. A cited source may establish a family, capacity,
@@ -54,3 +56,24 @@ the visual masters are attractive, that a future measurement view is readable,
 or that the package is ready for M6 S3. Strong-acid phenolphthalein orange is a
 documented optical follow-up/refusal boundary, not an implementation claim in
 this asset pass.
+
+## Runtime materialization boundary
+
+The register records physical and teaching references, not the pixels of a
+production asset. The active package may contain a layered source, a
+high-resolution authored raster body, optional structured masks/path data,
+runtime exports, and a schema-validated semantic manifest. The package must
+record which fields are source-backed, derived, interpolated, or
+pedagogicalApproximation.
+
+Pixi/Phaser documentation supports loading images, spritesheets, atlases and
+SVG-derived runtime textures; it does not make an SVG or image a source of
+chemistry truth. A runtime texture is selected by asset identity and export
+hash. Liquid, meniscus, level, colour observation, labels and interaction
+overlays remain Observable/Representation outputs.
+
+The user-supplied NOBOOK-like SVG archive was inspected as a reference intake:
+its SVG files wrap embedded PNG data and do not provide editable vector
+structure, semantic parts, physical-unit mapping, or sufficient source/licence
+records. It is therefore not admitted as a ChemRealm Gold Master or production
+runtime package.

@@ -1,9 +1,8 @@
 # M6 Final-quality apparatus implementation plan
 
-> This plan executes the authorized M6 slice in small verifiable steps. It
-> targets M6 S2 implementation and evidence preparation; it does not grant M6
-> S3. The plan uses the repository NOBOOK research and the companion web
-> evidence brief as design input, while keeping `SPEC-0001` authoritative.
+> Status: Historical plan; not an active implementation authority. The active
+> M6 plan is the hybrid apparatus asset-pipeline plan. This record does not
+> grant M6 S3 and `SPEC-0001` remains authoritative.
 
 ## Step 1 — Central version and asset package
 

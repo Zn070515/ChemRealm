@@ -1,6 +1,8 @@
 # M6 Instrument-First Gold Master Rebuild — Implementation Plan
 
-> Status: S2 implementation in progress. This is an ordered implementation argument, not evidence that M6 is complete.
+> Status: Historical plan; not an active implementation authority. This is an
+> ordered historical implementation argument, not evidence that M6 is complete.
+> Lifecycle: Historical plan. Superseded by the M6 hybrid apparatus asset-pipeline plan.
 > Spec: [M6 Instrument-First Gold Master Rebuild](../specs/2026-09-15-m6-instrument-first-gold-master-rebuild.md)
 > Prerequisite: owner accepts this spec/plan. M6 remains S2 visual NO-GO until `M6-S3` owner review succeeds.
 

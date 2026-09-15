@@ -1,10 +1,10 @@
 # 从 NOBOOK 反推 ChemRealm：UI、药品系统、待选区、运行态 Inspector 与化学过程世界深度调研
 
 > **文档性质：** 产品研究 / 竞品考古 / 架构输入，不是 ChemRealm 规范本身
-> **研究日期：** 2026-09-13
+> **研究日期：** 2026-09-16（持续更新）
 > **研究对象：** NOBOOK（NB）化学实验的教师端、学生端、开放平台、历史产品资料、政府采购技术规格、教学应用案例、版本演化与社区使用
 > **研究重点：** UI 信息架构、右侧待选区、药品/器材 Catalog、参数化材料实例、容器状态查看、实时反应信息、相态/拓扑/历史依赖、竞争与连续过程、数值存在阈值、现象表现、交互语义、内容规模与长期维护成本
-> **与 ChemRealm 的关系：** 本文一方面提炼“成熟虚拟化学世界已经证明有价值的产品能力”，另一方面把这些产品能力继续向科学运行时深挖：哪些行为仅靠药品名/方程式数据库无法正确实现，ChemRealm 必须怎样用 Scientific Reality、process network、Inspector 和数值语义承接。本文不建议复制 NOBOOK 的闭源实现、商业权限、UI 皮肤、素材或不可审计的科学逻辑。
+> **与 ChemRealm 的关系：** 本文一方面提炼“成熟虚拟化学世界已经证明有价值的产品能力”，另一方面把这些产品能力继续向科学运行时深挖：哪些行为仅靠药品名/方程式数据库无法正确实现，ChemRealm 必须怎样用 Scientific Reality、process network、Inspector 和数值语义承接。本文不建议复制 NOBOOK 的闭源实现、商业权限、UI 皮肤、素材或不可审计的科学逻辑。M6 的当前资产落地规范是 [混合器材资产管线](../superpowers/specs/2026-09-15-m6-hybrid-apparatus-asset-pipeline.md)；本研究只负责外部证据与产品推论，不替代该规范。
 
 ---
 
@@ -3155,6 +3155,18 @@ https://open.nobook.com/docs/2.0/tutorial-integration/experimental-integration/p
 
 支持：顶部/左右/底部工具栏、器材属性设置、播放器工具条、编辑器/播放器信息区等独立 surface。
 
+### G4. 开放平台资源版本列表
+
+https://open.nobook.com/docs/2.0/tutorial-integration/resource-list-download/
+
+支持：公开 SDK/资源版本选择和资源下载/对接入口；版本列表会变化，不能把当前列表当作 ChemRealm 的依赖版本。
+
+### G5. 学生端操作手册
+
+https://imgcdn.nobook.com/files/NOBOOK化学实验加试学生端%20使用手册.pdf
+
+支持：历史学生端中选择、移动、旋转、连接、取用、倾斜、读数、报告、练习/考试等外部操作证据；属于历史一手资料，不能据此断言 2026 客户端每个细节不变。
+
 ## H. 课程与虚拟实验教育研究
 
 ### H1. JY/T 0655—2025
@@ -3218,3 +3230,128 @@ https://phet.colorado.edu/en/teaching-resources/activities-design
 对教学，最重要的变化是：
 
 > **自由探索必须和引导探究、反思、比较和迁移结合；一个学生点过所有按钮，不等于他形成了可迁移的化学模型。**
+
+---
+
+# 58. M6 混合资产管线与 GOAL 完全体的可运行性复核
+
+本节是 2026-09-16 对当前 M6 混合器材资产规范的复核。问题不是“高分辨率图片能不能显示”，而是：
+
+> **同一件原创器材资产，能否在未来完整 GOAL 中同时服务资源库、场景编辑、实验运行、运行态检查、读数、保存/回放、分支、ACE 和不同渲染后端，而不产生第二套世界真相？**
+
+结论是：**可以，且混合资产包比 SVG-only 方案更适合这个终局；但它只证明资产边界可扩展，不代表这些后续产品表面已经实现。**
+
+## 58.1 截至本轮核对的公开 NOBOOK 证据
+
+本轮重点复核了 NOBOOK 当前官网、开放平台 2.0、UI 配置文档、历史化学界面说明、学生端手册、公开资源列表和教育装备标准。
+
+官方开放平台直接公开了以下外部能力：
+
+| 公开能力 | 证据 | 对 ChemRealm 的含义 |
+|---|---|---|
+| iframe/SDK 集成与跨窗口通信 | [NOBOOK 实验 API](https://open.nobook.com/docs/2.0/tutorial-integration/experimental-integration/phy-or-chem-integration/) | 外部壳层、实验运行时和内部场景数据可以分层；ChemRealm 不需要依赖该 SDK |
+| 编辑器/播放器、顶部/左右/底部工具栏、设置、器材库、信息区可分别配置 | [UI 组件与样式配置](https://open.nobook.com/docs/2.0/tutorial-integration/experimental-integration/phy-or-chem-integration/CustomUI) | Catalog、配置、运行、Inspector 不应被做成一个不可拆的巨型面板 |
+| getData/setData、play/stop、保存通知、截图 | [实验 API](https://open.nobook.com/docs/2.0/tutorial-integration/experimental-integration/phy-or-chem-integration/) | 场景文档、运行态、导出和呈现是不同边界；ChemRealm 仍坚持 event log 不等同于场景 JSON |
+| 化学资源/实验有持续的资源库和模块入口 | [NOBOOK 化学资源页](https://www.nobook.com/nb_huaxue_ziyuan.html)、[开放平台资源版本列表](https://open.nobook.com/docs/2.0/tutorial-integration/resource-list-download/) | 资产必须支持 catalog、版本、变体、缩略图和可复现加载，而不是只交一张图 |
+| 选择、移动、旋转、连接、取用、倾斜、读数、报告和练习/考试等学生端操作 | [NOBOOK 化学界面说明](https://nobook-doc-cdn.nobook.com/chem/NB化学实验界面及相应功能特性说明.html)、[学生端使用手册](https://imgcdn.nobook.com/files/NOBOOK化学实验加试学生端%20使用手册.pdf) | parts、ports、capabilities、抓取/连接区和量测区必须是资产包可寻址语义 |
+| 高中器材族与玻璃仪器标准被纳入教学装备配置 | [教育部 JY/T 0655—2025](https://www.moe.gov.cn/srcsite/A06/s3732/202507/W020250701322477393561.pdf) | 规格变体、器材家族和结构辨识应从标准/厂家资料建立，不能用一个缩放函数代替 |
+| 当前产品宣传 3D/自由交互/实验资源 | [NOBOOK 开放平台](https://open.nobook.com/)、[NOBOOK 化学产品介绍](https://www.nobook.com/nb_huaxue_ziyuan.html) | 2D/2.5D/3D 是表示后端选择，不应改变器材 identity 或科学状态；营销表述不证明内部科学正确性 |
+
+这些资料能证明 NOBOOK 的产品表面和用户期待，不能证明其内部素材格式、资产生产流程、event sourcing、回放算法或统一热力学求解器。本文不从公开页面推断这些未知内容。
+
+## 58.2 GOAL 完全体运行矩阵
+
+当前 M6 规范的 asset package、VolumeProfileSnapshot、ScientificFrame 和 ObservableModel 可以按下表承接后续目标：
+
+| GOAL 完全体能力 | 资产包提供什么 | 真正的运行时 owner | 是否方便落地 |
+|---|---|---|---|
+| 资源库/Catalog | assetId、family、variant、容量、标签、缩略图、格式、许可和来源 | Representation/content tooling | 是；M6 只冻结包形状，Catalog UI 仍待后续 |
+| 场景编辑与装配 | parts、ports、anchors、regions、capabilities、抓取/吸附区、拆卸关系 | Representation + World command boundary | 是；图片不持有命令，部件身份可复用 |
+| 演示/播放器 | 同一包的静态 body、动态层和 presentation policy | Observable/Representation | 是；演示不是第二套 asset |
+| 运行态 Inspector | 可读名称、部件身份、profile/export identity、frame-bound 数值 | World/Science projections + Observable | 是；不能从像素猜质量、浓度或 pH |
+| 读数/量测 | profile、刻度、meniscus/read region、精度和量测语义 | World/Science boundary + Observable | 是；量测读 profile/状态，不依赖 OCR |
+| 保存、回放、分支、比较 | genesis-owned profile/export identity、hash、可恢复资源和事件边界 | World Runtime/persistence | 是；完整 import/export 仍需 M8 等阶段实现 |
+| 液体、沉淀、气泡、热、连接反馈 | mask、layer slot、状态标签和观察策略的承载位 | Scientific Reality + Observable policy | 是；资产不决定何时发生效果 |
+| ACE 练习、报告、考试 | 稳定动作目标、能力 ID、可观测状态和截图/报告锚点 | ACE + projection | 是；资产只提供观察与交互表面，不推断学习 |
+| 桌面、平板、移动 | deliberate LOD、可缩放命中区、访问名称、替代操作和 viewport QA | Representation Engine | 是；需按视口逐件验收 |
+| 2D、WebGL、Pixi、Canvas、未来 3D | backend-neutral manifest、纹理/遮罩、profile、frame、ObservableModel | Renderer backend adapter | 是；后端可以变，identity 和 truth 不能变 |
+| Rust/C++/WASM 优化 | 明确 adapter、版本和 fixture-equivalent output | 对应的科学/世界/表示 owner | 是；只在 profiling 后引入，不能形成第二科学权威 |
+
+因此，混合资产包并非只适合“放一张高质量图片”。它同时提供：
+
+```
+visual body
+    + structured masks/geometry
+    + semantic parts/ports/capabilities
+    + frozen profile/calibration identity
+    + dynamic-state slots
+    + source/license/export evidence
+```
+
+这组边界可以让同一件器材在 Catalog、编辑器、播放器、Inspector、读数、截图和未来 ACE 中重复使用，同时避免把每一种模式复制成一套图片和一套化学逻辑。
+
+## 58.3 为什么它比旧 SVG-only 路线更适合终局
+
+旧路线把“可检查”几乎等同于“所有像素必须是 SVG path”。这会诱导团队为了满足文件格式而牺牲真正的玻璃材质、局部折射、器材特定曲线和美术定稿。
+
+混合路线把职责拆开：
+
+1. authored raster body 负责经过审查的视觉细节；
+2. mask/path/structured geometry 负责液体裁切、命中区、测量区和需要稳定寻址的结构；
+3. semantic manifest 负责器材身份、规格、部件、端口、能力、来源和许可；
+4. VolumeProfileSnapshot 负责可回放的体积—高度关系；
+5. Observable/RenderState 负责液体、颜色、读数、选中、连接和其他状态投影。
+
+因此它同时满足“视觉目标达到或超过成熟虚拟实验产品”和“科学/世界状态不能藏进 renderer”这两个看似冲突、实际上属于不同层的问题。
+
+## 58.4 运行方便性的硬条件
+
+“方便运行”不是把文件丢进 assets 目录后能显示，而是下面的链条不需要返工：
+
+```
+CatalogEntry
+    → instantiate variant
+    → World command/event
+    → committed WorldState
+    → ScientificFrame
+    → ObservableModel
+    → backend RenderState
+```
+
+要保持这条链稳定，必须满足：
+
+- 资产是 content-addressed 或能被 genesis 恢复，不能只有会漂移的 geometryRef；
+- 一个规格变体有自己的 manifest、source record、export hash 和 QA，不靠改 label 伪装；
+- detachable part 是 first-class identity，attach/detach 是 command/event；
+- liquid、meniscus、indicator palette、burette reading 和 measurement guide 都来自 frame/policy；
+- editor/player/ACE 可以换布局，但不能换 scientific meaning；
+- Pixi/Canvas/WebGL/WASM 只接收 ObservableModel/RuntimeAssetBundle，不能重新求解 chemistry；
+- 本地运行不依赖 NOBOOK iframe、远程 SDK、账户或服务器 scene service；
+- 任何缺失、hash mismatch、格式不支持或 profile 不可恢复都必须 typed fail，而不是静默换 generic apparatus。
+
+这意味着后续 GOAL 完全体无需推翻当前资产包；需要增加的是：
+
+1. Catalog/registry 和搜索；
+2. World commands 与 attach/detach/transfer/tilt 等 domain transitions；
+3. production composition；
+4. inspector/process/measurement projections；
+5. ACE evidence 与报告；
+6. 更完整的资产族和真实截图验收。
+
+这些是功能和内容增长，不是资产身份/真相边界的重写。
+
+## 58.5 最终判定
+
+截至本轮：
+
+| 判定 | 结果 |
+|---|---|
+| M6 混合资产包是否能支撑 GOAL 完全体 | **架构上可以** |
+| 是否能达到 NOBOOK 级别的可操作密度 | **可以作为目标，但必须用逐件 Gold Master 和运行态截图证明** |
+| 是否已经实现 Catalog/编辑器/播放器/Inspector/ACE | **没有；它们属于后续阶段** |
+| 是否需要依赖 NOBOOK 运行时 | **不需要，也不允许** |
+| 是否需要把所有视觉内容做成纯 SVG | **不需要，且当前不应如此要求** |
+| 是否允许单张 PNG 直接成为生产资产 | **不允许；必须是完整资产包的一部分** |
+| 是否允许未来引入 Rust/C++/WASM | **允许，但必须保持显式 adapter、同一 fixture 输出和可回退 JS 路径** |
+
+所以当前 M6 规范可以继续作为 GOAL 完全体的视觉/运行时资产底座。它的真实缺口不是格式兼容性，而是尚未完成第一件 Gold Master、production composition 和后续场景/交互证据。M6 仍应保持 S2 visual NO-GO，不能因为这次可运行性复核就提前宣称产品闭环。

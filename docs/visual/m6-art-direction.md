@@ -6,10 +6,42 @@ apparatus slice is a technical baseline, not a visual acceptance.
 **Authority:** `GOAL.md`, `SPEC-0001`, ADR-0006, ADR-0013,
 `docs/visual/apparatus-standard.md`, the M6 entry gate, and the research in
 `docs/research/m6-zhejiang-apparatus-and-visual-target.md`.
+The current asset materialization authority is
+`docs/superpowers/specs/2026-09-15-m6-hybrid-apparatus-asset-pipeline.md`
+and ADR-0018. Earlier SVG-only M6 plans are historical.
 
 This document is the M6 visual production standard. It does not replace the
 Scientific Reality, World Runtime, quantity, optical, replay, persistence or
 central-version contracts. It does not copy or reproduce NOBOOK/vendor assets.
+
+## 0. Asset materialization decision
+
+M6 uses a hybrid asset package. The authored visual body may be a high-resolution
+transparent raster export when that is the best way to reproduce individually
+art-directed glass, rim, wall, edge light, markings and subtle material detail.
+Structured SVG/path/mask layers remain available for clipping, hit regions,
+measurement geometry and other parts that must be addressed at runtime.
+
+The following roles are distinct:
+
+| Role | Current rule |
+|---|---|
+| Editable source | Layered design source or a reproducible source record and frozen export |
+| Visual body | Authored high-resolution RGBA image with deliberate runtime derivatives |
+| Structured/runtime layer | SVG/path/mask/hit-region data only where runtime addressability needs it |
+| Dynamic observation layer | Liquid, meniscus, level, indicator observation, selection and measurement from ObservableModel |
+| Semantic truth | Manifest, parts, ports, capabilities, profile identity, provenance and licence |
+
+An SVG whose only payload is a base64 embedded PNG is not an admitted vector
+master. A single PNG is not a complete Gold Master. Both may appear inside a
+complete package only in their declared roles. The current rough procedural SVG
+batch is retained as a rejected visual candidate and structural test baseline;
+it is not M6/M7 production art.
+
+The package must record authoring tool and version, export settings, source
+references, licence/use classification, hashes, intended scale, and the
+relationship between visual pixels and semantic millimetres. Pixel density is
+an export choice, not a physical measurement.
 
 ## 1. Purpose and benchmark boundary
 
@@ -107,7 +139,9 @@ not evidence that the first three families meet the visual bar.
 - no new chemistry, equilibrium, activity, density or optical model;
 - no renderer-side reagent/equilibrium branches;
 - no NOBOOK/vendor asset, screenshot, layout or distinctive expression reuse;
-- no static image accepted as a substitute for parts, ports, states and QA;
+- no single static image accepted as a substitute for parts, ports, states,
+  provenance and QA; a static image may be the authored visual body inside a
+  complete hybrid package;
 - no event persistence for pointer noise or renderer animation;
 - no catalog editor/search/player UI implementation in this remediation; the
   future surface modes are specified only so assets do not acquire a hidden
@@ -385,10 +419,10 @@ response. Glass must not be drawn as a continuous equal-weight, high-contrast
 closed contour; use local rear/front edges, rim thickness and directional
 highlights so the object reads as glass rather than a dark icon.
 
-All standalone SVG LODs are construction/identity assets and contain no scene
-shadow. A composed experiment scene may add a scene-owned contact shadow when
-a bench/support relation exists. Comparison sheets must embed the actual
-generated master geometry and may not use hand-authored proxy outlines.
+All standalone structured LODs are construction/identity assets and contain no
+scene shadow. A composed experiment scene may add a scene-owned contact shadow
+when a bench/support relation exists. Comparison sheets must embed the actual
+admitted master/export artifact and may not use hand-authored proxy outlines.
 
 ## 4.1 Family geometry rules
 
@@ -484,8 +518,8 @@ M6 requires two separate comparison sheets for each represented family:
 
 Each sheet records the changed parameters, their provenance class, source or
 rationale, and whether the comparison is measurement-valid or visual-only.
-The comparison geometry must be embedded from the generated master SVG files
-and marked with the source asset ID and master LOD. Hand-authored proxy
+The comparison must embed the actual admitted master/export artifact, identify
+the source asset and LOD, and record the artifact hash. Hand-authored proxy
 silhouettes, even when labelled with the correct asset ID, are not evidence.
 
 ## 6. Visual state and interaction separation
@@ -539,19 +573,21 @@ persisting pointer gestures or creating M7 domain events.
 
 ## 7. Asset package and architecture
 
-The production unit is an asset package, not a single SVG:
+The production unit is an asset package, not a single image or a single SVG.
+The former SVG-oriented map is retained only as historical context. The current
+M6 package map is:
 
 ```text
 asset-id/
-├─ master/       construction/master geometry
-├─ scene/        experiment-world LOD
-├─ preview/      non-measurement preview LOD
-├─ thumbnail/    small-size identity LOD
-├─ states/       reusable state/effect layers
+├─ source/       editable source or reproducible source record
+├─ master/       high-resolution authored visual body and optional structure
+├─ exports/      scene/preview/thumbnail runtime derivatives
+├─ masks/        liquid, meniscus, hit-region and measurement layers
+├─ states/       reusable state/effect layer definitions
 ├─ manifest.json
 ├─ source-record.md
 ├─ license.md
-├─ qa/           geometry, interaction, backgrounds, screenshots
+├─ qa/           geometry, interaction, backgrounds, hashes, screenshots
 └─ fixture/      deterministic render fixture
 ```
 
@@ -559,6 +595,9 @@ The manifest points to the sole central catalog version, separates logical
 artboard coordinates from semantic millimetre dimensions, and declares family,
 specification, parts, ports, anchors, hit regions, capabilities, state
 coverage, profile identity, accessibility text and provenance claim scope.
+It also declares the visual body, structured layers, runtime derivative formats,
+fallback order, export scale and artifact hashes. The absence of SVG does not
+make a package invalid; the absence of semantic/runtime evidence does.
 
 The owning core is Representation Engine. The path remains:
 
@@ -633,10 +672,15 @@ catalog/package review. Changes that alter persisted world meaning use the
 existing profile/content-hash migration process. Visual polish must not silently
 reinterpret historical geometry.
 
-The existing first slice is retained as a technical baseline for RenderState,
-profile identity, Pixi isolation and catalog shape. It does not yet prove the
+The existing first slice and rough SVG family are retained as technical
+baselines for RenderState, profile identity, Pixi isolation and catalog shape.
+They are rejected visual candidates, not approved masters. They do not prove the
 full family construction standard, visibly distinct variants, complete
 state/interaction packages, professional visual quality or owner acceptance.
+
+The replacement production gate begins with one 250 mL Griffin beaker. The
+remaining first-wave assets are not batch-promoted until that asset has passed
+the hybrid package, runtime and owner visual review.
 
 Current status is therefore **M6 S2 implementation baseline / visual gate
 NO-GO**, and M7 must not be authorized from this document alone.
@@ -658,3 +702,5 @@ NO-GO**, and M7 must not be authorized from this document alone.
 - [MDN SVG `vector-effect`](https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Attribute/vector-effect)。用于说明 `non-scaling-stroke` 的局部适用性，不把它当成全局线宽策略。
 - [MDN `prefers-reduced-motion`](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/%40media/prefers-reduced-motion)。用于后续状态动效的可访问性约束；M6 静态 Gold Master 不以动画证明质量。
 - [Unity Level of Detail guidance](https://docs.unity3d.com/es/2020.2/Manual/LevelOfDetail.html)。用于 LOD 作为距离/尺寸相关表现优化的通用参考，不作为 ChemRealm 资产或科学事实来源。
+- [PixiJS Assets](https://pixijs.com/7.x/guides/components/assets) 与 [PixiJS textures](https://pixijs.com/7.x/guides/components/textures)：用于运行时纹理、图集、格式回退和复用边界。
+- [Phaser texture concepts](https://docs.phaser.io/phaser/concepts/textures)：用于区分 image、spritesheet、atlas 与 SVG 浏览器栅格化行为。

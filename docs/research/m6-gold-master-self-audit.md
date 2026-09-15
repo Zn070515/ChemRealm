@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-15
 **Scope:** source-backed apparatus asset package and its contract/evidence boundary
-**Status:** implementation handoff; owner visual acceptance remains open
+**Status:** legacy SVG structural audit retained; visual candidate rejected; hybrid replacement not yet audited
 
 This audit records two independent passes over the M6 Gold Master candidate.
 It does not promote the package to an owner-approved Gold Master or change the
@@ -14,8 +14,9 @@ apparatus baseline.
 
 ### Scope and ownership
 
-- The Representation Engine owns apparatus construction metadata, clean SVG
-  geometry, LOD visibility and runtime asset-package boundaries.
+- The Representation Engine owns apparatus construction metadata, authored
+  visual body/runtime layers, LOD visibility and runtime asset-package
+  boundaries.
 - Scientific Reality, World Runtime and ACE are not modified by this package.
 - Runtime quantities, liquid, meniscus, optical state, readouts, chemical
   colors, shadows and QA overlays are not authored into clean masters.
@@ -29,24 +30,23 @@ apparatus baseline.
 The following chain was reviewed as one identity boundary:
 
 ```text
-gold-master-construction.json
+legacy construction source
         ↓
-gold-master-source.ts
+legacy procedural generator
         ↓
-APPARATUS_CATALOG projection
-        ↓
-create_gold_master_assets.mjs
-        ↓
-manifest / source record / fixture / state package / SVG LODs / QA sheets
+rejected SVG candidate package
 ```
 
-The construction source keeps the broader catalogue records, while the four
-first-wave records are selected only when a matching manually authored master
-exists. The TypeScript catalog projects those active records instead of
-maintaining a second first-wave geometry list. The generator discovers the
-manual-master identity from the SVG root and reads the matching source record;
-it does not maintain an independent asset list. The generated manifest points
-back to that source path.
+The active replacement chain is defined by the hybrid M6 specification but is
+not yet executed:
+
+asset brief and reference board
+        ↓
+asset-specific layered source master
+        ↓
+high-resolution visual body and optional structured layers
+        ↓
+runtime exports, semantic manifest and QA
 
 ### Mechanical checks performed
 
@@ -81,10 +81,10 @@ back to that source path.
 
 ### Audit A result
 
-**PASS for the bounded package contract.** No unresolved P0/P1 was found in the
-source/catalog/generator/manifest identity chain during this pass. This result
-does not include visual taste, apparatus realism, browser composition or owner
-approval.
+**PASS for the bounded legacy package contract only.** No unresolved P0/P1 was
+found in that structural identity chain during this pass. This result does not
+admit the legacy SVGs as visual masters and does not include visual taste,
+apparatus realism, browser composition or owner approval.
 
 ## Audit B — rendered review and acceptance boundary
 
@@ -95,12 +95,11 @@ Representative package review targets are:
 - 250 mL beaker;
 - 250 mL Erlenmeyer flask.
 
-Each target has `master`, `scene`, `preview` and `thumbnail` LODs, and the
-package declares both `dark-neutral` and `light-neutral` review backgrounds.
-The physical and normalized comparison sheets are generated from the actual
-masters. The review checklist covers full-size and thumbnail silhouette,
-opening/neck, rim/spout continuity, graduation placement, actuator anatomy,
-transparent material, clean-master overlays and common-scale labeling.
+Each legacy target has master, scene, preview and thumbnail LODs, and the package
+declares both dark-neutral and light-neutral review backgrounds. Those artifacts
+are structural candidates, not admitted visual masters. The replacement audit
+must instead inspect the authored high-resolution body, structured layers,
+runtime exports and semantic alignment.
 
 The candidate package was also inspected separately from the existing browser
 capture. The browser first slice still renders the legacy `TITRATION_BENCH_ASSET`
@@ -119,12 +118,11 @@ not claims that package tests can settle.
 
 ### Audit B result
 
-**STRUCTURAL REVIEW PASS; OWNER VISUAL GATE OPEN.** The package can proceed as
-a candidate handoff, but V-P0-1 through V-P0-12 and M6-S3 remain blocked until
-the owner reviews the required full-size and thumbnail captures on both neutral
-backgrounds against `docs/visual/apparatus-standard.md`. Any later production
-composition review must also prove that the candidate package, not the legacy
-first-slice fixture, is the source of the rendered apparatus.
+**LEGACY STRUCTURAL REVIEW PASS; VISUAL ADMISSION REJECTED.** The legacy package
+must not proceed as a Gold Master handoff. V-P0-1 through V-P0-12 and M6-S3
+remain blocked until the hybrid replacement begins with the 250 mL Griffin
+beaker and the owner reviews its source, exports, states and captures against
+the current apparatus visual standard.
 
 ## Evidence boundary
 
@@ -132,6 +130,7 @@ The following are deliberately not claimed by this audit:
 
 - NOBOOK-level visual parity or superiority;
 - owner-approved Gold Master quality;
+- hybrid package source/body/runtime admission;
 - complete Zhejiang/high-school apparatus coverage;
 - M6 production Pixi integration;
 - M7 pointer/drag/snap behavior;
@@ -160,13 +159,11 @@ command run is package evidence, not owner visual acceptance.
 
 ## Handoff
 
-- Current stage: M6 S2 implementation candidate; visual-system gate NO-GO.
-- Verified: source/catalog/generator identity, measured physical-mm bounds,
-  semantic LOD roles, declared marking semantics, clean-master exclusions,
-  candidate comparison sheets and package tests.
-- Not verified: owner visual quality, dual-background screenshot acceptance,
-  production integration of the candidate package, performance sample and
-  M6 S3.
-- Next decision: owner review of bounded candidate captures; separately scope
-  the production composition work needed to replace the legacy first-slice
-  apparatus path.
+- Current stage: M6 S2 visual NO-GO; legacy SVG candidate rejected.
+- Verified: legacy structural source/catalog identity, measured physical-mm
+  bounds, semantic roles and package tests.
+- Not verified: hybrid source master, authored visual body, runtime exports,
+  dual-background screenshot acceptance, production composition, performance
+  sample and M6 S3.
+- Next decision: produce and owner-review the 250 mL Griffin beaker under the
+  hybrid asset pipeline.

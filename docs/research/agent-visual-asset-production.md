@@ -1,8 +1,8 @@
 # Agent visual asset production playbook
 
 > **中文定位：面向 Agent 的 ChemRealm 美术资产生产手册**
-> Research date: 2026-09-15 (updated with M6 visual-system audit)
-> Status: Research / M6-M7 implementation guidance
+> Research date: 2026-09-16 (updated with M6 hybrid asset-pipeline and GOAL-complete viability audit)
+> Status: Research / M6-M7 implementation guidance; aligned with the active M6 hybrid pipeline
 > Scope: ChemRealm 的实验器材、试剂、现象、缩略图和教学插图
 > Normative relationship: 本文件是研究与生产方法，不替代已生效的视觉标准、ADR 或 SPEC。
 
@@ -88,6 +88,24 @@ whole object
 
 这也是 Agent 不能只交付一张透明 PNG 的原因：图片没有办法表达滴定管活塞、瓶口、导管端点和夹持区之间的区别。
 
+### 1.5 对 NOBOOK 公开资料的交叉提炼
+
+本手册只从 NOBOOK 的公开产品页、开放平台文档、化学界面说明和公开学生端
+资料提炼产品表面能力，不把任何一份资料当作 ChemRealm 的科学或美术来源。
+公开资料反复出现的可运行能力包括：
+
+- 器材库/工具栏、器材属性或信息区、场景编辑与演示/播放器表面分层；
+- 场景准备、器材选择、移动、旋转、连接、拿取、倾斜、读数和即时反馈；
+- 实验库、练习/考试等不同使用表面，以及结果/报告类信息输出；
+- 2D/3D 或有深度线索的实验表现与可观察的器材关系。
+
+因此 ChemRealm 的资产包不能只交付一张漂亮图。它需要同一件资产在
+catalog、inspector、experiment-world、measurement 和 demo/player 投影中
+保持 identity，同时允许不同投影使用不同 LOD、信息密度和交互覆盖层。
+NOBOOK 公开资料没有授权复制具体模型、贴图、布局、图标或操作编排；本手册
+只把上述能力转换为原创的 parts、ports、regions、capabilities、runtime
+states 和 evidence。
+
 ---
 
 ## 2. ChemRealm 对“美观”的可执行定义
@@ -130,17 +148,20 @@ whole object
 
 **结论：** 适合后续分子查看器、复杂装配和多视角检查，不应成为 v0 交付所有器材的前置条件。
 
-### 3.3 推荐：AI 概念探索 + 参数化/矢量/正交 2.5D master
+### 3.3 历史路径：AI 概念探索 + 矢量/正交 2.5D master
 
 ```text
 生成模型
   → 探索轮廓、构图、色彩和材质方向
   → 人工/Agent 选择一条原创方向
-  → 参数化或矢量方式重建可控 master
+   → 以分层设计源文件定稿，再导出高分辨率视觉主体与结构化运行层
   → 运行时生成液面、刻度、连接态和现象
 ```
 
-这是 ChemRealm v0 的推荐路径。正交 2.5D 允许表达口沿、壁厚、后方硬件和可拆接口，但不得出现透视汇聚、远近缩放或把测量面转成斜视。它保留生成模型的审美探索能力，同时把以下内容交还给确定性资产和代码：
+这段流程保留为概念探索历史记录；当前 M6 的推荐路径见下一节。正交 2.5D
+允许表达口沿、壁厚、后方硬件和可拆接口，但不得出现透视汇聚、远近缩放或把
+测量面转成斜视。它保留生成模型的审美探索能力，同时把以下内容交还给确定性
+资产和代码：
 
 - 几何比例；
 - 刻度与单位文字；
@@ -165,6 +186,30 @@ whole object
 | 连接口、操作部位 | 不可猜测 | 资产 manifest |
 | 颜色变化、沉淀、气泡 | 不可决定因果 | Scientific Core → ObservableModel |
 | 运行时状态动画 | 不可私自添加 | approved render state |
+
+### 3.5 当前推荐：分层源文件 + authored raster body + structured runtime layers
+
+当前 M6 不再要求视觉主体必须由 SVG 路径表达。推荐的生产单元是：
+
+    参考板与 asset brief
+      -> 器材专属 silhouette/proportion lock
+      -> 分层设计源文件
+      -> 高分辨率透明视觉主体
+      -> 可选 SVG/path/mask/hit-region 层
+      -> WebP/AVIF/PNG runtime exports
+      -> Observable-driven liquid/meniscus/state layers
+      -> 固定视口与 composed-scene 审查
+
+高分辨率 PNG/WebP 只能负责视觉主体，不能携带或替代化学、物理 profile、
+部件语义、动态液面、交互状态、来源和许可证。SVG 可以负责结构化遮罩、
+测量和 hit region，但不得通过一个嵌入位图的 SVG wrapper 假装成可编辑矢量
+master。原始设计工具可以是 Figma、Illustrator、Affinity、Krita、Photoshop
+或其他工具；工具名不是验收标准，source-record、导出参数、hash 和截图才是。
+
+Pixi/Phaser 等运行时可以加载 image、spritesheet、atlas、WebP/AVIF/PNG 或
+结构化 mask；它们不能改变 ObservableModel、ScientificFrame 或
+VolumeProfileSnapshot 的 owner。未来 Rust/C++/WASM 只能作为可替换的几何、
+插值、图像处理或渲染性能实现，并必须与 JS reference path 做 fixture 对照。
 
 ---
 
@@ -370,18 +415,35 @@ Return three controlled silhouette/material variations with the same geometry.
 
 ```text
 asset-id/
-├─ master/                 原创 construction/master 几何或矢量资产
-├─ scene/                  实验世界 LOD
-├─ preview/                非测量的目录/检查器 LOD
-├─ thumbnail/              小尺寸识别 LOD
+├─ source/                 分层源文件或可复现的 source-record
+├─ master/                 高分辨率 authored visual body 与可选结构层
+├─ exports/                scene/preview/thumbnail runtime exports
+├─ masks/                  liquid/meniscus/hit-region/measurement layers
 ├─ states/                 由 master 派生的状态定义或图层
 ├─ manifest.json           尺寸、部件、端口、能力、可访问名称
 ├─ source-record.md        参考、生成工具、prompt、seed、作者记录
 ├─ license.md              资产许可证和第三方声明
-└─ qa/                     固定视口截图、问题记录、验收结果
+└─ qa/                     固定视口截图、问题记录、hash 与验收结果
 ```
 
-### 6.1 Manifest 的最小语义
+### 6.2 资产输入准入
+
+Agent 收到外部压缩包、PNG、SVG 或参考截图时，必须先做输入审计：
+
+1. 记录来源 URL、访问日期、许可证/使用分类和文件 hash；
+2. 检查 SVG 是否真正含有可审查结构，不能把 embedded raster wrapper 当作
+   vector master；
+3. 检查图片是否只是 preview/reference，不能把它宣称为可编辑或可测量
+   master；
+4. 如果没有来源、许可证或原始层信息，降级为 reference-only；
+5. 检查物理尺寸、容量、刻度和部件语义是否与 manifest 分离；
+6. 只有完成 source-record、license、manifest、状态层和 QA 后，才可进入
+   Gold Master candidate。
+
+这条规则适用于用户提供的 NOBOOK-like SVG/ZIP，也适用于 AI 生成图。没有
+可审查来源和结构的文件可以帮助研究风格，但不能直接进入 ChemRealm 运行包。
+
+### 6.3 Manifest 的最小语义
 
 ```ts
 type ApparatusAssetManifest = {
@@ -429,7 +491,7 @@ Gold Master 要在 `dark-neutral` 和 `light-neutral` 两种背景上各留全�
 不能靠黑色粗描边或白色光晕解决。气泡、沉淀、气体、热效应和指示剂光学外观
 都是可复用的 state/effect overlay；不能为每种现象复制一份器材 master。
 
-### 6.2 文字和数字永远分层
+### 6.4 文字和数字永远分层
 
 以下内容不应烘焙进生成图片：
 
@@ -538,38 +600,34 @@ Owner visual review
 
 ## 9. 第一条 Agent 美术纵向切片
 
-第一批建议只做滴定实验的八件基础资产：
+第一阶段不批量铺八件基础资产。先做一件真正的视觉 Gold Master：
 
-1. 锥形瓶；
-2. 滴定管；
-3. 铁架台；
-4. 烧杯；
-5. 移液管；
-6. 玻璃棒；
-7. 指示剂瓶；
-8. 温度计。
+1. 250 mL Griffin 烧杯；
+2. 通过 owner visual review 后，再做 250 mL 锥形瓶；
+3. 再做 25 mL 酸式滴定管；
+4. 最后做 50 mL 碱式滴定管。
 
 验收不以“八件图都生成出来”为目标，而以以下场景通过为目标：
 
 ```text
-资源库
-→ 拖入滴定管和锥形瓶
-→ 对齐并建立语义连接/支撑关系
-→ 加入液体
-→ 显示正确液面和读数
-→ 执行滴定
-→ 根据 observable state 显示指示剂变化
-→ 切换演示态
+单件 Gold Master package
+→ 载入固定 fixture world
+→ 从 bound frame 派生液面、刻度/读数和状态覆盖层
+→ 在 experiment/measurement/preview 投影检查
 → 在四个固定视口截图
+→ owner review PASS
+→ 才扩展到下一件器材
 ```
 
 ### 9.1 这条切片必须证明
 
-- 所有器材遵守同一视角、光照、玻璃和描边语言；
+- 单件器材有独立、可审查的 silhouette、比例、口沿、壁厚和材质层次；
+- 所有已批准器材遵守同一视角、光照、玻璃和描边语言；
 - 滴定管与锥形瓶的相对尺寸可读；
 - 液面由体积 profile 驱动，而不是按图片高度猜测；
 - 刻度、单位和实时读数不是图片的一部分；
-- 选中、拖动、连接和无效操作有清楚的状态反馈；
+- 已声明的选中、连接和无效状态有清楚的状态反馈；M6 不把 pointer noise
+  伪装成 World event；
 - 演示态能隐藏编辑噪声，但不隐藏必要的实验信息；
 - 颜色和现象来自 ObservableModel；
 - 资产能在固定 fixture world 中重复生成相同截图。
@@ -615,12 +673,15 @@ Owner visual review
 ## 10.1 研究来源与使用边界
 
 - [NOBOOK 化学实验界面与功能说明](https://nobook-doc-cdn.nobook.com/chem/NB%E5%8C%96%E5%AD%A6%E5%AE%9E%E9%AA%8C界面及相应功能特性说明.html)、[NOBOOK 开放平台实验 API](https://open.nobook.com/docs/2.0/tutorial-integration/experimental-integration/phy-or-chem-integration/)：用于编辑/演示/器材库/检查器等产品表面分层；不作为素材、布局或科学正确性来源。
+- [NOBOOK 开放平台 UI 配置指南](https://open.nobook.com/docs/2.0/tutorial-integration/experimental-integration/phy-or-chem-integration/CustomUI)、[资源版本列表](https://open.nobook.com/docs/2.0/tutorial-integration/resource-list-download/)、[化学实验学生端手册](https://imgcdn.nobook.com/files/NOBOOK化学实验加试学生端%20使用手册.pdf)：用于核对 editor/player surface、资源版本、选择/移动/旋转/连接/取用/倾斜/读数/报告等外部行为；不证明 NOBOOK 内部资产格式或科学 solver。
 - [教育部 JY/T 0655—2025 普通高中化学教学装备配置标准](https://www.moe.gov.cn/srcsite/A06/s3732/202507/W020250701322477393561.pdf)：用于高中器材族覆盖压力；不自动证明具体厂家尺寸。
 - [国家标准信息公共服务平台 GB/T 12805—2011 滴定管](https://std.samr.gov.cn/gb/search/gbDetailed?id=71F772D7FD44D3A7E05397BE0A0AB82A)、[酸式/碱式滴定管教学参考](https://www.muhn.edu.cn/ecmd/info/1481/14785.htm)：用于结构和读数操作审查。
 - [W3C WCAG 2.2 non-text contrast](https://www.w3.org/WAI/WCAG22/understanding/non-text-contrast.html)：用于重要非文本图形/状态对比度参考。
 - [MDN SVG `viewBox`](https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Attribute/viewBox)、[`preserveAspectRatio`](https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Attribute/preserveAspectRatio)、[`vector-effect`](https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Attribute/vector-effect)：用于逻辑坐标、比例保持和局部非缩放线条判断。
 - [MDN `prefers-reduced-motion`](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/%40media/prefers-reduced-motion)：用于后续动态状态的可访问性约束。
 - [Unity Level of Detail](https://docs.unity3d.com/es/2020.2/Manual/LevelOfDetail.html)：用于 LOD 的通用表现/性能理由，不作为器材或化学事实。
+- [PixiJS Assets](https://pixijs.com/7.x/guides/components/assets)、[PixiJS Textures](https://pixijs.com/7.x/guides/components/textures)：用于运行时纹理、图集、格式回退和资源复用边界。
+- [Phaser Texture Concepts](https://docs.phaser.io/phaser/concepts/textures)：用于 image、spritesheet、atlas 与 SVG 浏览器栅格化边界。
 
 ---
 

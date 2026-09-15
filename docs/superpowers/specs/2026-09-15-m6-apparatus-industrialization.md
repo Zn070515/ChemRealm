@@ -1,7 +1,9 @@
 # M6 器材资产工业化与浙江实验覆盖设计
 
-**Status:** M6 S1 design / implementation authorized by the owner's direct request;
-this document does not claim M6 S3.
+**Status:** Historical design record; not an active implementation authority.
+It does not claim M6 S3.
+**Lifecycle:** Historical design record; superseded as active M6 asset
+materialization authority by the hybrid apparatus asset-pipeline specification.
 
 **Authority:** `GOAL.md`, `SPEC-0001`, ADR-0006, ADR-0013,
 `docs/visual/apparatus-standard.md`, the existing M6 design, and the cited

@@ -1,7 +1,7 @@
 # M6 器材资产工业化实施计划
 
-> 目标是完成 M6 S2 的高保真资产与验证准备，不提前宣称 S3。直接在当前
-> 工作树集成；每一步先有可失败的测试，再实现最小正确行为。
+> Historical plan only; it is not an active implementation authority. Current
+> M6 work follows the hybrid apparatus asset-pipeline plan.
 
 > This is the original technical-slice plan. It is retained as historical
 > context only and is not an active implementation authority. Current M6 work

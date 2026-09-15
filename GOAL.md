@@ -3,7 +3,7 @@
 > Status: Project Constitution  
 > Priority: Highest-level product intent  
 > Rule: Lower-level specs, plans, ADRs, implementations, and agent instructions MUST NOT contradict this file without an explicit owner-approved amendment.
-> Revision 2026-09-13: Material/catalog abundance, parameterized world objects, runtime state inspection, process-first chemistry, simultaneous competing processes, phase/topology/history dependence, numerical presence semantics, live process visibility, and content-production scalability are elevated to first-class product requirements after renewed NOBOOK-class and scientific-runtime study. This revision does **not** make NOBOOK an authority on scientific truth; it clarifies what a mature interactive chemical world must feel capable of doing and what scientific shortcuts it is not allowed to take.
+> Revision 2026-09-15: Material/catalog abundance, parameterized world objects, runtime state inspection, process-first chemistry, simultaneous competing processes, phase/topology/history dependence, numerical presence semantics, live process visibility, content-production scalability, and a format-neutral high-fidelity asset pipeline are elevated to first-class product requirements after renewed NOBOOK-class and scientific-runtime study. This revision does **not** make NOBOOK an authority on scientific truth; it clarifies what a mature interactive chemical world must feel capable of doing and what scientific shortcuts it is not allowed to take.
 
 # 1. Mission
 
@@ -214,6 +214,15 @@ The finished product should reach at least the perceived quality bar of mature h
 Prototype visuals are acceptable only inside clearly isolated engineering prototypes.
 
 Assets entering a release path MUST follow a coherent art pipeline and visual standard.
+
+The visual pipeline is format-neutral but package-strict. A high-resolution
+authored raster body, structured vector or mask layers, runtime textures, and
+Observable-driven state layers MAY be combined when their roles, provenance,
+licence, hashes, semantic identity, and reproducible exports are explicit. A
+single bitmap, a procedural icon batch, or an SVG wrapper around an embedded
+bitmap MUST NOT be treated as a complete production apparatus asset. Visual
+quality is judged by the rendered result and its runtime/state evidence, not by
+the source file extension.
 
 ## 5.8 Simulation is not automatically learning
 

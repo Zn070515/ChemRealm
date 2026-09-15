@@ -1,7 +1,10 @@
 # M6 Visual Asset System Remediation
 
-**Status:** M6 S1 specified; implementation follows this specification and the
-current M6 visual production standard, and does not claim M6 S3.
+**Status:** Historical remediation record; not an active implementation
+authority and does not claim M6 S3. The active materialization authority is the
+hybrid apparatus asset-pipeline specification.
+**Lifecycle:** Historical remediation record; the active materialization
+authority is the M6 hybrid apparatus asset-pipeline specification.
 
 **Authority:** subordinate to `GOAL.md`, `SPEC-0001`, ADR-0006, ADR-0013,
 `docs/visual/apparatus-standard.md` and

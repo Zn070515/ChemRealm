@@ -1,14 +1,14 @@
-# Apparatus visual standard — v1
+# Apparatus visual standard — v2
 
-- **Status:** **Binding.** `SPEC-0001` was accepted 2026-09-11, which is the
-  condition this line named, so the M6 gate in §6 is now a real gate rather than
-  a proposal. Repointed from "Proposed" during the M1 contract remediation's
-  document audit.
+- **Status:** **Binding for M6 asset admission; not evidence of visual acceptance.**
+  The current rough SVG batch remains rejected visual candidate material. This
+  version defines the hybrid source/body/runtime package used by the active M6
+  specification.
 - **Scope:** an orthographic-camera experiment world with bounded 2.5D depth
   cues, a strict frontal measurement presentation, and explicitly labelled
   non-measurement 2.5D catalog/inspector/construction previews. Governs all
   apparatus entering a release path.
-- **Related:** `GOAL.md` §5.7, §15; `CLAUDE.md` §4.7, §10; `AGENTS.md` §14; `ADR-0006`
+- **Related:** `GOAL.md` §5.7, §15; `CLAUDE.md` §4.7, §10; `AGENTS.md` §14; `ADR-0006`; `ADR-0018`
 
 ## Gold Master first wave
 
@@ -48,6 +48,29 @@ surface. It may not reproduce exact panel positions, widths, icons, toolbar
 order, card treatment, scene composition or interaction choreography. Layout,
 assets and visual identity must be original. M6 includes an explicit originality
 check in its review checklist.
+
+## Master materialization and admission
+
+The standard is deliberately hybrid. An authored high-resolution transparent
+image may carry the visual body when it gives better control of glass, wall
+thickness, rim, spout, hardware, highlights and asset-specific proportions.
+Structured SVG/path/mask data remains required wherever liquid clipping,
+measurement geometry, hit regions or detachable parts need deterministic
+runtime addressing.
+
+The complete package must contain, or reproducibly identify:
+
+- an editable layered source or an owner-approved frozen source record;
+- a high-resolution visual body and deliberate runtime exports;
+- optional structured geometry/masks with stable role names;
+- semantic manifest, parts, ports, capabilities and accessibility labels;
+- frozen volume-profile identity when the apparatus is volumetric;
+- source, licence, export settings and artifact hashes;
+- empty/loaded/selected/connected/detached state evidence where applicable.
+
+A standalone bitmap is concept/reference material, not a Gold Master. An SVG
+that only embeds a bitmap is not a vector master. The source format never
+substitutes for semantic identity, state separation or QA.
 
 ## 1. Scene convention
 
@@ -310,3 +333,5 @@ choices that have not yet been informed by anything real.
 - [MDN SVG `viewBox`](https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Attribute/viewBox), [`preserveAspectRatio`](https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Attribute/preserveAspectRatio) and [`vector-effect`](https://developer.mozilla.org/en-US/docs/Web/SVG/Reference/Attribute/vector-effect): logical SVG scaling and the limited use of non-scaling strokes.
 - [MDN `prefers-reduced-motion`](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/%40media/prefers-reduced-motion): future interaction/transition accessibility reference.
 - [Unity Level of Detail guidance](https://docs.unity3d.com/es/2020.2/Manual/LevelOfDetail.html): generic LOD rationale only; it is not a ChemRealm physical or chemistry source.
+- [PixiJS Assets](https://pixijs.com/7.x/guides/components/assets) and [PixiJS textures](https://pixijs.com/7.x/guides/components/textures): runtime texture, atlas and format-fallback references.
+- [Phaser texture concepts](https://docs.phaser.io/phaser/concepts/textures): image, spritesheet, atlas and SVG rasterization boundary reference.

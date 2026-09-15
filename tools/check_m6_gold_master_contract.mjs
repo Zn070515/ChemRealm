@@ -22,7 +22,7 @@ const [source, manifest, versionManifest, evidence, artDirection, plan, generato
   readJson("contracts/version-manifest.json"),
   read("docs/evidence/M6.md"),
   read("docs/visual/m6-art-direction.md"),
-  read("docs/superpowers/plans/2026-09-15-m6-instrument-first-gold-master-rebuild.md"),
+  read("docs/superpowers/plans/2026-09-15-m6-hybrid-apparatus-asset-pipeline.md"),
   read("tools/create_gold_master_assets.mjs"),
 ]);
 
@@ -115,8 +115,9 @@ requireText(!/path count[^\n]*proves|all[^\n]*shadow[^\n]*master/i.test(artDirec
   "art direction must not use path count or blanket shadow claims as acceptance proof");
 requireText(/self-audit/i.test(evidence) && /m6-gold-master-self-audit\.md/i.test(evidence),
   "M6 evidence must link the two-round self-audit");
-requireText(/Status: S2 implementation in progress/i.test(plan) && /owner review succeeds/i.test(plan),
-  "implementation plan must preserve the S2 candidate/owner-review gate");
+requireText(/Current stage:\s*M6 S2 visual NO-GO/i.test(plan) &&
+  /owner visual review/i.test(plan),
+  "active implementation plan must preserve the S2 candidate/owner-review gate");
 
 if (failures.length > 0) {
   for (const failure of failures) console.error(`FAIL  ${failure}`);
