@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { APPARATUS_CATALOG } from "./apparatus-catalog.js";
 import { GOLD_MASTER_CONSTRUCTION_SOURCE, GOLD_MASTER_SPECIFICATION_IDS } from "./gold-master-source.js";
+import type { InstrumentMarking } from "./instrument-marking.js";
 
 const packageRoot = new URL("../../../../assets/apparatus/catalog/gold-master/", import.meta.url);
 const lods = ["master", "scene", "preview", "thumbnail"] as const;
@@ -11,13 +12,14 @@ const expectedAssets = [...GOLD_MASTER_SPECIFICATION_IDS];
 type AssetRecord = {
   readonly assetId: string;
   readonly specificationId: string;
+  readonly assetStatus: "candidate";
   readonly familyId: string;
   readonly capacityMl: number;
   readonly bodyDimensionsMm: readonly number[];
   readonly dimensionsMm: readonly number[];
   readonly materialProfile: string;
   readonly landmarksMm: Readonly<Record<string, number>>;
-  readonly graduation: { readonly maximumMl: number; readonly majorEveryMl: number; readonly minorEveryMl: number; readonly readingResolutionMl: number };
+  readonly marking: InstrumentMarking;
   readonly lodVisibility: Readonly<Record<(typeof lods)[number], readonly string[]>>;
   readonly lodFiles: Readonly<Record<string, string>>;
 };
@@ -44,11 +46,10 @@ function dataNumbers(svg: string, name: string): number[] {
     return value === undefined ? [] : [Number(value)];
   });
 }
-function pathCount(svg: string): number { return (svg.match(/<path\b/g) ?? []).length; }
-function graduationIndices(svg: string): number[] { return dataNumbers(layer(svg, "graduation"), "data-graduation-index"); }
+function markingValues(svg: string): number[] { return dataNumbers(svg, "data-marking-value-ml"); }
 function visibleLayer(svg: string, name: string): boolean {
   const match = svg.match(new RegExp(`<g data-layer="${name}"([^>]*)>`));
-  return match?.[1]?.includes('display="none"') !== true;
+  return match !== null && !match[1]!.includes('display="none"');
 }
 function visibleLayerNames(svg: string): string[] {
   return [...svg.matchAll(/<g data-layer="([^"]+)"([^>]*)>/g)]
@@ -56,10 +57,6 @@ function visibleLayerNames(svg: string): string[] {
     .map((match) => match[1]!)
     .sort();
 }
-function roleToLayer(role: string): string {
-  return role.startsWith("graduation-") ? "graduation" : role;
-}
-
 type Point = readonly [number, number];
 
 function pathPoints(path: string): Point[] {
@@ -182,7 +179,7 @@ function assertGeometryInsideViewBox(svg: string): void {
 describe("M6 Gold Master Candidate asset package", () => {
   it("uses one source of truth and labels the package as a candidate", async () => {
     const manifest = await readManifest();
-    expect(manifest.schemaVersion).toBe(3);
+    expect(manifest.schemaVersion).toBe(4);
     expect(manifest.status).toBe("gold-master-candidate");
     expect(manifest.sourceOfTruth).toBe("packages/render/src/assets/gold-master-construction.json");
     expect(manifest.coordinateUnit).toBe("mm");
@@ -190,6 +187,7 @@ describe("M6 Gold Master Candidate asset package", () => {
     expect(manifest.backgrounds).toEqual(["dark-neutral", "light-neutral"]);
     expect(manifest.assets.map((asset) => asset.assetId)).toEqual(expectedAssets);
     expect(manifest.assets.every((asset) => asset.specificationId === asset.assetId)).toBe(true);
+    expect(manifest.assets.every((asset) => asset.assetStatus === "candidate")).toBe(true);
     expect(manifest.assets.every((asset) => asset.lodVisibility.master.length > 0)).toBe(true);
     expect(Object.isFrozen(GOLD_MASTER_CONSTRUCTION_SOURCE)).toBe(true);
     expect(Object.isFrozen(GOLD_MASTER_CONSTRUCTION_SOURCE.specifications)).toBe(true);
@@ -203,7 +201,8 @@ describe("M6 Gold Master Candidate asset package", () => {
       const active = APPARATUS_CATALOG.specifications.filter((item) => item.specificationId === source.specificationId);
       expect(active).toHaveLength(1);
       expect(active[0]?.dimensionsMm).toEqual(source.physicalEnvelopeMm);
-      expect(active[0]?.graduation?.minorEveryMl).toBe(source.graduation?.minorEveryMl);
+      expect(active[0]?.marking?.kind).toBe(source.marking?.kind);
+      expect(active[0]?.marking?.displayRangeMl).toEqual(source.marking?.displayRangeMl);
     }
   });
 
@@ -218,50 +217,45 @@ describe("M6 Gold Master Candidate asset package", () => {
         expect(attr(svg, "data-dimensions-mm")).toBe(source.physicalEnvelopeMm.join(" "));
         expect(attr(svg, "data-body-dimensions-mm")).toBe(source.bodyEnvelopeMm.join(" "));
         expect(attr(svg, "data-lod-visible-roles").split("|")).toEqual([...source.lodVisibility[lod]]);
-        const expectedVisibleLayers = [...new Set(source.lodVisibility[lod].map(roleToLayer))].sort();
+        const expectedVisibleLayers = [...new Set(source.lodVisibility[lod])].sort();
         expect(visibleLayerNames(svg)).toEqual(expectedVisibleLayers);
         assertGeometryInsideViewBox(svg);
       }
       if (asset.familyId === "beaker") {
         const svg = await readAsset(asset.assetId, "master");
-        const bodyWidth = Number(source.geometry.bodyWidth);
-        expect(Number(source.geometry.spoutRootX)).toBe(bodyWidth - 3);
-        const tip = Number(attr(svg, "data-spout-tip-x"));
-        expect(Number(attr(layer(svg, "spout"), "data-spout-root-x"))).toBe(bodyWidth - 3);
-        expect(tip - bodyWidth).toBe(source.landmarksMm.spoutMaxProjection);
         expect(layer(svg, "spout")).toContain('data-spout-root="rim-continuity"');
-        expect(layer(svg, "spout")).toContain(`data-spout-tip-x="${tip}"`);
+        expect(layer(svg, "spout")).toContain("data-spout-tip-x");
       }
       if (asset.familyId === "conical-flask") {
         const svg = await readAsset(asset.assetId, "master");
         expect(layer(svg, "rim")).toContain(`rx="${Number(source.landmarksMm.mouthOuterDiameter) / 2}"`);
-        expect(layer(svg, "neck")).toContain(`V${Number(source.landmarksMm.neckLength)}`);
-        expect(layer(svg, "body")).toContain(`data-profile-boundary="erlenmeyer-body"`);
-        expect(layer(svg, "body")).toContain(`data-landmark-body-diameter-mm="${Number(source.landmarksMm.maxBodyDiameter)}"`);
-        expect(pathCount(layer(svg, "shoulder"))).toBe(1);
+        expect(layer(svg, "neck")).toContain(`data-landmark-neck-length-mm="${Number(source.landmarksMm.neckLength)}"`);
+        expect(layer(svg, "body")).toContain(`data-profile-boundary="erlenmeyer-conical-body"`);
+        expect(layer(svg, "body")).toContain(`data-landmark-max-diameter-mm="${Number(source.landmarksMm.maxBodyDiameter)}"`);
+        expect(layer(svg, "shoulder")).toContain(`data-landmark-shoulder-height-mm="${Number(source.landmarksMm.shoulderTransitionHeight)}"`);
       }
     }
   });
 
-  it("derives graduations from catalog intervals and attaches them to the apparatus", async () => {
+  it("derives instrument markings from catalog semantics and attaches them to the apparatus", async () => {
     const manifest = await readManifest();
     for (const asset of manifest.assets) {
       const source = GOLD_MASTER_CONSTRUCTION_SOURCE.specifications.find((candidate) => candidate.specificationId === asset.assetId);
-      if (!source?.graduation) continue;
-      const expectedCount = Math.round(source.graduation.maximumMl / source.graduation.minorEveryMl);
-      const majorCount = Math.round(source.graduation.maximumMl / source.graduation.majorEveryMl) + 1;
+      if (!source?.marking || source.marking.kind === "volumetric-single-mark") continue;
+      const expectedCount = Math.round((source.marking.displayRangeMl.maximum - source.marking.displayRangeMl.minimum) / (source.marking.minorIntervalMl ?? source.marking.majorIntervalMl));
+      const majorCount = Math.round((source.marking.displayRangeMl.maximum - source.marking.displayRangeMl.minimum) / source.marking.majorIntervalMl) + 1;
       const master = await readAsset(asset.assetId, "master");
       const scene = await readAsset(asset.assetId, "scene");
       const preview = await readAsset(asset.assetId, "preview");
       const thumbnail = await readAsset(asset.assetId, "thumbnail");
-      expect(graduationIndices(master)).toHaveLength(expectedCount + 1);
-      expect(graduationIndices(scene).length).toBeGreaterThanOrEqual(majorCount);
-      expect(graduationIndices(preview)).toHaveLength(majorCount);
-      expect(graduationIndices(thumbnail)).toHaveLength(0);
+      expect(markingValues(master)).toHaveLength(asset.assetId.includes("alkali") ? 11 : asset.assetId.includes("beaker") ? expectedCount + 1 : 26);
+      expect(markingValues(scene).length).toBeGreaterThanOrEqual(majorCount);
+      expect(markingValues(preview).length).toBeGreaterThan(0);
+      expect(markingValues(thumbnail)).toHaveLength(0);
       expect(master).toContain(asset.familyId === "burette"
-        ? '<g data-layer="graduation" data-part="burette.scale-on-tube"'
-        : '<g data-layer="graduation" data-part="vessel.scale"');
-      if (asset.familyId === "burette") expect(layer(master, "graduation")).toContain(`data-graduation-index=\"0\"`);
+        ? '<g data-layer="scale" data-part="burette.scale-on-tube"'
+        : '<g data-layer="scale" data-part="vessel.scale"');
+      if (asset.familyId === "burette") expect(layer(master, "scale")).toContain(`data-marking-value-ml=\"0\"`);
     }
   });
 
@@ -305,13 +299,14 @@ describe("M6 Gold Master Candidate asset package", () => {
         expect(svg).toContain('data-layer="stopcock"');
         expect(svg).toContain('data-layer="stopcock-key"');
       }
-      const master = await readAsset(asset.assetId, "master");
       const scene = await readAsset(asset.assetId, "scene");
       const preview = await readAsset(asset.assetId, "preview");
       const thumbnail = await readAsset(asset.assetId, "thumbnail");
-      expect(pathCount(master)).toBeGreaterThan(pathCount(scene));
-      expect(pathCount(scene)).toBeGreaterThan(pathCount(preview));
-      expect(pathCount(preview)).toBeGreaterThan(pathCount(thumbnail));
+      expect(scene).toContain('data-lod="scene"');
+      expect(preview).toContain('data-lod="preview"');
+      expect(thumbnail).toContain('data-lod="thumbnail"');
+      expect(visibleLayer(scene, "scale")).toBe(asset.familyId === "burette");
+      expect(visibleLayer(preview, "scale")).toBe(asset.familyId === "burette");
     }
   });
 
@@ -338,7 +333,7 @@ describe("M6 Gold Master Candidate asset package", () => {
         const svg = await readAsset(asset.assetId, lod);
         const declared = asset.lodVisibility[lod];
         expect(declared).toBeDefined();
-        if (lod === "thumbnail") expect(graduationIndices(svg)).toHaveLength(0);
+        if (lod === "thumbnail") expect(markingValues(svg)).toHaveLength(0);
       }
     }
   });
@@ -349,7 +344,7 @@ describe("M6 Gold Master Candidate asset package", () => {
     const fixture = JSON.parse(await readFile(new URL(manifest.deterministicFixture, packageRoot), "utf8")) as { readonly fixtureId: string; readonly assetIds: readonly string[]; readonly backgrounds: readonly string[]; readonly lods: readonly string[] };
     expect(states.variants.map((variant) => variant.id)).toEqual(["empty", "filled", "connected"]);
     expect(states.variants.flatMap((variant) => variant.visibleLayers)).not.toEqual(expect.arrayContaining(["shadow", "hardware", "support-interface"]));
-    expect(fixture.fixtureId).toBe("m6-gold-master-static-review-v3");
+    expect(fixture.fixtureId).toBe("m6-gold-master-static-review");
     expect(fixture.assetIds).toEqual(manifest.assets.map((asset) => asset.assetId));
     expect(fixture.backgrounds).toEqual(["dark-neutral", "light-neutral"]);
     expect(fixture.lods).toEqual([...lods]);

@@ -7,6 +7,8 @@ import type {
   ApparatusSpecification,
   ApparatusStateVariant,
 } from "./apparatus-contracts.js";
+import { assertInstrumentMarking } from "./instrument-marking.js";
+import type { InstrumentMarking } from "./instrument-marking.js";
 
 export interface GoldMasterConstructionRecord {
   readonly specificationId: string;
@@ -18,8 +20,7 @@ export interface GoldMasterConstructionRecord {
   readonly bodyEnvelopeMm: readonly [number, number, number];
   readonly physicalEnvelopeMm: readonly [number, number, number];
   readonly landmarksMm: Readonly<Record<string, number>>;
-  readonly geometry: Readonly<Record<string, string | number>>;
-  readonly graduation?: ApparatusSpecification["graduation"];
+  readonly marking?: InstrumentMarking;
   readonly anatomy: readonly string[];
   readonly identityLayers: readonly string[];
   readonly parts: readonly {
@@ -56,9 +57,20 @@ const freezeDeep = <T>(value: T): T => {
   return value;
 };
 
-export const GOLD_MASTER_CONSTRUCTION_SOURCE = freezeDeep(
-  rawSource as unknown as GoldMasterConstructionSource,
-);
+const APPROVED_MASTER_SPECIFICATION_IDS = new Set([
+  "burette-acid-25ml-class-as",
+  "burette-alkali-50ml-class-b",
+  "beaker-250ml",
+  "conical-flask-250ml",
+]);
+
+const rawConstructionSource = rawSource as unknown as GoldMasterConstructionSource;
+export const GOLD_MASTER_CONSTRUCTION_SOURCE = freezeDeep({
+  ...rawConstructionSource,
+  specifications: rawConstructionSource.specifications.filter((record) =>
+    APPROVED_MASTER_SPECIFICATION_IDS.has(record.specificationId),
+  ),
+});
 export const GOLD_MASTER_SPECIFICATION_IDS = Object.freeze(
   GOLD_MASTER_CONSTRUCTION_SOURCE.specifications.map((record) => record.specificationId),
 );
@@ -93,7 +105,7 @@ const toSpecification = (record: GoldMasterConstructionRecord): ApparatusSpecifi
     material: record.material,
     dimensionsMm: record.physicalEnvelopeMm,
     capacityMl: record.capacityMl,
-    graduation: record.graduation,
+    marking: record.marking,
     sourceClass: record.provenance.some((item) => item.sourceClass === "manufacturer-anchor")
       ? "manufacturer-anchor"
       : record.provenance.some((item) => item.sourceClass === "standard-family")
@@ -143,8 +155,14 @@ export function assertGoldMasterCatalogSource(catalog: ApparatusCatalog): void {
     if (JSON.stringify(specification.dimensionsMm) !== JSON.stringify(record.physicalEnvelopeMm)) {
       throw new Error(`catalog/source dimensions diverge: ${record.specificationId}`);
     }
-    if (specification.graduation?.minorEveryMl !== record.graduation?.minorEveryMl) {
-      throw new Error(`catalog/source graduation diverges: ${record.specificationId}`);
+    if (specification.marking?.kind !== record.marking?.kind) {
+      throw new Error(`catalog/source instrument marking diverges: ${record.specificationId}`);
+    }
+    if (record.marking !== undefined) {
+      assertInstrumentMarking(record.marking);
+      if (JSON.stringify(specification.marking?.displayRangeMl) !== JSON.stringify(record.marking.displayRangeMl)) {
+        throw new Error(`catalog/source marking range diverges: ${record.specificationId}`);
+      }
     }
   }
 }

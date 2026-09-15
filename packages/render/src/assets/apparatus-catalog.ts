@@ -12,6 +12,8 @@ import type {
   ApparatusSpecification,
   ApparatusStateVariant,
 } from "./apparatus-contracts.js";
+import { assertInstrumentMarking } from "./instrument-marking.js";
+import type { InstrumentMarking } from "./instrument-marking.js";
 import {
   assertGoldMasterCatalogSource,
   replaceGoldMasterSpecifications,
@@ -21,7 +23,6 @@ export type {
   ApparatusCatalog,
   ApparatusConnection,
   ApparatusFamilyId,
-  ApparatusGraduation,
   ApparatusMaterial,
   ApparatusPart,
   ApparatusPort,
@@ -33,6 +34,7 @@ export type {
   ApparatusSpecification,
   ApparatusStateVariant,
 } from "./apparatus-contracts.js";
+export type { InstrumentMarking } from "./instrument-marking.js";
 
 export const APPARATUS_CATALOG_VERSION = VERSION_MANIFEST.representation.apparatusCatalog;
 
@@ -75,6 +77,66 @@ const part = (
 ): ApparatusPart => ({ id, role, boundsMm, detachable, portIds });
 
 const stateVariants = (...variants: ApparatusStateVariant[]): readonly ApparatusStateVariant[] => variants;
+
+const approximateContainedMarking = (
+  displayRangeMl: { readonly minimum: number; readonly maximum: number },
+  majorIntervalMl: number,
+  minorIntervalMl: number | undefined,
+  readingResolutionMl: number | undefined,
+  provenance: ApparatusProvenance,
+): InstrumentMarking => ({
+  kind: "approximate-contained",
+  displayRangeMl,
+  valueDirection: "increases-upward",
+  reference: "bottom-zero",
+  calibration: "approximate",
+  markingSurface: "vessel-wall",
+  labelPolicy: "selected-major",
+  majorIntervalMl,
+  minorIntervalMl,
+  readingResolutionMl,
+  provenance,
+});
+
+const approximateBuretteMarking = (
+  displayRangeMl: { readonly minimum: number; readonly maximum: number },
+  majorIntervalMl: number,
+  minorIntervalMl: number,
+  readingResolutionMl: number,
+  provenance: ApparatusProvenance,
+): InstrumentMarking => ({
+  kind: "burette-approximate",
+  displayRangeMl,
+  valueDirection: "increases-downward",
+  reference: "top-zero",
+  calibration: "approximate",
+  markingSurface: "tube-wrap",
+  labelPolicy: "selected-major",
+  majorIntervalMl,
+  minorIntervalMl,
+  readingResolutionMl,
+  provenance,
+});
+
+const graduatedCylinderMarking = (
+  displayRangeMl: { readonly minimum: number; readonly maximum: number },
+  majorIntervalMl: number,
+  minorIntervalMl: number,
+  readingResolutionMl: number,
+  provenance: ApparatusProvenance,
+): InstrumentMarking => ({
+  kind: "graduated-cylinder-in",
+  displayRangeMl,
+  valueDirection: "increases-upward",
+  reference: "bottom-zero",
+  calibration: "In",
+  markingSurface: "vessel-wall",
+  labelPolicy: "all-major",
+  majorIntervalMl,
+  minorIntervalMl,
+  readingResolutionMl,
+  provenance,
+});
 
 const empty = (): ApparatusStateVariant => ({
   id: "empty",
@@ -147,7 +209,7 @@ function vessel(
   dimensionsMm: readonly [number, number, number],
   capacityMl: number,
   provenance: readonly ApparatusProvenance[],
-  extra: Partial<Pick<ApparatusSpecification, "graduation" | "parts" | "ports" | "stateVariants" | "material">> = {},
+  extra: Partial<Pick<ApparatusSpecification, "marking" | "parts" | "ports" | "stateVariants" | "material">> = {},
 ): ApparatusSpecification {
   const defaultPort = port("vessel.mouth", "fluid-inlet", "in", [dimensionsMm[0] / 2, 0], undefined, false);
   return {
@@ -158,7 +220,7 @@ function vessel(
     material: extra.material ?? "borosilicate-glass",
     dimensionsMm,
     capacityMl,
-    graduation: extra.graduation,
+    marking: extra.marking,
     sourceClass: provenance.some((item) => item.sourceClass === "manufacturer-anchor")
       ? "manufacturer-anchor"
       : "standard-family",
@@ -175,6 +237,28 @@ function vessel(
   };
 }
 
+function beaker(
+  specificationId: string,
+  displayName: string,
+  dimensionsMm: readonly [number, number, number],
+  capacityMl: number,
+  marking: InstrumentMarking,
+  provenance: readonly ApparatusProvenance[],
+): ApparatusSpecification {
+  const mouth = port("vessel.mouth", "fluid-inlet", "in", [dimensionsMm[0] / 2, 0], undefined, false);
+  const spout = port("vessel.spout", "fluid-outlet", "out", [dimensionsMm[0], 10], undefined, false);
+  return vessel(specificationId, "beaker", displayName, dimensionsMm, capacityMl, provenance, {
+    marking,
+    parts: [
+      part("vessel.body", "body", bounds(0, 0, dimensionsMm[0], dimensionsMm[1]), false, [mouth.id]),
+      part("vessel.rim", "rim", bounds(0, 0, dimensionsMm[0], 6), false, [mouth.id]),
+      part("vessel.spout", "spout", bounds(dimensionsMm[0] - 3, 2, 18, 14), false, [spout.id]),
+      part("vessel.base", "base", bounds(3, dimensionsMm[1] - 5, dimensionsMm[0] - 6, 5), false),
+    ],
+    ports: [mouth, spout],
+  });
+}
+
 const legacySpecifications: ApparatusSpecification[] = [
   {
     specificationId: "burette-v0-100ml",
@@ -184,7 +268,7 @@ const legacySpecifications: ApparatusSpecification[] = [
     material: "borosilicate-glass",
     dimensionsMm: dimensions(42, 980, 42),
     capacityMl: 100,
-    graduation: { maximumMl: 100, majorEveryMl: 10, minorEveryMl: 1, readingResolutionMl: 1 },
+    marking: approximateBuretteMarking({ minimum: 0, maximum: 100 }, 10, 1, 1, approximateSource("Existing v0 composition burette fixture scale; top-zero direction normalized to the burette family")),
     sourceClass: "approximate-visual",
     claimScope: "Existing M4/M5 world fixture compatibility; approximate visual dimensions",
     provenance: [approximateSource("Existing v0 world uses a 100 mL burette profile")],
@@ -202,14 +286,19 @@ const legacySpecifications: ApparatusSpecification[] = [
     detachable: true,
     stateVariants: stateVariants(empty(), filled(), connected()),
   },
+  beaker("beaker-100ml", "Beaker, Griffin low form, 100 mL", dimensions(63, 72, 52), 100, approximateContainedMarking({ minimum: 20, maximum: 100 }, 20, 10, 10, approximateSource("100 mL Griffin beaker contained-volume marks; visual approximation")), [standardFamilySource, approximateSource("100 mL Griffin low-form proportions")]),
+  beaker("beaker-500ml", "Beaker, Griffin low form, 500 mL", dimensions(106, 125, 88), 500, approximateContainedMarking({ minimum: 50, maximum: 400 }, 100, 50, 50, approximateSource("500 mL Griffin beaker contained-volume marks; visual approximation")), [standardFamilySource, approximateSource("500 mL Griffin low-form proportions")]),
+  beaker("beaker-1000ml", "Beaker, Griffin low form, 1000 mL", dimensions(136, 165, 112), 1000, approximateContainedMarking({ minimum: 100, maximum: 800 }, 200, 100, 100, approximateSource("1000 mL Griffin beaker contained-volume marks; visual approximation")), [standardFamilySource, approximateSource("1000 mL Griffin low-form proportions")]),
+  vessel("conical-flask-100ml", "conical-flask", "Erlenmeyer flask, 100 mL", dimensions(62, 105, 62), 100, [standardFamilySource, approximateSource("100 mL Erlenmeyer proportions")]),
   vessel("volumetric-flask-50ml", "volumetric-flask", "Volumetric flask, Class B, 50 mL", dimensions(46, 140, 46), 50, [standardFamilySource, approximateSource("50 mL volumetric flask proportions")]),
   vessel("volumetric-flask-100ml", "volumetric-flask", "Volumetric flask, Class B, 100 mL", dimensions(61, 170, 61), 100, [standardFamilySource, approximateSource("100 mL volumetric flask proportions anchored to a manufacturer blank")]),
   vessel("volumetric-flask-250ml", "volumetric-flask", "Volumetric flask, Class A, 250 mL", dimensions(80, 210, 80), 250, [volumetricSource, standardFamilySource]),
   vessel("volumetric-flask-500ml", "volumetric-flask", "Volumetric flask, Class B, 500 mL", dimensions(100, 260, 100), 500, [standardFamilySource, approximateSource("500 mL volumetric flask proportions")]),
-  vessel("graduated-cylinder-25ml", "graduated-cylinder", "Measuring cylinder, Class B, 25 mL", dimensions(21, 167, 21), 25, [standardFamilySource, source("duran-cylinder-25ml-class-b", "https://www.dwk.com/duran-measuring-cylinder-with-hexagonal-base-class-b-25-ml-213961403", "manufacturer-anchor", "25 mL cylinder, 21 mm diameter by 167 mm height and 0.5 mL interval", "reported")], { graduation: { maximumMl: 25, majorEveryMl: 5, minorEveryMl: 0.5, readingResolutionMl: 0.5 } }),
-  vessel("graduated-cylinder-50ml", "graduated-cylinder", "Measuring cylinder, Class B, 50 mL", dimensions(25, 200, 25), 50, [standardFamilySource, approximateSource("50 mL graduated cylinder proportions")], { graduation: { maximumMl: 50, majorEveryMl: 10, minorEveryMl: 1, readingResolutionMl: 1 } }),
-  vessel("graduated-cylinder-100ml", "graduated-cylinder", "Measuring cylinder, Class A, 100 mL", dimensions(29, 256, 29), 100, [cylinderSource, standardFamilySource], { graduation: { maximumMl: 100, majorEveryMl: 10, minorEveryMl: 1, readingResolutionMl: 1 } }),
-  vessel("graduated-cylinder-250ml", "graduated-cylinder", "Measuring cylinder, Class B, 250 mL", dimensions(38, 330, 38), 250, [standardFamilySource, approximateSource("250 mL graduated cylinder proportions")], { graduation: { maximumMl: 250, majorEveryMl: 50, minorEveryMl: 5, readingResolutionMl: 5 } }),
+  vessel("conical-flask-500ml", "conical-flask", "Erlenmeyer flask, 500 mL", dimensions(102, 186, 102), 500, [standardFamilySource, approximateSource("500 mL Erlenmeyer proportions")]),
+  vessel("graduated-cylinder-25ml", "graduated-cylinder", "Measuring cylinder, Class B, 25 mL", dimensions(21, 167, 21), 25, [standardFamilySource, source("duran-cylinder-25ml-class-b", "https://www.dwk.com/duran-measuring-cylinder-with-hexagonal-base-class-b-25-ml-213961403", "manufacturer-anchor", "25 mL cylinder, 21 mm diameter by 167 mm height and 0.5 mL interval", "reported")], { marking: graduatedCylinderMarking({ minimum: 0, maximum: 25 }, 5, 0.5, 0.5, source("duran-cylinder-25ml-class-b", "https://www.dwk.com/duran-measuring-cylinder-with-hexagonal-base-class-b-25-ml-213961403", "manufacturer-anchor", "25 mL cylinder, 21 mm diameter by 167 mm height and 0.5 mL interval", "reported")) }),
+  vessel("graduated-cylinder-50ml", "graduated-cylinder", "Measuring cylinder, Class B, 50 mL", dimensions(25, 200, 25), 50, [standardFamilySource, approximateSource("50 mL graduated cylinder proportions")], { marking: graduatedCylinderMarking({ minimum: 0, maximum: 50 }, 10, 1, 1, approximateSource("50 mL graduated cylinder marking approximation")) }),
+  vessel("graduated-cylinder-100ml", "graduated-cylinder", "Measuring cylinder, Class A, 100 mL", dimensions(29, 256, 29), 100, [cylinderSource, standardFamilySource], { marking: graduatedCylinderMarking({ minimum: 0, maximum: 100 }, 10, 1, 1, cylinderSource) }),
+  vessel("graduated-cylinder-250ml", "graduated-cylinder", "Measuring cylinder, Class B, 250 mL", dimensions(38, 330, 38), 250, [standardFamilySource, approximateSource("250 mL graduated cylinder proportions")], { marking: graduatedCylinderMarking({ minimum: 0, maximum: 250 }, 50, 5, 5, approximateSource("250 mL graduated cylinder marking approximation")) }),
   vessel("test-tube-16x150mm", "test-tube", "Test tube, 16 × 150 mm", dimensions(18, 150, 18), 25, [standardFamilySource, approximateSource("16 × 150 mm teaching test-tube size")], { material: "soda-lime-glass" }),
   vessel("test-tube-18x180mm", "test-tube", "Large test tube, 18 × 180 mm", dimensions(20, 180, 20), 35, [standardFamilySource, approximateSource("18 × 180 mm teaching test-tube size")], { material: "borosilicate-glass" }),
   {
@@ -220,7 +309,7 @@ const legacySpecifications: ApparatusSpecification[] = [
     material: "borosilicate-glass",
     dimensionsMm: dimensions(6, 200, 6),
     capacityMl: undefined,
-    graduation: undefined,
+    marking: undefined,
     sourceClass: "standard-family",
     claimScope: "Teaching glass connector; nominal diameter is a connection anchor",
     provenance: [connectorSource, approximateSource("200 mm straight tube length")],
@@ -240,7 +329,7 @@ const legacySpecifications: ApparatusSpecification[] = [
     material: "borosilicate-glass",
     dimensionsMm: dimensions(70, 150, 6),
     capacityMl: undefined,
-    graduation: undefined,
+    marking: undefined,
     sourceClass: "standard-family",
     claimScope: "Teaching glass connector with a bent path; bend geometry is an approximate visual variant",
     provenance: [connectorSource, approximateSource("Bent tube path and 150 mm overall envelope")],
@@ -260,7 +349,7 @@ const legacySpecifications: ApparatusSpecification[] = [
     material: "borosilicate-glass",
     dimensionsMm: dimensions(70, 110, 6),
     capacityMl: undefined,
-    graduation: undefined,
+    marking: undefined,
     sourceClass: "standard-family",
     claimScope: "JY/T 0427 U connector family; dimensions are an approximate visual envelope",
     provenance: [connectorSource, approximateSource("U connector envelope")],
@@ -280,7 +369,7 @@ const legacySpecifications: ApparatusSpecification[] = [
     material: "borosilicate-glass",
     dimensionsMm: dimensions(70, 70, 6),
     capacityMl: undefined,
-    graduation: undefined,
+    marking: undefined,
     sourceClass: "standard-family",
     claimScope: "JY/T 0427 T connector family; branch geometry is an approximate visual envelope",
     provenance: [connectorSource, approximateSource("T connector envelope")],
@@ -301,7 +390,7 @@ const legacySpecifications: ApparatusSpecification[] = [
     material: "borosilicate-glass",
     dimensionsMm: dimensions(80, 80, 6),
     capacityMl: undefined,
-    graduation: undefined,
+    marking: undefined,
     sourceClass: "standard-family",
     claimScope: "JY/T 0427 Y connector family; branch geometry is an approximate visual envelope",
     provenance: [connectorSource, approximateSource("Y connector envelope")],
@@ -322,7 +411,7 @@ const legacySpecifications: ApparatusSpecification[] = [
     material: "silicone-rubber",
     dimensionsMm: dimensions(8, 300, 8),
     capacityMl: undefined,
-    graduation: undefined,
+    marking: undefined,
     sourceClass: "approximate-visual",
     claimScope: "Flexible connector; nominal diameter and length are visual/connection anchors",
     provenance: [connectorSource, approximateSource("Flexible tube nominal 6 mm connection size")],
@@ -342,7 +431,7 @@ const legacySpecifications: ApparatusSpecification[] = [
     material: "natural-rubber",
     dimensionsMm: dimensions(24, 25, 24),
     capacityMl: undefined,
-    graduation: undefined,
+    marking: undefined,
     sourceClass: "standard-family",
     claimScope: "One-hole teaching stopper; hole and taper are connection semantics, not a seal guarantee",
     provenance: [connectorSource, source("fisher-two-hole-stoppers", "https://www.fishersci.com/shop/products/rubber-stopper-assortment/s67823", "manufacturer-anchor", "Teaching rubber stoppers are tapered and sold in one-/two-hole families", "reported")],
@@ -359,7 +448,7 @@ const legacySpecifications: ApparatusSpecification[] = [
     material: "natural-rubber",
     dimensionsMm: dimensions(24, 25, 24),
     capacityMl: undefined,
-    graduation: undefined,
+    marking: undefined,
     sourceClass: "standard-family",
     claimScope: "Two-hole teaching stopper; holes and taper are connection semantics, not a seal guarantee",
     provenance: [connectorSource, source("fisher-two-hole-stoppers", "https://www.fishersci.com/shop/products/rubber-stopper-assortment/s67823", "manufacturer-anchor", "Teaching rubber stopper family has a two-hole variant", "reported")],
@@ -379,7 +468,7 @@ const legacySpecifications: ApparatusSpecification[] = [
     material: "natural-rubber",
     dimensionsMm: dimensions(24, 25, 24),
     capacityMl: undefined,
-    graduation: undefined,
+    marking: undefined,
     sourceClass: "approximate-visual",
     claimScope: "Three-hole teaching closure variant; hole layout is an explicit visual/connection approximation",
     provenance: [connectorSource, approximateSource("Three-hole stopper layout")],
@@ -479,14 +568,15 @@ export function validateApparatusCatalog(
       throw new RangeError(`specification dimensions must be positive: ${specification.specificationId}`);
     }
     requiredPositive(specification.capacityMl, `${specification.specificationId} capacity`);
-    if (specification.graduation !== undefined) {
-      const graduation = specification.graduation;
-      requiredPositive(graduation.maximumMl, `${specification.specificationId} graduation maximum`);
-      requiredPositive(graduation.majorEveryMl, `${specification.specificationId} graduation major interval`);
-      requiredPositive(graduation.minorEveryMl, `${specification.specificationId} graduation minor interval`);
-      requiredPositive(graduation.readingResolutionMl, `${specification.specificationId} graduation resolution`);
-      if (specification.capacityMl !== undefined && graduation.maximumMl > specification.capacityMl) {
-        throw new RangeError(`graduation exceeds capacity: ${specification.specificationId}`);
+    if (specification.marking !== undefined) {
+      const marking = specification.marking;
+      requiredPositive(marking.displayRangeMl.maximum, `${specification.specificationId} marking maximum`);
+      if (marking.displayRangeMl.minimum >= marking.displayRangeMl.maximum) {
+        throw new RangeError(`marking range is not increasing: ${specification.specificationId}`);
+      }
+      assertInstrumentMarking(marking);
+      if (specification.capacityMl !== undefined && marking.displayRangeMl.maximum > specification.capacityMl) {
+        throw new RangeError(`marking exceeds capacity: ${specification.specificationId}`);
       }
     }
     const portIds = new Set<string>();

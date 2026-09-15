@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 4,
   "source": "RenderState apparatus state contract",
   "variants": [
     {
@@ -16,7 +16,7 @@
       "visibleLayers": [
         "apparatus-body",
         "rim-or-mouth",
-        "graduation-when-present",
+        "marking-when-present",
         "contact-surface",
         "liquid",
         "meniscus"
@@ -52,13 +52,6 @@
       ]
     },
     {
-      "assetId": "beaker-100ml",
-      "supportedVariants": [
-        "empty",
-        "filled"
-      ]
-    },
-    {
       "assetId": "beaker-250ml",
       "supportedVariants": [
         "empty",
@@ -66,35 +59,7 @@
       ]
     },
     {
-      "assetId": "beaker-500ml",
-      "supportedVariants": [
-        "empty",
-        "filled"
-      ]
-    },
-    {
-      "assetId": "beaker-1000ml",
-      "supportedVariants": [
-        "empty",
-        "filled"
-      ]
-    },
-    {
-      "assetId": "conical-flask-100ml",
-      "supportedVariants": [
-        "empty",
-        "filled"
-      ]
-    },
-    {
       "assetId": "conical-flask-250ml",
-      "supportedVariants": [
-        "empty",
-        "filled"
-      ]
-    },
-    {
-      "assetId": "conical-flask-500ml",
       "supportedVariants": [
         "empty",
         "filled"

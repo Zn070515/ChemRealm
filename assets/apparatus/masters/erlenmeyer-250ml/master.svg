@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 85 145" data-asset-id="conical-flask-250ml" data-family-id="conical-flask" data-capacity-ml="250" data-coordinate-unit="mm" data-master-authored="true" data-marking-kind="none" role="img" aria-labelledby="title desc">
+  <title id="title">250 mL Erlenmeyer flask master</title>
+  <desc id="desc">Source-backed conical flask silhouette with a cylindrical neck and no invented measurement scale.</desc>
+  <defs>
+    <linearGradient id="flask-glass" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#a9c9cb" stop-opacity=".36"/><stop offset=".2" stop-color="#fbffff" stop-opacity=".17"/><stop offset=".53" stop-color="#d7e8e7" stop-opacity=".2"/><stop offset="1" stop-color="#709296" stop-opacity=".35"/></linearGradient>
+    <style>.edge{fill:none;stroke:#3d6267;stroke-linecap:round;stroke-linejoin:round}.shine{fill:none;stroke:#fff;stroke-linecap:round}</style>
+  </defs>
+  <g data-layer="glass-back" data-part="vessel.body"><path d="M31 46C29 53 18 60 12 70C7 78 5 93 5 126Q5 138 17 141H68Q80 138 80 126C80 93 78 78 73 70C67 60 56 53 54 46Z" fill="url(#flask-glass)" stroke="#5b7b80" stroke-width=".55"/></g>
+  <g data-layer="body" data-part="vessel.body"><path d="M31 46C29 53 18 60 12 70C7 78 5 93 5 126Q5 138 17 141H68Q80 138 80 126C80 93 78 78 73 70C67 60 56 53 54 46Z" fill="url(#flask-glass)" stroke="#45696e" stroke-width=".52" data-profile-boundary="erlenmeyer-conical-body" data-landmark-max-diameter-mm="85"/><path d="M8 123Q8 137 18 138H67Q77 137 77 123" class="edge" stroke-width=".55" opacity=".85"/><path d="M15 70C24 61 31 55 32 47M70 70C61 61 54 55 53 47" class="edge" stroke-width=".4" opacity=".55"/></g>
+  <g data-layer="shoulder" data-part="vessel.shoulder"><path d="M31 46C29 53 18 60 12 70M54 46C56 53 67 60 73 70" class="edge" stroke-width=".7" data-landmark-shoulder-height-mm="52"/></g>
+  <g data-layer="neck" data-part="vessel.neck"><path d="M31 3V46M54 3V46" class="edge" stroke-width=".7" data-landmark-neck-length-mm="48"/><path d="M34 5V43M51 5V43" class="shine" stroke-width=".75" opacity=".34"/></g>
+  <g data-layer="rim" data-part="vessel.rim"><ellipse cx="42.5" cy="3" rx="14" ry="2.2" fill="#f5ffff" fill-opacity=".24" stroke="#45696e" stroke-width=".58"/><ellipse cx="42.5" cy="3" rx="11.8" ry="1.1" fill="#fff" fill-opacity=".18" stroke="#8ca7aa" stroke-width=".3"/></g>
+  <g data-layer="glass-front" data-part="vessel.body"><path d="M18 73C13 86 13 113 14 128" class="shine" stroke-width="1.1" opacity=".32"/><path d="M68 77C72 94 71 116 70 129" class="shine" stroke-width=".38" opacity=".27"/></g>
+  <g data-layer="highlight"><path d="M35 7V40" class="shine" stroke-width=".5" opacity=".72"/><path d="M17 138H68" class="shine" stroke-width=".55" opacity=".45"/></g>
+</svg>

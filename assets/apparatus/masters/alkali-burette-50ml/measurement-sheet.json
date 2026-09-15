@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "assetId": "burette-alkali-50ml-class-b",
+  "coordinateUnit": "mm",
+  "classification": "family-anchor-and-pedagogical-approximation",
+  "dimensionsMm": [36, 900, 36],
+  "bodyEnvelopeMm": [18, 830, 18],
+  "landmarks": [
+    { "name": "graduatedLength", "value": 790, "classification": "derived", "note": "master mapping from y=24 to y=814" },
+    { "name": "connectorY", "value": 830, "classification": "derived", "note": "lower connector placement" },
+    { "name": "tipLength", "value": 52, "classification": "derived", "note": "visual envelope anchor" }
+  ],
+  "marking": { "kind": "burette-approximate", "rangeMl": [0, 50], "majorIntervalMl": 5, "minorIntervalMl": 0.1, "direction": "increases-downward", "reference": "top-zero", "surface": "tube-wrap", "calibration": "approximate", "classification": "pedagogicalApproximation" },
+  "sourceRefs": ["jy-t-0655-2025", "chemrealm-alkali-burette-anchor"]
+}

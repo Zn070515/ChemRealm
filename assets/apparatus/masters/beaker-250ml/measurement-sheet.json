@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "assetId": "beaker-250ml",
+  "coordinateUnit": "mm",
+  "classification": "manufacturer-anchor-and-derived-construction",
+  "dimensionsMm": [85, 95, 70],
+  "bodyEnvelopeMm": [70, 95, 70],
+  "landmarks": [
+    { "name": "mouthOuterDiameter", "value": 70, "classification": "source" },
+    { "name": "wallHeight", "value": 85, "classification": "derived", "note": "body/spout envelope mapping" },
+    { "name": "spoutMaxProjection", "value": 15, "classification": "derived", "note": "rim-continuous visual anchor" },
+    { "name": "wallThickness", "value": 1.5, "classification": "pedagogicalApproximation", "note": "illustrative glass edge width" }
+  ],
+  "marking": { "kind": "approximate-contained", "rangeMl": [25, 200], "majorIntervalMl": 25, "minorIntervalMl": 25, "direction": "increases-upward", "reference": "bottom-zero", "surface": "vessel-wall", "calibration": "approximate", "classification": "source" },
+  "sourceRefs": ["corning-pyrex-vista-250", "jy-t-0655-2025"]
+}

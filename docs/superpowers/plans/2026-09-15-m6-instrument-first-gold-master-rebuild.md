@@ -1,6 +1,6 @@
 # M6 Instrument-First Gold Master Rebuild — Implementation Plan
 
-> Status: S1 candidate. This is an ordered implementation argument, not evidence that M6 is complete.
+> Status: S2 implementation in progress. This is an ordered implementation argument, not evidence that M6 is complete.
 > Spec: [M6 Instrument-First Gold Master Rebuild](../specs/2026-09-15-m6-instrument-first-gold-master-rebuild.md)
 > Prerequisite: owner accepts this spec/plan. M6 remains S2 visual NO-GO until `M6-S3` owner review succeeds.
 
@@ -64,7 +64,7 @@ No single green test is allowed to claim all four.
 pnpm test -- apparatus-contracts
 pnpm typecheck
 pnpm generate:versions
-pnpm verify:generated-versions
+pnpm verify:versions
 ```
 
 Add negative fixtures for omitted calibration, impossible direction/reference combinations, fabricated precision, and legacy generic graduation use.
@@ -81,8 +81,8 @@ Add negative fixtures for omitted calibration, impossible direction/reference co
 
 **Files/packages:**
 
-- `assets/apparatus/<id>/master/source-record.md`;
-- `assets/apparatus/<id>/master/measurement-sheet.json`;
+- `assets/apparatus/masters/<id>/source-record.md`;
+- `assets/apparatus/masters/<id>/measurement-sheet.json`;
 - `docs/research/m6-nobook-web-evidence.md`;
 - a new `docs/research/m6-instrument-reference-register.md`;
 - Instrument Audit tests/tooling.
@@ -116,10 +116,10 @@ Tests must fail for reversed beaker labels, a burette scale laid out as an exter
 
 **Files/packages:**
 
-- `assets/apparatus/beaker-250ml/**`;
-- `assets/apparatus/erlenmeyer-250ml/**`;
-- `assets/apparatus/acid-burette-25ml/**`;
-- `assets/apparatus/alkali-burette-50ml/**`;
+- `assets/apparatus/masters/beaker-250ml/**`;
+- `assets/apparatus/masters/erlenmeyer-250ml/**`;
+- `assets/apparatus/masters/acid-burette-25ml/**`;
+- `assets/apparatus/masters/alkali-burette-50ml/**`;
 - manifests, source records, licences, state sheets, and QA review sheets;
 - `docs/visual/m6-art-direction.md` and `docs/visual/apparatus-standard.md` only where their current text conflicts with the new contract.
 
@@ -170,7 +170,7 @@ Add XML/layer tests, manifest/source-record completeness tests, and asset-ID/var
 
 ```text
 pnpm test -- gold-master
-pnpm verify:m6-gold-master-contract
+pnpm verify:m6-gold-master
 pnpm verify:m6-instruments
 ```
 
@@ -273,8 +273,8 @@ Tests must reject a duplicate semantic identity, a planned variant marked master
 **Tests to add/run:**
 
 ```text
-pnpm verify:m6-contracts
-pnpm verify:acceptance-coverage
+pnpm verify:m6-gold-master
+uv run python tools/check_acceptance_coverage.py
 ```
 
 Add stale-wording fixtures that fail when a contract audit calls itself a visual acceptance, or a candidate/planned asset is called approved.
@@ -306,10 +306,10 @@ Add stale-wording fixtures that fail when a contract audit calls itself a visual
 
 ```text
 pnpm test
-pnpm verify:m6-contracts
+pnpm verify:m6-gold-master
 pnpm verify:m6-instruments
 pnpm verify:m6-render-geometry
-pnpm playwright:test
+pnpm test:browser
 ```
 
 **Expected evidence:** Two dated audit records and owner review material. M6 remains S2 until owner approves `M6-S3`.
@@ -339,12 +339,13 @@ pnpm test
 pnpm verify:scientific-math
 pnpm verify:scientific-quantities
 pnpm verify:world
-pnpm verify:m6-contracts
+pnpm verify:m6-gold-master
+pnpm verify:m6-master-packages
 pnpm verify:m6-instruments
 pnpm verify:m6-render-geometry
-pnpm playwright:test
+pnpm test:browser
+uv run python tools/check_acceptance_coverage.py
 pnpm lint
-pnpm verify:acceptance-coverage
 git diff --check
 ```
 
@@ -365,4 +366,4 @@ Run Python/PHREEQC checks only as existing repository CI requires; M6 must not w
 | Source fidelity protected | PASS | Task 2 forbids fabricated conditions/precision and distinguishes approximation. |
 | Visual acceptance cannot be faked by contract tests | PASS | Four non-substitutable audits plus owner review are required. |
 | No hidden M7/M8 expansion | PASS | Interaction/persistence changes are explicit non-goals. |
-| Preconditions for implementation | PASS | Owner acceptance is required; this plan stops at a documented S1 candidate. |
+| Preconditions for implementation | PASS | Owner has authorized implementation; this plan still stops short of self-accepting M6 S3. |

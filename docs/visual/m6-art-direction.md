@@ -93,8 +93,8 @@ first owner-reviewed Gold Master set is deliberately small and representative:
 | Gold Master family | Required specifications | Why first |
 |---|---|---|
 | Acid and alkali burette | acid 25 mL; alkali 50 mL | tests scale, meniscus, reading direction and genuinely different actuators |
-| Beaker | 100, 250, 1000 mL | tests open rim, spout, wall/base mass and capacity variation |
-| Erlenmeyer flask | 100, 250, 500 mL | tests shoulder/neck/base proportions and liquid profile |
+| Beaker | 250 mL first-wave master; 100/500/1000 mL planned variants | tests open rim, spout, wall/base mass and explicit capacity records |
+| Erlenmeyer flask | 250 mL first-wave master; 100/500 mL planned variants | tests shoulder/neck/base proportions without inventing a scale |
 
 Each Gold Master must pass master, scene, preview and thumbnail review on both
 background conditions before the catalog expands to graduated cylinders,

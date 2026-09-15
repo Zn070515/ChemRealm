@@ -15,9 +15,12 @@
 The first owner-reviewed visual baseline is intentionally bounded:
 
 - acid 25 mL and alkali 50 mL burettes;
-- 100, 250 and 1000 mL beakers (the candidate package also contains a 500 mL
-  family variant for size-class review);
-- 100, 250 and 500 mL Erlenmeyer flasks.
+- a 250 mL Griffin beaker;
+- a 250 mL Erlenmeyer flask.
+
+The catalogue may carry 100/500/1000 mL beaker and 100/500 mL Erlenmeyer
+specifications as planned or reference-only variants. They are not Gold Master
+visual evidence until each has its own authored master and review packet.
 
 These families exercise scale reading, meniscus, two different valve
 mechanisms, open-rim/spout geometry, shoulder/neck transitions and visibly

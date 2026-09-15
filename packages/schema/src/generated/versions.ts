@@ -55,8 +55,9 @@ export const VERSION_MANIFEST = deepFreeze({
     "volumeProfile": "1.0.0",
     "indicatorOpticalProfile": "2.0.0",
     "opticalPath": "1.0.0",
-    "apparatusAsset": "1.0.0",
-    "apparatusCatalog": "1.0.0"
+    "apparatusAsset": "2.0.0",
+    "apparatusCatalog": "2.0.0",
+    "apparatusGoldMasterPackage": 4
   },
   "content": {
     "current": 1

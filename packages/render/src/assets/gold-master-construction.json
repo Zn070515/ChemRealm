@@ -1,5 +1,4 @@
 {
-  "schemaVersion": 1,
   "visualFamily": "chemrealm-lab-v1",
   "coordinateUnit": "mm",
   "specifications": [
@@ -16,25 +15,15 @@
         "mouthOuterDiameter": 15,
         "tubeOuterDiameter": 15,
         "graduatedLength": 720,
-        "graduationStartY": 24,
-        "graduationEndY": 744,
+        "markingStartY": 24,
+        "markingEndY": 744,
         "stopcockCenterY": 764,
         "tipLength": 56,
         "wallThickness": 0.8
       },
-      "geometry": {
-        "kind": "burette",
-        "actuator": "rotary-valve",
-        "centerX": 15,
-        "tubeTopY": 0,
-        "tubeEndY": 744,
-        "stopcockTopY": 744,
-        "tipEndY": 820,
-        "graduationSide": "right"
-      },
-      "graduation": { "maximumMl": 25, "majorEveryMl": 1, "minorEveryMl": 0.05, "readingResolutionMl": 0.05 },
+      "marking": { "kind": "burette-ex", "displayRangeMl": { "minimum": 0, "maximum": 25 }, "valueDirection": "increases-downward", "reference": "top-zero", "calibration": "Ex", "markingSurface": "tube-wrap", "labelPolicy": "all-major", "majorIntervalMl": 1, "minorIntervalMl": 0.05, "readingResolutionMl": 0.05, "calibrationTemperatureCelsius": 20, "accuracyClass": "AS", "provenance": { "sourceId": "duran-burette-25ml-class-as", "sourceRef": "https://www.dwk.com/duran-burette-class-as-with-schellbach-stripe-and-ptfe-key-25-ml-243303304", "sourceClass": "manufacturer-anchor", "claim": "25 mL Class AS burette with 0.05 mL interval", "reportedPrecision": "reported" } },
       "anatomy": ["graduated-tube", "open-mouth", "rim", "ptfe-stopcock-body", "rotary-key", "outlet-tip", "detachable-actuator"],
-      "identityLayers": ["body", "glass-back", "glass-front", "rim", "graduation", "stopcock", "stopcock-key", "tip", "highlight"],
+      "identityLayers": ["body", "glass-back", "glass-front", "rim", "scale", "labels", "stopcock", "stopcock-key", "tip", "highlight"],
       "parts": [
         { "id": "burette.body", "role": "body", "boundsMm": [7.5, 0, 15, 744], "detachable": false, "portIds": ["burette.top-joint", "burette.bottom-joint"] },
         { "id": "burette.scale", "role": "scale", "boundsMm": [7.5, 24, 20, 720], "detachable": false, "portIds": [] },
@@ -51,9 +40,9 @@
         { "sourceId": "jy-t-0655-2025", "sourceRef": "https://www.moe.gov.cn/srcsite/A06/s3732/202507/W020250701322477393561.pdf", "sourceClass": "standard-family", "claim": "High-school teaching-equipment family and acid/alkali burette use", "reportedPrecision": "not-stated" }
       ],
       "lodVisibility": {
-        "master": ["body", "glass-back", "glass-front", "rim", "graduation-major", "graduation-minor", "stopcock", "stopcock-key", "tip", "highlight"],
-        "scene": ["body", "glass-back", "glass-front", "rim", "graduation-major", "graduation-medium", "stopcock", "stopcock-key", "tip", "highlight"],
-        "preview": ["body", "rim", "graduation-major", "stopcock", "stopcock-key", "tip"],
+        "master": ["body", "glass-back", "glass-front", "rim", "scale", "labels", "stopcock", "stopcock-key", "tip", "highlight"],
+        "scene": ["body", "glass-back", "glass-front", "rim", "scale", "labels", "stopcock", "stopcock-key", "tip", "highlight"],
+        "preview": ["body", "rim", "scale", "labels", "stopcock", "stopcock-key", "tip"],
         "thumbnail": ["body", "rim", "stopcock", "tip"]
       }
     },
@@ -70,25 +59,15 @@
         "mouthOuterDiameter": 18,
         "tubeOuterDiameter": 18,
         "graduatedLength": 790,
-        "graduationStartY": 24,
-        "graduationEndY": 814,
+        "markingStartY": 24,
+        "markingEndY": 814,
         "connectorY": 830,
         "tipLength": 52,
         "wallThickness": 0.8
       },
-      "geometry": {
-        "kind": "burette",
-        "actuator": "pinch-valve",
-        "centerX": 18,
-        "tubeTopY": 0,
-        "tubeEndY": 814,
-        "connectorTopY": 814,
-        "tipEndY": 900,
-        "graduationSide": "right"
-      },
-      "graduation": { "maximumMl": 50, "majorEveryMl": 1, "minorEveryMl": 0.1, "readingResolutionMl": 0.1 },
+      "marking": { "kind": "burette-approximate", "displayRangeMl": { "minimum": 0, "maximum": 50 }, "valueDirection": "increases-downward", "reference": "top-zero", "calibration": "approximate", "markingSurface": "tube-wrap", "labelPolicy": "all-major", "majorIntervalMl": 5, "minorIntervalMl": 0.1, "readingResolutionMl": 0.1, "provenance": { "sourceId": "chemrealm-alkali-burette-anchor", "sourceRef": "docs/research/m6-zhejiang-apparatus-and-visual-target.md", "sourceClass": "approximate-visual", "claim": "50 mL alkali burette marking is a pedagogical visual approximation with 5 mL labelled intervals", "reportedPrecision": "approximate" } },
       "anatomy": ["graduated-tube", "open-mouth", "rim", "lower-glass-connector", "rubber-delivery-tube", "glass-bead", "pinch-region", "outlet-tip", "detachable-actuator"],
-      "identityLayers": ["body", "glass-back", "glass-front", "rim", "graduation", "lower-connector", "rubber-tube", "glass-bead", "pinch-region", "tip", "highlight"],
+      "identityLayers": ["body", "glass-back", "glass-front", "rim", "scale", "labels", "lower-connector", "rubber-tube", "glass-bead", "pinch-region", "tip", "highlight"],
       "parts": [
         { "id": "burette.body", "role": "body", "boundsMm": [9, 0, 18, 814], "detachable": false, "portIds": ["burette.top-joint", "burette.bottom-joint"] },
         { "id": "burette.scale", "role": "scale", "boundsMm": [9, 24, 24, 790], "detachable": false, "portIds": [] },
@@ -106,9 +85,9 @@
         { "sourceId": "chemrealm-alkali-burette-anchor", "sourceRef": "docs/research/m6-zhejiang-apparatus-and-visual-target.md", "sourceClass": "approximate-visual", "claim": "50 mL rubber-tube/glass-bead family construction; not a certified dimension", "reportedPrecision": "approximate" }
       ],
       "lodVisibility": {
-        "master": ["body", "glass-back", "glass-front", "rim", "graduation-major", "graduation-minor", "lower-connector", "rubber-tube", "glass-bead", "pinch-region", "tip", "highlight"],
-        "scene": ["body", "glass-back", "glass-front", "rim", "graduation-major", "graduation-medium", "lower-connector", "rubber-tube", "glass-bead", "pinch-region", "tip", "highlight"],
-        "preview": ["body", "rim", "graduation-major", "lower-connector", "rubber-tube", "glass-bead", "pinch-region", "tip"],
+        "master": ["body", "glass-back", "glass-front", "rim", "scale", "labels", "lower-connector", "rubber-tube", "glass-bead", "pinch-region", "tip", "highlight"],
+        "scene": ["body", "glass-back", "glass-front", "rim", "scale", "labels", "lower-connector", "rubber-tube", "glass-bead", "pinch-region", "tip", "highlight"],
+        "preview": ["body", "rim", "scale", "labels", "lower-connector", "rubber-tube", "glass-bead", "pinch-region", "tip"],
         "thumbnail": ["body", "rim", "rubber-tube", "glass-bead", "tip"]
       }
     },
@@ -121,11 +100,10 @@
       "capacityMl": 100,
       "bodyEnvelopeMm": [52, 72, 52],
       "physicalEnvelopeMm": [63, 72, 52],
-      "landmarksMm": { "mouthOuterDiameter": 52, "wallHeight": 64, "rimThickness": 2.4, "spoutMaxProjection": 11, "flatBaseWidth": 48, "graduationStartHeight": 20, "wallThickness": 1.2 },
-      "geometry": { "kind": "beaker", "bodyWidth": 52, "height": 72, "spoutRootX": 49, "spoutTipX": 63, "spoutRootY": 3, "baseRadius": 3 },
-      "graduation": { "maximumMl": 100, "majorEveryMl": 20, "minorEveryMl": 10, "readingResolutionMl": 10 },
+      "landmarksMm": { "mouthOuterDiameter": 52, "wallHeight": 64, "rimThickness": 2.4, "spoutMaxProjection": 11, "flatBaseWidth": 48, "markingStartHeight": 20, "wallThickness": 1.2 },
+      "marking": { "kind": "approximate-contained", "displayRangeMl": { "minimum": 20, "maximum": 100 }, "valueDirection": "increases-upward", "reference": "bottom-zero", "calibration": "approximate", "markingSurface": "vessel-wall", "labelPolicy": "selected-major", "majorIntervalMl": 20, "minorIntervalMl": 10, "readingResolutionMl": 10, "provenance": { "sourceId": "chemrealm-beaker-family-anchor", "sourceRef": "docs/research/m6-zhejiang-apparatus-and-visual-target.md", "sourceClass": "approximate-visual", "claim": "100 mL Griffin beaker contained-volume marks are approximate", "reportedPrecision": "approximate" } },
       "anatomy": ["straight-wall-body", "open-rim", "integrated-pour-spout", "interior-cavity", "graduation-marks", "flat-contact-foot"],
-      "identityLayers": ["body", "glass-back", "glass-front", "rim", "spout", "graduation", "highlight"],
+      "identityLayers": ["body", "glass-back", "glass-front", "rim", "spout", "scale", "labels", "highlight"],
       "parts": [
         { "id": "vessel.body", "role": "body", "boundsMm": [0, 0, 52, 72], "detachable": false, "portIds": ["vessel.mouth"] },
         { "id": "vessel.rim", "role": "rim", "boundsMm": [0, 0, 52, 5], "detachable": false, "portIds": ["vessel.mouth"] },
@@ -140,7 +118,7 @@
         { "sourceId": "jy-t-0655-2025", "sourceRef": "https://www.moe.gov.cn/srcsite/A06/s3732/202507/W020250701322477393561.pdf", "sourceClass": "standard-family", "claim": "High-school beaker family", "reportedPrecision": "not-stated" },
         { "sourceId": "chemrealm-beaker-family-anchor", "sourceRef": "docs/research/m6-zhejiang-apparatus-and-visual-target.md", "sourceClass": "approximate-visual", "claim": "100 mL Griffin low-form proportions; visual approximation", "reportedPrecision": "approximate" }
       ],
-      "lodVisibility": { "master": ["body", "glass-back", "glass-front", "rim", "spout", "graduation-major", "graduation-minor", "highlight"], "scene": ["body", "glass-back", "glass-front", "rim", "spout", "graduation-major", "graduation-medium", "highlight"], "preview": ["body", "rim", "spout", "graduation-major"], "thumbnail": ["body", "rim", "spout"] }
+      "lodVisibility": { "master": ["body", "glass-back", "glass-front", "rim", "spout", "scale", "labels", "highlight"], "scene": ["body", "glass-back", "glass-front", "rim", "spout", "scale", "labels", "highlight"], "preview": ["body", "rim", "spout", "scale", "labels"], "thumbnail": ["body", "rim", "spout"] }
     },
     {
       "specificationId": "beaker-250ml",
@@ -151,11 +129,10 @@
       "capacityMl": 250,
       "bodyEnvelopeMm": [70, 95, 70],
       "physicalEnvelopeMm": [85, 95, 70],
-      "landmarksMm": { "mouthOuterDiameter": 70, "wallHeight": 85, "rimThickness": 2.6, "spoutMaxProjection": 15, "flatBaseWidth": 65, "graduationStartHeight": 26, "wallThickness": 1.5 },
-      "geometry": { "kind": "beaker", "bodyWidth": 70, "height": 95, "spoutRootX": 67, "spoutTipX": 85, "spoutRootY": 3, "baseRadius": 4 },
-      "graduation": { "maximumMl": 250, "majorEveryMl": 50, "minorEveryMl": 25, "readingResolutionMl": 25 },
+      "landmarksMm": { "mouthOuterDiameter": 70, "wallHeight": 85, "rimThickness": 2.6, "spoutMaxProjection": 15, "flatBaseWidth": 65, "markingStartHeight": 26, "wallThickness": 1.5 },
+      "marking": { "kind": "approximate-contained", "displayRangeMl": { "minimum": 25, "maximum": 200 }, "valueDirection": "increases-upward", "reference": "bottom-zero", "calibration": "approximate", "markingSurface": "vessel-wall", "labelPolicy": "selected-major", "majorIntervalMl": 25, "minorIntervalMl": 25, "readingResolutionMl": 25, "provenance": { "sourceId": "corning-pyrex-vista-250", "sourceRef": "https://ecatalog.corning.com/life-sciences/b2c/en/General-Labware/Beakers/Beakers%2C-Glass/PYREX%C2%AE-VISTA%E2%84%A2-Beakers%2C-Standard-Low-Griffin/p/70000-250", "sourceClass": "manufacturer-anchor", "claim": "250 mL Griffin beaker has approximate 25–200 mL graduations at 25 mL increments", "reportedPrecision": "reported" } },
       "anatomy": ["straight-wall-body", "open-rim", "integrated-pour-spout", "interior-cavity", "graduation-marks", "flat-contact-foot"],
-      "identityLayers": ["body", "glass-back", "glass-front", "rim", "spout", "graduation", "highlight"],
+      "identityLayers": ["body", "glass-back", "glass-front", "rim", "spout", "scale", "labels", "highlight"],
       "parts": [
         { "id": "vessel.body", "role": "body", "boundsMm": [0, 0, 70, 95], "detachable": false, "portIds": ["vessel.mouth"] },
         { "id": "vessel.rim", "role": "rim", "boundsMm": [0, 0, 70, 6], "detachable": false, "portIds": ["vessel.mouth"] },
@@ -170,7 +147,7 @@
         { "sourceId": "corning-pyrex-vista-250", "sourceRef": "https://ecatalog.corning.com/life-sciences/b2b/MX/en/General-Labware/Beakers/Beakers%2C-Glass/PYREX%C2%AE-VISTA%E2%84%A2-Beakers%2C-Standard-Low-Griffin/p/70000-250", "sourceClass": "manufacturer-anchor", "claim": "250 mL Griffin low form, approximately 70 mm OD × 95 mm high, 25 mL graduation", "reportedPrecision": "reported" },
         { "sourceId": "jy-t-0655-2025", "sourceRef": "https://www.moe.gov.cn/srcsite/A06/s3732/202507/W020250701322477393561.pdf", "sourceClass": "standard-family", "claim": "High-school beaker family", "reportedPrecision": "not-stated" }
       ],
-      "lodVisibility": { "master": ["body", "glass-back", "glass-front", "rim", "spout", "graduation-major", "graduation-minor", "highlight"], "scene": ["body", "glass-back", "glass-front", "rim", "spout", "graduation-major", "graduation-medium", "highlight"], "preview": ["body", "rim", "spout", "graduation-major"], "thumbnail": ["body", "rim", "spout"] }
+      "lodVisibility": { "master": ["body", "glass-back", "glass-front", "rim", "spout", "scale", "labels", "highlight"], "scene": ["body", "glass-back", "glass-front", "rim", "spout", "scale", "labels", "highlight"], "preview": ["body", "rim", "spout", "scale", "labels"], "thumbnail": ["body", "rim", "spout"] }
     },
     {
       "specificationId": "beaker-500ml",
@@ -181,11 +158,10 @@
       "capacityMl": 500,
       "bodyEnvelopeMm": [88, 125, 88],
       "physicalEnvelopeMm": [106, 125, 88],
-      "landmarksMm": { "mouthOuterDiameter": 88, "wallHeight": 114, "rimThickness": 2.9, "spoutMaxProjection": 18, "flatBaseWidth": 80, "graduationStartHeight": 34, "wallThickness": 1.7 },
-      "geometry": { "kind": "beaker", "bodyWidth": 88, "height": 125, "spoutRootX": 85, "spoutTipX": 106, "spoutRootY": 3, "baseRadius": 4.5 },
-      "graduation": { "maximumMl": 500, "majorEveryMl": 100, "minorEveryMl": 50, "readingResolutionMl": 50 },
+      "landmarksMm": { "mouthOuterDiameter": 88, "wallHeight": 114, "rimThickness": 2.9, "spoutMaxProjection": 18, "flatBaseWidth": 80, "markingStartHeight": 34, "wallThickness": 1.7 },
+      "marking": { "kind": "approximate-contained", "displayRangeMl": { "minimum": 50, "maximum": 400 }, "valueDirection": "increases-upward", "reference": "bottom-zero", "calibration": "approximate", "markingSurface": "vessel-wall", "labelPolicy": "selected-major", "majorIntervalMl": 100, "minorIntervalMl": 50, "readingResolutionMl": 50, "provenance": { "sourceId": "chemrealm-beaker-family-anchor", "sourceRef": "docs/research/m6-zhejiang-apparatus-and-visual-target.md", "sourceClass": "approximate-visual", "claim": "500 mL Griffin beaker contained-volume marks are approximate", "reportedPrecision": "approximate" } },
       "anatomy": ["straight-wall-body", "open-rim", "integrated-pour-spout", "interior-cavity", "graduation-marks", "flat-contact-foot"],
-      "identityLayers": ["body", "glass-back", "glass-front", "rim", "spout", "graduation", "highlight"],
+      "identityLayers": ["body", "glass-back", "glass-front", "rim", "spout", "scale", "labels", "highlight"],
       "parts": [
         { "id": "vessel.body", "role": "body", "boundsMm": [0, 0, 88, 125], "detachable": false, "portIds": ["vessel.mouth"] },
         { "id": "vessel.rim", "role": "rim", "boundsMm": [0, 0, 88, 7], "detachable": false, "portIds": ["vessel.mouth"] },
@@ -200,7 +176,7 @@
         { "sourceId": "chemrealm-beaker-family-anchor", "sourceRef": "docs/research/m6-zhejiang-apparatus-and-visual-target.md", "sourceClass": "approximate-visual", "claim": "500 mL Griffin low-form proportions; visual approximation", "reportedPrecision": "approximate" },
         { "sourceId": "jy-t-0655-2025", "sourceRef": "https://www.moe.gov.cn/srcsite/A06/s3732/202507/W020250701322477393561.pdf", "sourceClass": "standard-family", "claim": "High-school beaker family", "reportedPrecision": "not-stated" }
       ],
-      "lodVisibility": { "master": ["body", "glass-back", "glass-front", "rim", "spout", "graduation-major", "graduation-minor", "highlight"], "scene": ["body", "glass-back", "glass-front", "rim", "spout", "graduation-major", "highlight"], "preview": ["body", "rim", "spout", "graduation-major"], "thumbnail": ["body", "rim", "spout"] }
+      "lodVisibility": { "master": ["body", "glass-back", "glass-front", "rim", "spout", "scale", "labels", "highlight"], "scene": ["body", "glass-back", "glass-front", "rim", "spout", "scale", "labels", "highlight"], "preview": ["body", "rim", "spout", "scale", "labels"], "thumbnail": ["body", "rim", "spout"] }
     },
     {
       "specificationId": "beaker-1000ml",
@@ -211,11 +187,10 @@
       "capacityMl": 1000,
       "bodyEnvelopeMm": [112, 165, 112],
       "physicalEnvelopeMm": [136, 165, 112],
-      "landmarksMm": { "mouthOuterDiameter": 112, "wallHeight": 150, "rimThickness": 3.2, "spoutMaxProjection": 24, "flatBaseWidth": 104, "graduationStartHeight": 44, "wallThickness": 2 },
-      "geometry": { "kind": "beaker", "bodyWidth": 112, "height": 165, "spoutRootX": 109, "spoutTipX": 136, "spoutRootY": 3, "baseRadius": 5 },
-      "graduation": { "maximumMl": 1000, "majorEveryMl": 200, "minorEveryMl": 100, "readingResolutionMl": 100 },
+      "landmarksMm": { "mouthOuterDiameter": 112, "wallHeight": 150, "rimThickness": 3.2, "spoutMaxProjection": 24, "flatBaseWidth": 104, "markingStartHeight": 44, "wallThickness": 2 },
+      "marking": { "kind": "approximate-contained", "displayRangeMl": { "minimum": 100, "maximum": 800 }, "valueDirection": "increases-upward", "reference": "bottom-zero", "calibration": "approximate", "markingSurface": "vessel-wall", "labelPolicy": "selected-major", "majorIntervalMl": 200, "minorIntervalMl": 100, "readingResolutionMl": 100, "provenance": { "sourceId": "chemrealm-beaker-family-anchor", "sourceRef": "docs/research/m6-zhejiang-apparatus-and-visual-target.md", "sourceClass": "approximate-visual", "claim": "1000 mL Griffin beaker contained-volume marks are approximate", "reportedPrecision": "approximate" } },
       "anatomy": ["straight-wall-body", "open-rim", "integrated-pour-spout", "interior-cavity", "graduation-marks", "flat-contact-foot"],
-      "identityLayers": ["body", "glass-back", "glass-front", "rim", "spout", "graduation", "highlight"],
+      "identityLayers": ["body", "glass-back", "glass-front", "rim", "spout", "scale", "labels", "highlight"],
       "parts": [
         { "id": "vessel.body", "role": "body", "boundsMm": [0, 0, 112, 165], "detachable": false, "portIds": ["vessel.mouth"] },
         { "id": "vessel.rim", "role": "rim", "boundsMm": [0, 0, 112, 8], "detachable": false, "portIds": ["vessel.mouth"] },
@@ -230,7 +205,7 @@
         { "sourceId": "corning-pyrex-vista-family", "sourceRef": "https://www.corning.com/catalog/cls/documents/product-information-sheets/CLS-GL-005_REV6_DL.pdf", "sourceClass": "manufacturer-anchor", "claim": "PYREX VISTA Griffin family includes a 1,000 mL double-graduated beaker", "reportedPrecision": "reported" },
         { "sourceId": "chemrealm-beaker-family-anchor", "sourceRef": "docs/research/m6-zhejiang-apparatus-and-visual-target.md", "sourceClass": "approximate-visual", "claim": "1,000 mL body proportions; visual approximation", "reportedPrecision": "approximate" }
       ],
-      "lodVisibility": { "master": ["body", "glass-back", "glass-front", "rim", "spout", "graduation-major", "graduation-minor", "highlight"], "scene": ["body", "glass-back", "glass-front", "rim", "spout", "graduation-major", "highlight"], "preview": ["body", "rim", "spout", "graduation-major"], "thumbnail": ["body", "rim", "spout"] }
+      "lodVisibility": { "master": ["body", "glass-back", "glass-front", "rim", "spout", "scale", "labels", "highlight"], "scene": ["body", "glass-back", "glass-front", "rim", "spout", "scale", "labels", "highlight"], "preview": ["body", "rim", "spout", "scale", "labels"], "thumbnail": ["body", "rim", "spout"] }
     },
     {
       "specificationId": "conical-flask-100ml",
@@ -242,7 +217,6 @@
       "bodyEnvelopeMm": [62, 105, 62],
       "physicalEnvelopeMm": [62, 105, 62],
       "landmarksMm": { "mouthOuterDiameter": 22, "neckOuterDiameter": 18, "neckLength": 34, "shoulderTransitionHeight": 38, "maxBodyDiameter": 62, "bottomCornerRadius": 8, "flatBaseWidth": 48, "wallThickness": 1 },
-      "geometry": { "kind": "erlenmeyer", "centerX": 31, "baseY": 105 },
       "anatomy": ["curved-conical-body", "shoulder-transition", "cylindrical-neck", "open-mouth-rim", "interior-cavity", "flat-contact-foot"],
       "identityLayers": ["body", "shoulder", "neck", "rim", "glass-back", "glass-front", "highlight"],
       "parts": [
@@ -268,7 +242,6 @@
       "bodyEnvelopeMm": [85, 145, 85],
       "physicalEnvelopeMm": [85, 145, 85],
       "landmarksMm": { "mouthOuterDiameter": 28, "neckOuterDiameter": 23, "neckLength": 48, "shoulderTransitionHeight": 52, "maxBodyDiameter": 85, "bottomCornerRadius": 10, "flatBaseWidth": 65, "wallThickness": 1.2 },
-      "geometry": { "kind": "erlenmeyer", "centerX": 42.5, "baseY": 145 },
       "anatomy": ["curved-conical-body", "shoulder-transition", "cylindrical-neck", "open-mouth-rim", "interior-cavity", "flat-contact-foot"],
       "identityLayers": ["body", "shoulder", "neck", "rim", "glass-back", "glass-front", "highlight"],
       "parts": [
@@ -294,7 +267,6 @@
       "bodyEnvelopeMm": [102, 186, 102],
       "physicalEnvelopeMm": [102, 186, 102],
       "landmarksMm": { "mouthOuterDiameter": 34, "neckOuterDiameter": 28, "neckLength": 62, "shoulderTransitionHeight": 66, "maxBodyDiameter": 102, "bottomCornerRadius": 12, "flatBaseWidth": 78, "wallThickness": 1.4 },
-      "geometry": { "kind": "erlenmeyer", "centerX": 51, "baseY": 186 },
       "anatomy": ["curved-conical-body", "shoulder-transition", "cylindrical-neck", "open-mouth-rim", "interior-cavity", "flat-contact-foot"],
       "identityLayers": ["body", "shoulder", "neck", "rim", "glass-back", "glass-front", "highlight"],
       "parts": [

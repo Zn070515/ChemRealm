@@ -77,6 +77,9 @@ jobs:
       - run: pnpm verify:m5-contracts
       - run: pnpm verify:m6-entry
       - run: pnpm verify:m6-gold-master
+      - run: pnpm verify:m6-master-packages
+      - run: pnpm verify:m6-instruments
+      - run: pnpm verify:m6-render-geometry
       - run: pnpm verify:m6-renderer
       - run: pnpm verify:world
       # Indicator optical source admission is a refusal-first evidence gate;

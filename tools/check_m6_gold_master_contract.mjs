@@ -6,8 +6,7 @@
  * quality proof and must never promote a candidate package to M6 S3.
  */
 
-import { readFile } from "node:fs/promises";
-import { access } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 
 const root = new URL("../", import.meta.url);
 const failures = [];
@@ -17,20 +16,38 @@ const read = (relativePath) => readFile(new URL(relativePath, root), "utf8");
 const readJson = async (relativePath) => JSON.parse(await read(relativePath));
 const requireText = (condition, message) => { if (!condition) failures.push(message); };
 
-const [source, manifest, evidence, artDirection, plan, generator] = await Promise.all([
+const [source, manifest, versionManifest, evidence, artDirection, plan, generator] = await Promise.all([
   readJson("packages/render/src/assets/gold-master-construction.json"),
   readJson("assets/apparatus/catalog/gold-master/manifest.json"),
+  readJson("contracts/version-manifest.json"),
   read("docs/evidence/M6.md"),
   read("docs/visual/m6-art-direction.md"),
-  read("docs/superpowers/plans/2026-09-15-m6-gold-master-contract-remediation.md"),
+  read("docs/superpowers/plans/2026-09-15-m6-instrument-first-gold-master-rebuild.md"),
   read("tools/create_gold_master_assets.mjs"),
 ]);
 
-requireText(source.schemaVersion === 1 && source.coordinateUnit === "mm",
-  "construction source must be schema v1 in millimetres");
-const sourceIds = source.specifications.map((item) => item.specificationId);
+const masterRoot = new URL("assets/apparatus/masters/", root);
+const masterDirectories = await readdir(masterRoot, { withFileTypes: true });
+const masters = new Map();
+for (const entry of masterDirectories) {
+  if (!entry.isDirectory()) continue;
+  const svg = await read(`assets/apparatus/masters/${entry.name}/master.svg`);
+  const identity = svg.match(/data-asset-id="([^"]+)"/);
+  if (identity?.[1] !== undefined) masters.set(identity[1], { directory: entry.name, svg });
+}
+const sourceRecords = Array.isArray(source.specifications) ? source.specifications : [];
+const selectedRecords = sourceRecords.filter((record) => masters.has(record.specificationId));
+const sourceIds = selectedRecords.map((item) => item.specificationId);
+const packageVersion = versionManifest.representation.apparatusGoldMasterPackage;
+
+requireText(source.coordinateUnit === "mm", "construction source must use millimetres");
+requireText(sourceIds.length > 0, "construction source has no manual master records");
 requireText(new Set(sourceIds).size === sourceIds.length,
-  "construction source contains duplicate specification IDs");
+  "construction source contains duplicate manual specification IDs");
+requireText(masters.size === sourceIds.length,
+  "every manual master must correspond to exactly one construction source record");
+requireText(manifest.schemaVersion === packageVersion,
+  "generated package schema version must come from the central version manifest");
 requireText(manifest.status === "gold-master-candidate",
   "generated package must remain explicitly candidate-scoped");
 requireText(manifest.sourceOfTruth === "packages/render/src/assets/gold-master-construction.json",
@@ -42,19 +59,37 @@ requireText(JSON.stringify(manifest.lods) === JSON.stringify(lods),
 requireText(JSON.stringify(manifest.backgrounds) === JSON.stringify(["dark-neutral", "light-neutral"]),
   "generated package must declare both neutral review backgrounds");
 requireText(JSON.stringify(manifest.assets.map((item) => item.assetId)) === JSON.stringify(sourceIds),
-  "generated manifest asset IDs must exactly match source IDs and order");
+  "generated manifest asset IDs must exactly match manual source IDs and order");
+
+for (const record of selectedRecords) {
+  const master = masters.get(record.specificationId);
+  requireText(master?.svg.includes('data-master-authored="true"') === true,
+    `manual master must be explicitly authored: ${record.specificationId}`);
+  requireText(!JSON.stringify(record).includes('"geometry"'),
+    `generic geometry record must not remain in the active source: ${record.specificationId}`);
+  requireText(!JSON.stringify(record).includes('"graduation"'),
+    `legacy graduation record must not remain in the active source: ${record.specificationId}`);
+  requireText(master?.svg.includes(`viewBox="0 0 ${record.physicalEnvelopeMm[0]} ${record.physicalEnvelopeMm[1]}"`) === true,
+    `manual master viewBox must match source envelope: ${record.specificationId}`);
+}
 
 for (const asset of manifest.assets) {
+  const record = selectedRecords.find((item) => item.specificationId === asset.assetId);
+  requireText(record !== undefined, `manifest asset has no manual source record: ${asset.assetId}`);
   requireText(asset.specificationId === asset.assetId,
     `manifest specification identity diverges for ${asset.assetId}`);
-  requireText(JSON.stringify(asset.dimensionsMm) === JSON.stringify(
-    source.specifications.find((item) => item.specificationId === asset.assetId)?.physicalEnvelopeMm,
-  ), `manifest physical envelope diverges for ${asset.assetId}`);
+  requireText(asset.assetStatus === "candidate",
+    `candidate package asset must not claim approval: ${asset.assetId}`);
+  requireText(JSON.stringify(asset.dimensionsMm) === JSON.stringify(record?.physicalEnvelopeMm),
+    `manifest physical envelope diverges for ${asset.assetId}`);
   for (const lod of lods) {
     const path = `assets/apparatus/catalog/gold-master/${asset.assetId}/${lod}.svg`;
-    try { await access(new URL(path, root)); } catch { failures.push(`missing generated LOD: ${path}`); }
-    const svg = await read(path);
+    let svg = "";
+    try { svg = await read(path); } catch { failures.push(`missing generated LOD: ${path}`); continue; }
     requireText(svg.includes('data-coordinate-unit="mm"'), `${path} must declare millimetre coordinates`);
+    requireText(svg.includes(`data-lod="${lod}"`), `${path} must declare its LOD`);
+    requireText(svg.includes(`data-asset-version="${versionManifest.representation.apparatusAsset}"`),
+      `${path} must use the central apparatus asset version`);
     const forbiddenVisibleLayer = [...svg.matchAll(
       /<g data-layer="(?:shadow|qa-overlay|support-interface|construction|contact-base)"([^>]*)>/gi,
     )].some((match) => !/\bdisplay="none"/i.test(match[1] ?? ""));
@@ -62,11 +97,12 @@ for (const asset of manifest.assets) {
   }
 }
 
-for (const specificationId of sourceIds) {
-  requireText(!generator.includes(`"${specificationId}"`),
-    `generator contains a duplicate first-wave specification literal: ${specificationId}`);
+for (const forbidden of ["beakerGeometry", "flaskGeometry", "buretteGeometry", "function graduation", "ApparatusGraduation"]) {
+  requireText(!generator.includes(forbidden), `compiler still contains retired generic construction path: ${forbidden}`);
 }
 
+requireText(/manual master/i.test(generator) && /does not draw apparatus/i.test(generator),
+  "compiler must describe and implement a manual-master compilation boundary");
 requireText(/Gold Master candidate/i.test(evidence), "M6 evidence must name the package as a candidate");
 requireText(/owner visual review remains open/i.test(evidence), "M6 evidence must keep owner visual review open");
 requireText(!/M6-LOD\s*\|\s*PASS locally\s*\|/i.test(evidence),
@@ -79,8 +115,8 @@ requireText(!/path count[^\n]*proves|all[^\n]*shadow[^\n]*master/i.test(artDirec
   "art direction must not use path count or blanket shadow claims as acceptance proof");
 requireText(/self-audit/i.test(evidence) && /m6-gold-master-self-audit\.md/i.test(evidence),
   "M6 evidence must link the two-round self-audit");
-requireText(/Gold Master package is a candidate until owner visual review/i.test(plan),
-  "implementation plan must preserve the candidate/owner-review gate");
+requireText(/Status: S2 implementation in progress/i.test(plan) && /owner review succeeds/i.test(plan),
+  "implementation plan must preserve the S2 candidate/owner-review gate");
 
 if (failures.length > 0) {
   for (const failure of failures) console.error(`FAIL  ${failure}`);
@@ -88,7 +124,7 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-console.log("ok    canonical source, generated candidate package, LOD files, and evidence boundary are aligned");
-console.log("ok    clean-master exclusions and source-driven generation are mechanically checked");
+console.log("ok    canonical source, manual masters, generated candidate package, and LOD files are aligned");
+console.log("ok    clean-master exclusions and source-driven compilation are mechanically checked");
 console.log("ok    visual owner acceptance remains explicitly outside this structural guard");
 console.log("\nRESULT: PASS");

@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 85 95" data-asset-id="beaker-250ml" data-family-id="beaker" data-capacity-ml="250" data-coordinate-unit="mm" data-master-authored="true" data-marking-kind="approximate-contained" role="img" aria-labelledby="title desc">
+  <title id="title">250 mL Griffin low-form beaker master</title>
+  <desc id="desc">Source-backed approximate-contained scale from 25 mL to 200 mL, increasing upward on the vessel wall.</desc>
+  <defs>
+    <linearGradient id="beaker-glass" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#b7d0d2" stop-opacity=".38"/><stop offset=".16" stop-color="#f7ffff" stop-opacity=".2"/><stop offset=".52" stop-color="#dbe9e8" stop-opacity=".23"/><stop offset="1" stop-color="#73989c" stop-opacity=".34"/></linearGradient>
+    <linearGradient id="beaker-rim" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#ffffff" stop-opacity=".72"/><stop offset="1" stop-color="#afcacc" stop-opacity=".3"/></linearGradient>
+    <style>.edge{fill:none;stroke:#3d6267;stroke-linecap:round;stroke-linejoin:round}.mark{fill:none;stroke:#193d43;stroke-linecap:round}.label{fill:#173d43;font:2.8px Arial,sans-serif}.shine{fill:none;stroke:#fff;stroke-linecap:round}</style>
+  </defs>
+  <g data-layer="glass-back" data-part="vessel.body"><path d="M8 8V86Q8 91 13 92H72Q77 91 77 86V8" fill="url(#beaker-glass)" stroke="#5c7b80" stroke-width=".65"/></g>
+  <g data-layer="body" data-part="vessel.body"><path d="M8 8V86Q8 91 13 92H72Q77 91 77 86V8Z" fill="url(#beaker-glass)" stroke="#45696e" stroke-width=".45" data-profile-boundary="griffin-straight-wall"/><path d="M11 14V84Q11 88 15 89H70" class="edge" stroke-width=".35" opacity=".7"/></g>
+  <g data-layer="spout" data-part="vessel.spout"><path d="M73 8C77 7 79 5 82 5C83.5 5 84.5 6 85 7.2C82.2 8.3 79.5 10 76 12L73 13Z" fill="url(#beaker-glass)" stroke="#45696e" stroke-width=".48" data-spout-root="rim-continuity" data-spout-tip-x="85"/><path d="M76 9C79 7.8 81 6.6 83.8 6.5" class="shine" stroke-width=".38" opacity=".75"/></g>
+  <g data-layer="rim" data-part="vessel.rim"><ellipse cx="42.5" cy="7.5" rx="34.8" ry="3.2" fill="url(#beaker-rim)" stroke="#45696e" stroke-width=".6"/><ellipse cx="42.5" cy="7.5" rx="31.8" ry="1.9" fill="#f5ffff" fill-opacity=".22" stroke="#78969a" stroke-width=".3"/><path d="M8 7.5H73" class="edge" stroke-width=".55"/></g>
+  <g data-layer="scale" data-part="vessel.scale" data-marking-kind="approximate-contained" data-marking-direction="increases-upward" data-marking-range-ml="25-200" data-marking-interval-ml="25">
+    <path d="M64 22H73M64 30H73M64 38H73M64 46H73M64 54H73M64 62H73M64 70H73M64 78H73" class="mark" stroke-width=".55"/>
+    <path d="M69 22V78" class="mark" stroke-width=".22" opacity=".65"/>
+    <g data-marking-value-ml="200"><path d="M64 22H73" class="mark" stroke-width=".7"/></g>
+    <g data-marking-value-ml="175"><path d="M64 30H73" class="mark" stroke-width=".7"/></g>
+    <g data-marking-value-ml="150"><path d="M64 38H73" class="mark" stroke-width=".7"/></g>
+    <g data-marking-value-ml="125"><path d="M64 46H73" class="mark" stroke-width=".7"/></g>
+    <g data-marking-value-ml="100"><path d="M64 54H73" class="mark" stroke-width=".7"/></g>
+    <g data-marking-value-ml="75"><path d="M64 62H73" class="mark" stroke-width=".7"/></g>
+    <g data-marking-value-ml="50"><path d="M64 70H73" class="mark" stroke-width=".7"/></g>
+    <g data-marking-value-ml="25"><path d="M64 78H73" class="mark" stroke-width=".7"/></g>
+  </g>
+  <g data-layer="labels" data-part="vessel.scale-labels"><text x="74.5" y="23" class="label">200</text><text x="74.5" y="31" class="label">175</text><text x="74.5" y="39" class="label">150</text><text x="74.5" y="47" class="label">125</text><text x="74.5" y="55" class="label">100</text><text x="74.5" y="63" class="label">75</text><text x="74.5" y="71" class="label">50</text><text x="74.5" y="79" class="label">25</text><text x="64" y="19" class="label" font-size="2.1">approx. mL</text></g>
+  <g data-layer="glass-front" data-part="vessel.body"><path d="M16 13V84" class="shine" stroke-width="1.2" opacity=".32"/><path d="M70 16V83" class="shine" stroke-width=".45" opacity=".3"/></g>
+  <g data-layer="highlight"><path d="M12 10H56" class="shine" stroke-width=".4" opacity=".7"/><path d="M15 91H70" class="shine" stroke-width=".55" opacity=".45"/></g>
+</svg>

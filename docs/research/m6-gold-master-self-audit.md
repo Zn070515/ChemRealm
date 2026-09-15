@@ -40,10 +40,12 @@ create_gold_master_assets.mjs
 manifest / source record / fixture / state package / SVG LODs / QA sheets
 ```
 
-The first-wave specification IDs occur once in the checked-in construction
-source. The TypeScript catalog projects those records instead of maintaining a
-second first-wave literal array. The generator reads the same JSON source and
-does not maintain an independent catalog list. The generated manifest points
+The construction source keeps the broader catalogue records, while the four
+first-wave records are selected only when a matching manually authored master
+exists. The TypeScript catalog projects those active records instead of
+maintaining a second first-wave geometry list. The generator discovers the
+manual-master identity from the SVG root and reads the matching source record;
+it does not maintain an independent asset list. The generated manifest points
 back to that source path.
 
 ### Mechanical checks performed
@@ -106,14 +108,14 @@ scene and manually composed prototype apparatus; it is useful regression
 evidence for the old runtime path, but it is **not** a Gold Master visual
 capture. No production integration claim is made from it.
 
-A local eight-panel review harness rendered the four representative masters and
-their thumbnails on alternating dark-neutral and light-neutral panels. The
-review confirmed that the candidate contains the intended family anatomy and no
-visible QA/support overlays. It also made the remaining owner questions
-visible: the long burette format compresses graduation detail at thumbnail
-scale, and light-neutral glass contrast/material treatment must be judged
-against the approved visual baseline. Those are visual-review decisions, not
-claims that package tests can settle.
+The generated package contains physical-scale and normalized-shape comparison
+sheets embedding the four representative masters and declares alternating
+dark-neutral/light-neutral review backgrounds. Package checks confirm the
+intended family anatomy and no visible QA/support overlays. The remaining owner
+questions are visual: the long burette format may compress graduation detail at
+thumbnail scale, and light-neutral glass contrast/material treatment must be
+judged against the approved visual baseline. Those are visual-review decisions,
+not claims that package tests can settle.
 
 ### Audit B result
 
@@ -142,6 +144,9 @@ The following are deliberately not claimed by this audit:
 ```powershell
 node tools/create_gold_master_assets.mjs
 pnpm verify:m6-gold-master
+pnpm verify:m6-master-packages
+pnpm verify:m6-instruments
+pnpm verify:m6-render-geometry
 pnpm exec vitest run packages/render/src/assets/gold-master.test.ts packages/render/src/assets/apparatus-catalog.test.ts --reporter=verbose --no-file-parallelism
 pnpm verify:m6-entry
 pnpm verify:m6-renderer
@@ -157,7 +162,7 @@ command run is package evidence, not owner visual acceptance.
 
 - Current stage: M6 S2 implementation candidate; visual-system gate NO-GO.
 - Verified: source/catalog/generator identity, measured physical-mm bounds,
-  semantic LOD roles, calibrated graduations, clean-master exclusions,
+  semantic LOD roles, declared marking semantics, clean-master exclusions,
   candidate comparison sheets and package tests.
 - Not verified: owner visual quality, dual-background screenshot acceptance,
   production integration of the candidate package, performance sample and

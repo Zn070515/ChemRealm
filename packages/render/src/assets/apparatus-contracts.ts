@@ -1,3 +1,7 @@
+import type { InstrumentMarking } from "./instrument-marking.js";
+export type { ApparatusProvenance, ApparatusSourceClass } from "./apparatus-provenance.js";
+import type { ApparatusProvenance, ApparatusSourceClass } from "./apparatus-provenance.js";
+
 export type ApparatusSpecKind = "vessel" | "support" | "connector" | "closure";
 export type ApparatusFamilyId =
   | "burette"
@@ -18,10 +22,6 @@ export type ApparatusMaterial =
   | "stainless-steel"
   | "coated-metal"
   | "ceramic";
-export type ApparatusSourceClass =
-  | "standard-family"
-  | "manufacturer-anchor"
-  | "approximate-visual";
 export type ApparatusPortKind =
   | "fluid-inlet"
   | "fluid-outlet"
@@ -30,22 +30,6 @@ export type ApparatusPortKind =
   | "support-contact"
   | "joint";
 export type ApparatusPortDirection = "in" | "out" | "bidirectional";
-
-export interface ApparatusProvenance {
-  readonly sourceId: string;
-  /** Canonical URL or repository-relative source record. */
-  readonly sourceRef: string;
-  readonly sourceClass: ApparatusSourceClass;
-  readonly claim: string;
-  readonly reportedPrecision: "reported" | "not-stated" | "approximate";
-}
-
-export interface ApparatusGraduation {
-  readonly maximumMl: number;
-  readonly majorEveryMl: number;
-  readonly minorEveryMl: number;
-  readonly readingResolutionMl: number;
-}
 
 export interface ApparatusPort {
   readonly id: string;
@@ -79,7 +63,7 @@ export interface ApparatusSpecification {
   readonly material: ApparatusMaterial;
   readonly dimensionsMm: readonly [number, number, number];
   readonly capacityMl: number | undefined;
-  readonly graduation: ApparatusGraduation | undefined;
+  readonly marking: InstrumentMarking | undefined;
   readonly sourceClass: ApparatusSourceClass;
   readonly claimScope: string;
   readonly provenance: readonly ApparatusProvenance[];

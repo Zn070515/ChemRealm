@@ -1,12 +1,12 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "status": "gold-master-candidate",
   "sourceOfTruth": "packages/render/src/assets/gold-master-construction.json",
   "assetVersionSource": "contracts/version-manifest.json#representation.apparatusAsset",
   "catalogVersionSource": "contracts/version-manifest.json#representation.apparatusCatalog",
   "visualFamily": "chemrealm-lab-v1",
   "coordinateUnit": "mm",
-  "viewMode": "construction",
+  "viewMode": "manual-master-compilation",
   "lods": [
     "master",
     "scene",
@@ -36,6 +36,7 @@
     {
       "assetId": "burette-acid-25ml-class-as",
       "specificationId": "burette-acid-25ml-class-as",
+      "assetStatus": "candidate",
       "familyId": "burette",
       "capacityMl": 25,
       "bodyDimensionsMm": [
@@ -62,8 +63,8 @@
         "mouthOuterDiameter": 15,
         "tubeOuterDiameter": 15,
         "graduatedLength": 720,
-        "graduationStartY": 24,
-        "graduationEndY": 744,
+        "markingStartY": 24,
+        "markingEndY": 744,
         "stopcockCenterY": 764,
         "tipLength": 56,
         "wallThickness": 0.8
@@ -73,17 +74,36 @@
         "glass-back",
         "glass-front",
         "rim",
-        "graduation",
+        "scale",
+        "labels",
         "stopcock",
         "stopcock-key",
         "tip",
         "highlight"
       ],
-      "graduation": {
-        "maximumMl": 25,
-        "majorEveryMl": 1,
-        "minorEveryMl": 0.05,
-        "readingResolutionMl": 0.05
+      "marking": {
+        "kind": "burette-ex",
+        "displayRangeMl": {
+          "minimum": 0,
+          "maximum": 25
+        },
+        "valueDirection": "increases-downward",
+        "reference": "top-zero",
+        "calibration": "Ex",
+        "markingSurface": "tube-wrap",
+        "labelPolicy": "all-major",
+        "majorIntervalMl": 1,
+        "minorIntervalMl": 0.05,
+        "readingResolutionMl": 0.05,
+        "calibrationTemperatureCelsius": 20,
+        "accuracyClass": "AS",
+        "provenance": {
+          "sourceId": "duran-burette-25ml-class-as",
+          "sourceRef": "https://www.dwk.com/duran-burette-class-as-with-schellbach-stripe-and-ptfe-key-25-ml-243303304",
+          "sourceClass": "manufacturer-anchor",
+          "claim": "25 mL Class AS burette with 0.05 mL interval",
+          "reportedPrecision": "reported"
+        }
       },
       "lodVisibility": {
         "master": [
@@ -91,8 +111,8 @@
           "glass-back",
           "glass-front",
           "rim",
-          "graduation-major",
-          "graduation-minor",
+          "scale",
+          "labels",
           "stopcock",
           "stopcock-key",
           "tip",
@@ -103,8 +123,8 @@
           "glass-back",
           "glass-front",
           "rim",
-          "graduation-major",
-          "graduation-medium",
+          "scale",
+          "labels",
           "stopcock",
           "stopcock-key",
           "tip",
@@ -113,7 +133,8 @@
         "preview": [
           "body",
           "rim",
-          "graduation-major",
+          "scale",
+          "labels",
           "stopcock",
           "stopcock-key",
           "tip"
@@ -139,6 +160,7 @@
     {
       "assetId": "burette-alkali-50ml-class-b",
       "specificationId": "burette-alkali-50ml-class-b",
+      "assetStatus": "candidate",
       "familyId": "burette",
       "capacityMl": 50,
       "bodyDimensionsMm": [
@@ -167,8 +189,8 @@
         "mouthOuterDiameter": 18,
         "tubeOuterDiameter": 18,
         "graduatedLength": 790,
-        "graduationStartY": 24,
-        "graduationEndY": 814,
+        "markingStartY": 24,
+        "markingEndY": 814,
         "connectorY": 830,
         "tipLength": 52,
         "wallThickness": 0.8
@@ -178,7 +200,8 @@
         "glass-back",
         "glass-front",
         "rim",
-        "graduation",
+        "scale",
+        "labels",
         "lower-connector",
         "rubber-tube",
         "glass-bead",
@@ -186,11 +209,27 @@
         "tip",
         "highlight"
       ],
-      "graduation": {
-        "maximumMl": 50,
-        "majorEveryMl": 1,
-        "minorEveryMl": 0.1,
-        "readingResolutionMl": 0.1
+      "marking": {
+        "kind": "burette-approximate",
+        "displayRangeMl": {
+          "minimum": 0,
+          "maximum": 50
+        },
+        "valueDirection": "increases-downward",
+        "reference": "top-zero",
+        "calibration": "approximate",
+        "markingSurface": "tube-wrap",
+        "labelPolicy": "all-major",
+        "majorIntervalMl": 5,
+        "minorIntervalMl": 0.1,
+        "readingResolutionMl": 0.1,
+        "provenance": {
+          "sourceId": "chemrealm-alkali-burette-anchor",
+          "sourceRef": "docs/research/m6-zhejiang-apparatus-and-visual-target.md",
+          "sourceClass": "approximate-visual",
+          "claim": "50 mL alkali burette marking is a pedagogical visual approximation with 5 mL labelled intervals",
+          "reportedPrecision": "approximate"
+        }
       },
       "lodVisibility": {
         "master": [
@@ -198,8 +237,8 @@
           "glass-back",
           "glass-front",
           "rim",
-          "graduation-major",
-          "graduation-minor",
+          "scale",
+          "labels",
           "lower-connector",
           "rubber-tube",
           "glass-bead",
@@ -212,8 +251,8 @@
           "glass-back",
           "glass-front",
           "rim",
-          "graduation-major",
-          "graduation-medium",
+          "scale",
+          "labels",
           "lower-connector",
           "rubber-tube",
           "glass-bead",
@@ -224,7 +263,8 @@
         "preview": [
           "body",
           "rim",
-          "graduation-major",
+          "scale",
+          "labels",
           "lower-connector",
           "rubber-tube",
           "glass-bead",
@@ -251,100 +291,9 @@
       }
     },
     {
-      "assetId": "beaker-100ml",
-      "specificationId": "beaker-100ml",
-      "familyId": "beaker",
-      "capacityMl": 100,
-      "bodyDimensionsMm": [
-        52,
-        72,
-        52
-      ],
-      "dimensionsMm": [
-        63,
-        72,
-        52
-      ],
-      "materialProfile": "clear-borosilicate-open-vessel",
-      "anatomy": [
-        "straight-wall-body",
-        "open-rim",
-        "integrated-pour-spout",
-        "interior-cavity",
-        "graduation-marks",
-        "flat-contact-foot"
-      ],
-      "landmarksMm": {
-        "mouthOuterDiameter": 52,
-        "wallHeight": 64,
-        "rimThickness": 2.4,
-        "spoutMaxProjection": 11,
-        "flatBaseWidth": 48,
-        "graduationStartHeight": 20,
-        "wallThickness": 1.2
-      },
-      "identityLayers": [
-        "body",
-        "glass-back",
-        "glass-front",
-        "rim",
-        "spout",
-        "graduation",
-        "highlight"
-      ],
-      "graduation": {
-        "maximumMl": 100,
-        "majorEveryMl": 20,
-        "minorEveryMl": 10,
-        "readingResolutionMl": 10
-      },
-      "lodVisibility": {
-        "master": [
-          "body",
-          "glass-back",
-          "glass-front",
-          "rim",
-          "spout",
-          "graduation-major",
-          "graduation-minor",
-          "highlight"
-        ],
-        "scene": [
-          "body",
-          "glass-back",
-          "glass-front",
-          "rim",
-          "spout",
-          "graduation-major",
-          "graduation-medium",
-          "highlight"
-        ],
-        "preview": [
-          "body",
-          "rim",
-          "spout",
-          "graduation-major"
-        ],
-        "thumbnail": [
-          "body",
-          "rim",
-          "spout"
-        ]
-      },
-      "provenanceRefs": [
-        "jy-t-0655-2025",
-        "chemrealm-beaker-family-anchor"
-      ],
-      "lodFiles": {
-        "master": "master.svg",
-        "scene": "scene.svg",
-        "preview": "preview.svg",
-        "thumbnail": "thumbnail.svg"
-      }
-    },
-    {
       "assetId": "beaker-250ml",
       "specificationId": "beaker-250ml",
+      "assetStatus": "candidate",
       "familyId": "beaker",
       "capacityMl": 250,
       "bodyDimensionsMm": [
@@ -372,7 +321,7 @@
         "rimThickness": 2.6,
         "spoutMaxProjection": 15,
         "flatBaseWidth": 65,
-        "graduationStartHeight": 26,
+        "markingStartHeight": 26,
         "wallThickness": 1.5
       },
       "identityLayers": [
@@ -381,14 +330,31 @@
         "glass-front",
         "rim",
         "spout",
-        "graduation",
+        "scale",
+        "labels",
         "highlight"
       ],
-      "graduation": {
-        "maximumMl": 250,
-        "majorEveryMl": 50,
-        "minorEveryMl": 25,
-        "readingResolutionMl": 25
+      "marking": {
+        "kind": "approximate-contained",
+        "displayRangeMl": {
+          "minimum": 25,
+          "maximum": 200
+        },
+        "valueDirection": "increases-upward",
+        "reference": "bottom-zero",
+        "calibration": "approximate",
+        "markingSurface": "vessel-wall",
+        "labelPolicy": "selected-major",
+        "majorIntervalMl": 25,
+        "minorIntervalMl": 25,
+        "readingResolutionMl": 25,
+        "provenance": {
+          "sourceId": "corning-pyrex-vista-250",
+          "sourceRef": "https://ecatalog.corning.com/life-sciences/b2c/en/General-Labware/Beakers/Beakers%2C-Glass/PYREX%C2%AE-VISTA%E2%84%A2-Beakers%2C-Standard-Low-Griffin/p/70000-250",
+          "sourceClass": "manufacturer-anchor",
+          "claim": "250 mL Griffin beaker has approximate 25–200 mL graduations at 25 mL increments",
+          "reportedPrecision": "reported"
+        }
       },
       "lodVisibility": {
         "master": [
@@ -397,8 +363,8 @@
           "glass-front",
           "rim",
           "spout",
-          "graduation-major",
-          "graduation-minor",
+          "scale",
+          "labels",
           "highlight"
         ],
         "scene": [
@@ -407,15 +373,16 @@
           "glass-front",
           "rim",
           "spout",
-          "graduation-major",
-          "graduation-medium",
+          "scale",
+          "labels",
           "highlight"
         ],
         "preview": [
           "body",
           "rim",
           "spout",
-          "graduation-major"
+          "scale",
+          "labels"
         ],
         "thumbnail": [
           "body",
@@ -435,275 +402,9 @@
       }
     },
     {
-      "assetId": "beaker-500ml",
-      "specificationId": "beaker-500ml",
-      "familyId": "beaker",
-      "capacityMl": 500,
-      "bodyDimensionsMm": [
-        88,
-        125,
-        88
-      ],
-      "dimensionsMm": [
-        106,
-        125,
-        88
-      ],
-      "materialProfile": "clear-borosilicate-open-vessel",
-      "anatomy": [
-        "straight-wall-body",
-        "open-rim",
-        "integrated-pour-spout",
-        "interior-cavity",
-        "graduation-marks",
-        "flat-contact-foot"
-      ],
-      "landmarksMm": {
-        "mouthOuterDiameter": 88,
-        "wallHeight": 114,
-        "rimThickness": 2.9,
-        "spoutMaxProjection": 18,
-        "flatBaseWidth": 80,
-        "graduationStartHeight": 34,
-        "wallThickness": 1.7
-      },
-      "identityLayers": [
-        "body",
-        "glass-back",
-        "glass-front",
-        "rim",
-        "spout",
-        "graduation",
-        "highlight"
-      ],
-      "graduation": {
-        "maximumMl": 500,
-        "majorEveryMl": 100,
-        "minorEveryMl": 50,
-        "readingResolutionMl": 50
-      },
-      "lodVisibility": {
-        "master": [
-          "body",
-          "glass-back",
-          "glass-front",
-          "rim",
-          "spout",
-          "graduation-major",
-          "graduation-minor",
-          "highlight"
-        ],
-        "scene": [
-          "body",
-          "glass-back",
-          "glass-front",
-          "rim",
-          "spout",
-          "graduation-major",
-          "highlight"
-        ],
-        "preview": [
-          "body",
-          "rim",
-          "spout",
-          "graduation-major"
-        ],
-        "thumbnail": [
-          "body",
-          "rim",
-          "spout"
-        ]
-      },
-      "provenanceRefs": [
-        "chemrealm-beaker-family-anchor",
-        "jy-t-0655-2025"
-      ],
-      "lodFiles": {
-        "master": "master.svg",
-        "scene": "scene.svg",
-        "preview": "preview.svg",
-        "thumbnail": "thumbnail.svg"
-      }
-    },
-    {
-      "assetId": "beaker-1000ml",
-      "specificationId": "beaker-1000ml",
-      "familyId": "beaker",
-      "capacityMl": 1000,
-      "bodyDimensionsMm": [
-        112,
-        165,
-        112
-      ],
-      "dimensionsMm": [
-        136,
-        165,
-        112
-      ],
-      "materialProfile": "clear-borosilicate-open-vessel",
-      "anatomy": [
-        "straight-wall-body",
-        "open-rim",
-        "integrated-pour-spout",
-        "interior-cavity",
-        "graduation-marks",
-        "flat-contact-foot"
-      ],
-      "landmarksMm": {
-        "mouthOuterDiameter": 112,
-        "wallHeight": 150,
-        "rimThickness": 3.2,
-        "spoutMaxProjection": 24,
-        "flatBaseWidth": 104,
-        "graduationStartHeight": 44,
-        "wallThickness": 2
-      },
-      "identityLayers": [
-        "body",
-        "glass-back",
-        "glass-front",
-        "rim",
-        "spout",
-        "graduation",
-        "highlight"
-      ],
-      "graduation": {
-        "maximumMl": 1000,
-        "majorEveryMl": 200,
-        "minorEveryMl": 100,
-        "readingResolutionMl": 100
-      },
-      "lodVisibility": {
-        "master": [
-          "body",
-          "glass-back",
-          "glass-front",
-          "rim",
-          "spout",
-          "graduation-major",
-          "graduation-minor",
-          "highlight"
-        ],
-        "scene": [
-          "body",
-          "glass-back",
-          "glass-front",
-          "rim",
-          "spout",
-          "graduation-major",
-          "highlight"
-        ],
-        "preview": [
-          "body",
-          "rim",
-          "spout",
-          "graduation-major"
-        ],
-        "thumbnail": [
-          "body",
-          "rim",
-          "spout"
-        ]
-      },
-      "provenanceRefs": [
-        "corning-pyrex-vista-family",
-        "chemrealm-beaker-family-anchor"
-      ],
-      "lodFiles": {
-        "master": "master.svg",
-        "scene": "scene.svg",
-        "preview": "preview.svg",
-        "thumbnail": "thumbnail.svg"
-      }
-    },
-    {
-      "assetId": "conical-flask-100ml",
-      "specificationId": "conical-flask-100ml",
-      "familyId": "conical-flask",
-      "capacityMl": 100,
-      "bodyDimensionsMm": [
-        62,
-        105,
-        62
-      ],
-      "dimensionsMm": [
-        62,
-        105,
-        62
-      ],
-      "materialProfile": "clear-borosilicate-curved-vessel",
-      "anatomy": [
-        "curved-conical-body",
-        "shoulder-transition",
-        "cylindrical-neck",
-        "open-mouth-rim",
-        "interior-cavity",
-        "flat-contact-foot"
-      ],
-      "landmarksMm": {
-        "mouthOuterDiameter": 22,
-        "neckOuterDiameter": 18,
-        "neckLength": 34,
-        "shoulderTransitionHeight": 38,
-        "maxBodyDiameter": 62,
-        "bottomCornerRadius": 8,
-        "flatBaseWidth": 48,
-        "wallThickness": 1
-      },
-      "identityLayers": [
-        "body",
-        "shoulder",
-        "neck",
-        "rim",
-        "glass-back",
-        "glass-front",
-        "highlight"
-      ],
-      "lodVisibility": {
-        "master": [
-          "body",
-          "shoulder",
-          "neck",
-          "rim",
-          "glass-back",
-          "glass-front",
-          "highlight"
-        ],
-        "scene": [
-          "body",
-          "shoulder",
-          "neck",
-          "rim",
-          "glass-back",
-          "glass-front",
-          "highlight"
-        ],
-        "preview": [
-          "body",
-          "shoulder",
-          "neck",
-          "rim"
-        ],
-        "thumbnail": [
-          "body",
-          "neck",
-          "rim"
-        ]
-      },
-      "provenanceRefs": [
-        "jy-t-0655-2025",
-        "chemrealm-erlenmeyer-family-anchor"
-      ],
-      "lodFiles": {
-        "master": "master.svg",
-        "scene": "scene.svg",
-        "preview": "preview.svg",
-        "thumbnail": "thumbnail.svg"
-      }
-    },
-    {
       "assetId": "conical-flask-250ml",
       "specificationId": "conical-flask-250ml",
+      "assetStatus": "candidate",
       "familyId": "conical-flask",
       "capacityMl": 250,
       "bodyDimensionsMm": [
@@ -778,91 +479,6 @@
       "provenanceRefs": [
         "duran-erlenmeyer-250ml",
         "jy-t-0655-2025"
-      ],
-      "lodFiles": {
-        "master": "master.svg",
-        "scene": "scene.svg",
-        "preview": "preview.svg",
-        "thumbnail": "thumbnail.svg"
-      }
-    },
-    {
-      "assetId": "conical-flask-500ml",
-      "specificationId": "conical-flask-500ml",
-      "familyId": "conical-flask",
-      "capacityMl": 500,
-      "bodyDimensionsMm": [
-        102,
-        186,
-        102
-      ],
-      "dimensionsMm": [
-        102,
-        186,
-        102
-      ],
-      "materialProfile": "clear-borosilicate-curved-vessel",
-      "anatomy": [
-        "curved-conical-body",
-        "shoulder-transition",
-        "cylindrical-neck",
-        "open-mouth-rim",
-        "interior-cavity",
-        "flat-contact-foot"
-      ],
-      "landmarksMm": {
-        "mouthOuterDiameter": 34,
-        "neckOuterDiameter": 28,
-        "neckLength": 62,
-        "shoulderTransitionHeight": 66,
-        "maxBodyDiameter": 102,
-        "bottomCornerRadius": 12,
-        "flatBaseWidth": 78,
-        "wallThickness": 1.4
-      },
-      "identityLayers": [
-        "body",
-        "shoulder",
-        "neck",
-        "rim",
-        "glass-back",
-        "glass-front",
-        "highlight"
-      ],
-      "lodVisibility": {
-        "master": [
-          "body",
-          "shoulder",
-          "neck",
-          "rim",
-          "glass-back",
-          "glass-front",
-          "highlight"
-        ],
-        "scene": [
-          "body",
-          "shoulder",
-          "neck",
-          "rim",
-          "glass-back",
-          "glass-front",
-          "highlight"
-        ],
-        "preview": [
-          "body",
-          "shoulder",
-          "neck",
-          "rim"
-        ],
-        "thumbnail": [
-          "body",
-          "neck",
-          "rim"
-        ]
-      },
-      "provenanceRefs": [
-        "jy-t-0655-2025",
-        "chemrealm-erlenmeyer-family-anchor"
       ],
       "lodFiles": {
         "master": "master.svg",

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "assetId": "conical-flask-250ml",
+  "coordinateUnit": "mm",
+  "classification": "manufacturer-anchor-and-derived-construction",
+  "dimensionsMm": [85, 145, 85],
+  "bodyEnvelopeMm": [85, 145, 85],
+  "landmarks": [
+    { "name": "mouthOuterDiameter", "value": 28, "classification": "derived", "note": "master rim anchor" },
+    { "name": "neckLength", "value": 48, "classification": "derived", "note": "master neck anchor" },
+    { "name": "shoulderTransitionHeight", "value": 52, "classification": "derived", "note": "master shoulder anchor" },
+    { "name": "maxBodyDiameter", "value": 85, "classification": "source" }
+  ],
+  "marking": null,
+  "sourceRefs": ["duran-erlenmeyer-250ml", "jy-t-0655-2025"]
+}

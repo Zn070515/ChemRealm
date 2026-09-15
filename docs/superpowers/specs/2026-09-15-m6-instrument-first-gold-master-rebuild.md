@@ -1,6 +1,6 @@
 # M6 Instrument-First Gold Master Rebuild
 
-> Status: S1 candidate — implementation is not authorized by this document alone.
+> Status: S1 accepted for implementation — M6 remains S2 until owner visual review and S3 evidence succeed.
 > Date: 2026-09-15
 > Authority: `GOAL.md`, `AGENTS.md`, `SPEC-0001`, the accepted M4/M5 contracts, and `C:\Users\16275\Desktop\advices\ChatGPT.md`.
 > Supersession: when accepted, this governs the M6 Gold Master construction approach in preference to the earlier M6 industrialization, final-quality, and Gold-Master-remediation plans. Historical documents remain evidence, not implementation authority.
