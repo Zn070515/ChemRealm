@@ -53,6 +53,7 @@ snapshot.profileHash = volumeProfileHash(snapshot);
     expect(deriveLiquidLevel(litre(0.25), profile)).toEqual({
       volume: 0.25,
       height: 10,
+      profileMaxHeight: 40,
     });
   });
 

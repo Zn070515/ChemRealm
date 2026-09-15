@@ -5,7 +5,8 @@
 This record deliberately does not call the candidate captures an approved
 visual baseline or claim M6 S3. The apparatus is an original, self-hosted
 vector realization of the semantic package in
-`assets/apparatus/titration-bench/`; the page consumes the committed
+`assets/apparatus/titration-bench/`, backed by the reusable multi-spec catalog
+in `assets/apparatus/catalog/`; the page consumes the committed
 World → ScientificFrame → ObservableModel → RenderState path.
 
 ## Research-informed review frame
@@ -23,6 +24,8 @@ keeps essential readings in the DOM companion.
 | Criterion | Current result | Evidence |
 |---|---|---|
 | M6-ASSET | PASS locally | `assets/apparatus/titration-bench/`, asset manifest tests |
+| M6-CATALOG | PASS locally | multiple vessel specifications and detachable connection catalog |
+| M6-DETACH | PASS locally | typed ports, detachable state variants and compatibility tests |
 | M6-GEOMETRY | PASS locally at contract level | frozen profile-derived level, mm manifest, parts/ports/regions, render-state tests |
 | M6-RENDER | PASS locally | Pixi v8 adapter, `pnpm verify:m6-renderer`, built browser canvas mount |
 | M6-STATE | PASS locally | `tests/browser/m6-visual.spec.ts`, canvas state version and DOM identity/readout assertions |

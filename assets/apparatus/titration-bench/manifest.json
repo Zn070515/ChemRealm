@@ -2,25 +2,38 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "assetId": "chemrealm.titration-bench",
   "assetVersionSource": "contracts/version-manifest.json#representation.apparatusAsset",
+  "catalogVersionSource": "contracts/version-manifest.json#representation.apparatusCatalog",
+  "catalogSpecificationIds": ["burette-v0-100ml", "conical-flask-250ml", "beaker-250ml"],
   "visualFamily": "chemrealm-lab-v1",
   "coordinateUnit": "mm",
   "view": "orthographic-side-elevation",
+  "masterArtboard": {
+    "coordinateSpace": "logical-artboard",
+    "viewBox": [0, 0, 1200, 760],
+    "semanticBoundsMm": [260, 190]
+  },
+  "assetLayers": ["backplate", "glass-back", "liquid", "meniscus", "graduation", "hardware", "glass-front", "highlight", "detachable", "accessibility"],
   "dimensionsMm": [260, 190],
   "parts": [
-    { "id": "stand.base", "role": "base", "boundsMm": [0, 170, 62, 20], "capabilities": ["support-apparatus"] },
-    { "id": "stand.vertical", "role": "support", "boundsMm": [26, 18, 8, 152], "capabilities": ["support-apparatus"] },
-    { "id": "stand.clamp", "role": "clamp", "boundsMm": [28, 38, 52, 16], "capabilities": ["support-apparatus"] },
-    { "id": "burette.body", "role": "body", "boundsMm": [74, 20, 14, 126], "capabilities": ["contain-liquid", "deliver-liquid", "read-scale", "inspect-state"] },
-    { "id": "burette.stopcock", "role": "stopcock", "boundsMm": [70, 144, 24, 12], "capabilities": ["deliver-liquid"] },
-    { "id": "burette.tip", "role": "tip", "boundsMm": [78, 156, 6, 18], "capabilities": ["deliver-liquid"] },
-    { "id": "flask.body", "role": "body", "boundsMm": [128, 96, 80, 70], "capabilities": ["contain-liquid", "receive-liquid", "inspect-state"] },
-    { "id": "flask.neck", "role": "neck", "boundsMm": [157, 48, 22, 58], "capabilities": ["receive-liquid"] },
-    { "id": "flask.base", "role": "base", "boundsMm": [122, 160, 92, 10], "capabilities": ["support-apparatus"] },
-    { "id": "beaker.body", "role": "body", "boundsMm": [220, 112, 32, 58], "capabilities": ["contain-liquid", "receive-liquid", "inspect-state"] }
+    { "id": "stand.base", "role": "base", "boundsMm": [0, 170, 62, 20], "capabilities": ["support-apparatus"], "detachable": false },
+    { "id": "stand.vertical", "role": "support", "boundsMm": [26, 18, 8, 152], "capabilities": ["support-apparatus"], "detachable": false },
+    { "id": "stand.clamp", "role": "clamp", "boundsMm": [28, 38, 52, 16], "capabilities": ["support-apparatus"], "detachable": true },
+    { "id": "burette.body", "role": "body", "boundsMm": [74, 20, 14, 126], "capabilities": ["contain-liquid", "deliver-liquid", "read-scale", "inspect-state"], "detachable": false },
+    { "id": "burette.scale", "role": "scale", "boundsMm": [88, 20, 14, 126], "capabilities": ["read-scale"], "detachable": false },
+    { "id": "burette.stopcock", "role": "stopcock", "boundsMm": [70, 144, 24, 12], "capabilities": ["deliver-liquid"], "detachable": true },
+    { "id": "burette.tip", "role": "tip", "boundsMm": [78, 156, 6, 18], "capabilities": ["deliver-liquid"], "detachable": true },
+    { "id": "flask.body", "role": "body", "boundsMm": [128, 96, 80, 70], "capabilities": ["contain-liquid", "receive-liquid", "inspect-state"], "detachable": false },
+    { "id": "flask.neck", "role": "neck", "boundsMm": [157, 48, 22, 58], "capabilities": ["receive-liquid"], "detachable": false },
+    { "id": "flask.rim", "role": "rim", "boundsMm": [154, 44, 28, 8], "capabilities": ["receive-liquid"], "detachable": false },
+    { "id": "flask.base", "role": "base", "boundsMm": [122, 160, 92, 10], "capabilities": ["support-apparatus"], "detachable": false },
+    { "id": "beaker.body", "role": "body", "boundsMm": [220, 112, 32, 58], "capabilities": ["contain-liquid", "receive-liquid", "inspect-state"], "detachable": false },
+    { "id": "beaker.rim", "role": "rim", "boundsMm": [218, 108, 36, 8], "capabilities": ["receive-liquid"], "detachable": false },
+    { "id": "beaker.spout", "role": "spout", "boundsMm": [248, 110, 16, 14], "capabilities": ["deliver-liquid"], "detachable": false }
   ],
   "ports": [
     { "id": "burette.outlet", "kind": "fluid-outlet", "positionMm": [81, 174], "orientationDeg": 180 },
     { "id": "flask.mouth", "kind": "fluid-inlet", "positionMm": [168, 48], "orientationDeg": 270 },
+    { "id": "beaker.spout", "kind": "fluid-outlet", "positionMm": [252, 110], "orientationDeg": 0 },
     { "id": "stand.base-contact", "kind": "support-contact", "positionMm": [31, 180], "orientationDeg": 0 }
   ],
   "interactionRegions": [

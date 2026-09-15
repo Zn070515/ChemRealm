@@ -145,10 +145,19 @@ describe("renderer-neutral scene state", () => {
     ]));
     expect(scene.nodes.find((node) => node.id === "flask-apparatus")?.data).toMatchObject({
       fillHeightMm: source.liquidLevel.height,
+      maximumHeightMm: source.liquidLevel.profileMaxHeight,
       semanticPorts: ["flask.mouth"],
     });
     expect(scene.nodes.find((node) => node.id === "titration-bench")?.data.interactionRegions)
       .toHaveLength(3);
+    expect(scene.nodes.find((node) => node.id === "titration-bench")?.data).toMatchObject({
+      catalogVersion: expect.any(String),
+      assetLayers: expect.arrayContaining(["glass-back", "liquid", "meniscus", "hardware"]),
+    });
+    expect(scene.nodes.find((node) => node.id === "burette-apparatus")?.data).toMatchObject({
+      catalogVersion: expect.any(String),
+      specificationId: "burette-v0-100ml",
+    });
     expect(scene.nodes.every((node) => Object.isFrozen(node.data))).toBe(true);
     const burette = scene.nodes.find((node) => node.id === "burette-apparatus");
     expect(Object.isFrozen(burette?.data.partIds)).toBe(true);

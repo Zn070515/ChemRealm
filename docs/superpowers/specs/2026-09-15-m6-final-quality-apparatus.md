@@ -53,8 +53,10 @@ intended to validate.
 - No M7 world-mutating pointer interaction, drag commit, snap event, undo or
   live titrant delivery. M6 may expose semantic hit-region metadata and a
   non-mutating focus/inspection affordance only.
-- No full NOBOOK-like catalog, search engine, material authoring studio or
-  hundreds of assets.
+- No NOBOOK-like catalog UI, search engine, material authoring studio or
+  hundreds of rendered runtime assets. M6 may ship a bounded reusable
+  multi-specification data catalog and construction sheet; discovery/editor
+  surfaces remain later work.
 - No ACE, learner inference, account, telemetry, cloud sync or server.
 - No runtime fetching of fonts, textures, models or external references.
 - No use of generated imagery as a source of graduations, units, liquid levels,

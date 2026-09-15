@@ -1,0 +1,149 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 940" data-coordinate-space="logical-artboard" role="img" aria-labelledby="title desc">
+  <title id="title">ChemRealm reusable apparatus construction sheet</title>
+  <desc id="desc">Original orthographic construction sheet showing burette, flask, beaker, graduated cylinder, volumetric flask, test tube, detachable glass and rubber connectors, and stopper variants.</desc>
+  <defs>
+    <linearGradient id="sheet" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#f8fbfc"/>
+      <stop offset="1" stop-color="#e7eef0"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" x2="1">
+      <stop offset="0" stop-color="#a9c8cf" stop-opacity=".20"/>
+      <stop offset=".18" stop-color="#ffffff" stop-opacity=".46"/>
+      <stop offset=".52" stop-color="#d3e9ec" stop-opacity=".16"/>
+      <stop offset=".82" stop-color="#ffffff" stop-opacity=".32"/>
+      <stop offset="1" stop-color="#7399a2" stop-opacity=".24"/>
+    </linearGradient>
+    <linearGradient id="darkGlass" x1="0" x2="1">
+      <stop offset="0" stop-color="#638c96" stop-opacity=".22"/>
+      <stop offset=".25" stop-color="#ffffff" stop-opacity=".40"/>
+      <stop offset=".62" stop-color="#9fc4ca" stop-opacity=".16"/>
+      <stop offset="1" stop-color="#4e7680" stop-opacity=".24"/>
+    </linearGradient>
+    <linearGradient id="steel" x1="0" x2="1">
+      <stop offset="0" stop-color="#253139"/>
+      <stop offset=".2" stop-color="#7e9198"/>
+      <stop offset=".42" stop-color="#d8e0e2"/>
+      <stop offset=".62" stop-color="#6b7b82"/>
+      <stop offset="1" stop-color="#1d262c"/>
+    </linearGradient>
+    <linearGradient id="rubber" x1="0" x2="1">
+      <stop offset="0" stop-color="#1c2529"/>
+      <stop offset=".5" stop-color="#4b5a5c"/>
+      <stop offset="1" stop-color="#11181b"/>
+    </linearGradient>
+    <linearGradient id="ink" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#21353b"/>
+      <stop offset="1" stop-color="#38565d"/>
+    </linearGradient>
+    <pattern id="grid" width="28" height="28" patternUnits="userSpaceOnUse">
+      <path d="M28 0H0V28" fill="none" stroke="#9db2b8" stroke-opacity=".18" stroke-width="1"/>
+    </pattern>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feGaussianBlur stdDeviation="5"/>
+    </filter>
+  </defs>
+
+  <rect width="1400" height="940" fill="url(#sheet)"/>
+  <rect x="28" y="28" width="1344" height="884" rx="20" fill="url(#grid)" stroke="#78949c" stroke-width="2"/>
+  <g fill="#21353b" font-family="Arial, sans-serif">
+    <text x="64" y="78" font-size="28" font-weight="700" letter-spacing="2">CHEMREALM / APPARATUS FAMILY / ORTHOGRAPHIC MASTER</text>
+    <text x="64" y="108" font-size="14" fill="#59747b">Reusable parts, dimensional anchors and state-layer vocabulary — original construction sheet, not runtime chemistry.</text>
+  </g>
+
+  <g data-layer="hardware" stroke="#26383e" stroke-linejoin="round">
+    <path d="M78 240h140l22 15H58z" fill="url(#steel)" stroke-width="3"/>
+    <rect x="132" y="132" width="24" height="108" rx="10" fill="url(#steel)" stroke-width="3"/>
+    <path d="M142 142v88" stroke="#eaf4f5" stroke-width="3" stroke-opacity=".6"/>
+    <path d="M146 160v73" stroke="#26383e" stroke-width="2" stroke-opacity=".55"/>
+    <rect x="145" y="154" width="214" height="22" rx="10" fill="url(#steel)" stroke-width="3"/>
+    <path d="M244 166h78" stroke="#eef7f8" stroke-width="3" stroke-opacity=".55"/>
+    <path d="M315 156l25 10-25 10z" fill="#34484e"/>
+    <circle cx="339" cy="166" r="9" fill="#c1d0d3" stroke-width="2"/>
+    <path d="M343 166h35" stroke="#26383e" stroke-width="10" stroke-linecap="round"/>
+    <path d="M350 166h36" stroke="#dce9eb" stroke-width="2" stroke-linecap="round"/>
+    <g fill="#202d32" stroke-width="2">
+      <circle cx="94" cy="250" r="7"/><circle cx="202" cy="250" r="7"/>
+    </g>
+  </g>
+  <g data-layer="glass" data-specification="burette-acid-25ml-class-as" transform="translate(420 126)">
+    <rect x="0" y="0" width="28" height="110" rx="11" fill="url(#glass)" stroke="#517984" stroke-width="3"/>
+    <path d="M7 8v94" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-opacity=".78"/>
+    <path d="M20 6v100" stroke="#7da6ae" stroke-width="2" stroke-opacity=".45"/>
+    <g data-layer="scale" stroke="#24373e" stroke-width="2">
+      <path d="M28 5h23M28 14h13M28 23h13M28 32h13M28 41h23M28 50h13M28 59h13M28 68h13M28 77h23M28 86h13M28 95h13M28 104h13"/>
+    </g>
+    <path d="M14 110v14" stroke="#678990" stroke-width="3"/>
+    <path d="M-8 124h44v15H-8z" fill="url(#steel)" stroke-width="2"/>
+    <path d="M14 139v31" stroke="url(#glass)" stroke-width="8"/>
+    <path d="M7 170h14l-4 9h-6z" fill="url(#glass)" stroke-width="2"/>
+  </g>
+  <g data-layer="glass" data-specification="burette-alkali-50ml-class-b" transform="translate(550 126)">
+    <rect x="0" y="0" width="34" height="110" rx="12" fill="url(#glass)" stroke="#517984" stroke-width="3"/>
+    <path d="M8 8v94" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-opacity=".7"/>
+    <g data-layer="scale" stroke="#24373e" stroke-width="2"><path d="M34 5h25M34 14h14M34 23h14M34 32h14M34 41h25M34 50h14M34 59h14M34 68h14M34 77h25M34 86h14M34 95h14M34 104h14"/></g>
+    <path d="M17 110v14M-9 124h52v15H-9z" fill="url(#steel)" stroke-width="2"/><path d="M17 139v31" stroke="url(#glass)" stroke-width="9"/><path d="M9 170h16l-4 9h-8z" fill="url(#glass)" stroke-width="2"/>
+  </g>
+  <g data-layer="glass" data-specification="burette-v0-100ml" transform="translate(700 126)">
+    <rect x="0" y="0" width="42" height="110" rx="14" fill="url(#glass)" stroke="#517984" stroke-width="3"/>
+    <path d="M9 9v93" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-opacity=".74"/><path d="M32 7v97" stroke="#6e9aa3" stroke-width="2" stroke-opacity=".55"/>
+    <g data-layer="scale" stroke="#24373e" stroke-width="2"><path d="M42 5h28M42 14h15M42 23h15M42 32h15M42 41h28M42 50h15M42 59h15M42 68h15M42 77h28M42 86h15M42 95h15M42 104h15"/></g>
+    <path d="M21 110v14M-10 124h62v15H-10z" fill="url(#steel)" stroke-width="2"/><path d="M21 139v31" stroke="url(#glass)" stroke-width="10"/><path d="M12 170h18l-5 9h-8z" fill="url(#glass)" stroke-width="2"/>
+  </g>
+  <g fill="#38565d" font-family="Arial, sans-serif" font-size="14" font-weight="700"><text x="408" y="278">25 mL / 0.05 mL</text><text x="538" y="278">50 mL / 0.1 mL</text><text x="683" y="278">100 mL / 1 mL</text></g>
+
+  <g data-layer="glass" data-specification="conical-flask-250ml" transform="translate(850 122)" stroke="#385b64" stroke-width="3" stroke-linejoin="round">
+    <path d="M64 0h52v78l-5 16 65 88v52H0v-52l65-88-1-16z" fill="url(#glass)"/>
+    <path d="M72 8v68M108 8v70" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-opacity=".7"/>
+    <ellipse cx="90" cy="0" rx="27" ry="7" fill="#e6f1f2" fill-opacity=".45"/>
+    <path d="M9 181h162v48H9z" fill="#7aa6ad" fill-opacity=".2" stroke="none"/>
+    <path d="M9 181q81 12 162 0" fill="none" stroke="#4f7e86" stroke-width="3"/>
+    <path d="M9 181q81 8 162 0" fill="none" stroke="#fff" stroke-width="2" stroke-opacity=".8"/>
+    <path d="M20 228h140" stroke="#fff" stroke-width="5" stroke-opacity=".55"/>
+    <path d="M26 108l-8 66M43 103l-5 68" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-opacity=".65"/>
+    <path d="M-6 234h192v13H-6z" fill="url(#glass)"/>
+  </g>
+  <g data-layer="glass" data-specification="beaker-250ml" transform="translate(1110 155)" stroke="#385b64" stroke-width="3" stroke-linejoin="round">
+    <path d="M0 0h120l-6 192H9z" fill="url(#glass)"/>
+    <path d="M0 0h120" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-opacity=".75"/>
+    <path d="M8 48h35M8 82h25M8 116h35M8 150h25" data-layer="scale" fill="none" stroke="#36535a" stroke-width="2"/>
+    <path d="M10 150h100v42H10z" fill="#7aa6ad" fill-opacity=".2" stroke="none"/>
+    <path d="M10 150q50 9 100 0" fill="none" stroke="#517f87"/><path d="M22 24v140" stroke="#fff" stroke-width="5" stroke-opacity=".55"/>
+    <path d="M110 0l24 13-20 9" fill="#dce9eb" fill-opacity=".6"/>
+  </g>
+  <g fill="#38565d" font-family="Arial, sans-serif" font-size="14" font-weight="700"><text x="850" y="510">ERLENMEYER / 250 mL</text><text x="1112" y="370">BEAKER / 250 mL</text></g>
+
+  <g data-layer="glass" data-specification="volumetric-flask-250ml" transform="translate(82 400)" stroke="#385b64" stroke-width="3" stroke-linejoin="round">
+    <path d="M65 0h46v84l54 60v80H11v-80l54-60z" fill="url(#glass)"/>
+    <path d="M72 8v70M104 8v72" stroke="#fff" stroke-width="4" stroke-opacity=".7"/>
+    <path d="M61 54h54" stroke="#36535a" stroke-width="3"/><path d="M11 157q77 10 154 0v67H11z" fill="#7aa6ad" fill-opacity=".2" stroke="none"/><path d="M15 157q73 10 146 0" fill="none" stroke="#fff" stroke-opacity=".8"/>
+    <path d="M53 224h69" stroke="#fff" stroke-width="5" stroke-opacity=".55"/>
+  </g>
+  <g data-layer="glass" data-specification="graduated-cylinder-100ml" transform="translate(300 410)" stroke="#385b64" stroke-width="3" stroke-linejoin="round">
+    <path d="M28 0h42v224H18V0z" fill="url(#glass)"/><path d="M24 0h50" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-opacity=".7"/>
+    <path d="M18 35h29M18 54h18M18 73h18M18 92h29M18 111h18M18 130h18M18 149h29M18 168h18M18 187h18M18 206h29" data-layer="scale" fill="none"/>
+    <path d="M16 222h66l18 12H0z" fill="url(#glass)"/>
+  </g>
+  <g data-layer="glass" data-specification="test-tube-18x180mm" transform="translate(485 420)" stroke="#385b64" stroke-width="3">
+    <path d="M0 0h38v184q-19 28-38 0z" fill="url(#glass)"/><ellipse cx="19" cy="0" rx="19" ry="6" fill="#d7e9eb" fill-opacity=".5"/><path d="M10 11v150" stroke="#fff" stroke-width="4" stroke-opacity=".7"/>
+  </g>
+  <g data-layer="glass" data-specification="test-tube-16x150mm" transform="translate(570 450) scale(.82)" stroke="#385b64" stroke-width="3">
+    <path d="M0 0h38v184q-19 28-38 0z" fill="url(#glass)"/><ellipse cx="19" cy="0" rx="19" ry="6" fill="#d7e9eb" fill-opacity=".5"/><path d="M10 11v150" stroke="#fff" stroke-width="4" stroke-opacity=".7"/>
+  </g>
+  <g fill="#38565d" font-family="Arial, sans-serif" font-size="14" font-weight="700"><text x="74" y="736">VOL. FLASK / 250 mL</text><text x="270" y="662">CYLINDER / 100 mL</text><text x="470" y="700">TEST TUBE / 18 × 180 mm</text></g>
+
+  <g data-layer="detachable" transform="translate(720 560)" fill="none" stroke="#26383e" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M10 38h190" stroke="url(#glass)" stroke-width="16"/><path d="M10 38h190" stroke="#4f7680" stroke-width="3"/><path d="M26 31h158" stroke="#fff" stroke-width="3" stroke-opacity=".72"/>
+    <path d="M20 107h70v-50q0-20 20-20t20 20v50h70" stroke="url(#glass)" stroke-width="16"/><path d="M20 107h70v-50q0-20 20-20t20 20v50h70" stroke="#4f7680" stroke-width="3"/><path d="M26 101h58v-44" stroke="#fff" stroke-width="3" stroke-opacity=".72"/>
+    <path d="M20 174h65l35-46 35 46h65" stroke="url(#glass)" stroke-width="16"/><path d="M20 174h65l35-46 35 46h65" stroke="#4f7680" stroke-width="3"/><path d="M28 168h52l40-49" stroke="#fff" stroke-width="3" stroke-opacity=".72"/>
+    <g data-layer="hardware" stroke="#2c3c40" stroke-width="14"><path d="M280 38h120M340 38V0M340 38v80"/><path d="M280 135h120M340 135l55-58M340 135l-55-58"/></g>
+    <g data-layer="detachable" stroke="url(#rubber)" stroke-width="15"><path d="M470 20c55 0 42 108 98 108s43-80 96-80"/><path d="M480 190h155"/></g>
+  </g>
+  <g data-layer="closure" transform="translate(1135 565)" stroke="#26383e" stroke-linejoin="round">
+    <path d="M0 22l12-22h58l12 22-7 100H7z" fill="url(#rubber)" stroke-width="3"/>
+    <g fill="#172124" stroke="#b6c3c4" stroke-width="3"><circle cx="27" cy="16" r="6"/><circle cx="55" cy="16" r="6"/><circle cx="41" cy="16" r="6"/></g>
+    <path d="M99 22l12-22h58l12 22-7 100h-68z" fill="url(#rubber)" stroke-width="3"/><g fill="#172124" stroke="#b6c3c4" stroke-width="3"><circle cx="126" cy="16" r="6"/><circle cx="154" cy="16" r="6"/></g>
+    <path d="M198 22l12-22h58l12 22-7 100h-68z" fill="url(#rubber)" stroke-width="3"/><circle cx="239" cy="16" r="6" fill="#172124" stroke="#b6c3c4" stroke-width="3"/>
+  </g>
+  <g fill="#38565d" font-family="Arial, sans-serif" font-size="14" font-weight="700"><text x="720" y="810">STRAIGHT / BENT / U GLASS TUBES · T/Y CONNECTORS · FLEXIBLE RUBBER TUBE</text><text x="1135" y="720">1 / 2 / 3-HOLE STOPPERS</text></g>
+  <g data-layer="annotation" fill="#668087" font-family="Arial, sans-serif" font-size="12"><text x="64" y="876">MASTER LAYERS: backplate · glass-back · liquid · meniscus · graduation · hardware · glass-front · highlight · detachable · accessibility</text><text x="1120" y="876">LOGICAL ARTBOARD / ORTHOGRAPHIC / MASTER SHEET</text></g>
+</svg>

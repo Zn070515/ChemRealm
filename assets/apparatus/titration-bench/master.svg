@@ -1,34 +1,86 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 190" role="img" aria-labelledby="title desc">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 760" data-coordinate-space="logical-artboard" data-semantic-bounds-mm="260 190" role="img" aria-labelledby="title desc">
   <title id="title">Original ChemRealm titration bench master</title>
-  <desc id="desc">Orthographic side elevation of a burette held by a stand above a conical flask and beaker.</desc>
+  <desc id="desc">Detailed orthographic side elevation of a supported burette, conical flask and beaker. Runtime state layers are intentionally separate from this geometry master.</desc>
   <defs>
-    <linearGradient id="glass" x1="0" x2="1">
-      <stop offset="0" stop-color="#e4edf0" stop-opacity=".36"/>
-      <stop offset=".5" stop-color="#ffffff" stop-opacity=".14"/>
-      <stop offset="1" stop-color="#a8bbc0" stop-opacity=".32"/>
-    </linearGradient>
-    <linearGradient id="metal" x1="0" x2="1">
-      <stop offset="0" stop-color="#39454b"/>
-      <stop offset=".5" stop-color="#879399"/>
-      <stop offset="1" stop-color="#273238"/>
-    </linearGradient>
+    <linearGradient id="wall" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#fbfdfe"/><stop offset="1" stop-color="#e8f0f2"/></linearGradient>
+    <linearGradient id="bench" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#d4b895"/><stop offset="1" stop-color="#aa8865"/></linearGradient>
+    <linearGradient id="steel" x1="0" x2="1"><stop offset="0" stop-color="#1b252b"/><stop offset=".18" stop-color="#758990"/><stop offset=".38" stop-color="#e1e9ea"/><stop offset=".55" stop-color="#71838a"/><stop offset="1" stop-color="#182126"/></linearGradient>
+    <linearGradient id="steelTop" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#eef4f4"/><stop offset=".35" stop-color="#91a4a9"/><stop offset="1" stop-color="#40535a"/></linearGradient>
+    <linearGradient id="glass" x1="0" x2="1"><stop offset="0" stop-color="#7da6ae" stop-opacity=".16"/><stop offset=".12" stop-color="#fff" stop-opacity=".42"/><stop offset=".48" stop-color="#cbe3e7" stop-opacity=".12"/><stop offset=".82" stop-color="#fff" stop-opacity=".34"/><stop offset="1" stop-color="#638d97" stop-opacity=".22"/></linearGradient>
+    <linearGradient id="glassEdge" x1="0" x2="1"><stop offset="0" stop-color="#385d66"/><stop offset=".5" stop-color="#a6c3c7"/><stop offset="1" stop-color="#2c4b53"/></linearGradient>
+    <filter id="softShadow" x="-30%" y="-30%" width="160%" height="170%"><feGaussianBlur stdDeviation="8"/></filter>
   </defs>
-  <g fill="none" stroke="#253238" stroke-width="1.5" stroke-linejoin="round">
-    <path fill="url(#metal)" d="M2 170h60l8 8H0z"/>
-    <rect fill="url(#metal)" x="26" y="18" width="8" height="152" rx="2"/>
-    <path fill="url(#metal)" d="M29 40h51v10H29z"/>
-    <path fill="url(#glass)" d="M75 20h12v124H75z"/>
-    <path fill="url(#metal)" d="M70 145h24v9H70z"/>
-    <path fill="url(#glass)" d="M79 154h4v20h-4z"/>
-    <path fill="url(#glass)" d="M160 48h18v56l-8 7-8-7z"/>
-    <path fill="url(#glass)" d="M160 104l-28 23-4 29h80l-4-29-28-23z"/>
-    <path fill="url(#metal)" d="M122 160h92l-4 10h-84z"/>
-    <path fill="url(#glass)" d="M221 112h29v58h-29z"/>
+
+  <rect width="1200" height="760" fill="url(#wall)"/>
+  <path d="M0 582H1200V760H0z" fill="url(#bench)"/>
+  <path d="M0 582h1200v13H0z" fill="#816347" opacity=".68"/>
+  <path d="M0 595h1200" stroke="#f1ddbd" stroke-width="3" opacity=".55"/>
+  <ellipse cx="528" cy="602" rx="312" ry="34" fill="#34454a" opacity=".16" filter="url(#softShadow)"/>
+
+  <g data-layer="hardware" aria-label="stand">
+    <path d="M64 560h222l26 19H43z" fill="url(#steel)" stroke="#1d2a30" stroke-width="4"/>
+    <path d="M73 579h220" stroke="#e5edef" stroke-width="3" opacity=".45"/>
+    <path d="M92 579v9M264 579v9" stroke="#1b252b" stroke-width="10" stroke-linecap="round"/>
+    <rect x="166" y="96" width="34" height="465" rx="15" fill="url(#steel)" stroke="#1c2930" stroke-width="4"/>
+    <path d="M176 111v436" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".53"/>
+    <path d="M194 109v438" stroke="#24363d" stroke-width="3" opacity=".65"/>
+    <path d="M181 202h249v30H181z" fill="url(#steel)" stroke="#1c2930" stroke-width="4"/>
+    <path d="M198 208h212" stroke="#f5fafb" stroke-width="4" opacity=".52"/>
+    <path d="M410 195l35 22-35 22z" fill="url(#steelTop)" stroke="#26383f" stroke-width="3"/>
+    <ellipse cx="450" cy="217" rx="27" ry="19" fill="url(#steelTop)" stroke="#26383f" stroke-width="4"/>
+    <circle cx="450" cy="217" r="8" fill="#26383f"/>
+    <path d="M449 217h38" stroke="#25363d" stroke-width="12" stroke-linecap="round"/>
+    <path d="M451 214h35" stroke="#e3edef" stroke-width="3" stroke-linecap="round" opacity=".7"/>
+    <rect x="148" y="186" width="70" height="55" rx="13" fill="url(#steelTop)" stroke="#25363d" stroke-width="3"/>
+    <path d="M154 199h57M154 211h57M154 223h57" stroke="#25363d" stroke-width="3" opacity=".48"/>
+    <circle cx="183" cy="214" r="10" fill="#26373e" stroke="#d9e5e7" stroke-width="2"/>
+    <path d="M102 554h28M232 554h28" stroke="#141d21" stroke-width="9" stroke-linecap="round"/>
   </g>
-  <g fill="none" stroke="#ffffff" stroke-linecap="round" opacity=".72">
-    <path stroke-width="1.1" d="M77 25v108"/>
-    <path stroke-width="1.4" d="M164 55v43"/>
-    <path stroke-width="1.2" d="M139 130l-5 18"/>
-    <path stroke-width="1" d="M224 118v43"/>
+
+  <g data-layer="glass-back" data-specification="burette-v0-100ml" aria-label="burette body">
+    <rect x="392" y="70" width="54" height="430" rx="19" fill="url(#glass)" stroke="url(#glassEdge)" stroke-width="4"/>
+    <path d="M404 88v395" stroke="#fff" stroke-width="8" stroke-linecap="round" opacity=".62"/>
+    <path d="M432 82v407" stroke="#67939d" stroke-width="4" opacity=".42"/>
+    <path d="M419 72v426" stroke="#f5ffff" stroke-width="2" opacity=".5"/>
+    <path d="M397 58h44" stroke="#385d66" stroke-width="4" stroke-linecap="round"/>
+    <ellipse cx="419" cy="58" rx="22" ry="7" fill="#d9edf0" fill-opacity=".48" stroke="#385d66" stroke-width="3"/>
+  </g>
+  <g data-layer="hardware" data-specification="burette-v0-100ml" aria-label="burette stopcock">
+    <path d="M384 497h70v27h-70z" fill="url(#steel)" stroke="#1c2930" stroke-width="4"/>
+    <path d="M394 504h50" stroke="#f2f7f7" stroke-width="3" opacity=".52"/>
+    <circle cx="419" cy="510" r="10" fill="#d6e1e3" stroke="#25363d" stroke-width="3"/>
+    <path d="M419 510l34-17" stroke="#25363d" stroke-width="8" stroke-linecap="round"/>
+    <path d="M450 489l18-6" stroke="#c5d2d4" stroke-width="5" stroke-linecap="round"/>
+    <path d="M410 524v56" stroke="url(#glassEdge)" stroke-width="11" stroke-linecap="round"/>
+    <path d="M414 528v43" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".68"/>
+    <path d="M405 580h21l-6 20h-9z" fill="url(#glass)" stroke="#385d66" stroke-width="3"/>
+  </g>
+
+  <g data-layer="glass-back" data-specification="conical-flask-250ml" aria-label="conical flask">
+    <path d="M394 182h55v145l-10 22 101 133q9 13 9 34v35H249v-35q0-21 9-34l101-133-10-22V182z" fill="url(#glass)" stroke="url(#glassEdge)" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M400 193h43" stroke="#eefbfc" stroke-width="5" stroke-linecap="round" opacity=".68"/>
+    <ellipse cx="421" cy="181" rx="29" ry="9" fill="#e7f4f5" fill-opacity=".45" stroke="#385d66" stroke-width="3"/>
+    <path d="M364 349l-93 133q-7 11-7 27v8h314v-8q0-16-7-27l-93-133" fill="#e9f4f5" fill-opacity=".11" stroke="none"/>
+    <path d="M286 545h270" stroke="#fff" stroke-width="8" stroke-linecap="round" opacity=".48"/>
+    <path d="M299 526l-21 8M316 507l-17 7M333 486l-14 7" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".6"/>
+    <path d="M253 551h336v25H253z" fill="url(#glassEdge)" stroke="#28464e" stroke-width="3" opacity=".92"/>
+    <path d="M271 557h300" stroke="#f4ffff" stroke-width="3" opacity=".56"/>
+  </g>
+
+  <g data-layer="glass-back" data-specification="beaker-250ml" aria-label="beaker">
+    <path d="M782 286h166l-10 270H792z" fill="url(#glass)" stroke="url(#glassEdge)" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M780 282h170" stroke="#365d66" stroke-width="4" stroke-linecap="round"/>
+    <ellipse cx="865" cy="282" rx="85" ry="13" fill="#e2f1f2" fill-opacity=".38" stroke="#365d66" stroke-width="4"/>
+    <path d="M936 288l52 26-45 18" fill="#c4dfe2" fill-opacity=".48" stroke="#365d66" stroke-width="4"/>
+    <path d="M801 542h128" stroke="#fff" stroke-width="8" stroke-linecap="round" opacity=".48"/>
+    <path d="M815 313v205" stroke="#fff" stroke-width="7" stroke-linecap="round" opacity=".6"/>
+    <path d="M792 557h166" stroke="#28464e" stroke-width="5" opacity=".78"/>
+  </g>
+
+  <g data-layer="annotation" fill="#38565d" font-family="Arial, sans-serif">
+    <text x="64" y="654" font-size="18" font-weight="700" letter-spacing="2">ORIGINAL CHEMREALM ORTHOGRAPHIC MASTER</text>
+    <text x="64" y="682" font-size="13">Dynamic graduation, meniscus, liquid, readout and optical state are runtime layers.</text>
+    <text x="64" y="706" font-size="13">Geometry vocabulary: stand · clamp · burette · stopcock · tip · flask · beaker.</text>
+    <text x="1010" y="682" font-size="13" text-anchor="end">logical artboard / semantic bounds 260 × 190 mm</text>
   </g>
 </svg>

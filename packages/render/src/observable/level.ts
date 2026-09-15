@@ -21,6 +21,7 @@ export interface VolumeProfile {
 export interface LiquidLevel {
   readonly volume: Litre;
   readonly height: Millimetre;
+  readonly profileMaxHeight: Millimetre;
 }
 
 interface ProfilePoint {
@@ -119,5 +120,9 @@ export function deriveLiquidLevel(
   if (Math.abs(inverseVolume - volumeValue) > roundTripTolerance) {
     throw new RangeError("volume profile inverse exceeds round-trip tolerance");
   }
-  return Object.freeze({ volume, height });
+  return Object.freeze({
+    volume,
+    height,
+    profileMaxHeight: profile.maxHeight,
+  });
 }

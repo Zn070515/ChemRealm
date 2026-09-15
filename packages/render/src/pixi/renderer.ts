@@ -36,11 +36,20 @@ function stringData(node: RenderNode | undefined, key: string): string | undefin
   return typeof value === "string" ? value : undefined;
 }
 
+function objectData(node: RenderNode | undefined, key: string): Record<string, unknown> | undefined {
+  const value = node?.data[key];
+  return typeof value === "object" && value !== null ? value as Record<string, unknown> : undefined;
+}
+
 function tintData(node: RenderNode | undefined): TintData | undefined {
   const value = node?.data.tint;
   if (typeof value !== "object" || value === null) return undefined;
   const tint = value as TintData;
   return tint.srgb === undefined || tint.srgb.length !== 3 ? undefined : tint;
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
 }
 
 function srgbToHex(srgb: readonly number[]): number {
@@ -50,22 +59,21 @@ function srgbToHex(srgb: readonly number[]): number {
     channel(srgb[2] ?? 0);
 }
 
+function blendHex(foreground: number, background: number, strength: number): number {
+  const mix = (shift: number) => Math.round(
+    ((foreground >> shift) & 0xff) * strength +
+    ((background >> shift) & 0xff) * (1 - strength),
+  );
+  return (mix(16) << 16) | (mix(8) << 8) | mix(0);
+}
+
 function liquidColour(state: RenderState): number {
   const tint = tintData(state.nodes.find((node) => node.id.startsWith("indicator-")));
   if (tint?.srgb === undefined) return T.liquidNeutral;
   const strength = typeof tint.strength === "number"
-    ? Math.max(0, Math.min(1, tint.strength))
+    ? clamp(tint.strength, 0, 1)
     : 1;
-  const colour = srgbToHex(tint.srgb);
-  // Blend weak optical observations with the neutral liquid token. This is a
-  // presentation operation; the admitted optical observation remains the
-  // only source of the tint.
-  const blend = (from: number, to: number) => Math.round(
-    ((from >> 16 & 0xff) * strength + (to >> 16 & 0xff) * (1 - strength)) * 0x10000 +
-    ((from >> 8 & 0xff) * strength + (to >> 8 & 0xff) * (1 - strength)) * 0x100 +
-    ((from & 0xff) * strength + (to & 0xff) * (1 - strength)),
-  );
-  return blend(colour, T.liquidNeutral);
+  return blendHex(srgbToHex(tint.srgb), T.liquidNeutral, strength);
 }
 
 function path(graphics: Graphics, commands: readonly (readonly [number, number])[]): Graphics {
@@ -76,7 +84,27 @@ function path(graphics: Graphics, commands: readonly (readonly [number, number])
   return graphics.closePath();
 }
 
-function addText(root: Container, text: Text, x: number, y: number): Text {
+function addText(root: Container, value: string, x: number, y: number, options: {
+  readonly size?: number;
+  readonly color?: number;
+  readonly weight?: "400" | "600" | "700";
+  readonly letterSpacing?: number;
+  readonly alpha?: number;
+  readonly anchor?: number;
+} = {}): Text {
+  const text = new Text({
+    text: value,
+    style: {
+      fontFamily: "Arial",
+      fontSize: options.size ?? 14,
+      fontWeight: options.weight ?? "400",
+      fill: options.color ?? T.text,
+      letterSpacing: options.letterSpacing ?? 0,
+      padding: 2,
+    },
+  });
+  text.alpha = options.alpha ?? 1;
+  text.anchor.set(options.anchor ?? 0, 0);
   text.position.set(x, y);
   root.addChild(text);
   return text;
@@ -87,152 +115,258 @@ function drawBackdrop(root: Container): void {
     .rect(0, 0, LOGICAL.width, LOGICAL.height)
     .fill({ color: T.background }));
   root.addChild(new Graphics()
-    .roundRect(36, 32, LOGICAL.width - 72, LOGICAL.height - 100, 26)
+    .roundRect(28, 24, LOGICAL.width - 56, 566, 24)
     .fill({ color: T.surface })
-    .stroke({ color: 0xd3dde3, width: 2 }));
+    .stroke({ color: 0xc9d8dc, width: 2 }));
+  const wall = new Graphics()
+    .roundRect(48, 48, 1104, 60, 12)
+    .fill({ color: T.surfaceInset })
+    .stroke({ color: 0xd6e2e5, width: 1 });
+  root.addChild(wall);
+  addText(root, "TITRATION BENCH", 72, 66, { size: 18, weight: "700", letterSpacing: 2, color: T.text });
+  addText(root, "ORTHOGRAPHIC / REUSABLE APPARATUS FAMILY", 1108, 68, {
+    size: 12,
+    letterSpacing: 1.2,
+    color: T.textMuted,
+    anchor: 1,
+  });
+  const bench = new Graphics()
+    .rect(0, 606, LOGICAL.width, 154)
+    .fill({ color: T.bench });
+  bench.rect(0, 606, LOGICAL.width, 8).fill({ color: T.benchEdge });
+  bench.rect(0, 614, LOGICAL.width, 3).fill({ color: T.benchHighlight, alpha: 0.7 });
+  for (let y = 644; y < LOGICAL.height; y += 28) {
+    bench.moveTo(0, y).lineTo(LOGICAL.width, y + 3);
+  }
+  bench.stroke({ color: T.benchEdge, width: 1, alpha: 0.17 });
+  root.addChild(bench);
   root.addChild(new Graphics()
-    .rect(36, 596, LOGICAL.width - 72, 100)
-    .fill({ color: T.bench })
-    .stroke({ color: T.benchEdge, width: 2 }));
-  root.addChild(new Graphics()
-    .rect(36, 596, LOGICAL.width - 72, 7)
-    .fill({ color: T.benchEdge }));
+    .ellipse(526, 608, 320, 25)
+    .fill({ color: T.metalDark, alpha: 0.12 }));
 }
 
 function drawStand(root: Container): void {
-  root.addChild(new Graphics()
-    .roundRect(110, 528, 190, 22, 11)
+  const stand = new Graphics();
+  // Base: bevelled cast-metal foot, rubber feet and a highlight plane.
+  path(stand, [[70, 555], [278, 555], [307, 579], [43, 579]])
+    .fill({ color: T.metalDark })
+    .stroke({ color: T.metal, width: 3 });
+  path(stand, [[78, 559], [270, 559], [291, 574], [62, 574]])
+    .fill({ color: T.metalMid, alpha: 0.76 });
+  stand.moveTo(83, 562).lineTo(271, 562).stroke({ color: T.metalHighlight, width: 3, alpha: 0.7 });
+  stand.roundRect(94, 575, 32, 12, 6).fill({ color: T.metalDark });
+  stand.roundRect(236, 575, 32, 12, 6).fill({ color: T.metalDark });
+  // Rod with a bright front edge and collar marks.
+  stand.roundRect(166, 103, 34, 458, 14)
     .fill({ color: T.metal })
-    .stroke({ color: T.metalHighlight, width: 2 }));
-  root.addChild(new Graphics()
-    .roundRect(194, 102, 22, 436, 10)
+    .stroke({ color: T.metalDark, width: 3 });
+  stand.roundRect(174, 113, 8, 432, 4).fill({ color: T.metalHighlight, alpha: 0.65 });
+  stand.rect(192, 114, 4, 430).fill({ color: T.metalDark, alpha: 0.68 });
+  stand.roundRect(159, 270, 48, 11, 5).fill({ color: T.metalDark });
+  stand.roundRect(155, 274, 56, 4, 2).fill({ color: T.metalHighlight, alpha: 0.6 });
+  // Horizontal clamp arm and boss.
+  stand.roundRect(181, 202, 244, 30, 14)
     .fill({ color: T.metal })
-    .stroke({ color: T.metalHighlight, width: 2 }));
-  root.addChild(new Graphics()
-    .roundRect(194, 150, 198, 24, 12)
-    .fill({ color: T.metal })
-    .stroke({ color: T.metalHighlight, width: 2 }));
-  root.addChild(new Graphics()
-    .ellipse(205, 162, 42, 13)
+    .stroke({ color: T.metalDark, width: 3 });
+  stand.roundRect(195, 207, 215, 7, 3).fill({ color: T.metalHighlight, alpha: 0.62 });
+  stand.moveTo(408, 204).lineTo(444, 217).lineTo(408, 230).closePath()
+    .fill({ color: T.metalMid })
+    .stroke({ color: T.metalDark, width: 2 });
+  stand.ellipse(451, 217, 28, 20)
     .fill({ color: T.metalHighlight })
-    .stroke({ color: T.metal, width: 2 }));
+    .stroke({ color: T.metalDark, width: 3 });
+  stand.circle(451, 217, 8).fill({ color: T.metalDark });
+  stand.moveTo(451, 217).lineTo(490, 217).stroke({ color: T.metalDark, width: 11, cap: "round" });
+  stand.moveTo(453, 214).lineTo(486, 214).stroke({ color: T.white, width: 2, alpha: 0.65 });
+  // Jaw plate, screw and a visible clamp pad.
+  stand.roundRect(145, 185, 72, 60, 13)
+    .fill({ color: T.metalMid })
+    .stroke({ color: T.metalDark, width: 3 });
+  for (const y of [198, 212, 226]) stand.moveTo(153, y).lineTo(209, y).stroke({ color: T.metalDark, width: 2, alpha: 0.45 });
+  stand.circle(181, 214, 11).fill({ color: T.metalDark }).stroke({ color: T.metalHighlight, width: 2 });
+  stand.circle(181, 214, 4).fill({ color: T.metalHighlight });
+  root.addChild(stand);
 }
 
 function drawBurette(root: Container, state: RenderState): void {
+  const node = nodeById(state, "burette-apparatus");
   const x = 390;
-  const top = 80;
-  const height = 420;
+  const top = 76;
+  const bodyHeight = 275;
+  const bodyWidth = 56;
+  const bottom = top + bodyHeight;
+  const graduation = objectData(node, "graduation");
+  const maximum = numberData(node, "maximumVolumeL") ??
+    (typeof graduation?.maximumVolumeL === "number" ? graduation.maximumVolumeL : TITRATION_BENCH_ASSET.graduation.maximumVolumeL);
+  const contained = numberData(node, "containedVolumeL");
+  const liquidFraction = contained === undefined ? 0.62 : clamp(contained / maximum, 0, 1);
+  const liquidTop = bottom - bodyHeight * liquidFraction;
+  const liquid = liquidColour(state);
+  // Rear glass and the state-derived liquid column.
   root.addChild(new Graphics()
-    .roundRect(x, top, 54, height, 18)
-    .fill({ color: T.glass, alpha: 0.72 })
-    .stroke({ color: T.glassEdge, width: 3, alpha: 0.95 }));
+    .roundRect(x, top, bodyWidth, bodyHeight, 18)
+    .fill({ color: T.glassShadow, alpha: 0.16 }));
   root.addChild(new Graphics()
-    .roundRect(x + 10, top + 12, 8, height - 35, 4)
-    .fill({ color: T.white, alpha: 0.58 }));
-  const graduation = nodeById(state, "burette-apparatus")?.data.graduation;
-  const maximum = typeof graduation === "object" && graduation !== null &&
-    typeof (graduation as { maximumVolumeL?: unknown }).maximumVolumeL === "number"
-    ? (graduation as { maximumVolumeL: number }).maximumVolumeL
-    : TITRATION_BENCH_ASSET.graduation.maximumVolumeL;
-  const majorEvery = typeof graduation === "object" && graduation !== null &&
-    typeof (graduation as { majorEveryL?: unknown }).majorEveryL === "number"
-    ? (graduation as { majorEveryL: number }).majorEveryL
-    : TITRATION_BENCH_ASSET.graduation.majorEveryL;
-  const minorEvery = typeof graduation === "object" && graduation !== null &&
-    typeof (graduation as { minorEveryL?: unknown }).minorEveryL === "number"
-    ? (graduation as { minorEveryL: number }).minorEveryL
-    : TITRATION_BENCH_ASSET.graduation.minorEveryL;
-  const ticks = new Graphics();
-  const count = Math.round(maximum / minorEvery);
-  for (let index = 0; index <= count; index += 1) {
-    const y = top + (height * index) / count;
-    const major = index % Math.round(majorEvery / minorEvery) === 0;
-    ticks.moveTo(x + 54, y).lineTo(x + 54 + (major ? 18 : 10), y);
-  }
-  ticks.stroke({ color: T.tick, width: majorEvery > 0 ? 2 : 1, alpha: 0.9 });
-  root.addChild(ticks);
+    .rect(x + 5, liquidTop, bodyWidth - 10, bottom - liquidTop)
+    .fill({ color: liquid, alpha: 0.74 }));
   root.addChild(new Graphics()
-    .roundRect(x - 10, top + height - 4, 74, 18, 7)
-    .fill({ color: T.metal })
-    .stroke({ color: T.metalHighlight, width: 2 }));
+    .ellipse(x + bodyWidth / 2, liquidTop + 2, bodyWidth / 2 - 7, 6)
+    .fill({ color: liquid, alpha: 0.8 })
+    .stroke({ color: T.white, width: 1.5, alpha: 0.6 }));
+  const glass = new Graphics()
+    .roundRect(x, top, bodyWidth, bodyHeight, 18)
+    .fill({ color: T.glass, alpha: 0.36 })
+    .stroke({ color: T.glassEdge, width: 3, alpha: 0.95 });
+  // Schellbach-style central reading stripe and two-sided highlights.
+  glass.roundRect(x + 24, top + 3, 8, bodyHeight - 8, 4).fill({ color: T.white, alpha: 0.19 });
+  glass.roundRect(x + 27, top + 8, 3, bodyHeight - 18, 2).fill({ color: T.glassHighlight, alpha: 0.62 });
+  glass.roundRect(x + 8, top + 15, 7, bodyHeight - 34, 3).fill({ color: T.white, alpha: 0.62 });
+  glass.roundRect(x + 45, top + 12, 4, bodyHeight - 28, 2).fill({ color: T.glassShadow, alpha: 0.25 });
+  root.addChild(glass);
+  // Open rim and fill neck.
   root.addChild(new Graphics()
-    .roundRect(x + 16, top + height + 12, 22, 70, 7)
-    .fill({ color: T.glass, alpha: 0.72 })
+    .ellipse(x + bodyWidth / 2, top, bodyWidth / 2, 8)
+    .fill({ color: T.surfaceInset, alpha: 0.58 })
     .stroke({ color: T.glassEdge, width: 3 }));
-  addText(root, new Text({
-    text: "burette",
-    style: { fontFamily: "Arial", fontSize: 15, fill: T.text, letterSpacing: 1 },
-  }), x - 2, top - 30);
+  const scale = new Graphics();
+  const minorEvery = typeof graduation?.minorEveryL === "number" ? graduation.minorEveryL : TITRATION_BENCH_ASSET.graduation.minorEveryL;
+  const majorEvery = typeof graduation?.majorEveryL === "number" ? graduation.majorEveryL : TITRATION_BENCH_ASSET.graduation.majorEveryL;
+  const count = Math.max(1, Math.round(maximum / minorEvery));
+  const majorStep = Math.max(1, Math.round(majorEvery / minorEvery));
+  for (let index = 0; index <= count; index += 1) {
+    const y = top + bodyHeight * index / count;
+    const isMajor = index % majorStep === 0;
+    const tickLength = isMajor ? 20 : index % 5 === 0 ? 14 : 9;
+    scale.moveTo(x + bodyWidth, y).lineTo(x + bodyWidth + tickLength, y);
+  }
+  scale.stroke({ color: T.tick, width: 1.5, alpha: 0.95 });
+  root.addChild(scale);
+  for (let index = 0; index <= count; index += majorStep) {
+    const y = top + bodyHeight * index / count;
+    addText(root, `${Math.round(maximum * 1000 * index / count)} mL`, x + bodyWidth + 27, y - 7, {
+      size: 11,
+      color: T.textMuted,
+      anchor: 0,
+    });
+  }
+  // PTFE stopcock, glass tip, and a deliberately static outlet port marker.
+  const hardware = new Graphics()
+    .roundRect(x - 9, bottom - 4, bodyWidth + 18, 28, 8)
+    .fill({ color: T.metal })
+    .stroke({ color: T.metalDark, width: 3 });
+  hardware.roundRect(x + 2, bottom + 2, bodyWidth - 4, 7, 3).fill({ color: T.metalHighlight, alpha: 0.62 });
+  hardware.circle(x + bodyWidth / 2, bottom + 10, 10).fill({ color: T.metalHighlight }).stroke({ color: T.metalDark, width: 3 });
+  hardware.moveTo(x + bodyWidth / 2, bottom + 10).lineTo(x + bodyWidth + 29, bottom - 7).stroke({ color: T.metalDark, width: 8, cap: "round" });
+  hardware.moveTo(x + bodyWidth + 22, bottom - 10).lineTo(x + bodyWidth + 39, bottom - 16).stroke({ color: T.metalHighlight, width: 4, cap: "round" });
+  hardware.moveTo(x + bodyWidth / 2 - 6, bottom + 24).lineTo(x + bodyWidth / 2 - 6, bottom + 66).stroke({ color: T.glassEdge, width: 11, cap: "round" });
+  hardware.moveTo(x + bodyWidth / 2 - 2, bottom + 29).lineTo(x + bodyWidth / 2 - 2, bottom + 58).stroke({ color: T.white, width: 3, alpha: 0.65 });
+  hardware.moveTo(x + bodyWidth / 2 - 12, bottom + 66).lineTo(x + bodyWidth / 2, bottom + 66).lineTo(x + bodyWidth / 2 - 5, bottom + 84).closePath().fill({ color: T.glass, alpha: 0.6 }).stroke({ color: T.glassEdge, width: 2 });
+  root.addChild(hardware);
+  addText(root, "BURETTE · 100 mL", x - 34, 35, { size: 14, weight: "700", letterSpacing: 1.1 });
+  addText(root, "0 → 100 mL scale", x + 69, 57, { size: 10, color: T.textMuted });
   const reading = stringData(nodeById(state, "burette-reading"), "text");
   if (reading !== undefined) {
-    addText(root, new Text({
-      text: reading,
-      style: { fontFamily: "Arial", fontSize: 16, fill: T.text },
-    }), x + 82, top + 10);
+    root.addChild(new Graphics().roundRect(514, 72, 126, 32, 8).fill({ color: T.surfaceInset }).stroke({ color: 0xc4d4d8, width: 1 }));
+    addText(root, reading, 528, 81, { size: 16, weight: "700", color: T.text });
   }
 }
 
 function drawFlask(root: Container, state: RenderState): void {
-  const x = 590;
-  const neckTop = 176;
-  const neckBottom = 330;
-  const bodyBottom = 548;
-  const bodyLeft = 510;
-  const bodyRight = 790;
-  const outline = [
-    [x - 28, neckTop], [x + 28, neckTop], [x + 28, neckBottom],
-    [bodyRight, 420], [bodyRight, bodyBottom], [bodyLeft, bodyBottom],
-    [bodyLeft, 420], [x - 28, neckBottom],
-  ] as const;
-  const fillHeight = numberData(nodeById(state, "flask-apparatus"), "fillHeightMm") ?? 0;
-  const fillTop = Math.max(410, bodyBottom - Math.min(140, fillHeight * 1.4));
-  const liquid = new Graphics();
-  path(liquid, [
-    [bodyLeft + 4, fillTop], [bodyRight - 4, fillTop],
-    [bodyRight - 4, bodyBottom - 6], [bodyLeft + 4, bodyBottom - 6],
-  ]).fill({ color: liquidColour(state), alpha: 0.84 });
-  liquid.ellipse((bodyLeft + bodyRight) / 2, fillTop, (bodyRight - bodyLeft - 8) / 2, 9)
-    .fill({ color: liquidColour(state), alpha: 0.94 });
-  const glass = new Graphics();
-  path(glass, outline).fill({ color: T.glass, alpha: 0.28 }).stroke({ color: T.glassEdge, width: 4 });
-  root.addChild(liquid);
-  root.addChild(glass);
+  const node = nodeById(state, "flask-apparatus");
+  const center = 420;
+  const neckTop = 405;
+  const neckBottom = 465;
+  const bodyBottom = 580;
+  const bodyLeft = 260;
+  const bodyRight = 580;
+  const fillHeight = Math.max(0, numberData(node, "fillHeightMm") ?? 20);
+  const maximumHeight = Math.max(fillHeight, numberData(node, "maximumHeightMm") ?? 100);
+  const liquidTop = bodyBottom - 12 - clamp(fillHeight / maximumHeight, 0, 1) * 92;
+  const widthAtTop = 56 + (liquidTop - neckBottom) * 1.32;
+  const leftAtTop = center - widthAtTop / 2;
+  const rightAtTop = center + widthAtTop / 2;
+  const liquid = liquidColour(state);
+  const liquidLayer = new Graphics();
+  path(liquidLayer, [
+    [leftAtTop, liquidTop], [rightAtTop, liquidTop],
+    [bodyRight - 10, bodyBottom - 10], [bodyLeft + 10, bodyBottom - 10],
+  ]).fill({ color: liquid, alpha: 0.78 });
+  liquidLayer.ellipse(center, liquidTop + 1, Math.max(24, widthAtTop / 2 - 4), 7)
+    .fill({ color: liquid, alpha: 0.84 })
+    .stroke({ color: T.white, width: 1.5, alpha: 0.58 });
+  root.addChild(liquidLayer);
+  const outline = new Graphics();
+  path(outline, [
+    [394, neckTop], [446, neckTop], [446, neckBottom],
+    [bodyRight, 472], [bodyRight, bodyBottom], [bodyLeft, bodyBottom],
+    [bodyLeft, 472], [394, neckBottom],
+  ]).fill({ color: T.glass, alpha: 0.28 }).stroke({ color: T.glassEdge, width: 4 });
+  outline.roundRect(390, neckTop - 4, 60, 10, 5).fill({ color: T.surfaceInset, alpha: 0.5 }).stroke({ color: T.glassEdge, width: 3 });
+  outline.ellipse(center, neckTop - 4, 30, 8).fill({ color: T.glass, alpha: 0.36 }).stroke({ color: T.glassEdge, width: 3 });
+  // Same highlight direction as the burette, plus a broad shoulder glint.
+  outline.roundRect(294, 475, 12, 78, 6).fill({ color: T.white, alpha: 0.65 });
+  outline.roundRect(316, 452, 6, 101, 3).fill({ color: T.white, alpha: 0.30 });
+  outline.moveTo(276, 550).lineTo(564, 550).stroke({ color: T.white, width: 6, alpha: 0.42 });
+  root.addChild(outline);
+  // A restrained maker mark and a local scale are visual object details, not a reading.
+  const mark = new Graphics();
+  mark.moveTo(505, 501).lineTo(541, 501).stroke({ color: T.glassEdge, width: 2, alpha: 0.7 });
+  mark.moveTo(505, 511).lineTo(532, 511).stroke({ color: T.glassEdge, width: 2, alpha: 0.56 });
+  mark.moveTo(505, 521).lineTo(541, 521).stroke({ color: T.glassEdge, width: 2, alpha: 0.7 });
+  root.addChild(mark);
   root.addChild(new Graphics()
-    .roundRect(bodyLeft - 15, bodyBottom - 5, bodyRight - bodyLeft + 30, 18, 9)
-    .fill({ color: T.glassEdge, alpha: 0.8 }));
-  root.addChild(new Graphics()
-    .roundRect(bodyLeft + 20, 430, 10, 92, 5)
-    .fill({ color: T.white, alpha: 0.7 }));
-  addText(root, new Text({
-    text: "conical flask",
-    style: { fontFamily: "Arial", fontSize: 15, fill: T.text, letterSpacing: 1 },
-  }), bodyLeft + 18, bodyBottom + 30);
+    .roundRect(bodyLeft - 15, bodyBottom - 6, bodyRight - bodyLeft + 30, 20, 8)
+    .fill({ color: T.glassEdge, alpha: 0.78 })
+    .stroke({ color: T.glassHighlight, width: 2, alpha: 0.55 }));
+  addText(root, "ERLENMEYER FLASK", 321, 586, { size: 12, weight: "700", letterSpacing: 1.1 });
+  addText(root, "250 mL", 431, 506, { size: 12, color: T.textMuted });
 }
 
 function drawBeaker(root: Container): void {
-  const glass = new Graphics();
-  path(glass, [[900, 400], [1040, 400], [1025, 548], [915, 548]])
-    .fill({ color: T.glass, alpha: 0.28 })
+  const left = 790;
+  const right = 950;
+  const top = 402;
+  const bottom = 580;
+  const beaker = new Graphics();
+  path(beaker, [[left, top], [right, top], [right - 11, bottom], [left + 11, bottom]])
+    .fill({ color: T.glass, alpha: 0.3 })
     .stroke({ color: T.glassEdge, width: 4 });
-  root.addChild(glass);
-  root.addChild(new Graphics()
-    .ellipse(970, 400, 70, 12)
-    .fill({ color: T.glass, alpha: 0.35 })
-    .stroke({ color: T.glassEdge, width: 3 }));
-  addText(root, new Text({
-    text: "beaker",
-    style: { fontFamily: "Arial", fontSize: 15, fill: T.text, letterSpacing: 1 },
-  }), 934, 570);
+  beaker.ellipse((left + right) / 2, top, (right - left) / 2, 11)
+    .fill({ color: T.surfaceInset, alpha: 0.42 })
+    .stroke({ color: T.glassEdge, width: 4 });
+  beaker.moveTo(right - 16, top + 4).lineTo(right + 32, top + 28).lineTo(right - 9, top + 44)
+    .fill({ color: T.glass, alpha: 0.38 })
+    .stroke({ color: T.glassEdge, width: 3 });
+  beaker.moveTo(left + 22, top + 27).lineTo(left + 22, bottom - 24).stroke({ color: T.white, width: 7, alpha: 0.6 });
+  beaker.moveTo(left + 42, top + 18).lineTo(left + 42, bottom - 14).stroke({ color: T.white, width: 3, alpha: 0.32 });
+  for (const [offset, length] of [[42, 44], [72, 29], [102, 44], [132, 29]] as const) {
+    beaker.moveTo(left + 13, top + offset).lineTo(left + 13 + length, top + offset).stroke({ color: T.tick, width: 2, alpha: 0.82 });
+  }
+  beaker.moveTo(left + 15, bottom - 5).lineTo(right - 15, bottom - 5).stroke({ color: T.glassEdge, width: 5, alpha: 0.75 });
+  root.addChild(beaker);
+  addText(root, "BEAKER", left + 35, 586, { size: 12, weight: "700", letterSpacing: 1.3 });
+  addText(root, "250 mL", left + 100, 586, { size: 10, color: T.textMuted });
 }
 
-function drawIndicatorStatus(root: Container, state: RenderState): void {
+function drawInspectionCard(root: Container, state: RenderState): void {
   const indicator = state.nodes.find((node) => node.id.startsWith("indicator-"));
   const status = stringData(indicator, "opticalStatus");
-  const label = status === "OPTICAL_MODEL_OK" ? "optical observation" : "optical model unavailable";
-  addText(root, new Text({
-    text: label,
-    style: { fontFamily: "Arial", fontSize: 14, fill: T.text },
-  }), 820, 74);
+  const isAvailable = status === "OPTICAL_MODEL_OK";
+  const card = new Graphics()
+    .roundRect(700, 126, 430, 92, 14)
+    .fill({ color: T.surfaceInset, alpha: 0.86 })
+    .stroke({ color: 0xc6d7db, width: 1.5 });
+  card.roundRect(718, 144, 8, 56, 4).fill({ color: isAvailable ? 0x3b9b78 : 0xd28c46 });
+  root.addChild(card);
+  addText(root, "OPTICAL OBSERVATION", 744, 143, { size: 12, weight: "700", letterSpacing: 1.1 });
+  addText(root, isAvailable ? "profile admitted" : "model boundary / neutral liquid", 744, 169, {
+    size: 14,
+    color: isAvailable ? 0x2d705b : 0x895f2b,
+  });
+  addText(root, isAvailable ? "colour is state-derived" : "reason remains visible in inspection", 744, 193, {
+    size: 11,
+    color: T.textMuted,
+  });
 }
 
 function drawState(root: Container, state: RenderState): void {
@@ -242,7 +376,7 @@ function drawState(root: Container, state: RenderState): void {
     drawBurette(root, state);
     drawFlask(root, state);
     drawBeaker(root);
-    drawIndicatorStatus(root, state);
+    drawInspectionCard(root, state);
   }
 }
 

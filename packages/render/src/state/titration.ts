@@ -1,4 +1,5 @@
 import { VERSION_MANIFEST } from "@chemrealm/schema";
+import { APPARATUS_SPECIFICATION_IDS } from "../assets/apparatus-catalog.js";
 import { validateApparatusAssetManifest } from "../assets/titration-bench.js";
 import { toRenderState, type HydrogenIonPresentationPolicy, type RenderNode, type RenderState } from "./scene.js";
 import { type ObservableModel } from "../observable/index.js";
@@ -41,9 +42,11 @@ export function toTitrationRenderState(
       data: {
         assetId: asset.assetId,
         assetVersion: asset.assetVersion,
+        catalogVersion: asset.catalogVersion,
         visualFamily: asset.visualFamily,
         coordinateUnit: asset.coordinateUnit,
         view: asset.view,
+        assetLayers: asset.assetLayers,
         dimensionsMm: asset.dimensionsMm,
         interactionRegions: asset.interactionRegions,
         accessibilityLabel: asset.accessibilityLabel,
@@ -65,9 +68,14 @@ export function toTitrationRenderState(
       zIndex: 4,
       data: {
         assetId: asset.assetId,
+        catalogVersion: asset.catalogVersion,
+        specificationId: APPARATUS_SPECIFICATION_IDS.burette,
         partIds: ["burette.body", "burette.stopcock", "burette.tip"],
         positionMm: [0, 0],
         graduation: asset.graduation,
+        maximumVolumeL: asset.graduation.maximumVolumeL,
+        containedVolumeL: model.burette?.containedVolume,
+        currentScaleReadingL: model.burette?.currentScaleReading,
         semanticPorts: ["burette.outlet"],
       },
     }),
@@ -77,9 +85,12 @@ export function toTitrationRenderState(
       zIndex: 3,
       data: {
         assetId: asset.assetId,
+        catalogVersion: asset.catalogVersion,
+        specificationId: APPARATUS_SPECIFICATION_IDS.conicalFlask,
         partIds: ["flask.body", "flask.neck", "flask.base"],
         positionMm: [0, 0],
         fillHeightMm: model.liquidLevel.height,
+        maximumHeightMm: model.liquidLevel.profileMaxHeight,
         semanticPorts: ["flask.mouth"],
       },
     }),
@@ -89,6 +100,8 @@ export function toTitrationRenderState(
       zIndex: 2,
       data: {
         assetId: asset.assetId,
+        catalogVersion: asset.catalogVersion,
+        specificationId: APPARATUS_SPECIFICATION_IDS.beaker,
         partIds: ["beaker.body"],
         positionMm: [0, 0],
       },

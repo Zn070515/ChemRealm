@@ -5,7 +5,7 @@
 Original vector/2.5D master for M6 implementation. This is not traced from a
 NOBOOK screenshot or another product. NOBOOK is used only as a quality and
 surface-separation benchmark, as documented in
-`docs/research/m6-nobook-web-evidence.md`.
+`docs/research/m6-zhejiang-apparatus-and-visual-target.md`.
 
 ## Production method
 
@@ -20,7 +20,10 @@ runtime-derived or renderer-generated layers.
 
 ## Runtime contract
 
-- coordinate unit: millimetres;
+- semantic package coordinate unit: millimetres;
+- master SVG artboard: logical scene units, viewBox `0 0 1200 760`, with
+  semantic bounds `260 × 190 mm`; the artboard is a review/layout surface and
+  must not be mistaken for a physical measurement;
 - view: orthographic side elevation;
 - volumetric profile identities: supplied by the frozen world frame;
 - semantic parts/ports/capabilities: `manifest.json`;
