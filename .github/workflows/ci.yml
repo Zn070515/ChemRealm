@@ -81,6 +81,9 @@ jobs:
       # no quantitative profile may enter production without source fidelity,
       # rights, condition, multi-point, and content-hash checks.
       - run: pnpm verify:indicator-profiles
+      # The admitted graphical spectrum must remain reproducible from its
+      # checked-in raw digitisation and anchor-normalisation builder.
+      - run: pnpm verify:indicator-optical-source
 
       # Product properties asserted against the shipped artifact: no
       # third-party origin (AC-P5), no server API route (AC-P1).
@@ -104,6 +107,9 @@ jobs:
           enable-cache: true
 
       - run: uv sync
+      # Independent colourimetry vectors are derived outside the TypeScript
+      # runtime and compared against the production optical adapter.
+      - run: pnpm verify:indicator-colourimetry-oracle
       - run: uv run pytest
       - run: pnpm verify:indicator-multiform-reference
 

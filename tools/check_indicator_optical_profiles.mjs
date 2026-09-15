@@ -175,6 +175,8 @@ async function checkQuantitativeEntry(entry, opticsRoot) {
   if (entry.candidateId === "phenolphthalein-ordinary-aqueous") {
     must(/Kouderis[\s,]+Tsigoias[\s,]+Siafarika[\s,]+(?:and|&)\s*Kalampounias/i.test(entry.source.citation), "ordinary phenolphthalein source authors are not faithful");
     must(!/Alim\s+et\s+al/i.test(entry.source.citation), "ordinary phenolphthalein source must not name Alim et al.");
+    must(/raw\/phenolphthalein-kouderis-figure1-digitized\.csv/i.test(entry.source.rawDataLocation), "ordinary profile source must point to the raw digitisation CSV");
+    must(/build_phenolphthalein_optical_profile\.mjs/i.test(entry.source.rawDataLocation), "ordinary profile source must point to the reproducible profile builder");
     must(/380[–-]780\s*nm/i.test(entry.source.rawDataLocation), "ordinary profile source must record the full visible extraction range");
     must(/552\s*nm/i.test(entry.source.rawDataLocation), "ordinary profile source must retain the UCRL 552 nm anchor");
     must(/Napierian/i.test(entry.source.reportedPrecision), "ordinary profile source must record the UCRL logarithm convention");
@@ -190,6 +192,8 @@ async function checkQuantitativeEntry(entry, opticsRoot) {
     must(/strong-acid[\s\S]{0,120}(?:orange|cation)[\s\S]{0,120}(?:refusal|not implemented|not emitted)/i.test(review), "ordinary profile review must retain the strong-acid orange refusal boundary");
     must(/81\s+(?:sample|point)|5\s*nm/i.test(review), "ordinary profile review must record full-grid sampling");
     must(/20%|uncertainty/i.test(review), "ordinary profile review must record extraction uncertainty");
+    await access(path.join(root, "docs", "research", "indicator-optics", "raw", "phenolphthalein-kouderis-figure1-digitized.csv")).catch(() => fail("ordinary profile raw digitisation CSV is missing"));
+    await access(path.join(root, "tools", "research", "build_phenolphthalein_optical_profile.mjs")).catch(() => fail("ordinary profile reproducible builder is missing"));
     const runtimeProfile = await readJson(path.join(
       root,
       "packages",

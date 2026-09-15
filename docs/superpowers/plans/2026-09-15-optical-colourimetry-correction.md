@@ -2,8 +2,10 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Status:** Implementation complete and attested on the committed baseline;
-owner acceptance of the candidate amendments remains open.
+**Status:** Optical implementation and evidence closure are in progress on the
+current round; the previous corrected baseline was attested, while the raw
+digitisation rebuild and independent oracle require a fresh hosted attestation.
+Owner acceptance of the candidate amendments remains open.
 
 **Goal:** Replace the invalid three-point production colour path with a source-attributed, full-visible-spectrum colourimetry transform whose optical constants and evidence cannot be mistaken for a test fixture.
 
@@ -146,3 +148,31 @@ This plan is complete only when the repository can demonstrate all of the follow
 - [x] Inspect the complete diff for test-only data entering production, fake precision, duplicated versions, and stale M5/M6 claims.
 - [x] Commit and push the completed round; exact committed baseline `bdef2366a2c34bd57604eb2825a57a5df15c2ed3` passed hosted CI #143 (`34924905998`).
 - [x] Handoff states that M6 is ready for owner authorization only after the attested baseline; owner acceptance of the candidate amendments remains required.
+
+## Task 7: Make derived spectrum and colourimetry independently reproducible
+
+**Objective:** Close the remaining M6-entry evidence gap without widening the
+scientific model or implementing the documented strong-acid orange regime.
+
+**Files:**
+- Add: `docs/research/indicator-optics/raw/phenolphthalein-kouderis-figure1-digitized.csv`
+- Add: `tools/research/build_phenolphthalein_optical_profile.mjs`
+- Add: `tools/research/build_indicator_colourimetry_oracle.py`
+- Add: `docs/research/indicator-optics/colourimetry-independent-oracle.json`
+- Add: `packages/render/src/observable/colourimetry-oracle.test.ts`
+- Modify: profile registry/source/review packets, profile checker, package scripts, and CI
+
+**Interfaces and evidence:**
+- The raw CSV is a relative raster digitisation; the 625–780 nm rows are
+  explicitly labelled zero extensions rather than source measurements.
+- The Node builder validates the raw trace, performs anchor normalization, and
+  reproduces the profile content hash.
+- The Python oracle uses no ChemRealm runtime imports and freezes XYZ/sRGB and
+  81-point transmittance vectors for four independent numerical cases.
+- CI runs both rebuild/check gates before the final M6 attestation.
+
+- [x] Add raw trace, reproducible profile builder, and source packet references.
+- [x] Add independent standard-library oracle and production comparison tests.
+- [x] Add CI/package gates and remove the stale M5 #140 current-status wording.
+- [ ] Record the new exact committed-baseline hosted attestation after CI success.
+- [ ] Owner reviews applicable candidate revisions before M6 authorization.

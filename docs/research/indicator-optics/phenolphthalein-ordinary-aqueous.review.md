@@ -22,8 +22,12 @@ payload.
 
 The source authors are Constantine Kouderis, Stefanos Tsigoias, Panagiota
 Siafarika, and Angelos G. Kalampounias. The ordinary visible trace is from
-Figure 1 of the cited Molecules paper and is sampled/derived on the complete
-380–780 nm, 5 nm grid. The numerical scale is tied to the independent UCRL
+Figure 1 of the cited Molecules paper. The auditable raw extraction is
+`raw/phenolphthalein-kouderis-figure1-digitized.csv`, and the checked-in
+profile is rebuilt by `tools/research/build_phenolphthalein_optical_profile.mjs`.
+The 380–620 nm rows are relative raster readings; 625–780 nm is an explicit
+below-sensitivity zero extension. The builder samples the complete 380–780 nm,
+5 nm grid and ties the numerical scale to the independent UCRL
 epsilon_N(552 nm)=2.935×10^4 anchor. The source figure is not copied into the
 repository; the checked-in samples are a digitised derived record with
 approximately 20% relative shape/transfer uncertainty.

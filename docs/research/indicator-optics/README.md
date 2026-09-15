@@ -41,6 +41,9 @@ indicator observation.
    with an explicit Beer–Lambert logarithm convention and uncertainty.
 3. Production colourimetry transform: CIE D65, CIE 1931 2° integration, blank
    normalization, and IEC sRGB encoding.
+4. Independent numerical oracle: frozen XYZ/sRGB/transmittance vectors derived
+   by a separate Python standard-library implementation. This validates the
+   transform; it does not admit a spectrum or claim PHREEQC equivalence.
 
 Only layer 2 may admit an indicator spectrum. Layer 1 remains qualitative-only,
 and layer 3 cannot substitute for layer 2.
@@ -52,6 +55,11 @@ optics and never represents CIE data.
 Run the registry gate with:
 
     pnpm verify:indicator-profiles
+
+Run the derived-spectrum reproducibility and independent transform gates with:
+
+    pnpm verify:indicator-optical-source
+    pnpm verify:indicator-colourimetry-oracle
 
 The gate checks registry/source correspondence, refusal-first status, source
 fidelity fields, production CIE coverage, quantitative profile conditions,

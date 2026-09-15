@@ -30,11 +30,21 @@ cross-source calibration and its uncertainty as an explicit approximation.
 
 ## Extraction and limits
 
-The local profile contains 81 samples from 380 through 780 nm at 5 nm spacing.
-The visible shape is a reviewed digitisation/derivation from the ordinary
-trace in Figure 1, scaled so the 550/555 nm neighbourhood represents the
-independent 552 nm UCRL anchor. The values are derived, not source-tabulated
-values; the retained shape/transfer uncertainty is approximately 20% relative.
+The auditable raw trace is checked in at
+`raw/phenolphthalein-kouderis-figure1-digitized.csv`. Its 380–620 nm rows are
+5 nm raster-digitised relative absorbance readings from the grey 0 microlitre
+beta-cyclodextrin trace in Figure 1. The 625–780 nm rows are explicitly marked
+as a below-sensitivity zero extension; they are not source measurements. This
+distinction prevents the extension from being mistaken for a published tail.
+
+`tools/research/build_phenolphthalein_optical_profile.mjs` is the reproducible
+builder. It validates the raw grid, linearly interpolates onto the production
+5 nm grid, evaluates the 552 nm anchor-neighbourhood normalization, multiplies
+by the independent UCRL Napierian anchor, rounds only to the declared graphical
+two-decimal derived precision, and recomputes the content hash. Running it with
+`--check` must reproduce the checked-in profile by parsed JSON. The values are
+derived, not source-tabulated values; the retained shape/transfer uncertainty is
+approximately 20% relative.
 The profile declares epsilonConvention = napierian, so runtime attenuation uses
 exp(-epsilon_N c l).
 

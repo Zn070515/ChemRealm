@@ -44,6 +44,12 @@ does not claim that the 5 nm quadrature is identical to a 1 nm integration;
 the source datasets and local sampling interval are explicit so the difference
 can be reproduced.
 
+An independent numerical oracle is recorded in
+`colourimetry-independent-oracle.json` and described in
+`colourimetry-independent-oracle.source.md`. Its Python standard-library
+derivation is separate from the TypeScript Representation Engine and covers
+transparent, neutral-grey, narrow-band, and admitted phenolphthalein vectors.
+
 ## Rights and boundary
 
 The CIE files remain the external source records. The local artifact records

@@ -107,7 +107,7 @@
         "accessedOn": "2026-09-15",
         "licenseOrPermission": "open",
         "extractionMethod": "digitized",
-        "rawDataLocation": "phenolphthalein-ordinary-aqueous.profile.json; Figure 1 grey 0 microlitre beta-cyclodextrin trace sampled every 5 nm across 380–780 nm, including the 552 nm anchor neighbourhood",
+        "rawDataLocation": "raw/phenolphthalein-kouderis-figure1-digitized.csv; tools/research/build_phenolphthalein_optical_profile.mjs; grey 0 microlitre beta-cyclodextrin trace sampled on the 5 nm 380–780 nm grid, with an explicit below-sensitivity zero extension after 620 nm and the 552 nm anchor neighbourhood",
         "reportedPrecision": "published spectrum is graphical; derived 81-point grid samples carry approximately 20% digitisation/transfer uncertainty; the 552 nm scale anchor is Napierian epsilon = 2.935e4 L mol^-1 cm^-1",
         "digitisationUncertainty": "approximately 20% relative for the derived visible-grid shape; not a claim of source tabular precision",
         "conditions": {
