@@ -16,3 +16,9 @@ Before a specification is released:
 The master is a reviewable construction sheet, not a runtime source of
 scientific values. Runtime rendering must consume frozen state and profile
 data through the Representation Engine contracts.
+
+The first Gold Master package is under
+[`../gold-master/manifest.json`](../gold-master/manifest.json). It is the
+bounded owner-review set, not a replacement for this catalog's complete family
+inventory. Its generated SVGs are candidate review assets; owner visual review
+must still inspect all four LODs on both neutral backgrounds.

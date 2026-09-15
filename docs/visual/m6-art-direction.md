@@ -270,8 +270,8 @@ not a license to mix pixel coordinates with millimetres.
 
 ### 3.3b LOD and thumbnail contract
 
-`construction.svg` and `preview.svg` are not the same file rendered at two
-arbitrary scales. An asset package declares deterministic level-of-detail (LOD)
+`master`/construction and `preview` LODs are not the same file rendered at
+two arbitrary scales. An asset package declares deterministic level-of-detail (LOD)
 variants that preserve semantic identity while changing only what is visible:
 
 | LOD | Must retain | May simplify/omit | Measurement use |
@@ -496,13 +496,16 @@ The production unit is an asset package, not a single SVG:
 
 ```text
 asset-id/
-├─ master/       construction.svg, preview.svg
-├─ states/
+├─ master/       construction/master geometry
+├─ scene/        experiment-world LOD
+├─ preview/      non-measurement preview LOD
+├─ thumbnail/    small-size identity LOD
+├─ states/       reusable state/effect layers
 ├─ manifest.json
 ├─ source-record.md
 ├─ license.md
-├─ qa/           geometry, interaction, screenshots
-└─ fixture/
+├─ qa/           geometry, interaction, backgrounds, screenshots
+└─ fixture/      deterministic render fixture
 ```
 
 The manifest points to the sole central catalog version, separates logical

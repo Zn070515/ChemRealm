@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "source": "RenderState apparatus state contract",
+  "variants": [
+    {
+      "id": "empty",
+      "visibleLayers": [
+        "glass",
+        "rim",
+        "graduation",
+        "hardware",
+        "shadow"
+      ],
+      "description": "Geometry-only empty apparatus; no runtime quantity is baked into the master."
+    },
+    {
+      "id": "filled",
+      "visibleLayers": [
+        "glass",
+        "rim",
+        "graduation",
+        "hardware",
+        "liquid",
+        "meniscus",
+        "shadow"
+      ],
+      "description": "State-derived liquid and meniscus overlays supplied by Observable/RenderState."
+    },
+    {
+      "id": "connected",
+      "visibleLayers": [
+        "glass",
+        "rim",
+        "graduation",
+        "hardware",
+        "liquid",
+        "meniscus",
+        "detachable",
+        "connection-highlight",
+        "shadow"
+      ],
+      "description": "Detachable-part connection state; currently declared for burette specifications."
+    }
+  ],
+  "assets": [
+    {
+      "assetId": "burette-acid-25ml-class-as",
+      "supportedVariants": [
+        "empty",
+        "filled",
+        "connected"
+      ]
+    },
+    {
+      "assetId": "burette-alkali-50ml-class-b",
+      "supportedVariants": [
+        "empty",
+        "filled",
+        "connected"
+      ]
+    },
+    {
+      "assetId": "beaker-100ml",
+      "supportedVariants": [
+        "empty",
+        "filled"
+      ]
+    },
+    {
+      "assetId": "beaker-250ml",
+      "supportedVariants": [
+        "empty",
+        "filled"
+      ]
+    },
+    {
+      "assetId": "beaker-1000ml",
+      "supportedVariants": [
+        "empty",
+        "filled"
+      ]
+    },
+    {
+      "assetId": "conical-flask-100ml",
+      "supportedVariants": [
+        "empty",
+        "filled"
+      ]
+    },
+    {
+      "assetId": "conical-flask-250ml",
+      "supportedVariants": [
+        "empty",
+        "filled"
+      ]
+    },
+    {
+      "assetId": "conical-flask-500ml",
+      "supportedVariants": [
+        "empty",
+        "filled"
+      ]
+    }
+  ]
+}

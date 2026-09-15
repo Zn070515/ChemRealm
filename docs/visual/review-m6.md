@@ -78,7 +78,7 @@ readings in the DOM companion.
 
 | Criterion | Current result | Evidence |
 |---|---|---|
-| M6-ASSET | PASS locally at package level; visual gate NO-GO | `assets/apparatus/titration-bench/`, asset manifest tests, Art Direction review |
+| M6-ASSET | PASS locally at package level; visual gate NO-GO | `assets/apparatus/titration-bench/`, `assets/apparatus/catalog/gold-master/`, asset manifest tests, Gold Master package tests, Art Direction review |
 | M6-CATALOG | PASS locally | multiple vessel specifications and detachable connection catalog |
 | M6-DETACH | PASS locally | typed ports, detachable state variants and compatibility tests |
 | M6-GEOMETRY | PASS locally at contract level | frozen profile-derived level, mm manifest, parts/ports/regions, render-state tests |

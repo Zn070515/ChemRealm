@@ -67,6 +67,17 @@
     "detachable",
     "accessibility"
   ],
+  "goldMasterPackage": "gold-master/manifest.json",
+  "goldMasterSpecificationIds": [
+    "burette-acid-25ml-class-as",
+    "burette-alkali-50ml-class-b",
+    "beaker-100ml",
+    "beaker-250ml",
+    "beaker-1000ml",
+    "conical-flask-100ml",
+    "conical-flask-250ml",
+    "conical-flask-500ml"
+  ],
   "sourceRecords": [
     "jy-t-0655-2025",
     "jy-t-0427-2011",

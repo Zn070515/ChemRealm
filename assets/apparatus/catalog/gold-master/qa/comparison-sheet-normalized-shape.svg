@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 880" data-review-mode="visual-only" data-coordinate-unit="mm" role="img" aria-labelledby="title desc">
+  <title id="title">Gold Master normalized-shape comparison sheet</title>
+  <desc id="desc">Visual-only comparison. The common artboard exposes changed geometry parameters; it must never supply a quantitative measurement.</desc>
+  <rect width="1500" height="880" fill="#202f34"/>
+  <g fill="#eef6f7" font-family="Arial, sans-serif">
+    <text x="55" y="55" font-size="28" font-weight="700">CHEMREALM GOLD MASTER / NORMALIZED SHAPE REVIEW</text>
+    <text x="55" y="84" font-size="15" fill="#b8d0d2">visual-only · common artboard · changed geometry parameters are annotated · not measurement evidence</text>
+  </g>
+  <g data-layer="normalized-geometry" fill="none" stroke="#bfe1e3" stroke-width="4">
+    <g data-asset-id="burette-acid-25ml-class-as"><rect x="150" y="140" width="34" height="430" rx="17" fill="#a8d5d9" fill-opacity=".28"/><path d="M167 570v26M151 596h32"/><path d="M190 150h34M190 180h23M190 210h23M190 240h34M190 270h23M190 300h23"/><text x="112" y="635" fill="#eef6f7" stroke="none" font-size="14">burette-acid-25ml-class-as</text></g>
+    <g data-asset-id="burette-alkali-50ml-class-b"><rect x="430" y="125" width="42" height="445" rx="21" fill="#a8d5d9" fill-opacity=".28"/><path d="M451 570v26M431 596h40"/><path d="M478 135h38M478 165h26M478 195h26M478 225h38M478 255h26M478 285h26"/><circle cx="451" cy="592" r="12" fill="#aebdbc"/><text x="373" y="635" fill="#eef6f7" stroke="none" font-size="14">burette-alkali-50ml-class-b</text></g>
+    <g data-asset-id="beaker-100ml"><path d="M690 205h118l-8 340h-102z" fill="#a8d5d9" fill-opacity=".28"/><ellipse cx="749" cy="205" rx="62" ry="10" fill="#a8d5d9" fill-opacity=".28"/><path d="M802 212l60 30-50 20"/><path d="M702 545h94"/><text x="690" y="635" fill="#eef6f7" stroke="none" font-size="14">beaker-100ml · short/wide marker</text></g>
+    <g data-asset-id="beaker-250ml"><path d="M930 180h135l-8 365H938z" fill="#a8d5d9" fill-opacity=".28"/><ellipse cx="997" cy="180" rx="70" ry="11" fill="#a8d5d9" fill-opacity=".28"/><path d="M1058 188l57 29-48 21"/><path d="M948 545h99"/><text x="914" y="635" fill="#eef6f7" stroke="none" font-size="14">beaker-250ml · increased height/width ratio</text></g>
+    <g data-asset-id="conical-flask-100ml"><path d="M1240 250h44v112l70 154h-184l70-154z" fill="#a8d5d9" fill-opacity=".28"/><path d="M1163 516h154"/><text x="1175" y="635" fill="#eef6f7" stroke="none" font-size="14">conical-flask-100ml · compact shoulder</text></g>
+  </g>
+  <g fill="#b8d0d2" font-family="Arial, sans-serif" font-size="14">
+    <text x="55" y="760">Legend: height/width, shoulder angle, neck length, graduation density and actuator construction are changed geometry parameters.</text>
+    <text x="55" y="790">This sheet is visual-only; consult the physical-scale sheet for declared dimensions.</text>
+  </g>
+</svg>

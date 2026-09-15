@@ -1,0 +1,284 @@
+{
+  "schemaVersion": 1,
+  "assetVersionSource": "contracts/version-manifest.json#representation.apparatusAsset",
+  "catalogVersionSource": "contracts/version-manifest.json#representation.apparatusCatalog",
+  "visualFamily": "chemrealm-lab-v1",
+  "coordinateUnit": "mm",
+  "viewMode": "construction",
+  "lods": [
+    "master",
+    "scene",
+    "preview",
+    "thumbnail"
+  ],
+  "backgrounds": [
+    "dark-neutral",
+    "light-neutral"
+  ],
+  "statePackage": {
+    "manifest": "states/manifest.json",
+    "variants": [
+      "empty",
+      "filled",
+      "connected"
+    ],
+    "source": "RenderState apparatus state contract"
+  },
+  "deterministicFixture": "fixture/render-fixture.json",
+  "backgroundQaStatus": "candidate-package-only; owner capture review pending",
+  "comparisonSheets": [
+    "qa/comparison-sheet-physical-scale.svg",
+    "qa/comparison-sheet-normalized-shape.svg"
+  ],
+  "assets": [
+    {
+      "assetId": "burette-acid-25ml-class-as",
+      "specificationId": "burette-acid-25ml-class-as",
+      "familyId": "burette",
+      "capacityMl": 25,
+      "dimensionsMm": [
+        30,
+        820,
+        30
+      ],
+      "identityLayers": [
+        "glass-back",
+        "glass-front",
+        "rim",
+        "base",
+        "hardware",
+        "highlight",
+        "graduation",
+        "actuator"
+      ],
+      "actuatorKind": "rotary-valve",
+      "provenanceRefs": [
+        "duran-burette-25ml-class-as",
+        "jy-t-0655-2025",
+        "chemrealm-visual-proportion-anchor"
+      ],
+      "lodFiles": {
+        "master": "master.svg",
+        "scene": "scene.svg",
+        "preview": "preview.svg",
+        "thumbnail": "thumbnail.svg"
+      }
+    },
+    {
+      "assetId": "burette-alkali-50ml-class-b",
+      "specificationId": "burette-alkali-50ml-class-b",
+      "familyId": "burette",
+      "capacityMl": 50,
+      "dimensionsMm": [
+        36,
+        900,
+        36
+      ],
+      "identityLayers": [
+        "glass-back",
+        "glass-front",
+        "rim",
+        "base",
+        "hardware",
+        "highlight",
+        "graduation",
+        "actuator"
+      ],
+      "actuatorKind": "pinch-valve",
+      "provenanceRefs": [
+        "jy-t-0655-2025",
+        "chemrealm-visual-proportion-anchor"
+      ],
+      "lodFiles": {
+        "master": "master.svg",
+        "scene": "scene.svg",
+        "preview": "preview.svg",
+        "thumbnail": "thumbnail.svg"
+      }
+    },
+    {
+      "assetId": "beaker-100ml",
+      "specificationId": "beaker-100ml",
+      "familyId": "beaker",
+      "capacityMl": 100,
+      "dimensionsMm": [
+        52,
+        72,
+        52
+      ],
+      "identityLayers": [
+        "glass-back",
+        "glass-front",
+        "rim",
+        "base",
+        "hardware",
+        "highlight",
+        "spout"
+      ],
+      "provenanceRefs": [
+        "jy-t-0655-2025",
+        "chemrealm-visual-proportion-anchor"
+      ],
+      "lodFiles": {
+        "master": "master.svg",
+        "scene": "scene.svg",
+        "preview": "preview.svg",
+        "thumbnail": "thumbnail.svg"
+      }
+    },
+    {
+      "assetId": "beaker-250ml",
+      "specificationId": "beaker-250ml",
+      "familyId": "beaker",
+      "capacityMl": 250,
+      "dimensionsMm": [
+        70,
+        95,
+        70
+      ],
+      "identityLayers": [
+        "glass-back",
+        "glass-front",
+        "rim",
+        "base",
+        "hardware",
+        "highlight",
+        "spout"
+      ],
+      "provenanceRefs": [
+        "jy-t-0655-2025",
+        "chemrealm-visual-proportion-anchor"
+      ],
+      "lodFiles": {
+        "master": "master.svg",
+        "scene": "scene.svg",
+        "preview": "preview.svg",
+        "thumbnail": "thumbnail.svg"
+      }
+    },
+    {
+      "assetId": "beaker-1000ml",
+      "specificationId": "beaker-1000ml",
+      "familyId": "beaker",
+      "capacityMl": 1000,
+      "dimensionsMm": [
+        112,
+        165,
+        112
+      ],
+      "identityLayers": [
+        "glass-back",
+        "glass-front",
+        "rim",
+        "base",
+        "hardware",
+        "highlight",
+        "spout"
+      ],
+      "provenanceRefs": [
+        "jy-t-0655-2025",
+        "chemrealm-visual-proportion-anchor"
+      ],
+      "lodFiles": {
+        "master": "master.svg",
+        "scene": "scene.svg",
+        "preview": "preview.svg",
+        "thumbnail": "thumbnail.svg"
+      }
+    },
+    {
+      "assetId": "conical-flask-100ml",
+      "specificationId": "conical-flask-100ml",
+      "familyId": "conical-flask",
+      "capacityMl": 100,
+      "dimensionsMm": [
+        62,
+        105,
+        62
+      ],
+      "identityLayers": [
+        "glass-back",
+        "glass-front",
+        "rim",
+        "base",
+        "hardware",
+        "highlight",
+        "body",
+        "neck"
+      ],
+      "provenanceRefs": [
+        "jy-t-0655-2025",
+        "chemrealm-visual-proportion-anchor"
+      ],
+      "lodFiles": {
+        "master": "master.svg",
+        "scene": "scene.svg",
+        "preview": "preview.svg",
+        "thumbnail": "thumbnail.svg"
+      }
+    },
+    {
+      "assetId": "conical-flask-250ml",
+      "specificationId": "conical-flask-250ml",
+      "familyId": "conical-flask",
+      "capacityMl": 250,
+      "dimensionsMm": [
+        85,
+        145,
+        85
+      ],
+      "identityLayers": [
+        "glass-back",
+        "glass-front",
+        "rim",
+        "base",
+        "hardware",
+        "highlight",
+        "body",
+        "neck"
+      ],
+      "provenanceRefs": [
+        "duran-erlenmeyer-250ml",
+        "jy-t-0655-2025",
+        "chemrealm-visual-proportion-anchor"
+      ],
+      "lodFiles": {
+        "master": "master.svg",
+        "scene": "scene.svg",
+        "preview": "preview.svg",
+        "thumbnail": "thumbnail.svg"
+      }
+    },
+    {
+      "assetId": "conical-flask-500ml",
+      "specificationId": "conical-flask-500ml",
+      "familyId": "conical-flask",
+      "capacityMl": 500,
+      "dimensionsMm": [
+        102,
+        186,
+        102
+      ],
+      "identityLayers": [
+        "glass-back",
+        "glass-front",
+        "rim",
+        "base",
+        "hardware",
+        "highlight",
+        "body",
+        "neck"
+      ],
+      "provenanceRefs": [
+        "jy-t-0655-2025",
+        "chemrealm-visual-proportion-anchor"
+      ],
+      "lodFiles": {
+        "master": "master.svg",
+        "scene": "scene.svg",
+        "preview": "preview.svg",
+        "thumbnail": "thumbnail.svg"
+      }
+    }
+  ]
+}

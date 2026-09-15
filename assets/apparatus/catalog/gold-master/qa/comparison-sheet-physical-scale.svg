@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 980" data-review-mode="measurement-valid" data-coordinate-unit="mm" role="img" aria-labelledby="title desc">
+  <title id="title">Gold Master physical-scale comparison sheet</title>
+  <desc id="desc">Measurement-valid comparison sheet. Each row retains declared physical family dimensions; it is not a runtime scene.</desc>
+  <rect width="1500" height="980" fill="#f4f7f7"/>
+  <g fill="#17333a" font-family="Arial, sans-serif">
+    <text x="55" y="55" font-size="28" font-weight="700">CHEMREALM GOLD MASTER / PHYSICAL SCALE REVIEW</text>
+    <text x="55" y="84" font-size="15">measurement-valid sheet · declared millimetre dimensions · labels are evidence metadata, not baked runtime readouts</text>
+    <text x="55" y="135" font-size="20" font-weight="700">Burettes</text>
+    <text x="55" y="410" font-size="20" font-weight="700">Beakers</text>
+    <text x="55" y="670" font-size="20" font-weight="700">Erlenmeyer flasks</text>
+  </g>
+  <g data-layer="comparison-geometry" fill="none" stroke="#315b64" stroke-width="3">
+    <path d="M180 145v220M350 145v220"/><path d="M520 145v220M700 145v220"/>
+    <path d="M180 390h960M180 650h960M180 910h960" stroke="#9ab4b8" stroke-width="1"/>
+    <g data-asset-id="burette-acid-25ml-class-as"><rect x="166" y="145" width="22" height="210" rx="11" fill="#cce3e6" fill-opacity=".42"/><path d="M177 355v18M165 373h24"/><text x="205" y="185" fill="#17333a" stroke="none" font-size="14">burette-acid-25ml-class-as · 30 × 820 mm</text></g>
+    <g data-asset-id="burette-alkali-50ml-class-b"><rect x="336" y="145" width="28" height="210" rx="14" fill="#cce3e6" fill-opacity=".42"/><path d="M350 355v18M334 373h32"/><text x="385" y="185" fill="#17333a" stroke="none" font-size="14">burette-alkali-50ml-class-b · 36 × 900 mm</text></g>
+    <g data-asset-id="beaker-100ml"><path d="M190 440h80l-4 170h-72z" fill="#cce3e6" fill-opacity=".42"/><path d="M265 444l34 19-29 13"/><text x="325" y="478" fill="#17333a" stroke="none" font-size="14">beaker-100ml · 52 × 72 mm</text></g>
+    <g data-asset-id="beaker-250ml"><path d="M500 430h108l-6 190H506z" fill="#cce3e6" fill-opacity=".42"/><path d="M602 434l38 20-31 16"/><text x="665" y="478" fill="#17333a" stroke="none" font-size="14">beaker-250ml · 70 × 95 mm</text></g>
+    <g data-asset-id="beaker-1000ml"><path d="M825 420h174l-9 205H834z" fill="#cce3e6" fill-opacity=".42"/><path d="M990 425l45 24-37 18"/><text x="1080" y="478" fill="#17333a" stroke="none" font-size="14">beaker-1000ml · 112 × 165 mm</text></g>
+    <g data-asset-id="conical-flask-100ml"><path d="M230 710h40v72l54 91h-148l54-91z" fill="#cce3e6" fill-opacity=".42"/><path d="M204 873h104"/><text x="330" y="770" fill="#17333a" stroke="none" font-size="14">conical-flask-100ml · 62 × 105 mm</text></g>
+    <g data-asset-id="conical-flask-250ml"><path d="M570 700h52v92l73 82H497l73-82z" fill="#cce3e6" fill-opacity=".42"/><path d="M493 882h156"/><text x="735" y="770" fill="#17333a" stroke="none" font-size="14">conical-flask-250ml · 85 × 145 mm</text></g>
+    <g data-asset-id="conical-flask-500ml"><path d="M920 680h62v112l90 90H830l90-90z" fill="#cce3e6" fill-opacity=".42"/><path d="M824 891h248"/><text x="1110" y="770" fill="#17333a" stroke="none" font-size="14">conical-flask-500ml · 102 × 186 mm</text></g>
+  </g>
+</svg>
