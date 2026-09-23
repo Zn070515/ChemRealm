@@ -7,7 +7,7 @@ const namedViewports = [
   ["narrow", 768, 1024],
 ] as const;
 
-test.describe("M6 final-quality apparatus composition", () => {
+test.describe("M6 candidate apparatus composition", () => {
   for (const [name, width, height] of namedViewports) {
     test(`${name} keeps the Pixi surface and essential DOM inspection visible`, async ({ page }) => {
       await page.setViewportSize({ width, height });

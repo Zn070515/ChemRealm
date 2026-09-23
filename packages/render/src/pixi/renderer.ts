@@ -369,38 +369,58 @@ function drawBeaker(root: Container, state: RenderState, bodyTexture: Texture): 
   body.position.set(760, 290);
   body.width = 250;
   body.height = 300;
-  body.alpha = actor.liquid.appearance.status === "observed" ? 0.68 : 0.72;
   root.addChild(body);
 
+  const liquidColour = beakerLiquidColour(actor);
+  const liquidDepthColour = blendHex(liquidColour, T.glassShadow, 0.24);
+  const liquidHighlight = blendHex(liquidColour, T.white, 0.42);
+  const bodyPoints = liquidGeometry.body.map(toScene);
   const liquid = new Graphics();
-  path(liquid, liquidGeometry.body.map(toScene))
+  // The body is deliberately layered over the authored body rather than
+  // weakening the body sprite. This keeps the approved rim/base/glass detail
+  // intact while the liquid contributes only its optical material response.
+  path(liquid, bodyPoints)
     .fill({
-      color: beakerLiquidColour(actor),
-      alpha: actor.liquid.appearance.status === "observed" ? 0.68 : 0.42,
+      color: liquidColour,
+      alpha: actor.liquid.appearance.status === "observed" ? 0.34 : 0.16,
     });
+  // A second, low-contrast depth pass prevents the state layer from reading as
+  // a uniformly filled polygon. It is still a visual response, not a chemical
+  // colour model or an independently authored palette.
+  path(liquid, bodyPoints)
+    .fill({ color: liquidDepthColour, alpha: actor.liquid.appearance.status === "observed" ? 0.10 : 0.06 });
+  const leftWall = bodyPoints[0];
+  const rightWall = bodyPoints[1];
+  const leftBase = bodyPoints.at(-1);
+  const rightBase = bodyPoints[2];
+  if (leftWall !== undefined && leftBase !== undefined) {
+    liquid.moveTo(leftWall[0], leftWall[1]).lineTo(leftBase[0], leftBase[1])
+      .stroke({ color: liquidDepthColour, width: 5, alpha: 0.28 });
+  }
+  if (rightWall !== undefined && rightBase !== undefined) {
+    liquid.moveTo(rightWall[0], rightWall[1]).lineTo(rightBase[0], rightBase[1])
+      .stroke({ color: liquidDepthColour, width: 5, alpha: 0.28 });
+  }
+  if (leftBase !== undefined && rightBase !== undefined) {
+    liquid.moveTo(leftBase[0] + 4, leftBase[1] - 5).lineTo(rightBase[0] - 4, rightBase[1] - 5)
+      .stroke({ color: liquidDepthColour, width: 7, alpha: 0.22 });
+  }
   const surfaceCenterX = left + ((liquidGeometry.surface.left + liquidGeometry.surface.right) / 2) * width;
   const surfaceWidth = (liquidGeometry.surface.right - liquidGeometry.surface.left) * width / 2;
   const surfaceY = top + liquidGeometry.surface.y * height;
   liquid.ellipse(surfaceCenterX, surfaceY, surfaceWidth, liquidGeometry.surface.depth * height)
     .fill({
-      color: actor.liquid.appearance.status === "observed"
-        ? beakerLiquidColour(actor)
-        : T.surfaceInset,
-      alpha: actor.liquid.appearance.status === "observed" ? 0.56 : 0.3,
+      color: liquidHighlight,
+      alpha: actor.liquid.appearance.status === "observed" ? 0.30 : 0.16,
     })
     .stroke({
-      color: actor.liquid.appearance.status === "observed" ? T.white : T.glassEdge,
-      width: 2,
-      alpha: actor.liquid.appearance.status === "observed" ? 0.64 : 0.38,
+      color: liquidDepthColour,
+      width: 2.2,
+      alpha: 0.58,
     });
+  liquid.ellipse(surfaceCenterX, surfaceY + liquidGeometry.surface.depth * height * 0.25, surfaceWidth * 0.94, liquidGeometry.surface.depth * height * 0.38)
+    .stroke({ color: T.white, width: 1.2, alpha: actor.liquid.appearance.status === "observed" ? 0.34 : 0.16 });
   root.addChild(liquid);
-
-  const glassResponse = new Graphics();
-  glassResponse.moveTo(left + 24, top + 35).lineTo(left + 24, bottom - 28)
-    .stroke({ color: T.white, width: 4, alpha: 0.35 });
-  glassResponse.moveTo(right - 18, top + 28).lineTo(right - 18, bottom - 24)
-    .stroke({ color: T.glassEdge, width: 2, alpha: 0.28 });
-  root.addChild(glassResponse);
 
   const scale = new Graphics();
   const rawMarking = node?.data.graduation;

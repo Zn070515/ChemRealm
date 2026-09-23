@@ -33,6 +33,12 @@ if (!rendererSource.includes("RenderState")) {
 if (!rendererSource.includes("Application") || !rendererSource.includes("app.init")) {
   failures.push("renderer.ts: Pixi Application must be initialized through the async v8 API");
 }
+if (rendererSource.includes("body.alpha")) {
+  failures.push("renderer.ts: authored beaker body opacity must not be weakened to reveal runtime liquid");
+}
+if (/const\s+cavity(?:Top|Bottom)\s*=\s*0\./u.test(rendererSource)) {
+  failures.push("renderer.ts: beaker cavity bounds must come from the asset calibration, not renderer-local literals");
+}
 
 if (failures.length > 0) {
   for (const failure of failures) console.error(`FAIL  ${failure}`);

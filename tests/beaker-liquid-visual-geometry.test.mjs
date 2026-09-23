@@ -42,7 +42,7 @@ describe("beaker liquid visual geometry spike", () => {
     );
   });
 
-  it("emits geometric liquid paths with a surface and no rectangular production fill", async () => {
+  it("keeps the rejected visual spike isolated from production claims", async () => {
     const svg = await readFile(geometryArtifactPath, "utf8");
 
     expect(svg).toContain('data-status="prototype-only"');
@@ -52,6 +52,6 @@ describe("beaker liquid visual geometry spike", () => {
     expect(svg).toContain('data-visual-volume-ml="25"');
     expect(svg).toContain('data-visual-volume-ml="100"');
     expect(svg).toContain('data-visual-volume-ml="200"');
-    expect(svg).not.toContain("<rect");
+    expect(svg).toContain("<path");
   });
 });

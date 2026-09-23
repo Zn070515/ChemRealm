@@ -75,3 +75,8 @@ not generate, replace, or calibrate a `VolumeProfileSnapshot`.
 
 The old `liquid-visual-geometry.svg` remains negative/prototype evidence only.
 It must not be promoted into the production liquid renderer.
+
+The target-first material study is recorded in
+[`target-render-analysis.md`](target-render-analysis.md). It is the visual
+reference for the next reconstruction pass; it is not itself a production
+layer.

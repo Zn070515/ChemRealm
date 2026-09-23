@@ -186,6 +186,7 @@ export function App({ schemaVersion }: { schemaVersion: number }): ReactElement 
           <section
             data-testid="beaker-scene-actor"
             data-asset-id={typeof beakerActor?.assetId === "string" ? beakerActor.assetId : undefined}
+            data-visual-status="prototype-rejected"
             aria-label="Beaker scene actor"
           >
             <span data-testid="beaker-scene-source">

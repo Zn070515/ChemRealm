@@ -1,4 +1,5 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -8,6 +9,9 @@ const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
 const construction = JSON.parse(await readFile(resolve(repositoryRoot, "packages/render/src/assets/gold-master-construction.json"), "utf8"));
 const outputRoot = resolve(dirname(manifestPath), "runtime");
 await mkdir(outputRoot, { recursive: true });
+
+const manifestBytes = await readFile(manifestPath);
+const sourceManifestSha256 = `sha256:${createHash("sha256").update(manifestBytes).digest("hex")}`;
 
 const width = manifest.body.widthPx;
 const height = manifest.body.heightPx;
@@ -91,10 +95,38 @@ await writeFile(resolve(outputRoot, "graduations.svg"), graduations, "utf8");
 await writeFile(resolve(outputRoot, "interior-mask.svg"), mask("interior-mask", "Provisional visual cavity mask; not measurement geometry."), "utf8");
 await writeFile(resolve(outputRoot, "liquid-mask.svg"), mask("liquid-mask", "Provisional clipping mask only; liquid height must still come from a validated VolumeProfileSnapshot."), "utf8");
 
+const normalizeBoundary = (points) => points.map((point) => ({
+  x: Number((point.x / width).toFixed(8)),
+  y: Number((point.y / height).toFixed(8)),
+}));
+const visualCalibration = {
+  schemaVersion: 1,
+  assetId: manifest.assetId,
+  sourceManifest: "assets/apparatus/masters/beaker-250ml/source/visual-body/manifest.json",
+  sourceManifestSha256,
+  status: "provisional-visual-calibration",
+  measurementUse: "forbidden",
+  cavity: {
+    topY: anchors.cavityTop[1],
+    bottomY: anchors.cavityBottom[1],
+    leftWall: normalizeBoundary(manifest.liquidVisualGeometry.sideBoundary.left),
+    rightWall: normalizeBoundary(manifest.liquidVisualGeometry.sideBoundary.right),
+    surface: {
+      kind: manifest.liquidVisualGeometry.surface.kind,
+      depth: Number((manifest.liquidVisualGeometry.surface.depthPx / height).toFixed(8)),
+    },
+  },
+};
+await writeFile(
+  resolve(repositoryRoot, "packages/render/src/assets/beaker-visual-calibration.json"),
+  `${JSON.stringify(visualCalibration, null, 2)}\n`,
+  "utf8",
+);
+
 console.log(JSON.stringify({
   status: "PASS",
   assetId: manifest.assetId,
-  generated: ["runtime/graduations.svg", "runtime/interior-mask.svg", "runtime/liquid-mask.svg"],
+  generated: ["runtime/graduations.svg", "runtime/interior-mask.svg", "runtime/liquid-mask.svg", "packages/render/src/assets/beaker-visual-calibration.json"],
   calibration: "provisional-visual-calibration",
   scientificProfile: "not-generated",
 }, null, 2));

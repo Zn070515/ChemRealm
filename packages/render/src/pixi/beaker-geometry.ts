@@ -2,6 +2,24 @@ import {
   valueToPhysicalPosition,
   type InstrumentMarking,
 } from "../assets/instrument-marking.js";
+import calibration from "../assets/beaker-visual-calibration.json";
+
+interface CalibrationPoint {
+  readonly x: number;
+  readonly y: number;
+}
+
+const VISUAL_CALIBRATION = calibration as {
+  readonly status: "provisional-visual-calibration";
+  readonly measurementUse: "forbidden";
+  readonly cavity: {
+    readonly topY: number;
+    readonly bottomY: number;
+    readonly leftWall: readonly CalibrationPoint[];
+    readonly rightWall: readonly CalibrationPoint[];
+    readonly surface: { readonly kind: "perspective-ellipse"; readonly depth: number };
+  };
+};
 
 export interface BeakerLiquidGeometry {
   readonly measurementUse: "forbidden";
@@ -12,6 +30,10 @@ export interface BeakerLiquidGeometry {
     readonly right: number;
     readonly y: number;
     readonly depth: number;
+  };
+  readonly wallContact: {
+    readonly left: number;
+    readonly right: number;
   };
 }
 
@@ -27,6 +49,24 @@ function clampUnit(value: number): number {
   return Math.max(0, Math.min(1, value));
 }
 
+function boundaryXAtY(points: readonly CalibrationPoint[], y: number): number {
+  const first = points[0];
+  const last = points.at(-1);
+  if (first === undefined || last === undefined) throw new RangeError("beaker cavity boundary is empty");
+  if (y <= first.y) return first.x;
+  if (y >= last.y) return last.x;
+  for (let index = 1; index < points.length; index += 1) {
+    const previous = points[index - 1]!;
+    const current = points[index]!;
+    if (y <= current.y) {
+      const span = current.y - previous.y;
+      const fraction = span === 0 ? 0 : (y - previous.y) / span;
+      return previous.x + (current.x - previous.x) * fraction;
+    }
+  }
+  return last.x;
+}
+
 /**
  * Visual-only upright geometry for the approved beaker actor.
  *
@@ -35,26 +75,31 @@ function clampUnit(value: number): number {
  * supplied by the Observable liquid-level result.
  */
 export function buildBeakerLiquidGeometry(fillFraction: number): BeakerLiquidGeometry {
+  if (VISUAL_CALIBRATION.status !== "provisional-visual-calibration" || VISUAL_CALIBRATION.measurementUse !== "forbidden") {
+    throw new Error("beaker visual calibration must remain provisional and non-measurement");
+  }
   const fraction = clampUnit(fillFraction);
-  const cavityTop = 0.12;
-  const cavityBottom = 0.9;
-  const leftTop = 0.18;
-  const rightTop = 0.82;
-  const leftBottom = 0.23;
-  const rightBottom = 0.77;
+  const cavityTop = VISUAL_CALIBRATION.cavity.topY;
+  const cavityBottom = VISUAL_CALIBRATION.cavity.bottomY;
   const y = cavityBottom - (cavityBottom - cavityTop) * fraction;
-  const left = leftBottom + (leftTop - leftBottom) * fraction;
-  const right = rightBottom + (rightTop - rightBottom) * fraction;
-  const depth = 0.018 + 0.012 * (1 - fraction);
+  const left = boundaryXAtY(VISUAL_CALIBRATION.cavity.leftWall, y);
+  const right = boundaryXAtY(VISUAL_CALIBRATION.cavity.rightWall, y);
+  const leftBottom = boundaryXAtY(VISUAL_CALIBRATION.cavity.leftWall, cavityBottom);
+  const rightBottom = boundaryXAtY(VISUAL_CALIBRATION.cavity.rightWall, cavityBottom);
+  const depth = VISUAL_CALIBRATION.cavity.surface.depth * (0.85 + 0.15 * (1 - fraction));
   const baseY = cavityBottom;
+  const baseWidth = rightBottom - leftBottom;
+  const baseShoulder = baseWidth * 0.12;
   return Object.freeze({
     measurementUse: "forbidden",
     body: Object.freeze([
       [left, y],
       [right, y],
       [rightBottom, baseY - 0.04],
-      [0.68, baseY],
-      [0.32, baseY],
+      [rightBottom - baseShoulder, baseY - 0.012],
+      [rightBottom - baseShoulder * 2.2, baseY],
+      [leftBottom + baseShoulder * 2.2, baseY],
+      [leftBottom + baseShoulder, baseY - 0.012],
       [leftBottom, baseY],
     ] as const),
     surface: Object.freeze({
@@ -64,6 +109,7 @@ export function buildBeakerLiquidGeometry(fillFraction: number): BeakerLiquidGeo
       y,
       depth,
     }),
+    wallContact: Object.freeze({ left, right }),
   });
 }
 

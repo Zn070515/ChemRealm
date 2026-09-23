@@ -38,6 +38,12 @@ The provisional candidate overlays can be regenerated with:
 pnpm generate:beaker-visual-body-layers
 ```
 
+That command also emits the renderer-facing
+`packages/render/src/assets/beaker-visual-calibration.json`. It is a generated
+artifact whose source-manifest SHA-256 is checked by
+`verify:beaker-visual-body`; `beaker-geometry.ts` must not carry a second set
+of cavity bounds.
+
 The generated files are placement studies only. Their pixel anchors are not a
 measurement transform and must not be used as liquid-height evidence.
 

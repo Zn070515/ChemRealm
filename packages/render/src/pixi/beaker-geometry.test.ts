@@ -11,6 +11,8 @@ describe("beaker scene liquid geometry", () => {
     expect(geometry.surface.kind).toBe("perspective-ellipse");
     expect(geometry.surface.depth).toBeGreaterThan(0);
     expect(geometry.surface.left).toBeLessThan(geometry.surface.right);
+    expect(geometry.wallContact.left).toBe(geometry.surface.left);
+    expect(geometry.wallContact.right).toBe(geometry.surface.right);
     expect(geometry.body[0]?.[1]).toBe(geometry.surface.y);
     expect(geometry.body[1]?.[1]).toBe(geometry.surface.y);
     expect(geometry.body[0]?.[0]).toBeLessThan(geometry.body.at(-1)?.[0] ?? 0);
@@ -24,6 +26,16 @@ describe("beaker scene liquid geometry", () => {
     expect(empty.surface.y).toBeGreaterThan(full.surface.y);
     expect(empty.body.at(-1)?.[1]).toBe(full.body.at(-1)?.[1]);
     expect(empty.body.at(-2)?.[1]).toBe(full.body.at(-2)?.[1]);
+  });
+
+  it("uses the authored provisional cavity calibration rather than renderer-local bounds", () => {
+    const empty = buildBeakerLiquidGeometry(0);
+    const full = buildBeakerLiquidGeometry(1);
+
+    expect(empty.surface.y).toBeCloseTo(0.84, 6);
+    expect(full.surface.y).toBeCloseTo(0.14, 6);
+    expect(full.surface.left).toBeCloseTo(246 / 1145, 6);
+    expect(full.surface.right).toBeCloseTo(899 / 1145, 6);
   });
 
   it("projects the declared 250 mL marking range instead of hard-coded tick offsets", () => {

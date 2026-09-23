@@ -14,6 +14,10 @@ test.describe("M5 production composition", () => {
       "data-asset-id",
       "beaker-250ml",
     );
+    await expect(page.getByTestId("beaker-scene-actor")).toHaveAttribute(
+      "data-visual-status",
+      "prototype-rejected",
+    );
     await expect(page.getByTestId("beaker-scene-source")).not.toHaveText("");
     await expect(page.getByTestId("beaker-scene-layers")).toContainText("glass-back");
     await expect(page.getByTestId("beaker-liquid-appearance")).toHaveText("unavailable");

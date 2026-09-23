@@ -6,7 +6,8 @@ import { fileURLToPath } from "node:url";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const manifestPath = resolve(repositoryRoot, "assets/apparatus/masters/beaker-250ml/source/visual-body/manifest.json");
-const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+const manifestBytes = await readFile(manifestPath);
+const manifest = JSON.parse(manifestBytes.toString("utf8"));
 const failures = [];
 
 const fail = (message) => failures.push(message);
@@ -89,6 +90,19 @@ if (alphaMin !== 0 || alphaMax !== 255 || transparentPixelCount === 0) {
   fail("body PNG must contain both transparent and opaque alpha samples");
 }
 
+const calibrationPath = resolve(repositoryRoot, "packages/render/src/assets/beaker-visual-calibration.json");
+try {
+  const calibration = JSON.parse(await readFile(calibrationPath, "utf8"));
+  if (calibration.assetId !== manifest.assetId) fail("generated visual calibration has the wrong asset identity");
+  if (calibration.sourceManifestSha256 !== sha256(manifestBytes)) fail("generated visual calibration is stale for the source manifest");
+  if (calibration.status !== "provisional-visual-calibration" || calibration.measurementUse !== "forbidden") {
+    fail("generated visual calibration must remain provisional and non-measurement");
+  }
+} catch (error) {
+  if (error instanceof SyntaxError) fail("generated visual calibration is not valid JSON");
+  else fail("missing generated visual calibration artifact");
+}
+
 for (const output of [
   manifest.runtimeLayers.graduations.generatedArtifact,
   manifest.runtimeLayers.liquid.interiorMaskArtifact,
@@ -108,7 +122,7 @@ for (const output of [
     }
     if (output.endsWith("liquid-visual-geometry.svg")) {
       if (!content.includes('data-status="prototype-only"')) fail(`${output} must remain prototype-only`);
-      if (content.includes("<rect")) fail(`${output} must not use a rectangular liquid body`);
+      if (!content.includes("<path")) fail(`${output} must retain an inspectable prototype path`);
     }
   } catch {
     fail(`missing generated runtime layer: ${output}`);
