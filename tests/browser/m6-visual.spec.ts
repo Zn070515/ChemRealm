@@ -40,4 +40,15 @@ test.describe("M6 candidate apparatus composition", () => {
     await expect(page.getByTestId("ph-readout")).toContainText("model pH");
     await expect(canvas).toHaveCount(1);
   });
+
+  test("renders the named GPU visual-stress fixture without presenting it as science", async ({ page }) => {
+    await page.goto("/?fixture=visual-stress", { waitUntil: "networkidle" });
+    await expect(page.getByTestId("m6-renderer-status")).toHaveText("Ready");
+    await expect(page.getByTestId("m6-visual-stress-warning")).toContainText("not scientific evidence");
+    await expect(page.getByTestId("beaker-scene-actor")).toHaveAttribute(
+      "data-visual-status",
+      "visual-stress-fixture",
+    );
+    await expect(page.getByTestId("beaker-liquid-appearance")).toHaveText("observed");
+  });
 });

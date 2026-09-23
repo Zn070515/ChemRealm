@@ -178,6 +178,14 @@ describe("production composition vertical path", () => {
     expect(toRenderState).toBeTypeOf("function");
   });
 
+  it("supports an explicit committed delivery schedule for visual review fixtures", async () => {
+    const composition = await composeProductionTitration({ deliveryVolumes: [0.075] });
+
+    expect(composition.observable.curve.map((point) => point.deliveredTitrantVolume)).toEqual([0, 0.075]);
+    expect(composition.state.canonical.byVessel["titration-flask"]?.liquidVolume).toBeCloseTo(0.1, 14);
+    expect(composition.observable.burette?.deliveredVolume).toBeCloseTo(0.075, 14);
+  });
+
   it("uses the real production path for a valid but out-of-envelope result", async () => {
     const composition = await composeProductionTitration({
       scenario: accuracyEnvelopeProbeScenario,

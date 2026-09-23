@@ -5,6 +5,10 @@ import { assertInstrumentMarking } from "../assets/instrument-marking.js";
 import { type RenderNode, type RenderState } from "../state/scene.js";
 import { type BeakerSceneActor } from "../state/beaker-scene.js";
 import { buildBeakerGraduationMarks, buildBeakerLiquidGeometry } from "./beaker-geometry.js";
+import {
+  buildBeakerLiquidMaterialInput,
+  createBeakerLiquidMaterialFilter,
+} from "./liquid-material.js";
 import { TITRATION_LOGICAL_SIZE, TITRATION_RENDER_TOKENS as T } from "./tokens.js";
 
 export interface PixiExperimentMount {
@@ -81,15 +85,6 @@ function liquidColour(state: RenderState): number {
     ? clamp(tint.strength, 0, 1)
     : 1;
   return blendHex(srgbToHex(tint.srgb), T.liquidNeutral, strength);
-}
-
-function beakerLiquidColour(actor: BeakerSceneActor): number {
-  if (actor.liquid.appearance.status !== "observed") return T.liquidNeutral;
-  return blendHex(
-    srgbToHex(actor.liquid.appearance.tintSrgb),
-    T.liquidNeutral,
-    clamp(actor.liquid.appearance.tintStrength, 0, 1),
-  );
 }
 
 function path(graphics: Graphics, commands: readonly (readonly [number, number])[]): Graphics {
@@ -371,56 +366,32 @@ function drawBeaker(root: Container, state: RenderState, bodyTexture: Texture): 
   body.height = 300;
   root.addChild(body);
 
-  const liquidColour = beakerLiquidColour(actor);
-  const liquidDepthColour = blendHex(liquidColour, T.glassShadow, 0.24);
-  const liquidHighlight = blendHex(liquidColour, T.white, 0.42);
   const bodyPoints = liquidGeometry.body.map(toScene);
   const liquid = new Graphics();
-  // The body is deliberately layered over the authored body rather than
-  // weakening the body sprite. This keeps the approved rim/base/glass detail
-  // intact while the liquid contributes only its optical material response.
-  path(liquid, bodyPoints)
-    .fill({
-      color: liquidColour,
-      alpha: actor.liquid.appearance.status === "observed" ? 0.34 : 0.16,
-    });
-  // A second, low-contrast depth pass prevents the state layer from reading as
-  // a uniformly filled polygon. It is still a visual response, not a chemical
-  // colour model or an independently authored palette.
-  path(liquid, bodyPoints)
-    .fill({ color: liquidDepthColour, alpha: actor.liquid.appearance.status === "observed" ? 0.10 : 0.06 });
-  const leftWall = bodyPoints[0];
-  const rightWall = bodyPoints[1];
-  const leftBase = bodyPoints.at(-1);
-  const rightBase = bodyPoints[2];
-  if (leftWall !== undefined && leftBase !== undefined) {
-    liquid.moveTo(leftWall[0], leftWall[1]).lineTo(leftBase[0], leftBase[1])
-      .stroke({ color: liquidDepthColour, width: 5, alpha: 0.28 });
-  }
-  if (rightWall !== undefined && rightBase !== undefined) {
-    liquid.moveTo(rightWall[0], rightWall[1]).lineTo(rightBase[0], rightBase[1])
-      .stroke({ color: liquidDepthColour, width: 5, alpha: 0.28 });
-  }
-  if (leftBase !== undefined && rightBase !== undefined) {
-    liquid.moveTo(leftBase[0] + 4, leftBase[1] - 5).lineTo(rightBase[0] - 4, rightBase[1] - 5)
-      .stroke({ color: liquidDepthColour, width: 7, alpha: 0.22 });
-  }
+  // The path is only the generated visual cavity mask. The GPU material adds
+  // transmission/depth response; no renderer-local palette or chemistry is
+  // introduced here.
+  path(liquid, bodyPoints).fill({ color: T.white });
+  liquid.filters = [createBeakerLiquidMaterialFilter(
+    buildBeakerLiquidMaterialInput(actor),
+    "body",
+  )];
   const surfaceCenterX = left + ((liquidGeometry.surface.left + liquidGeometry.surface.right) / 2) * width;
   const surfaceWidth = (liquidGeometry.surface.right - liquidGeometry.surface.left) * width / 2;
   const surfaceY = top + liquidGeometry.surface.y * height;
-  liquid.ellipse(surfaceCenterX, surfaceY, surfaceWidth, liquidGeometry.surface.depth * height)
-    .fill({
-      color: liquidHighlight,
-      alpha: actor.liquid.appearance.status === "observed" ? 0.30 : 0.16,
-    })
-    .stroke({
-      color: liquidDepthColour,
-      width: 2.2,
-      alpha: 0.58,
-    });
-  liquid.ellipse(surfaceCenterX, surfaceY + liquidGeometry.surface.depth * height * 0.25, surfaceWidth * 0.94, liquidGeometry.surface.depth * height * 0.38)
-    .stroke({ color: T.white, width: 1.2, alpha: actor.liquid.appearance.status === "observed" ? 0.34 : 0.16 });
   root.addChild(liquid);
+
+  // The surface is a separate material pass, not a stroked ellipse. Its mask
+  // comes from the same calibration and its colour/status comes from the same
+  // actor as the body pass.
+  const surface = new Graphics()
+    .ellipse(surfaceCenterX, surfaceY, surfaceWidth, liquidGeometry.surface.depth * height)
+    .fill({ color: T.white });
+  surface.filters = [createBeakerLiquidMaterialFilter(
+    buildBeakerLiquidMaterialInput(actor),
+    "surface",
+  )];
+  root.addChild(surface);
 
   const scale = new Graphics();
   const rawMarking = node?.data.graduation;

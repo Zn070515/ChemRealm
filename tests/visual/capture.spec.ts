@@ -27,4 +27,20 @@ test.describe("M6 candidate viewport captures", () => {
       });
     });
   }
+
+  test("visual-stress 100 mL blue fixture capture", async ({ page }) => {
+    test.skip(
+      process.env.M6_CAPTURE !== "1",
+      "Set M6_CAPTURE=1 to regenerate candidate captures; these are not approved baselines.",
+    );
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/?fixture=visual-stress", { waitUntil: "networkidle" });
+    await expect(page.getByTestId("m6-renderer-status")).toHaveText("Ready");
+    const outputDirectory = path.resolve("tests/visual/captures/m6");
+    await mkdir(outputDirectory, { recursive: true });
+    await page.getByTestId("m6-visual-surface").screenshot({
+      path: path.join(outputDirectory, "visual-stress-100ml-blue.png"),
+      animations: "disabled",
+    });
+  });
 });

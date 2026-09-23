@@ -55,6 +55,8 @@ export interface ProductionTitrationComposition {
 export interface ProductionTitrationOptions {
   readonly scenario?: Scenario;
   readonly worldId?: string;
+  /** Explicit committed transfer schedule for a named review fixture. */
+  readonly deliveryVolumes?: readonly number[];
   /** Explicit backend injection for native/browser validation; default is multiform TypeScript. */
   readonly adapter?: ScientificExecutionAdapter;
 }
@@ -262,6 +264,10 @@ export async function composeProductionTitration(
   const adapter = options.adapter ?? createPhenolphthaleinMultiformAdapter();
   const registry = new SolverRegistry([adapter]);
   const scenario = options.scenario ?? productionTitrationScenario;
+  const deliveryVolumes = options.deliveryVolumes ?? DELIVERY_VOLUMES;
+  if (deliveryVolumes.length === 0) {
+    throw new Error("production composition: at least one committed delivery is required");
+  }
   const worldId = options.worldId ?? (
     scenario === productionTitrationScenario
       ? "m5-production-world"
@@ -281,7 +287,7 @@ export async function composeProductionTitration(
     eventLog = appendEvent(eventLog, event);
     state = reduce(state, event);
   }
-  for (const volume of DELIVERY_VOLUMES) {
+  for (const volume of deliveryVolumes) {
     const emission = emitCommand(state, {
       schemaVersion: COMMAND_SCHEMA_VERSION,
       type: "DeliverTitrant",

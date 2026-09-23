@@ -13,6 +13,7 @@ import {
   type ProductionTitrationComposition,
 } from "./composition.js";
 import { accuracyEnvelopeProbeScenario } from "./production-scenario.js";
+import { applyM6VisualStressFixture } from "./m6-visual-stress-fixture.js";
 
 type PolicyId = "taught" | "scientific-model";
 
@@ -23,8 +24,9 @@ function loadProductionComposition(): Promise<ProductionTitrationComposition> {
     ? new URLSearchParams()
     : new URLSearchParams(window.location.search);
   const isAccuracyProbe = searchParams.get("fixture") === "accuracy-probe";
+  const isVisualStress = searchParams.get("fixture") === "visual-stress";
   const isNative = searchParams.get("backend") === "native";
-  const fixture = isAccuracyProbe ? "accuracy-probe" : "default";
+  const fixture = isAccuracyProbe ? "accuracy-probe" : isVisualStress ? "visual-stress" : "default";
   const backend = isNative ? "native" : "legacy";
   const key = `${backend}:${fixture}`;
   const existing = productionCompositionPromises.get(key);
@@ -35,6 +37,8 @@ function loadProductionComposition(): Promise<ProductionTitrationComposition> {
         scenario: accuracyEnvelopeProbeScenario,
         worldId: "m5-accuracy-envelope-probe-world",
       }
+    : isVisualStress
+      ? { deliveryVolumes: [0.075] }
     : {};
   const promise = isNative
     ? composeNativeProductionTitration(
@@ -44,6 +48,11 @@ function loadProductionComposition(): Promise<ProductionTitrationComposition> {
     : composeProductionTitration(options);
   productionCompositionPromises.set(key, promise);
   return promise;
+}
+
+function requestedFixture(): string {
+  if (typeof window === "undefined") return "default";
+  return new URLSearchParams(window.location.search).get("fixture") ?? "default";
 }
 function textFromNode(node: RenderNode | undefined): string {
   const text = node?.data.text;
@@ -83,6 +92,8 @@ function selectedPolicy(id: PolicyId) {
  * stay in the composition/core packages.
  */
 export function App({ schemaVersion }: { schemaVersion: number }): ReactElement {
+  const fixtureId = requestedFixture();
+  const isVisualStressFixture = fixtureId === "visual-stress";
   const [composition, setComposition] = useState<ProductionTitrationComposition>();
   const [failure, setFailure] = useState<string>();
   const [rendererFailure, setRendererFailure] = useState<string>();
@@ -108,8 +119,10 @@ export function App({ schemaVersion }: { schemaVersion: number }): ReactElement 
   const scene = useMemo(
     () => composition === undefined
       ? undefined
-      : toTitrationRenderState(composition.observable, selectedPolicy(policyId)),
-    [composition, policyId],
+      : isVisualStressFixture
+        ? applyM6VisualStressFixture(toTitrationRenderState(composition.observable, selectedPolicy(policyId)))
+        : toTitrationRenderState(composition.observable, selectedPolicy(policyId)),
+    [composition, isVisualStressFixture, policyId],
   );
 
   useEffect(() => {
@@ -162,6 +175,11 @@ export function App({ schemaVersion }: { schemaVersion: number }): ReactElement 
         <section aria-label="Committed world inspection">
           <h2 data-testid="composition-status">Committed world</h2>
           <section aria-label="Titration apparatus visual" data-testid="m6-visual-surface">
+            {isVisualStressFixture ? (
+              <p data-testid="m6-visual-stress-warning" role="note">
+                M6 visual-stress fixture only — synthetic tint, not scientific evidence.
+              </p>
+            ) : undefined}
             <div
               ref={pixiHost}
               className="pixi-host"
@@ -186,7 +204,7 @@ export function App({ schemaVersion }: { schemaVersion: number }): ReactElement 
           <section
             data-testid="beaker-scene-actor"
             data-asset-id={typeof beakerActor?.assetId === "string" ? beakerActor.assetId : undefined}
-            data-visual-status="prototype-rejected"
+            data-visual-status={isVisualStressFixture ? "visual-stress-fixture" : "prototype-rejected"}
             aria-label="Beaker scene actor"
           >
             <span data-testid="beaker-scene-source">

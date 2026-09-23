@@ -14,10 +14,11 @@ export const BEAKER_SCENE_LAYERS = Object.freeze([
 export type BeakerLiquidAppearance =
   | {
       readonly status: "observed";
-      readonly source: "observable-optical-observation";
+      readonly source: "observable-optical-observation" | "m6-visual-stress-fixture";
       readonly indicatorId: string;
       readonly tintSrgb: readonly [number, number, number];
       readonly tintStrength: number;
+      readonly fixtureId?: "beaker-100ml-blue";
     }
   | {
       readonly status: "unavailable" | "ambiguous";

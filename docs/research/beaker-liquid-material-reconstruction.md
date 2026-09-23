@@ -1,6 +1,6 @@
 # Beaker Liquid Material Reconstruction Research
 
-- **Status:** S0 research complete; implementation not started
+- **Status:** S2 implementation spike complete; target-level visual acceptance not demonstrated
 - **Scope:** `beaker-250ml-griffin` liquid materialization only
 - **Owner:** Representation Engine
 - **Does not advance:** M6 S3, Gold Master admission, or any Scientific Reality contract
@@ -12,11 +12,12 @@ The approved visual target
 is a satisfactory visual target for a loaded 250 mL Griffin beaker. It is not a
 production asset, a scientific colour result, or a source of vessel geometry.
 
-The current Pixi prototype has the correct cross-core wiring, but its liquid is
-still rendered as a low-opacity polygon plus simple ellipses. That produces a
-coloured panel rather than a transparent medium integrated with the authored
-glass body. The prototype's absence of an SVG `<rect>` is not evidence of visual
-quality; its rendered appearance is the relevant criterion.
+The first implementation spike has now replaced the production candidate's
+low-opacity polygon/stroke path with one Pixi WebGL custom-filter material for
+the liquid body and a second pass for the free surface. This proves the GPU
+boundary and refusal behavior, but the current capture still remains a
+prototype-quality material study; absence of an SVG `<rect>` is not evidence of
+visual quality, and no Gold Master or M6 S3 claim is made.
 
 The repository already defines the required ownership boundary:
 
@@ -316,10 +317,38 @@ must remain deterministic even when rendered pixels vary slightly by backend.
 
 ## What this research does and does not prove
 
-This research shows that the target effect is compatible with the current M6
-hybrid architecture and Pixi/WebGL backend. It does not prove that the shader
-has been implemented, that the target has been matched, that the beaker is a
-Gold Master, or that M6 S3 is complete.
+The implementation spike now shows that the target effect is compatible with
+the current M6 hybrid architecture and Pixi/WebGL backend without moving
+chemistry or volume truth into the renderer. It does not prove that the current
+shader matches the target, that the liquid has reached owner-approved visual
+quality, that the beaker is a Gold Master, or that M6 S3 is complete.
+
+## Implementation checkpoint — 2026-09-23
+
+Implemented in the shared production Pixi path:
+
+- `buildBeakerLiquidMaterialInput()` accepts only the scene actor's admitted
+  tint/status and strips indicator identity before the GPU boundary;
+- a WebGL `Filter`/`GlProgram` renders separate body and surface passes with
+  bounded visual transmission, wall contact, bottom response and surface-ring
+  cues;
+- the authored body sprite remains at full opacity; no global-alpha workaround,
+  renderer-local indicator palette, or shader chemistry was added;
+- the default committed production composition remains optical-refusal/neutral
+  when the optical profile is out of coverage;
+- `?fixture=visual-stress` uses the same World → ScientificFrame → Observable →
+  RenderState → Pixi path, with one explicit 75 mL committed transfer schedule
+  so the 25 mL initial target reaches 100 mL for visual review. Its blue tint is
+  labelled synthetic and is not scientific evidence;
+- the browser regression asserts the fixture warning and the Pixi WebGL
+  material compiles in Chromium. The fixture capture is a candidate review
+  artifact, not an approved visual baseline.
+
+Current stop condition remains active: the 100 mL capture still requires human
+side-by-side review against the approved target, including light/dark and
+thumbnail conditions. The next implementation work must improve or replace the
+material only if that review identifies a visible mismatch; it must not alter
+the scientific scenario merely to obtain a preferred colour.
 
 ## References
 
