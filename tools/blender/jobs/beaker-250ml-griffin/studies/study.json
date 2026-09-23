@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "studyId": "beaker-250ml-griffin-visual-studies-v1",
+  "assetId": "beaker-250ml",
+  "baseJob": "tools/blender/jobs/beaker-250ml-griffin/job.json",
+  "sourceBlend": "assets/apparatus/masters/beaker-250ml/source/blender/beaker-250ml.blend",
+  "outputRoot": "assets/apparatus/masters/beaker-250ml/qa/blender-studies",
+  "status": "study-only",
+  "rounds": {
+    "form": {
+      "candidateIds": ["F01", "F02", "F03", "F04"],
+      "allowedVariables": ["rim-profile", "spout-transition", "base-mass", "body-taper"]
+    },
+    "glass": {
+      "candidateIds": ["G01", "G02", "G03", "G04"],
+      "allowedVariables": ["glass-treatment"]
+    },
+    "lighting": {
+      "candidateIds": ["L01", "L02", "L03"],
+      "allowedVariables": ["lighting-rig"]
+    }
+  },
+  "sourceInputs": [
+    "tools/blender/jobs/beaker-250ml-griffin/job.json",
+    "assets/apparatus/masters/beaker-250ml/source/blender/beaker-250ml.blend",
+    "assets/apparatus/masters/beaker-250ml/measurement-sheet.json",
+    "assets/apparatus/masters/beaker-250ml/source-record.md",
+    "docs/visual/reference/sources.json",
+    "docs/visual/apparatus-standard.md",
+    "docs/visual/m6-art-direction.md"
+  ]
+}

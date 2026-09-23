@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "studyId": "beaker-250ml-griffin-visual-studies-v1",
+  "round": "lighting",
+  "candidateIds": [
+    "L01",
+    "L02",
+    "L03"
+  ],
+  "views": [
+    "front-light",
+    "front-dark",
+    "thumbnail-light",
+    "thumbnail-dark"
+  ],
+  "output": "assets/apparatus/masters/beaker-250ml/qa/blender-studies/beaker-250ml-griffin-visual-studies-v1/lighting/contact-sheet.png",
+  "status": "study-only"
+}

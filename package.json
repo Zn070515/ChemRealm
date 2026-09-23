@@ -39,6 +39,7 @@
     "verify:m6-instruments": "node tools/check_m6_instruments.mjs",
     "verify:m6-render-geometry": "node tools/check_m6_render_geometry.mjs",
     "verify:m6-renderer": "node tools/check_m6_renderer_boundary.mjs",
+    "verify:m6-visual-studies": "node tools/check_m6_visual_studies.mjs",
     "verify:world": "node tools/check_world_runtime_contract.mjs",
     "native:fmt": "cargo fmt --manifest-path native/sci-core/Cargo.toml -- --check",
     "native:test": "cargo test --manifest-path native/sci-core/Cargo.toml",

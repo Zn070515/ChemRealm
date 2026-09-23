@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "studyId": "beaker-250ml-griffin-visual-studies-v1",
+  "round": "form",
+  "candidateIds": [
+    "F01",
+    "F02",
+    "F03",
+    "F04"
+  ],
+  "views": [
+    "front-light",
+    "front-dark",
+    "thumbnail-light",
+    "thumbnail-dark"
+  ],
+  "output": "assets/apparatus/masters/beaker-250ml/qa/blender-studies/beaker-250ml-griffin-visual-studies-v1/form/contact-sheet.png",
+  "status": "study-only"
+}

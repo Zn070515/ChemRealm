@@ -139,3 +139,53 @@ edge differences, while CPU/OptiX comparison shows that backend pixels are not
 an identity contract. Geometry, semantic IDs, configuration, QA, and source
 hashes remain the portable evidence. This is why GPU is used for the candidate
 render matrix without claiming cross-device bit identity.
+
+## Controlled visual study extension
+
+The next step after the initial vertical slice is now implemented as a
+controlled, study-only exploration rather than a Gold Master admission. The
+positive reference system is in [`docs/visual/reference/`](../visual/reference/)
+and is deliberately separated from the constraint documents: it records what
+to observe in glass, form, lighting, and composition, as well as rejected
+patterns. The reference set uses source-backed public references and does not
+embed third-party images or transfer their rights into the repository.
+
+The study contract is defined by
+[`2026-09-23-m6-visual-study-vertical-slice.md`](../superpowers/specs/2026-09-23-m6-visual-study-vertical-slice.md)
+and the execution plan by
+[`2026-09-23-m6-controlled-visual-studies.md`](../superpowers/plans/2026-09-23-m6-controlled-visual-studies.md).
+The canonical manifest is
+[`study.json`](../../tools/blender/jobs/beaker-250ml-griffin/studies/study.json).
+It fixes the candidate IDs and changes exactly one declared visual variable in
+each round:
+
+- Form: F01–F04;
+- Glass: G01–G04;
+- Lighting: L01–L03.
+
+The resulting evidence is under
+[`beaker-250ml-griffin-visual-studies-v1`](../../assets/apparatus/masters/beaker-250ml/qa/blender-studies/beaker-250ml-griffin-visual-studies-v1/):
+source `.blend` files, scene-validation reports, render metadata, contact
+sheets, and the rejected-SVG A/B sheets. The review is recorded in
+[`review.md`](../../assets/apparatus/masters/beaker-250ml/qa/blender-studies/beaker-250ml-griffin-visual-studies-v1/review.md).
+
+The host and Blender-side checks pass locally. The visual review does not,
+however, promote a candidate: the study shows that the current vertical-slice
+geometry remains prototype-level, that form differences F01/F02/F04 are still
+subtle, and that no owner has selected a form, glass treatment, or lighting
+rig. The strongest study signals are currently F03, G01/G02 as contrasting
+glass bounds, and L02 as a readability study; these are observations, not
+acceptance decisions.
+
+Reproduction without MCP or a live GUI is supported by the same job scripts:
+
+```text
+pnpm verify:m6-visual-studies
+python tools/blender/jobs/beaker-250ml-griffin/studies/validate_study.py --manifest tools/blender/jobs/beaker-250ml-griffin/studies/study.json --require-outputs --report assets/apparatus/masters/beaker-250ml/qa/blender-studies/validation.json
+& 'C:\Program Files\Blender Foundation\Blender 5.2\blender.exe' --background --python tools/blender/jobs/beaker-250ml-griffin/studies/build_study.py -- --manifest tools/blender/jobs/beaker-250ml-griffin/studies/study.json --variant tools/blender/jobs/beaker-250ml-griffin/studies/study_variants.json
+```
+
+The capture/render commands are documented in the study README. MCP is not a
+dependency and no MCP decision is made by this evidence. The next stage is
+owner selection and, only if the selected direction survives another visual
+review, an asset-specific Gold Master rebuild.

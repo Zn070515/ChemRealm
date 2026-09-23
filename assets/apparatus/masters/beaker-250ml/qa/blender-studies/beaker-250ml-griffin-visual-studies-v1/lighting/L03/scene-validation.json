@@ -1,0 +1,73 @@
+{
+  "status": "PASS",
+  "studyId": "beaker-250ml-griffin-visual-studies-v1",
+  "round": "lighting",
+  "candidateId": "L03",
+  "checks": [
+    {
+      "id": "M6-STUDY-SCENE-STATUS",
+      "status": "PASS",
+      "message": "scene is study-only",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-SCENE-ASSET",
+      "status": "PASS",
+      "message": "scene asset identity matches manifest",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-SCENE-ROUND",
+      "status": "PASS",
+      "message": "scene round matches requested round",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-SCENE-CANDIDATE",
+      "status": "PASS",
+      "message": "scene candidate matches requested candidate",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-NO-CHEMISTRY",
+      "status": "PASS",
+      "message": "scene explicitly contains no chemistry state",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-SEMANTIC-IDS",
+      "status": "PASS",
+      "message": "required semantic objects remain present",
+      "details": {
+        "missing": []
+      }
+    },
+    {
+      "id": "M6-STUDY-NO-CHEMISTRY-OBJECTS",
+      "status": "PASS",
+      "message": "candidate has no chemistry-named object",
+      "details": {
+        "forbidden": []
+      }
+    },
+    {
+      "id": "M6-STUDY-PHYSICAL-ENVELOPE",
+      "status": "PASS",
+      "message": "candidate mesh remains within the established source-envelope tolerance",
+      "details": {
+        "actualMm": [
+          85.54999902844429,
+          94.9999988079071,
+          71.09999656677246
+        ],
+        "expectedMm": [
+          85,
+          95,
+          70
+        ],
+        "toleranceMm": 1.5
+      }
+    }
+  ],
+  "failures": []
+}

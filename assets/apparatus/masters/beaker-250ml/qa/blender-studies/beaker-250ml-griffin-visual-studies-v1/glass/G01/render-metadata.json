@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "studyId": "beaker-250ml-griffin-visual-studies-v1",
+  "round": "glass",
+  "candidateId": "G01",
+  "status": "study-only",
+  "intentionalVariable": "glass-treatment",
+  "noChemistry": true,
+  "backend": {
+    "requested": "OPTIX",
+    "effective": "OPTIX",
+    "fallback": false
+  },
+  "blender": {
+    "version": "5.2.2 LTS",
+    "buildHash": "d13f752e3b9c"
+  },
+  "render": {
+    "engine": "CYCLES",
+    "devicePolicy": "selected-and-recorded",
+    "preferredDevice": "OPTIX",
+    "fallbackDevice": "CPU",
+    "cycles": {
+      "samples": 32,
+      "useDenoise": true,
+      "transparentFilm": false
+    },
+    "colorManagement": {
+      "viewTransform": "AgX",
+      "look": "None",
+      "exposure": 0,
+      "gamma": 1
+    },
+    "resolution": {
+      "front": [
+        1440,
+        900
+      ],
+      "thumbnail": [
+        256,
+        256
+      ],
+      "closeup": [
+        900,
+        900
+      ],
+      "alpha": [
+        1440,
+        900
+      ]
+    },
+    "outputFormat": "PNG",
+    "outputColor": "RGBA"
+  },
+  "baseSourceBlend": {
+    "path": "assets/apparatus/masters/beaker-250ml/source/blender/beaker-250ml.blend",
+    "sha256": "20fa4c336f56c6cf4637c91211035b3ad61090bddf04847bd6b15296e644282e"
+  },
+  "sourceBlend": {
+    "path": "assets/apparatus/masters/beaker-250ml/qa/blender-studies/beaker-250ml-griffin-visual-studies-v1/glass/G01/candidate.blend",
+    "sha256": "4669490d4abd7c9183115cfb398a9647e61d5d686bbc4af800303f0adab7309e"
+  },
+  "outputs": [
+    {
+      "path": "assets/apparatus/masters/beaker-250ml/qa/blender-studies/beaker-250ml-griffin-visual-studies-v1/glass/G01/renders/front-light.png",
+      "sha256": "de8fbb4da1e09ba9885e845f5d93c7deb0bff0be47ff50f622cae0e6314cfcef",
+      "bytes": 1268740
+    },
+    {
+      "path": "assets/apparatus/masters/beaker-250ml/qa/blender-studies/beaker-250ml-griffin-visual-studies-v1/glass/G01/renders/front-dark.png",
+      "sha256": "19463569fc10135c847c7861dc26972316a57aaa40f1a25785f24a07ca3160cf",
+      "bytes": 1277740
+    },
+    {
+      "path": "assets/apparatus/masters/beaker-250ml/qa/blender-studies/beaker-250ml-griffin-visual-studies-v1/glass/G01/renders/thumbnail-light.png",
+      "sha256": "53f243582f84e9947d598aa0e54b852a034ef753fbf5016a856af81a1c663191",
+      "bytes": 73557
+    },
+    {
+      "path": "assets/apparatus/masters/beaker-250ml/qa/blender-studies/beaker-250ml-griffin-visual-studies-v1/glass/G01/renders/thumbnail-dark.png",
+      "sha256": "b47566cd27d6b64ba1050b729e989cd0ad9a03a70d9a177a39215ceaa9c14a0c",
+      "bytes": 74411
+    },
+    {
+      "path": "assets/apparatus/masters/beaker-250ml/qa/blender-studies/beaker-250ml-griffin-visual-studies-v1/glass/G01/renders/closeup-rim.png",
+      "sha256": "4bf0f407410865bedf8fb1f56a6c88486b7eb8e2ec1517f80767e4699dee7796",
+      "bytes": 852473
+    },
+    {
+      "path": "assets/apparatus/masters/beaker-250ml/qa/blender-studies/beaker-250ml-griffin-visual-studies-v1/glass/G01/renders/closeup-spout.png",
+      "sha256": "29338878b1ceeee953eb2b7a8352528be3be7ea0b8d704a62f0320f162699eba",
+      "bytes": 830348
+    },
+    {
+      "path": "assets/apparatus/masters/beaker-250ml/qa/blender-studies/beaker-250ml-griffin-visual-studies-v1/glass/G01/renders/alpha-check.png",
+      "sha256": "04ca05d9a178747087f9f5cff0415236e48e0fa0f2c303bfc2d42d02d5e690ae",
+      "bytes": 1317608
+    }
+  ]
+}

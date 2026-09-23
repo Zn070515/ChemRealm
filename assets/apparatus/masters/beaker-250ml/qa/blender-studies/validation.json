@@ -1,0 +1,819 @@
+{
+  "status": "PASS",
+  "manifest": "tools/blender/jobs/beaker-250ml-griffin/studies/study.json",
+  "studyId": "beaker-250ml-griffin-visual-studies-v1",
+  "checks": [
+    {
+      "id": "M6-STUDY-SCHEMA",
+      "status": "PASS",
+      "message": "study schema version is 1",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-STATUS",
+      "status": "PASS",
+      "message": "manifest is explicitly study-only",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-ASSET",
+      "status": "PASS",
+      "message": "study targets the 250 mL beaker",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-OUTPUT-ROOT",
+      "status": "PASS",
+      "message": "outputs remain in the beaker study QA root",
+      "details": "assets\\apparatus\\masters\\beaker-250ml\\qa\\blender-studies"
+    },
+    {
+      "id": "M6-STUDY-SOURCES",
+      "status": "PASS",
+      "message": "all source inputs exist and are hashable",
+      "details": {
+        "tools/blender/jobs/beaker-250ml-griffin/job.json": "8173b1426f8a78819ea70f5b157975a714bae6408963908b48efa9bd225e31d3",
+        "assets/apparatus/masters/beaker-250ml/source/blender/beaker-250ml.blend": "20fa4c336f56c6cf4637c91211035b3ad61090bddf04847bd6b15296e644282e",
+        "assets/apparatus/masters/beaker-250ml/measurement-sheet.json": "46ce02ef7b8bfd9512fc92332505d56486b49405fe71e564677fd775955655c3",
+        "assets/apparatus/masters/beaker-250ml/source-record.md": "ad54b1fd229f60f652252cc76e40869edaef890863f4483e5ba7cef5c0a73d62",
+        "docs/visual/reference/sources.json": "765314aed56081c35aa982289c34fe7ab65b2e92b856e6c7e99d092abc7f0980",
+        "docs/visual/apparatus-standard.md": "4a08089218d6b94d9d7e7f6ab4d9f0c0283e9c972bd78411e047c57491435541",
+        "docs/visual/m6-art-direction.md": "415767e7664cadf3ed5f31175b1d2dea33bbf96bb5de5b1f5254d308a4c81190"
+      }
+    },
+    {
+      "id": "M6-STUDY-ROUNDS",
+      "status": "PASS",
+      "message": "form, glass, and lighting are the only rounds",
+      "details": [
+        "form",
+        "glass",
+        "lighting"
+      ]
+    },
+    {
+      "id": "M6-STUDY-FORM-IDS",
+      "status": "PASS",
+      "message": "form candidate IDs are exact",
+      "details": [
+        "F01",
+        "F02",
+        "F03",
+        "F04"
+      ]
+    },
+    {
+      "id": "M6-STUDY-FORM-VARIABLES",
+      "status": "PASS",
+      "message": "form allowed variables are exact",
+      "details": [
+        "base-mass",
+        "body-taper",
+        "rim-profile",
+        "spout-transition"
+      ]
+    },
+    {
+      "id": "M6-STUDY-GLASS-IDS",
+      "status": "PASS",
+      "message": "glass candidate IDs are exact",
+      "details": [
+        "G01",
+        "G02",
+        "G03",
+        "G04"
+      ]
+    },
+    {
+      "id": "M6-STUDY-GLASS-VARIABLES",
+      "status": "PASS",
+      "message": "glass allowed variables are exact",
+      "details": [
+        "glass-treatment"
+      ]
+    },
+    {
+      "id": "M6-STUDY-LIGHTING-IDS",
+      "status": "PASS",
+      "message": "lighting candidate IDs are exact",
+      "details": [
+        "L01",
+        "L02",
+        "L03"
+      ]
+    },
+    {
+      "id": "M6-STUDY-LIGHTING-VARIABLES",
+      "status": "PASS",
+      "message": "lighting allowed variables are exact",
+      "details": [
+        "lighting-rig"
+      ]
+    },
+    {
+      "id": "M6-STUDY-UNIQUE-IDS",
+      "status": "PASS",
+      "message": "candidate IDs are globally unique",
+      "details": [
+        "F01",
+        "F02",
+        "F03",
+        "F04",
+        "G01",
+        "G02",
+        "G03",
+        "G04",
+        "L01",
+        "L02",
+        "L03"
+      ]
+    }
+  ],
+  "sourceHashes": {
+    "tools/blender/jobs/beaker-250ml-griffin/job.json": "8173b1426f8a78819ea70f5b157975a714bae6408963908b48efa9bd225e31d3",
+    "assets/apparatus/masters/beaker-250ml/source/blender/beaker-250ml.blend": "20fa4c336f56c6cf4637c91211035b3ad61090bddf04847bd6b15296e644282e",
+    "assets/apparatus/masters/beaker-250ml/measurement-sheet.json": "46ce02ef7b8bfd9512fc92332505d56486b49405fe71e564677fd775955655c3",
+    "assets/apparatus/masters/beaker-250ml/source-record.md": "ad54b1fd229f60f652252cc76e40869edaef890863f4483e5ba7cef5c0a73d62",
+    "docs/visual/reference/sources.json": "765314aed56081c35aa982289c34fe7ab65b2e92b856e6c7e99d092abc7f0980",
+    "docs/visual/apparatus-standard.md": "4a08089218d6b94d9d7e7f6ab4d9f0c0283e9c972bd78411e047c57491435541",
+    "docs/visual/m6-art-direction.md": "415767e7664cadf3ed5f31175b1d2dea33bbf96bb5de5b1f5254d308a4c81190"
+  },
+  "failures": [],
+  "outputChecks": [
+    {
+      "id": "M6-STUDY-FORM-F01-BLEND",
+      "status": "PASS",
+      "message": "candidate blend exists",
+      "details": "C:\\Users\\16275\\Desktop\\ChemRealm\\assets\\apparatus\\masters\\beaker-250ml\\qa\\blender-studies\\beaker-250ml-griffin-visual-studies-v1\\form\\F01\\candidate.blend"
+    },
+    {
+      "id": "M6-STUDY-FORM-F01-METADATA",
+      "status": "PASS",
+      "message": "candidate render metadata exists",
+      "details": "C:\\Users\\16275\\Desktop\\ChemRealm\\assets\\apparatus\\masters\\beaker-250ml\\qa\\blender-studies\\beaker-250ml-griffin-visual-studies-v1\\form\\F01\\render-metadata.json"
+    },
+    {
+      "id": "M6-STUDY-F01-STATUS",
+      "status": "PASS",
+      "message": "candidate metadata remains study-only",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-F01-IDENTITY",
+      "status": "PASS",
+      "message": "candidate metadata identity matches manifest",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-F01-VARIABLE",
+      "status": "PASS",
+      "message": "candidate variable is declared for its round",
+      "details": "spout-transition"
+    },
+    {
+      "id": "M6-STUDY-F01-CHEMISTRY",
+      "status": "PASS",
+      "message": "candidate metadata records no chemistry state",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-F01-SOURCE-HASH",
+      "status": "PASS",
+      "message": "candidate records the current base source hash",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-F01-RENDER-MATRIX",
+      "status": "PASS",
+      "message": "all required candidate renders exist",
+      "details": {
+        "missing": []
+      }
+    },
+    {
+      "id": "M6-STUDY-F01-BACKEND",
+      "status": "PASS",
+      "message": "candidate backend is recorded as preferred or fallback",
+      "details": "OPTIX"
+    },
+    {
+      "id": "M6-STUDY-FORM-F02-BLEND",
+      "status": "PASS",
+      "message": "candidate blend exists",
+      "details": "C:\\Users\\16275\\Desktop\\ChemRealm\\assets\\apparatus\\masters\\beaker-250ml\\qa\\blender-studies\\beaker-250ml-griffin-visual-studies-v1\\form\\F02\\candidate.blend"
+    },
+    {
+      "id": "M6-STUDY-FORM-F02-METADATA",
+      "status": "PASS",
+      "message": "candidate render metadata exists",
+      "details": "C:\\Users\\16275\\Desktop\\ChemRealm\\assets\\apparatus\\masters\\beaker-250ml\\qa\\blender-studies\\beaker-250ml-griffin-visual-studies-v1\\form\\F02\\render-metadata.json"
+    },
+    {
+      "id": "M6-STUDY-F02-STATUS",
+      "status": "PASS",
+      "message": "candidate metadata remains study-only",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-F02-IDENTITY",
+      "status": "PASS",
+      "message": "candidate metadata identity matches manifest",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-F02-VARIABLE",
+      "status": "PASS",
+      "message": "candidate variable is declared for its round",
+      "details": "spout-transition"
+    },
+    {
+      "id": "M6-STUDY-F02-CHEMISTRY",
+      "status": "PASS",
+      "message": "candidate metadata records no chemistry state",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-F02-SOURCE-HASH",
+      "status": "PASS",
+      "message": "candidate records the current base source hash",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-F02-RENDER-MATRIX",
+      "status": "PASS",
+      "message": "all required candidate renders exist",
+      "details": {
+        "missing": []
+      }
+    },
+    {
+      "id": "M6-STUDY-F02-BACKEND",
+      "status": "PASS",
+      "message": "candidate backend is recorded as preferred or fallback",
+      "details": "OPTIX"
+    },
+    {
+      "id": "M6-STUDY-FORM-F03-BLEND",
+      "status": "PASS",
+      "message": "candidate blend exists",
+      "details": "C:\\Users\\16275\\Desktop\\ChemRealm\\assets\\apparatus\\masters\\beaker-250ml\\qa\\blender-studies\\beaker-250ml-griffin-visual-studies-v1\\form\\F03\\candidate.blend"
+    },
+    {
+      "id": "M6-STUDY-FORM-F03-METADATA",
+      "status": "PASS",
+      "message": "candidate render metadata exists",
+      "details": "C:\\Users\\16275\\Desktop\\ChemRealm\\assets\\apparatus\\masters\\beaker-250ml\\qa\\blender-studies\\beaker-250ml-griffin-visual-studies-v1\\form\\F03\\render-metadata.json"
+    },
+    {
+      "id": "M6-STUDY-F03-STATUS",
+      "status": "PASS",
+      "message": "candidate metadata remains study-only",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-F03-IDENTITY",
+      "status": "PASS",
+      "message": "candidate metadata identity matches manifest",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-F03-VARIABLE",
+      "status": "PASS",
+      "message": "candidate variable is declared for its round",
+      "details": "rim-profile"
+    },
+    {
+      "id": "M6-STUDY-F03-CHEMISTRY",
+      "status": "PASS",
+      "message": "candidate metadata records no chemistry state",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-F03-SOURCE-HASH",
+      "status": "PASS",
+      "message": "candidate records the current base source hash",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-F03-RENDER-MATRIX",
+      "status": "PASS",
+      "message": "all required candidate renders exist",
+      "details": {
+        "missing": []
+      }
+    },
+    {
+      "id": "M6-STUDY-F03-BACKEND",
+      "status": "PASS",
+      "message": "candidate backend is recorded as preferred or fallback",
+      "details": "OPTIX"
+    },
+    {
+      "id": "M6-STUDY-FORM-F04-BLEND",
+      "status": "PASS",
+      "message": "candidate blend exists",
+      "details": "C:\\Users\\16275\\Desktop\\ChemRealm\\assets\\apparatus\\masters\\beaker-250ml\\qa\\blender-studies\\beaker-250ml-griffin-visual-studies-v1\\form\\F04\\candidate.blend"
+    },
+    {
+      "id": "M6-STUDY-FORM-F04-METADATA",
+      "status": "PASS",
+      "message": "candidate render metadata exists",
+      "details": "C:\\Users\\16275\\Desktop\\ChemRealm\\assets\\apparatus\\masters\\beaker-250ml\\qa\\blender-studies\\beaker-250ml-griffin-visual-studies-v1\\form\\F04\\render-metadata.json"
+    },
+    {
+      "id": "M6-STUDY-F04-STATUS",
+      "status": "PASS",
+      "message": "candidate metadata remains study-only",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-F04-IDENTITY",
+      "status": "PASS",
+      "message": "candidate metadata identity matches manifest",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-F04-VARIABLE",
+      "status": "PASS",
+      "message": "candidate variable is declared for its round",
+      "details": "base-mass"
+    },
+    {
+      "id": "M6-STUDY-F04-CHEMISTRY",
+      "status": "PASS",
+      "message": "candidate metadata records no chemistry state",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-F04-SOURCE-HASH",
+      "status": "PASS",
+      "message": "candidate records the current base source hash",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-F04-RENDER-MATRIX",
+      "status": "PASS",
+      "message": "all required candidate renders exist",
+      "details": {
+        "missing": []
+      }
+    },
+    {
+      "id": "M6-STUDY-F04-BACKEND",
+      "status": "PASS",
+      "message": "candidate backend is recorded as preferred or fallback",
+      "details": "OPTIX"
+    },
+    {
+      "id": "M6-STUDY-GLASS-G01-BLEND",
+      "status": "PASS",
+      "message": "candidate blend exists",
+      "details": "C:\\Users\\16275\\Desktop\\ChemRealm\\assets\\apparatus\\masters\\beaker-250ml\\qa\\blender-studies\\beaker-250ml-griffin-visual-studies-v1\\glass\\G01\\candidate.blend"
+    },
+    {
+      "id": "M6-STUDY-GLASS-G01-METADATA",
+      "status": "PASS",
+      "message": "candidate render metadata exists",
+      "details": "C:\\Users\\16275\\Desktop\\ChemRealm\\assets\\apparatus\\masters\\beaker-250ml\\qa\\blender-studies\\beaker-250ml-griffin-visual-studies-v1\\glass\\G01\\render-metadata.json"
+    },
+    {
+      "id": "M6-STUDY-G01-STATUS",
+      "status": "PASS",
+      "message": "candidate metadata remains study-only",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-G01-IDENTITY",
+      "status": "PASS",
+      "message": "candidate metadata identity matches manifest",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-G01-VARIABLE",
+      "status": "PASS",
+      "message": "candidate variable is declared for its round",
+      "details": "glass-treatment"
+    },
+    {
+      "id": "M6-STUDY-G01-CHEMISTRY",
+      "status": "PASS",
+      "message": "candidate metadata records no chemistry state",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-G01-SOURCE-HASH",
+      "status": "PASS",
+      "message": "candidate records the current base source hash",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-G01-RENDER-MATRIX",
+      "status": "PASS",
+      "message": "all required candidate renders exist",
+      "details": {
+        "missing": []
+      }
+    },
+    {
+      "id": "M6-STUDY-G01-BACKEND",
+      "status": "PASS",
+      "message": "candidate backend is recorded as preferred or fallback",
+      "details": "OPTIX"
+    },
+    {
+      "id": "M6-STUDY-GLASS-G02-BLEND",
+      "status": "PASS",
+      "message": "candidate blend exists",
+      "details": "C:\\Users\\16275\\Desktop\\ChemRealm\\assets\\apparatus\\masters\\beaker-250ml\\qa\\blender-studies\\beaker-250ml-griffin-visual-studies-v1\\glass\\G02\\candidate.blend"
+    },
+    {
+      "id": "M6-STUDY-GLASS-G02-METADATA",
+      "status": "PASS",
+      "message": "candidate render metadata exists",
+      "details": "C:\\Users\\16275\\Desktop\\ChemRealm\\assets\\apparatus\\masters\\beaker-250ml\\qa\\blender-studies\\beaker-250ml-griffin-visual-studies-v1\\glass\\G02\\render-metadata.json"
+    },
+    {
+      "id": "M6-STUDY-G02-STATUS",
+      "status": "PASS",
+      "message": "candidate metadata remains study-only",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-G02-IDENTITY",
+      "status": "PASS",
+      "message": "candidate metadata identity matches manifest",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-G02-VARIABLE",
+      "status": "PASS",
+      "message": "candidate variable is declared for its round",
+      "details": "glass-treatment"
+    },
+    {
+      "id": "M6-STUDY-G02-CHEMISTRY",
+      "status": "PASS",
+      "message": "candidate metadata records no chemistry state",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-G02-SOURCE-HASH",
+      "status": "PASS",
+      "message": "candidate records the current base source hash",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-G02-RENDER-MATRIX",
+      "status": "PASS",
+      "message": "all required candidate renders exist",
+      "details": {
+        "missing": []
+      }
+    },
+    {
+      "id": "M6-STUDY-G02-BACKEND",
+      "status": "PASS",
+      "message": "candidate backend is recorded as preferred or fallback",
+      "details": "OPTIX"
+    },
+    {
+      "id": "M6-STUDY-GLASS-G03-BLEND",
+      "status": "PASS",
+      "message": "candidate blend exists",
+      "details": "C:\\Users\\16275\\Desktop\\ChemRealm\\assets\\apparatus\\masters\\beaker-250ml\\qa\\blender-studies\\beaker-250ml-griffin-visual-studies-v1\\glass\\G03\\candidate.blend"
+    },
+    {
+      "id": "M6-STUDY-GLASS-G03-METADATA",
+      "status": "PASS",
+      "message": "candidate render metadata exists",
+      "details": "C:\\Users\\16275\\Desktop\\ChemRealm\\assets\\apparatus\\masters\\beaker-250ml\\qa\\blender-studies\\beaker-250ml-griffin-visual-studies-v1\\glass\\G03\\render-metadata.json"
+    },
+    {
+      "id": "M6-STUDY-G03-STATUS",
+      "status": "PASS",
+      "message": "candidate metadata remains study-only",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-G03-IDENTITY",
+      "status": "PASS",
+      "message": "candidate metadata identity matches manifest",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-G03-VARIABLE",
+      "status": "PASS",
+      "message": "candidate variable is declared for its round",
+      "details": "glass-treatment"
+    },
+    {
+      "id": "M6-STUDY-G03-CHEMISTRY",
+      "status": "PASS",
+      "message": "candidate metadata records no chemistry state",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-G03-SOURCE-HASH",
+      "status": "PASS",
+      "message": "candidate records the current base source hash",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-G03-RENDER-MATRIX",
+      "status": "PASS",
+      "message": "all required candidate renders exist",
+      "details": {
+        "missing": []
+      }
+    },
+    {
+      "id": "M6-STUDY-G03-BACKEND",
+      "status": "PASS",
+      "message": "candidate backend is recorded as preferred or fallback",
+      "details": "OPTIX"
+    },
+    {
+      "id": "M6-STUDY-GLASS-G04-BLEND",
+      "status": "PASS",
+      "message": "candidate blend exists",
+      "details": "C:\\Users\\16275\\Desktop\\ChemRealm\\assets\\apparatus\\masters\\beaker-250ml\\qa\\blender-studies\\beaker-250ml-griffin-visual-studies-v1\\glass\\G04\\candidate.blend"
+    },
+    {
+      "id": "M6-STUDY-GLASS-G04-METADATA",
+      "status": "PASS",
+      "message": "candidate render metadata exists",
+      "details": "C:\\Users\\16275\\Desktop\\ChemRealm\\assets\\apparatus\\masters\\beaker-250ml\\qa\\blender-studies\\beaker-250ml-griffin-visual-studies-v1\\glass\\G04\\render-metadata.json"
+    },
+    {
+      "id": "M6-STUDY-G04-STATUS",
+      "status": "PASS",
+      "message": "candidate metadata remains study-only",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-G04-IDENTITY",
+      "status": "PASS",
+      "message": "candidate metadata identity matches manifest",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-G04-VARIABLE",
+      "status": "PASS",
+      "message": "candidate variable is declared for its round",
+      "details": "glass-treatment"
+    },
+    {
+      "id": "M6-STUDY-G04-CHEMISTRY",
+      "status": "PASS",
+      "message": "candidate metadata records no chemistry state",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-G04-SOURCE-HASH",
+      "status": "PASS",
+      "message": "candidate records the current base source hash",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-G04-RENDER-MATRIX",
+      "status": "PASS",
+      "message": "all required candidate renders exist",
+      "details": {
+        "missing": []
+      }
+    },
+    {
+      "id": "M6-STUDY-G04-BACKEND",
+      "status": "PASS",
+      "message": "candidate backend is recorded as preferred or fallback",
+      "details": "OPTIX"
+    },
+    {
+      "id": "M6-STUDY-LIGHTING-L01-BLEND",
+      "status": "PASS",
+      "message": "candidate blend exists",
+      "details": "C:\\Users\\16275\\Desktop\\ChemRealm\\assets\\apparatus\\masters\\beaker-250ml\\qa\\blender-studies\\beaker-250ml-griffin-visual-studies-v1\\lighting\\L01\\candidate.blend"
+    },
+    {
+      "id": "M6-STUDY-LIGHTING-L01-METADATA",
+      "status": "PASS",
+      "message": "candidate render metadata exists",
+      "details": "C:\\Users\\16275\\Desktop\\ChemRealm\\assets\\apparatus\\masters\\beaker-250ml\\qa\\blender-studies\\beaker-250ml-griffin-visual-studies-v1\\lighting\\L01\\render-metadata.json"
+    },
+    {
+      "id": "M6-STUDY-L01-STATUS",
+      "status": "PASS",
+      "message": "candidate metadata remains study-only",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-L01-IDENTITY",
+      "status": "PASS",
+      "message": "candidate metadata identity matches manifest",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-L01-VARIABLE",
+      "status": "PASS",
+      "message": "candidate variable is declared for its round",
+      "details": "lighting-rig"
+    },
+    {
+      "id": "M6-STUDY-L01-CHEMISTRY",
+      "status": "PASS",
+      "message": "candidate metadata records no chemistry state",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-L01-SOURCE-HASH",
+      "status": "PASS",
+      "message": "candidate records the current base source hash",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-L01-RENDER-MATRIX",
+      "status": "PASS",
+      "message": "all required candidate renders exist",
+      "details": {
+        "missing": []
+      }
+    },
+    {
+      "id": "M6-STUDY-L01-BACKEND",
+      "status": "PASS",
+      "message": "candidate backend is recorded as preferred or fallback",
+      "details": "OPTIX"
+    },
+    {
+      "id": "M6-STUDY-LIGHTING-L02-BLEND",
+      "status": "PASS",
+      "message": "candidate blend exists",
+      "details": "C:\\Users\\16275\\Desktop\\ChemRealm\\assets\\apparatus\\masters\\beaker-250ml\\qa\\blender-studies\\beaker-250ml-griffin-visual-studies-v1\\lighting\\L02\\candidate.blend"
+    },
+    {
+      "id": "M6-STUDY-LIGHTING-L02-METADATA",
+      "status": "PASS",
+      "message": "candidate render metadata exists",
+      "details": "C:\\Users\\16275\\Desktop\\ChemRealm\\assets\\apparatus\\masters\\beaker-250ml\\qa\\blender-studies\\beaker-250ml-griffin-visual-studies-v1\\lighting\\L02\\render-metadata.json"
+    },
+    {
+      "id": "M6-STUDY-L02-STATUS",
+      "status": "PASS",
+      "message": "candidate metadata remains study-only",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-L02-IDENTITY",
+      "status": "PASS",
+      "message": "candidate metadata identity matches manifest",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-L02-VARIABLE",
+      "status": "PASS",
+      "message": "candidate variable is declared for its round",
+      "details": "lighting-rig"
+    },
+    {
+      "id": "M6-STUDY-L02-CHEMISTRY",
+      "status": "PASS",
+      "message": "candidate metadata records no chemistry state",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-L02-SOURCE-HASH",
+      "status": "PASS",
+      "message": "candidate records the current base source hash",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-L02-RENDER-MATRIX",
+      "status": "PASS",
+      "message": "all required candidate renders exist",
+      "details": {
+        "missing": []
+      }
+    },
+    {
+      "id": "M6-STUDY-L02-BACKEND",
+      "status": "PASS",
+      "message": "candidate backend is recorded as preferred or fallback",
+      "details": "OPTIX"
+    },
+    {
+      "id": "M6-STUDY-LIGHTING-L03-BLEND",
+      "status": "PASS",
+      "message": "candidate blend exists",
+      "details": "C:\\Users\\16275\\Desktop\\ChemRealm\\assets\\apparatus\\masters\\beaker-250ml\\qa\\blender-studies\\beaker-250ml-griffin-visual-studies-v1\\lighting\\L03\\candidate.blend"
+    },
+    {
+      "id": "M6-STUDY-LIGHTING-L03-METADATA",
+      "status": "PASS",
+      "message": "candidate render metadata exists",
+      "details": "C:\\Users\\16275\\Desktop\\ChemRealm\\assets\\apparatus\\masters\\beaker-250ml\\qa\\blender-studies\\beaker-250ml-griffin-visual-studies-v1\\lighting\\L03\\render-metadata.json"
+    },
+    {
+      "id": "M6-STUDY-L03-STATUS",
+      "status": "PASS",
+      "message": "candidate metadata remains study-only",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-L03-IDENTITY",
+      "status": "PASS",
+      "message": "candidate metadata identity matches manifest",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-L03-VARIABLE",
+      "status": "PASS",
+      "message": "candidate variable is declared for its round",
+      "details": "lighting-rig"
+    },
+    {
+      "id": "M6-STUDY-L03-CHEMISTRY",
+      "status": "PASS",
+      "message": "candidate metadata records no chemistry state",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-L03-SOURCE-HASH",
+      "status": "PASS",
+      "message": "candidate records the current base source hash",
+      "details": null
+    },
+    {
+      "id": "M6-STUDY-L03-RENDER-MATRIX",
+      "status": "PASS",
+      "message": "all required candidate renders exist",
+      "details": {
+        "missing": []
+      }
+    },
+    {
+      "id": "M6-STUDY-L03-BACKEND",
+      "status": "PASS",
+      "message": "candidate backend is recorded as preferred or fallback",
+      "details": "OPTIX"
+    },
+    {
+      "id": "M6-STUDY-CANDIDATE-COUNT",
+      "status": "PASS",
+      "message": "all 11 candidates are enumerated",
+      "details": 11
+    },
+    {
+      "id": "M6-STUDY-METADATA-COUNT",
+      "status": "PASS",
+      "message": "all 11 candidates have metadata",
+      "details": 11
+    },
+    {
+      "id": "M6-STUDY-FORM-CONTACT-SHEET",
+      "status": "PASS",
+      "message": "round contact sheet metadata exists",
+      "details": "C:\\Users\\16275\\Desktop\\ChemRealm\\assets\\apparatus\\masters\\beaker-250ml\\qa\\blender-studies\\beaker-250ml-griffin-visual-studies-v1\\form\\contact-sheet.json"
+    },
+    {
+      "id": "M6-STUDY-GLASS-CONTACT-SHEET",
+      "status": "PASS",
+      "message": "round contact sheet metadata exists",
+      "details": "C:\\Users\\16275\\Desktop\\ChemRealm\\assets\\apparatus\\masters\\beaker-250ml\\qa\\blender-studies\\beaker-250ml-griffin-visual-studies-v1\\glass\\contact-sheet.json"
+    },
+    {
+      "id": "M6-STUDY-LIGHTING-CONTACT-SHEET",
+      "status": "PASS",
+      "message": "round contact sheet metadata exists",
+      "details": "C:\\Users\\16275\\Desktop\\ChemRealm\\assets\\apparatus\\masters\\beaker-250ml\\qa\\blender-studies\\beaker-250ml-griffin-visual-studies-v1\\lighting\\contact-sheet.json"
+    },
+    {
+      "id": "M6-STUDY-AB-COMPARISON",
+      "status": "PASS",
+      "message": "matched rejected-SVG A/B report exists",
+      "details": "C:\\Users\\16275\\Desktop\\ChemRealm\\assets\\apparatus\\masters\\beaker-250ml\\qa\\blender-studies\\beaker-250ml-griffin-visual-studies-v1\\ab\\ab-report.json"
+    },
+    {
+      "id": "M6-STUDY-BACKEND-COMPARISON",
+      "status": "PASS",
+      "message": "OptiX/CPU comparison covers the required render matrix",
+      "details": {
+        "path": "C:\\Users\\16275\\Desktop\\ChemRealm\\assets\\apparatus\\masters\\beaker-250ml\\qa\\blender-studies\\beaker-250ml-griffin-visual-studies-v1\\backend-comparison\\F03-optix-vs-cpu.json",
+        "images": [
+          "alpha-check.png",
+          "closeup-rim.png",
+          "closeup-spout.png",
+          "front-dark.png",
+          "front-light.png",
+          "thumbnail-dark.png",
+          "thumbnail-light.png"
+        ]
+      }
+    },
+    {
+      "id": "M6-STUDY-UNIQUE-OUTPUT-IDS",
+      "status": "PASS",
+      "message": "candidate output IDs are unique",
+      "details": null
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "studyId": "beaker-250ml-griffin-visual-studies-v1",
+  "rejectedSvg": "assets/apparatus/masters/beaker-250ml/master.svg",
+  "candidate": "form/F03",
+  "outputs": [
+    {
+      "view": "front-light",
+      "path": "assets/apparatus/masters/beaker-250ml/qa/blender-studies/beaker-250ml-griffin-visual-studies-v1/ab/ab-front-light.png",
+      "background": "#dfe3e3"
+    },
+    {
+      "view": "front-dark",
+      "path": "assets/apparatus/masters/beaker-250ml/qa/blender-studies/beaker-250ml-griffin-visual-studies-v1/ab/ab-front-dark.png",
+      "background": "#101820"
+    },
+    {
+      "view": "thumbnail-light",
+      "path": "assets/apparatus/masters/beaker-250ml/qa/blender-studies/beaker-250ml-griffin-visual-studies-v1/ab/ab-thumbnail-light.png",
+      "background": "#dfe3e3"
+    },
+    {
+      "view": "thumbnail-dark",
+      "path": "assets/apparatus/masters/beaker-250ml/qa/blender-studies/beaker-250ml-griffin-visual-studies-v1/ab/ab-thumbnail-dark.png",
+      "background": "#101820"
+    }
+  ],
+  "status": "study-only",
+  "note": "A/B evidence is for owner visual review; it is not automatic Gold Master acceptance."
+}

@@ -19,6 +19,8 @@ __pycache__/
 venv/
 .uv/
 *.egg-info/
+# Blender's auto-saved sidecar backups are transient and are not source or evidence.
+*.blend1
 tools/oracle/phreeqc/.cache/
 native/sci-core/target/
 

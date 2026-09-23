@@ -141,3 +141,17 @@
 - The plan does not require image download, MCP, CPU-only rendering, EXR, or batch apparatus production.
 - The plan preserves the owner visual-review stop condition and cannot promote a study automatically.
 - There are no unresolved implementation placeholders; candidate controls and output locations are explicit.
+
+## Execution status
+
+Tasks 1–5 are implemented in the current working tree. The canonical
+manifest, 11 candidate `.blend` sources, OptiX render matrix, CPU comparison,
+contact sheets, A/B sheets, Blender-side scene reports, host validation, and
+owner-gated review are present.
+
+Task 6 verification is complete locally. The generated study candidates were
+rebuilt idempotently from the canonical source and all required outputs were
+overwritten before validation. Recursive deletion of the generated study
+directory was refused by the local safety policy, so this round does not claim
+that literal deletion/recreation occurred. Existing vertical-slice source and
+QA artifacts were not modified.

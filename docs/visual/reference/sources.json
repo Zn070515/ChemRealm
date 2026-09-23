@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "sources": [
+    {
+      "sourceId": "corning-pyrex-1003-250",
+      "kind": "manufacturer-product-record",
+      "url": "https://ecatalog.corning.com/life-sciences/b2c/US/en/General-Labware/Beakers/Beakers%2C-Glass/PYREX%C2%AE-Beakers%2C-Griffin%2C-Heavy-Duty%2C-Graduated/p/1003-250",
+      "publisher": "Corning",
+      "accessedOn": "2026-09-23",
+      "usage": "linked-description-only",
+      "supports": [
+        "250 mL capacity",
+        "approximately 74.3 mm outside diameter",
+        "approximately 90 mm height",
+        "25 mL graduation increment",
+        "Griffin low-form spout",
+        "double graduated scale",
+        "large marking spot",
+        "ASTM E-960 reference"
+      ]
+    },
+    {
+      "sourceId": "nobook-public-virtual-lab-description",
+      "kind": "public-product-description",
+      "url": "https://www.nobook.com/view/146",
+      "publisher": "NOBOOK",
+      "accessedOn": "2026-09-23",
+      "usage": "linked-description-only; benchmark-not-art-source",
+      "supports": [
+        "discoverable apparatus library",
+        "drag-and-drop setup",
+        "free-form laboratory workspace",
+        "instrument manipulation and connection",
+        "readable experiment operation"
+      ]
+    },
+    {
+      "sourceId": "nobook-public-virtual-lab-home",
+      "kind": "public-product-home",
+      "url": "https://chemistry-en.nobook.com/",
+      "publisher": "NOBOOK",
+      "accessedOn": "2026-09-23",
+      "usage": "linked-description-only; benchmark-not-art-source",
+      "supports": [
+        "catalog-and-experiment navigation context",
+        "desktop-and-mobile virtual-lab presentation context"
+      ]
+    }
+  ]
+}

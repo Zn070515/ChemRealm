@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "form": {
+    "F01": {
+      "label": "quiet-spout",
+      "variable": "spout-transition",
+      "spoutZScale": 0.94
+    },
+    "F02": {
+      "label": "pronounced-spout",
+      "variable": "spout-transition",
+      "spoutZScale": 1.01
+    },
+    "F03": {
+      "label": "heavy-rim",
+      "variable": "rim-profile",
+      "rimZScale": 1.18
+    },
+    "F04": {
+      "label": "quiet-base",
+      "variable": "base-mass",
+      "baseZScale": 1.06
+    }
+  },
+  "glass": {
+    "G01": {
+      "label": "neutral-scientific",
+      "variable": "glass-treatment",
+      "bodyMix": 0.42,
+      "edgeMix": 0.60,
+      "bodyColor": [0.035, 0.055, 0.060, 1.0],
+      "edgeColor": [0.020, 0.060, 0.070, 1.0]
+    },
+    "G02": {
+      "label": "edge-readable",
+      "variable": "glass-treatment",
+      "bodyMix": 0.50,
+      "edgeMix": 0.68,
+      "bodyColor": [0.040, 0.090, 0.105, 1.0],
+      "edgeColor": [0.025, 0.085, 0.105, 1.0]
+    },
+    "G03": {
+      "label": "product-soft",
+      "variable": "glass-treatment",
+      "bodyMix": 0.56,
+      "edgeMix": 0.70,
+      "bodyColor": [0.045, 0.105, 0.120, 1.0],
+      "edgeColor": [0.030, 0.100, 0.125, 1.0]
+    },
+    "G04": {
+      "label": "educational-contrast",
+      "variable": "glass-treatment",
+      "bodyMix": 0.62,
+      "edgeMix": 0.76,
+      "bodyColor": [0.055, 0.130, 0.145, 1.0],
+      "edgeColor": [0.035, 0.125, 0.150, 1.0]
+    }
+  },
+  "lighting": {
+    "L01": {
+      "label": "soft-neutral",
+      "variable": "lighting-rig",
+      "keyEnergy": 0.70,
+      "fillEnergy": 0.26,
+      "rimEnergy": 0.42,
+      "keyLocation": [-0.10, -0.15, 0.17],
+      "fillLocation": [0.13, -0.10, 0.09],
+      "rimLocation": [0.06, 0.08, 0.15]
+    },
+    "L02": {
+      "label": "edge-card",
+      "variable": "lighting-rig",
+      "keyEnergy": 0.62,
+      "fillEnergy": 0.18,
+      "rimEnergy": 0.70,
+      "keyLocation": [-0.12, -0.14, 0.16],
+      "fillLocation": [0.16, -0.08, 0.08],
+      "rimLocation": [0.08, 0.10, 0.16]
+    },
+    "L03": {
+      "label": "quiet-studio",
+      "variable": "lighting-rig",
+      "keyEnergy": 0.52,
+      "fillEnergy": 0.34,
+      "rimEnergy": 0.30,
+      "keyLocation": [-0.10, -0.18, 0.18],
+      "fillLocation": [0.14, -0.12, 0.10],
+      "rimLocation": [0.04, 0.07, 0.14]
+    }
+  }
+}
