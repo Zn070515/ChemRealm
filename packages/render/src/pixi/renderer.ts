@@ -6,6 +6,11 @@ import { type RenderNode, type RenderState } from "../state/scene.js";
 import { type BeakerSceneActor } from "../state/beaker-scene.js";
 import { buildBeakerGraduationMarks, buildBeakerLiquidGeometry } from "./beaker-geometry.js";
 import {
+  assertBeakerLayeredCompositionPlan,
+  BEAKER_BODY_SPRITE_FRAME,
+  buildBeakerLayeredCompositionPlan,
+} from "./beaker-layered-compositor.js";
+import {
   buildBeakerLiquidMaterialInput,
   createBeakerLiquidMaterialFilter,
 } from "./liquid-material.js";
@@ -30,6 +35,10 @@ interface TintData {
 const LOGICAL = TITRATION_LOGICAL_SIZE;
 const BEAKER_BODY_ASSET_URL = new URL(
   "../../../../assets/apparatus/masters/beaker-250ml/source/visual-body/body.png",
+  import.meta.url,
+).href;
+const BEAKER_FRONT_DETAIL_ASSET_URL = new URL(
+  "../../../../assets/apparatus/masters/beaker-250ml/source/visual-body/runtime/glass-front-detail.svg",
   import.meta.url,
 ).href;
 
@@ -333,37 +342,40 @@ function drawFlask(root: Container, state: RenderState): void {
   addText(root, "250 mL", 431, 506, { size: 12, color: T.textMuted });
 }
 
-function drawBeaker(root: Container, state: RenderState, bodyTexture: Texture): void {
+function drawBeaker(root: Container, state: RenderState, bodyTexture: Texture, frontDetailTexture: Texture): void {
   const node = nodeById(state, "beaker-apparatus");
   const actor = node?.data.sceneActor as BeakerSceneActor | undefined;
   if (actor === undefined) return;
-  const left = 786;
-  const right = 974;
-  const top = 316;
-  const bottom = 570;
-  const width = right - left;
-  const height = bottom - top;
+  const bodyFrame = BEAKER_BODY_SPRITE_FRAME;
+  const left = bodyFrame.left;
+  const top = bodyFrame.top;
+  const width = bodyFrame.width;
+  const height = bodyFrame.height;
   const fillFraction = clamp(
     actor.liquid.heightMm / Math.max(actor.liquid.profileMaxHeightMm, Number.EPSILON),
     0,
     1,
   );
   const liquidGeometry = buildBeakerLiquidGeometry(fillFraction);
+  const compositionPlan = buildBeakerLayeredCompositionPlan(
+    fillFraction,
+    actor.liquid.appearance.status,
+  );
+  assertBeakerLayeredCompositionPlan(compositionPlan);
   const toScene = ([x, y]: readonly [number, number]): readonly [number, number] => [
-    left + x * width,
-    top + y * height,
+    bodyFrame.left + x * bodyFrame.width,
+    bodyFrame.top + y * bodyFrame.height,
   ];
 
-  // NOBOOK-aligned scene composition: the authored vessel body establishes the
-  // visual material, the state-derived liquid is clipped to a visual cavity,
-  // and deterministic markings are projected from the apparatus contract. The
+  // The authored vessel body establishes the back-glass reference. The
+  // state-derived liquid samples the already-rendered pixels behind its mask;
+  // the separate front-detail sprite is restored after the liquid pass. The
   // geometry helper is visual-only; volume and appearance still come from the
-  // ObservableModel. A production back/front glass decomposition remains a
-  // separate admission task.
+  // ObservableModel.
   const body = new Sprite(bodyTexture);
-  body.position.set(760, 290);
-  body.width = 250;
-  body.height = 300;
+  body.position.set(bodyFrame.left, bodyFrame.top);
+  body.width = bodyFrame.width;
+  body.height = bodyFrame.height;
   root.addChild(body);
 
   const bodyPoints = liquidGeometry.body.map(toScene);
@@ -392,6 +404,12 @@ function drawBeaker(root: Container, state: RenderState, bodyTexture: Texture): 
     "surface",
   )];
   root.addChild(surface);
+
+  const frontDetail = new Sprite(frontDetailTexture);
+  frontDetail.position.set(bodyFrame.left, bodyFrame.top);
+  frontDetail.width = bodyFrame.width;
+  frontDetail.height = bodyFrame.height;
+  root.addChild(frontDetail);
 
   const scale = new Graphics();
   const rawMarking = node?.data.graduation;
@@ -440,13 +458,13 @@ function drawInspectionCard(root: Container, state: RenderState): void {
   });
 }
 
-function drawState(root: Container, state: RenderState, beakerBodyTexture: Texture): void {
+function drawState(root: Container, state: RenderState, beakerBodyTexture: Texture, frontDetailTexture: Texture): void {
   if (state.nodes.some((node) => node.id === "titration-bench")) {
     drawBackdrop(root);
     drawStand(root);
     drawBurette(root, state);
     drawFlask(root, state);
-    drawBeaker(root, state, beakerBodyTexture);
+    drawBeaker(root, state, beakerBodyTexture, frontDetailTexture);
     drawInspectionCard(root, state);
   }
 }
@@ -478,10 +496,14 @@ export async function mountPixiExperiment(
     autoDensity: true,
     resolution: Math.min(2, Math.max(1, globalThis.devicePixelRatio ?? 1)),
     preference: "webgl",
+    useBackBuffer: true,
   });
   const root = new Container();
   app.stage.addChild(root);
-  const beakerBodyTexture = await Assets.load<Texture>(BEAKER_BODY_ASSET_URL);
+  const [beakerBodyTexture, beakerFrontDetailTexture] = await Promise.all([
+    Assets.load<Texture>(BEAKER_BODY_ASSET_URL),
+    Assets.load<Texture>(BEAKER_FRONT_DETAIL_ASSET_URL),
+  ]);
   options.host.replaceChildren(app.canvas);
   app.canvas.setAttribute("aria-hidden", "true");
   app.canvas.dataset.renderer = "pixi";
@@ -489,7 +511,7 @@ export async function mountPixiExperiment(
 
   const update = (renderState: RenderState): void => {
     root.removeChildren().forEach((child) => child.destroy({ children: true }));
-    drawState(root, renderState, beakerBodyTexture);
+    drawState(root, renderState, beakerBodyTexture, beakerFrontDetailTexture);
     app.canvas.dataset.renderStateVersion = String(renderState.version);
     fitLogicalScene(root, options.host);
     app.render();

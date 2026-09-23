@@ -90,7 +90,7 @@
     },
     "surface": {
       "kind": "perspective-ellipse",
-      "depthPx": 22,
+      "depthPx": 48,
       "rearArcRisePx": 5,
       "frontArcDropPx": 8,
       "wallContactInsetPx": 0
@@ -98,6 +98,12 @@
     "prototypeArtifact": "runtime/liquid-visual-geometry.svg"
   },
   "runtimeLayers": {
+    "layerManifest": {
+      "owner": "Representation Engine",
+      "mode": "provisional-layered-compositor",
+      "artifact": "runtime/layer-manifest.json",
+      "measurementUse": "forbidden"
+    },
     "graduations": {
       "owner": "Representation Engine",
       "mode": "deterministic-runtime-layer",
@@ -116,6 +122,12 @@
       "interiorMaskArtifact": "runtime/interior-mask.svg",
       "maskArtifact": "runtime/liquid-mask.svg",
       "prototypeGeometryArtifact": "runtime/liquid-visual-geometry.svg"
+    },
+    "frontDetail": {
+      "owner": "Representation Engine",
+      "mode": "provisional-authored-front-detail",
+      "artifact": "runtime/glass-front-detail.svg",
+      "measurementUse": "forbidden"
     },
     "stateEffects": {
       "owner": "ObservableModel",

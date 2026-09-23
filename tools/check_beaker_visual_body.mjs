@@ -129,6 +129,31 @@ for (const output of [
   }
 }
 
+const layerManifestPath = resolve(dirname(manifestPath), "runtime/layer-manifest.json");
+try {
+  const layerManifestBytes = await readFile(layerManifestPath);
+  const layerManifest = JSON.parse(layerManifestBytes.toString("utf8"));
+  if (layerManifest.assetId !== manifest.assetId) fail("layer manifest has the wrong asset identity");
+  if (layerManifest.status !== "provisional-layered-compositor") fail("layer manifest must remain provisional");
+  if (layerManifest.measurementUse !== "forbidden") fail("layer manifest must remain non-measurement");
+  if (layerManifest.sourceManifestSha256 !== sha256(manifestBytes)) fail("layer manifest source manifest hash is stale");
+  if (!layerManifest.roles?.backBody || !layerManifest.roles?.frontDetail || !layerManifest.roles?.liquidResponse || !layerManifest.roles?.surfaceResponse) {
+    fail("layer manifest must declare back body, front detail, liquid response and surface response roles");
+  }
+  const frontDetailPath = resolve(dirname(manifestPath), layerManifest.roles.frontDetail.path);
+  const frontDetailBytes = await readFile(frontDetailPath);
+  const frontDetail = frontDetailBytes.toString("utf8");
+  if (layerManifest.roles.frontDetail.sha256 !== sha256(frontDetailBytes)) fail("front detail hash does not match layer manifest");
+  const calibrationBytes = await readFile(resolve(repositoryRoot, "packages/render/src/assets/beaker-visual-calibration.json"));
+  if (layerManifest.calibrationSha256 !== sha256(calibrationBytes)) fail("layer manifest calibration hash is stale");
+  if (!frontDetail.includes(`data-asset-id="${manifest.assetId}"`)) fail("front detail has the wrong asset identity");
+  if (!frontDetail.includes('data-layer="glass-front-detail"')) fail("front detail has the wrong layer identity");
+  if (!frontDetail.includes("provisional-visual-calibration")) fail("front detail must remain provisional");
+} catch (error) {
+  if (error instanceof SyntaxError) fail("layer manifest is not valid JSON");
+  else fail("missing or invalid layered compositor manifest");
+}
+
 for (const [name, input] of Object.entries(manifest.engineeringSources ?? {})) {
   if (name === "centralVersionManifest") continue;
   const inputBytes = await readFile(relative(input.path));

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "assetId": "beaker-250ml",
   "sourceManifest": "assets/apparatus/masters/beaker-250ml/source/visual-body/manifest.json",
-  "sourceManifestSha256": "sha256:707887427a3f4f61fa80ab6eec186f32b1ebb41e526ca88e8fea4db9dd85608e",
+  "sourceManifestSha256": "sha256:f51b78653205114236579932cad605c23d095edd958d2173ac392894e48ae121",
   "status": "provisional-visual-calibration",
   "measurementUse": "forbidden",
   "cavity": {
@@ -46,7 +46,7 @@
     ],
     "surface": {
       "kind": "perspective-ellipse",
-      "depth": 0.01601164
+      "depth": 0.0349345
     }
   }
 }

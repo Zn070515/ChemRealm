@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1145 1374" data-asset-id="beaker-250ml" data-layer="glass-front-detail" data-calibration-status="provisional-visual-calibration" role="img" aria-label="Provisional front glass detail overlay">
+  <title>Provisional front glass detail</title>
+  <desc>Visual-only authored detail retained above the state-derived liquid. It is not measurement or chemistry data.</desc>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M 154 184 C 205 118 330 92 573 92 C 816 92 940 118 991 184" stroke="#ffffff" stroke-width="12" opacity="0.30"/>
+    <path d="M 174 214 C 260 248 388 262 573 262 C 758 262 886 248 972 214" stroke="#1e2b2f" stroke-width="8" opacity="0.24"/>
+    <path d="M 210 270 C 198 430 198 820 224 1026" stroke="#ffffff" stroke-width="10" opacity="0.16"/>
+    <path d="M 935 270 C 947 430 947 820 921 1026" stroke="#1e2b2f" stroke-width="9" opacity="0.20"/>
+    <path d="M 236 1080 C 340 1160 806 1160 909 1080" stroke="#ffffff" stroke-width="16" opacity="0.34"/>
+    <path d="M 246 1134 C 354 1194 792 1194 899 1134" stroke="#1e2b2f" stroke-width="10" opacity="0.28"/>
+  </g>
+</svg>

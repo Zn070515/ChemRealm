@@ -123,10 +123,48 @@ await writeFile(
   "utf8",
 );
 
+const calibrationBytes = Buffer.from(`${JSON.stringify(visualCalibration, null, 2)}\n`, "utf8");
+const frontDetailPath = resolve(outputRoot, "glass-front-detail.svg");
+const frontDetailBytes = await readFile(frontDetailPath);
+const layeredManifest = {
+  schemaVersion: 1,
+  assetId: manifest.assetId,
+  status: "provisional-layered-compositor",
+  measurementUse: "forbidden",
+  sourceManifestSha256,
+  calibrationSha256: `sha256:${createHash("sha256").update(calibrationBytes).digest("hex")}`,
+  roles: {
+    backBody: {
+      path: manifest.body.path,
+      mimeType: manifest.body.mimeType,
+      kind: "authored-body-reference",
+      sha256: manifest.body.sha256,
+    },
+    frontDetail: {
+      path: "runtime/glass-front-detail.svg",
+      mimeType: "image/svg+xml",
+      kind: "provisional-authored-front-detail",
+      sha256: `sha256:${createHash("sha256").update(frontDetailBytes).digest("hex")}`,
+    },
+    liquidResponse: {
+      path: "packages/render/src/assets/beaker-visual-calibration.json",
+      kind: "renderer-calibration",
+      measurementUse: "forbidden",
+    },
+    surfaceResponse: {
+      path: "packages/render/src/assets/beaker-visual-calibration.json",
+      kind: "renderer-calibration",
+      measurementUse: "forbidden",
+    },
+  },
+};
+await writeFile(resolve(outputRoot, "layer-manifest.json"), `${JSON.stringify(layeredManifest, null, 2)}\n`, "utf8");
+await writeFile(resolve(repositoryRoot, "packages/render/src/assets/beaker-visual-layer-manifest.json"), `${JSON.stringify(layeredManifest, null, 2)}\n`, "utf8");
+
 console.log(JSON.stringify({
   status: "PASS",
   assetId: manifest.assetId,
-  generated: ["runtime/graduations.svg", "runtime/interior-mask.svg", "runtime/liquid-mask.svg", "packages/render/src/assets/beaker-visual-calibration.json"],
+  generated: ["runtime/graduations.svg", "runtime/interior-mask.svg", "runtime/liquid-mask.svg", "runtime/layer-manifest.json", "packages/render/src/assets/beaker-visual-calibration.json", "packages/render/src/assets/beaker-visual-layer-manifest.json"],
   calibration: "provisional-visual-calibration",
   scientificProfile: "not-generated",
 }, null, 2));

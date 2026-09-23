@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "assetId": "beaker-250ml",
+  "status": "provisional-layered-compositor",
+  "measurementUse": "forbidden",
+  "sourceManifestSha256": "sha256:f51b78653205114236579932cad605c23d095edd958d2173ac392894e48ae121",
+  "calibrationSha256": "sha256:2c2ab92b8894b86a5571a349724d0cec45e6c710d35f7d629083f73b1781c285",
+  "roles": {
+    "backBody": {
+      "path": "body.png",
+      "mimeType": "image/png",
+      "kind": "authored-body-reference",
+      "sha256": "sha256:2e155d30d38fd52f394fad2c951d5a1e8d029cdcf5ed636f91b62657d9129fb8"
+    },
+    "frontDetail": {
+      "path": "runtime/glass-front-detail.svg",
+      "mimeType": "image/svg+xml",
+      "kind": "provisional-authored-front-detail",
+      "sha256": "sha256:03c0604bd7677782ada2d5fb6b1995f5a67a7626f7031f875576921f90a17e09"
+    },
+    "liquidResponse": {
+      "path": "packages/render/src/assets/beaker-visual-calibration.json",
+      "kind": "renderer-calibration",
+      "measurementUse": "forbidden"
+    },
+    "surfaceResponse": {
+      "path": "packages/render/src/assets/beaker-visual-calibration.json",
+      "kind": "renderer-calibration",
+      "measurementUse": "forbidden"
+    }
+  }
+}

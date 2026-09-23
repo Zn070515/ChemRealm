@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   BEAKER_LIQUID_FRAGMENT_GLSL,
+  BEAKER_LIQUID_FILTER_BLEND_REQUIRED,
   buildBeakerLiquidMaterialInput,
   type BeakerLiquidMaterialActor,
 } from "./liquid-material.js";
@@ -46,6 +47,7 @@ describe("beaker GPU liquid material boundary", () => {
 
   it("keeps the fragment program chemistry-blind and non-palette-based", () => {
     expect(BEAKER_LIQUID_FRAGMENT_GLSL).toContain("uTintStrength");
+    expect(BEAKER_LIQUID_FRAGMENT_GLSL).toContain("uBackTexture");
     expect(BEAKER_LIQUID_FRAGMENT_GLSL).toContain("uWallBand");
     expect(BEAKER_LIQUID_FRAGMENT_GLSL).toContain("uBottomBand");
     expect(BEAKER_LIQUID_FRAGMENT_GLSL).toContain("uSurfaceRing");
@@ -53,5 +55,10 @@ describe("beaker GPU liquid material boundary", () => {
     expect(BEAKER_LIQUID_FRAGMENT_GLSL).not.toContain("indicatorId");
     expect(BEAKER_LIQUID_FRAGMENT_GLSL).not.toMatch(/phenolphthalein|methyl-orange|methylOrange/i);
     expect(BEAKER_LIQUID_FRAGMENT_GLSL).not.toMatch(/\bpH\b|\bKa\b|\bKw\b|\bspecies\b|\bequilibrium\b/i);
+  });
+
+  it("uses the Pixi back-buffer contract instead of a standalone liquid card", () => {
+    expect(BEAKER_LIQUID_FILTER_BLEND_REQUIRED).toBe(true);
+    expect(BEAKER_LIQUID_FRAGMENT_GLSL).toMatch(/texture2D\(uBackTexture,\s*uv\)/);
   });
 });
