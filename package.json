@@ -42,6 +42,7 @@
     "verify:m6-visual-studies": "node tools/check_m6_visual_studies.mjs",
     "verify:beaker-visual-body": "node tools/check_beaker_visual_body.mjs",
     "generate:beaker-visual-body-layers": "node tools/generate_beaker_visual_body_layers.mjs",
+    "preview:beaker-visual-body": "node tools/compose_beaker_visual_body_preview.mjs",
     "verify:world": "node tools/check_world_runtime_contract.mjs",
     "native:fmt": "cargo fmt --manifest-path native/sci-core/Cargo.toml -- --check",
     "native:test": "cargo test --manifest-path native/sci-core/Cargo.toml",
