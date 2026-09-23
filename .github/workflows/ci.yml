@@ -81,6 +81,7 @@ jobs:
       - run: pnpm verify:m6-instruments
       - run: pnpm verify:m6-render-geometry
       - run: pnpm verify:m6-renderer
+      - run: pnpm verify:beaker-visual-body
       - run: pnpm verify:world
       # Indicator optical source admission is a refusal-first evidence gate;
       # no quantitative profile may enter production without source fidelity,

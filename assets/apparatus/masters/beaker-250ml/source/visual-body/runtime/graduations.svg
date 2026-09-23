@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1145 1374" data-asset-id="beaker-250ml" data-layer="graduations" data-marking-kind="approximate-contained" data-calibration-status="provisional-visual-calibration" role="img" aria-label="Approximate contained-volume graduations; runtime layer only">
+  <title>Approximate contained-volume graduations</title>
+  <desc>Generated from the existing approximate-contained marking contract. This layer is not analytical measurement evidence.</desc>
+  <g fill="none" stroke="#304247" stroke-width="3" stroke-linecap="round">
+  <g data-marking-value-ml="25"><path d="M 618.30 1154.16 H 744.25"/></g>
+  <g data-marking-value-ml="50"><path d="M 618.30 1016.76 H 744.25"/></g>
+  <g data-marking-value-ml="75"><path d="M 618.30 879.36 H 744.25"/></g>
+  <g data-marking-value-ml="100"><path d="M 618.30 741.96 H 744.25"/></g>
+  <g data-marking-value-ml="125"><path d="M 618.30 604.56 H 744.25"/></g>
+  <g data-marking-value-ml="150"><path d="M 618.30 467.16 H 744.25"/></g>
+  <g data-marking-value-ml="175"><path d="M 618.30 329.76 H 744.25"/></g>
+  <g data-marking-value-ml="200"><path d="M 618.30 192.36 H 744.25"/></g>
+  </g>
+  <g fill="#304247" font-family="system-ui, sans-serif" font-size="26" text-anchor="start">
+    <text x="767.15" y="1160.16">25</text>
+    <text x="767.15" y="1022.76">50</text>
+    <text x="767.15" y="885.36">75</text>
+    <text x="767.15" y="747.96">100</text>
+    <text x="767.15" y="610.56">125</text>
+    <text x="767.15" y="473.16">150</text>
+    <text x="767.15" y="335.76">175</text>
+    <text x="767.15" y="198.36">200</text>
+    <text x="618.30" y="174.36" font-size="20">approx. mL</text>
+  </g>
+</svg>

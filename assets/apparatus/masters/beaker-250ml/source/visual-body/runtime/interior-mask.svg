@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1145 1374" data-asset-id="beaker-250ml" data-layer="interior-mask" data-calibration-status="provisional-visual-calibration">
+  <title>interior-mask</title>
+  <desc>Provisional visual cavity mask; not measurement geometry.</desc>
+  <path d="M 263.35 224.36 Q 263.35 192.36 295.35 192.36 H 941.25 Q 973.25 192.36 973.25 224.36 V 1122.16 Q 973.25 1154.16 941.25 1154.16 H 295.35 Q 263.35 1154.16 263.35 1122.16 Z" fill="#ffffff"/>
+</svg>

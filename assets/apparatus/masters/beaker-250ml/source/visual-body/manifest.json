@@ -1,0 +1,93 @@
+{
+  "assetId": "beaker-250ml",
+  "familyId": "beaker",
+  "specificationId": "beaker-250ml",
+  "status": "visual-body-candidate",
+  "admission": "not-gold-master",
+  "body": {
+    "path": "body.png",
+    "mimeType": "image/png",
+    "widthPx": 1145,
+    "heightPx": 1374,
+    "sha256": "sha256:2e155d30d38fd52f394fad2c951d5a1e8d029cdcf5ed636f91b62657d9129fb8",
+    "alpha": "required",
+    "transparentBackground": true,
+    "contains": ["empty-vessel-body", "rim", "spout", "glass-base"],
+    "excludes": [
+      "graduations",
+      "graduation-labels",
+      "liquid",
+      "meniscus",
+      "chemical-colour",
+      "state-overlay",
+      "baked-shadow",
+      "branding"
+    ]
+  },
+  "engineeringSources": {
+    "measurementSheet": {
+      "path": "assets/apparatus/masters/beaker-250ml/measurement-sheet.json",
+      "sha256": "sha256:46ce02ef7b8bfd9512fc92332505d56486b49405fe71e564677fd775955655c3"
+    },
+    "sourceRecord": {
+      "path": "assets/apparatus/masters/beaker-250ml/source-record.md",
+      "sha256": "sha256:ad54b1fd229f60f652252cc76e40869edaef890863f4483e5ba7cef5c0a73d62"
+    },
+    "constructionContract": {
+      "path": "packages/render/src/assets/gold-master-construction.json",
+      "sha256": "sha256:5a65994cfc0604aac6fd6b4e650c38d2f8546cef4d9a7a18464b7dcbfeabf3d3"
+    },
+    "centralVersionManifest": "contracts/version-manifest.json"
+  },
+  "coordinateContract": {
+    "imageCoordinateUnit": "pixel",
+    "normalizedCoordinates": "[0,1] relative to body.png",
+    "alphaBoundsPx": [137, 123, 997, 1252],
+    "calibrationStatus": "provisional-visual-calibration",
+    "measurementUse": "forbidden",
+    "anchors": {
+      "rimTop": [0.5, 0.09],
+      "cavityTop": [0.5, 0.14],
+      "cavityBottom": [0.5, 0.84],
+      "contactBase": [0.5, 0.91],
+      "spoutTip": [0.12, 0.16]
+    },
+    "graduationRegion": {
+      "xStart": 0.54,
+      "xEnd": 0.65,
+      "labelX": 0.67,
+      "status": "provisional-visual-calibration"
+    }
+  },
+  "runtimeLayers": {
+    "graduations": {
+      "owner": "Representation Engine",
+      "mode": "deterministic-runtime-layer",
+      "source": "packages/render/src/assets/gold-master-construction.json#specifications[beaker-250ml].marking",
+      "unit": "mL",
+      "classification": "read-from-source-contract",
+      "bakedIntoBody": false,
+      "generatedArtifact": "runtime/graduations.svg"
+    },
+    "liquid": {
+      "owner": "Observable / Representation boundary",
+      "mode": "state-derived-runtime-layer",
+      "requires": "validated VolumeProfileSnapshot",
+      "bakedIntoBody": false,
+      "profileGeneratedByThisAsset": false,
+      "maskArtifact": "runtime/liquid-mask.svg"
+    },
+    "stateEffects": {
+      "owner": "ObservableModel",
+      "bakedIntoBody": false,
+      "examples": ["meniscus", "precipitate", "bubbles", "selection", "refusal"]
+    }
+  },
+  "generationRecord": {
+    "method": "OpenAI image generation preview, then targeted visual-body refinement",
+    "sourceArtworkRedistributed": false,
+    "generatedImageIsScientificTruth": false,
+    "visualReview": "pending-owner-review",
+    "nextEngineeringStep": "manual anchor calibration and runtime composition fixture"
+  }
+}
