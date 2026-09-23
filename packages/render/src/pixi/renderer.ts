@@ -1,7 +1,10 @@
-import { Application, Container, Graphics, Text } from "pixi.js";
+import { Application, Assets, Container, Graphics, Sprite, Text, type Texture } from "pixi.js";
 
 import { TITRATION_BENCH_ASSET } from "../assets/titration-bench.js";
+import { assertInstrumentMarking } from "../assets/instrument-marking.js";
 import { type RenderNode, type RenderState } from "../state/scene.js";
+import { type BeakerSceneActor } from "../state/beaker-scene.js";
+import { buildBeakerGraduationMarks, buildBeakerLiquidGeometry } from "./beaker-geometry.js";
 import { TITRATION_LOGICAL_SIZE, TITRATION_RENDER_TOKENS as T } from "./tokens.js";
 
 export interface PixiExperimentMount {
@@ -21,6 +24,10 @@ interface TintData {
 }
 
 const LOGICAL = TITRATION_LOGICAL_SIZE;
+const BEAKER_BODY_ASSET_URL = new URL(
+  "../../../../assets/apparatus/masters/beaker-250ml/source/visual-body/body.png",
+  import.meta.url,
+).href;
 
 function nodeById(state: RenderState, id: string): RenderNode | undefined {
   return state.nodes.find((node) => node.id === id);
@@ -74,6 +81,15 @@ function liquidColour(state: RenderState): number {
     ? clamp(tint.strength, 0, 1)
     : 1;
   return blendHex(srgbToHex(tint.srgb), T.liquidNeutral, strength);
+}
+
+function beakerLiquidColour(actor: BeakerSceneActor): number {
+  if (actor.liquid.appearance.status !== "observed") return T.liquidNeutral;
+  return blendHex(
+    srgbToHex(actor.liquid.appearance.tintSrgb),
+    T.liquidNeutral,
+    clamp(actor.liquid.appearance.tintStrength, 0, 1),
+  );
 }
 
 function path(graphics: Graphics, commands: readonly (readonly [number, number])[]): Graphics {
@@ -322,30 +338,94 @@ function drawFlask(root: Container, state: RenderState): void {
   addText(root, "250 mL", 431, 506, { size: 12, color: T.textMuted });
 }
 
-function drawBeaker(root: Container): void {
-  const left = 790;
-  const right = 950;
-  const top = 402;
-  const bottom = 580;
-  const beaker = new Graphics();
-  path(beaker, [[left, top], [right, top], [right - 11, bottom], [left + 11, bottom]])
-    .fill({ color: T.glass, alpha: 0.3 })
-    .stroke({ color: T.glassEdge, width: 4 });
-  beaker.ellipse((left + right) / 2, top, (right - left) / 2, 11)
-    .fill({ color: T.surfaceInset, alpha: 0.42 })
-    .stroke({ color: T.glassEdge, width: 4 });
-  beaker.moveTo(right - 16, top + 4).lineTo(right + 32, top + 28).lineTo(right - 9, top + 44)
-    .fill({ color: T.glass, alpha: 0.38 })
-    .stroke({ color: T.glassEdge, width: 3 });
-  beaker.moveTo(left + 22, top + 27).lineTo(left + 22, bottom - 24).stroke({ color: T.white, width: 7, alpha: 0.6 });
-  beaker.moveTo(left + 42, top + 18).lineTo(left + 42, bottom - 14).stroke({ color: T.white, width: 3, alpha: 0.32 });
-  for (const [offset, length] of [[42, 44], [72, 29], [102, 44], [132, 29]] as const) {
-    beaker.moveTo(left + 13, top + offset).lineTo(left + 13 + length, top + offset).stroke({ color: T.tick, width: 2, alpha: 0.82 });
+function drawBeaker(root: Container, state: RenderState, bodyTexture: Texture): void {
+  const node = nodeById(state, "beaker-apparatus");
+  const actor = node?.data.sceneActor as BeakerSceneActor | undefined;
+  if (actor === undefined) return;
+  const left = 786;
+  const right = 974;
+  const top = 316;
+  const bottom = 570;
+  const width = right - left;
+  const height = bottom - top;
+  const fillFraction = clamp(
+    actor.liquid.heightMm / Math.max(actor.liquid.profileMaxHeightMm, Number.EPSILON),
+    0,
+    1,
+  );
+  const liquidGeometry = buildBeakerLiquidGeometry(fillFraction);
+  const toScene = ([x, y]: readonly [number, number]): readonly [number, number] => [
+    left + x * width,
+    top + y * height,
+  ];
+
+  // NOBOOK-aligned scene composition: the authored vessel body establishes the
+  // visual material, the state-derived liquid is clipped to a visual cavity,
+  // and deterministic markings are projected from the apparatus contract. The
+  // geometry helper is visual-only; volume and appearance still come from the
+  // ObservableModel. A production back/front glass decomposition remains a
+  // separate admission task.
+  const body = new Sprite(bodyTexture);
+  body.position.set(760, 290);
+  body.width = 250;
+  body.height = 300;
+  body.alpha = actor.liquid.appearance.status === "observed" ? 0.68 : 0.72;
+  root.addChild(body);
+
+  const liquid = new Graphics();
+  path(liquid, liquidGeometry.body.map(toScene))
+    .fill({
+      color: beakerLiquidColour(actor),
+      alpha: actor.liquid.appearance.status === "observed" ? 0.68 : 0.42,
+    });
+  const surfaceCenterX = left + ((liquidGeometry.surface.left + liquidGeometry.surface.right) / 2) * width;
+  const surfaceWidth = (liquidGeometry.surface.right - liquidGeometry.surface.left) * width / 2;
+  const surfaceY = top + liquidGeometry.surface.y * height;
+  liquid.ellipse(surfaceCenterX, surfaceY, surfaceWidth, liquidGeometry.surface.depth * height)
+    .fill({
+      color: actor.liquid.appearance.status === "observed"
+        ? beakerLiquidColour(actor)
+        : T.surfaceInset,
+      alpha: actor.liquid.appearance.status === "observed" ? 0.56 : 0.3,
+    })
+    .stroke({
+      color: actor.liquid.appearance.status === "observed" ? T.white : T.glassEdge,
+      width: 2,
+      alpha: actor.liquid.appearance.status === "observed" ? 0.64 : 0.38,
+    });
+  root.addChild(liquid);
+
+  const glassResponse = new Graphics();
+  glassResponse.moveTo(left + 24, top + 35).lineTo(left + 24, bottom - 28)
+    .stroke({ color: T.white, width: 4, alpha: 0.35 });
+  glassResponse.moveTo(right - 18, top + 28).lineTo(right - 18, bottom - 24)
+    .stroke({ color: T.glassEdge, width: 2, alpha: 0.28 });
+  root.addChild(glassResponse);
+
+  const scale = new Graphics();
+  const rawMarking = node?.data.graduation;
+  if (rawMarking !== undefined) {
+    assertInstrumentMarking(rawMarking);
+    const marks = buildBeakerGraduationMarks(rawMarking, {
+      start: top + height * 0.25,
+      end: top + height * 0.78,
+    });
+    for (const mark of marks) {
+      const tickLength = mark.isMajor ? 30 : 20;
+      scale.moveTo(left + 12, mark.y).lineTo(left + 12 + tickLength, mark.y)
+        .stroke({ color: T.tick, width: mark.isMajor ? 1.6 : 1.1, alpha: 0.84 });
+      if (mark.showLabel) {
+        addText(root, `${mark.valueMl} mL`, left + 47, mark.y - 5, {
+          size: 8,
+          color: T.textMuted,
+          anchor: 0,
+        });
+      }
+    }
   }
-  beaker.moveTo(left + 15, bottom - 5).lineTo(right - 15, bottom - 5).stroke({ color: T.glassEdge, width: 5, alpha: 0.75 });
-  root.addChild(beaker);
-  addText(root, "BEAKER", left + 35, 586, { size: 12, weight: "700", letterSpacing: 1.3 });
-  addText(root, "250 mL", left + 100, 586, { size: 10, color: T.textMuted });
+  root.addChild(scale);
+  addText(root, "BEAKER", left + 40, 594, { size: 12, weight: "700", letterSpacing: 1.3 });
+  addText(root, "250 mL", left + 105, 594, { size: 10, color: T.textMuted });
 }
 
 function drawInspectionCard(root: Container, state: RenderState): void {
@@ -369,13 +449,13 @@ function drawInspectionCard(root: Container, state: RenderState): void {
   });
 }
 
-function drawState(root: Container, state: RenderState): void {
+function drawState(root: Container, state: RenderState, beakerBodyTexture: Texture): void {
   if (state.nodes.some((node) => node.id === "titration-bench")) {
     drawBackdrop(root);
     drawStand(root);
     drawBurette(root, state);
     drawFlask(root, state);
-    drawBeaker(root);
+    drawBeaker(root, state, beakerBodyTexture);
     drawInspectionCard(root, state);
   }
 }
@@ -410,6 +490,7 @@ export async function mountPixiExperiment(
   });
   const root = new Container();
   app.stage.addChild(root);
+  const beakerBodyTexture = await Assets.load<Texture>(BEAKER_BODY_ASSET_URL);
   options.host.replaceChildren(app.canvas);
   app.canvas.setAttribute("aria-hidden", "true");
   app.canvas.dataset.renderer = "pixi";
@@ -417,7 +498,7 @@ export async function mountPixiExperiment(
 
   const update = (renderState: RenderState): void => {
     root.removeChildren().forEach((child) => child.destroy({ children: true }));
-    drawState(root, renderState);
+    drawState(root, renderState, beakerBodyTexture);
     app.canvas.dataset.renderStateVersion = String(renderState.version);
     fitLogicalScene(root, options.host);
     app.render();

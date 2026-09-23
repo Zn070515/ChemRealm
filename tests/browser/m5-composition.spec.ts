@@ -10,6 +10,13 @@ test.describe("M5 production composition", () => {
     await expect(page.getByTestId("backend-version")).toHaveText(/^\d+\.\d+\.\d+$/);
     await expect(page.getByTestId("world-sequence")).not.toHaveText("");
     await expect(page.getByTestId("world-state-hash")).not.toHaveText("");
+    await expect(page.getByTestId("beaker-scene-actor")).toHaveAttribute(
+      "data-asset-id",
+      "beaker-250ml",
+    );
+    await expect(page.getByTestId("beaker-scene-source")).not.toHaveText("");
+    await expect(page.getByTestId("beaker-scene-layers")).toContainText("glass-back");
+    await expect(page.getByTestId("beaker-liquid-appearance")).toHaveText("unavailable");
     await expect(page.getByTestId("ph-readout")).toHaveText(/^pH \d+\.\d{2}$/);
     await expect(page.getByTestId("burette-reading")).toHaveText(/mL$/);
     await expect(page.getByTestId("indicator-id")).toHaveText("phenolphthalein");

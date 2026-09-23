@@ -7,6 +7,7 @@ export * from "./observable/level.js";
 export * from "./observable/species.js";
 export * from "./observable/symbolic.js";
 export * from "./state/scene.js";
+export * from "./state/beaker-scene.js";
 export * from "./state/titration.js";
 export * from "./assets/titration-bench.js";
 export * from "./assets/apparatus-catalog.js";

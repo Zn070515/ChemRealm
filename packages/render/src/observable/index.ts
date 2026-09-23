@@ -91,6 +91,7 @@ export interface ObservableReadouts {
 
 export interface ObservableModel {
   readonly version: typeof OBSERVABLE_MODEL_VERSION;
+  readonly sequence: number;
   readonly indicators: readonly ObservableIndicator[];
   readonly liquidLevel: LiquidLevel;
   readonly sourceStateHash: string;
@@ -225,6 +226,7 @@ export function buildObservableModel(input: ObservableInput): ObservableModel {
 
   return Object.freeze({
     version: OBSERVABLE_MODEL_VERSION,
+    sequence: input.frame.sequence,
     sourceStateHash: input.frame.sourceStateHash,
     indicators: Object.freeze(indicators),
     liquidLevel: deriveLiquidLevel(

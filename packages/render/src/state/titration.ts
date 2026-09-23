@@ -1,7 +1,8 @@
 import { VERSION_MANIFEST } from "@chemrealm/schema";
-import { APPARATUS_SPECIFICATION_IDS } from "../assets/apparatus-catalog.js";
+import { APPARATUS_SPECIFICATION_IDS, apparatusSpecification } from "../assets/apparatus-catalog.js";
 import { validateApparatusAssetManifest } from "../assets/titration-bench.js";
 import { toRenderState, type HydrogenIonPresentationPolicy, type RenderNode, type RenderState } from "./scene.js";
+import { buildBeakerSceneActor } from "./beaker-scene.js";
 import { type ObservableModel } from "../observable/index.js";
 
 function freezeDataValue(value: unknown): unknown {
@@ -33,6 +34,7 @@ export function toTitrationRenderState(
   policy?: HydrogenIonPresentationPolicy,
 ): RenderState {
   const asset = validateApparatusAssetManifest();
+  const beakerSpecification = apparatusSpecification(APPARATUS_SPECIFICATION_IDS.beaker);
   const base = toRenderState(model, policy);
   const apparatusNodes: RenderNode[] = [
     freezeNode({
@@ -104,6 +106,8 @@ export function toTitrationRenderState(
         specificationId: APPARATUS_SPECIFICATION_IDS.beaker,
         partIds: ["beaker.body"],
         positionMm: [0, 0],
+        graduation: beakerSpecification.marking,
+        sceneActor: buildBeakerSceneActor(model),
       },
     }),
     freezeNode({

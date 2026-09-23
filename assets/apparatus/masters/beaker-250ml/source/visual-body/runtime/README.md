@@ -14,7 +14,10 @@ back glass response
 → interaction/focus overlays
 ```
 
-The current body candidate contains none of the dynamic layers above.
+The current body candidate contains none of the dynamic layers above. The
+renderer-neutral `BeakerSceneActor` now describes those layers and binds them
+to one Observable source frame; it is a composition contract, not a Gold
+Master admission.
 
 The single-body compositing limitation is recorded in
 `assets/apparatus/masters/beaker-250ml/qa/visual-body/glass-layer-decomposition-spike.md`.
@@ -26,6 +29,8 @@ The separate `liquid-visual-geometry.svg` is also prototype evidence only. It
 uses a hand-authored cavity outline, wall boundaries, and perspective-ellipse
 surface paths for 25/100/200 mL visual fixtures. Those fixture heights are not
 scientific `h(V)` results, and its blue fill is not an optical observation.
+It must not be promoted into production. The NOBOOK-aligned scene boundary is
+recorded in `qa/visual-body/nobook-scene-vertical-slice.md`.
 
 The provisional candidate overlays can be regenerated with:
 
@@ -69,7 +74,8 @@ rather than invent a fill height.
 
 ## Current stop point
 
-No production renderer wiring is added in this first assetization step. The
-next implementation should create a deterministic fixture that consumes this
-manifest and the existing Observable/marking contracts, then prove that the
-body, labels, liquid, and state layers can be replaced independently.
+The first renderer-neutral scene wiring and browser identity evidence now
+exist. Production visual admission still stops here: the body remains a
+candidate, the old liquid spike remains prototype-only, and a complete
+NOBOOK-level scene study must still prove body/layer quality, pouring and
+state-effect composition before M6 S3.

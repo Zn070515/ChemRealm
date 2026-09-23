@@ -59,6 +59,18 @@ function srgbStyle(srgb: readonly number[]): string {
   return `rgb(${srgb.join(", ")})`;
 }
 
+function beakerActorFromScene(scene: { readonly nodes: readonly RenderNode[] } | undefined) {
+  const node = scene?.nodes.find((candidate) => candidate.id === "beaker-apparatus");
+  const value = node?.data.sceneActor;
+  if (typeof value !== "object" || value === null) return undefined;
+  return value as {
+    readonly assetId?: unknown;
+    readonly sourceStateHash?: unknown;
+    readonly runtimeLayers?: unknown;
+    readonly liquid?: { readonly appearance?: { readonly status?: unknown } };
+  };
+}
+
 function selectedPolicy(id: PolicyId) {
   return id === "taught"
     ? TAUGHT_HYDROGEN_ION_POLICY
@@ -130,6 +142,10 @@ export function App({ schemaVersion }: { schemaVersion: number }): ReactElement 
   const levelNode = scene?.nodes.find((node) => node.id === "liquid-level");
   const buretteNode = scene?.nodes.find((node) => node.id === "burette-reading");
   const qualificationNode = scene?.nodes.find((node) => node.id === "accuracy-qualification");
+  const beakerActor = beakerActorFromScene(scene);
+  const beakerLayers = Array.isArray(beakerActor?.runtimeLayers)
+    ? beakerActor.runtimeLayers.join(", ")
+    : "";
 
   return (
     <main>
@@ -166,6 +182,22 @@ export function App({ schemaVersion }: { schemaVersion: number }): ReactElement 
             <div><dt>Scientific backend</dt><dd data-testid="backend-id">{composition.frame.scientificState.provenance.modelId}</dd></div>
             <div><dt>Scientific backend version</dt><dd data-testid="backend-version">{composition.frame.scientificState.provenance.modelVersion}</dd></div>
           </dl>
+
+          <section
+            data-testid="beaker-scene-actor"
+            data-asset-id={typeof beakerActor?.assetId === "string" ? beakerActor.assetId : undefined}
+            aria-label="Beaker scene actor"
+          >
+            <span data-testid="beaker-scene-source">
+              {typeof beakerActor?.sourceStateHash === "string" ? beakerActor.sourceStateHash : ""}
+            </span>
+            <span data-testid="beaker-scene-layers">{beakerLayers}</span>
+            <span data-testid="beaker-liquid-appearance">
+              {typeof beakerActor?.liquid?.appearance?.status === "string"
+                ? beakerActor.liquid.appearance.status
+                : "unavailable"}
+            </span>
+          </section>
 
           <section aria-label="Hydrogen ion presentation">
             <h3>Hydrogen-ion readout</h3>
