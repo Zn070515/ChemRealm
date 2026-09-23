@@ -81,6 +81,7 @@
       "requires": "validated VolumeProfileSnapshot",
       "bakedIntoBody": false,
       "profileGeneratedByThisAsset": false,
+      "interiorMaskArtifact": "runtime/interior-mask.svg",
       "maskArtifact": "runtime/liquid-mask.svg"
     },
     "stateEffects": {

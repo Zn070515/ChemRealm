@@ -11,6 +11,14 @@ const graduationsPath = resolve(
   repositoryRoot,
   "assets/apparatus/masters/beaker-250ml/source/visual-body/runtime/graduations.svg",
 );
+const interiorMaskPath = resolve(
+  repositoryRoot,
+  "assets/apparatus/masters/beaker-250ml/source/visual-body/runtime/interior-mask.svg",
+);
+const liquidMaskPath = resolve(
+  repositoryRoot,
+  "assets/apparatus/masters/beaker-250ml/source/visual-body/runtime/liquid-mask.svg",
+);
 
 describe("beaker runtime graduation boundary", () => {
   it("keeps the first and last graduation labels fully inside the vessel-safe clip box", async () => {
@@ -39,5 +47,26 @@ describe("beaker runtime graduation boundary", () => {
     expect(Number(clipRect[2]) + Number(clipRect[4])).toBeCloseTo(clipBottomY, 1);
     expect(svg).toContain('data-marking-value-ml="200"');
     expect(svg).toContain('data-marking-value-ml="25"');
+  });
+
+  it("derives liquid and interior masks from the cavity contract, not the graduation box", async () => {
+    const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+    const [interiorMask, liquidMask] = await Promise.all([
+      readFile(interiorMaskPath, "utf8"),
+      readFile(liquidMaskPath, "utf8"),
+    ]);
+    const { heightPx: height } = manifest.body;
+    const anchors = manifest.coordinateContract.anchors;
+    const cavityTopY = anchors.cavityTop[1] * height;
+    const cavityBottomY = anchors.cavityBottom[1] * height;
+    const graduationRegion = manifest.coordinateContract.graduationRegion;
+
+    for (const mask of [interiorMask, liquidMask]) {
+      expect(mask).toContain('data-mask-source="cavity-contract"');
+      expect(mask).toContain(`data-mask-top-y="${cavityTopY.toFixed(2)}"`);
+      expect(mask).toContain(`data-mask-bottom-y="${cavityBottomY.toFixed(2)}"`);
+    }
+    expect(cavityTopY).toBeLessThan(graduationRegion.topY * height);
+    expect(cavityBottomY).toBeGreaterThan(graduationRegion.bottomY * height);
   });
 });

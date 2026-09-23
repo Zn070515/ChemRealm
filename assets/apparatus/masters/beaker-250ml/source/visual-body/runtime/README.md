@@ -16,6 +16,12 @@ back glass response
 
 The current body candidate contains none of the dynamic layers above.
 
+The single-body compositing limitation is recorded in
+`assets/apparatus/masters/beaker-250ml/qa/visual-body/glass-layer-decomposition-spike.md`.
+That spike is prototype evidence only. Production liquid composition remains
+deferred until an authored glass-back/liquid/glass-front representation is
+validated.
+
 The provisional candidate overlays can be regenerated with:
 
 ```text
@@ -47,11 +53,14 @@ their own scale and label-safe calibration box.
 
 ## Liquid ownership
 
-Liquid height must come from a validated `VolumeProfileSnapshot` through the
-existing `h(V)` path when the vessel is treated as volumetric. This visual body
-does not generate, approximate, or mutate a profile. Until a profile is bound,
-the composition must keep liquid-level evidence deferred rather than invent a
-fill height.
+The `interior-mask.svg` and `liquid-mask.svg` artifacts use the manifest's
+`anchors.cavityTop` and `anchors.cavityBottom`. They deliberately do not use
+`graduationRegion`: a scale's visual clearance is not the physical liquid
+cavity. Liquid height must come from a validated `VolumeProfileSnapshot`
+through the existing `h(V)` path when the vessel is treated as volumetric.
+This visual body does not generate, approximate, or mutate a profile. Until a
+profile is bound, the composition must keep liquid-level evidence deferred
+rather than invent a fill height.
 
 ## Current stop point
 

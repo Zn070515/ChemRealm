@@ -1,0 +1,24 @@
+{
+  "status": "PROTOTYPE_EVIDENCE_ONLY",
+  "assetId": "beaker-250ml",
+  "liquidFixture": "deep-blue visual placeholder; not a scientific volume or chemistry state",
+  "variants": [
+    {
+      "id": "A",
+      "title": "A · liquid behind body",
+      "note": "body opacity suppresses liquid"
+    },
+    {
+      "id": "B",
+      "title": "B · liquid above body",
+      "note": "liquid suppresses glass response"
+    },
+    {
+      "id": "C",
+      "title": "C · single-body compromise",
+      "note": "neither layer is authoritative"
+    }
+  ],
+  "conclusion": "The current single body is not yet a production glass-back/liquid/glass-front composition contract.",
+  "productionAdmission": "not-admitted"
+}

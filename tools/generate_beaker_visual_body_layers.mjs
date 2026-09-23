@@ -21,8 +21,11 @@ const endX = region.xEnd * width;
 const labelX = region.labelX * width;
 const clipLeft = region.clipLeft * width;
 const clipRight = region.clipRight * width;
-const rimY = manifest.coordinateContract.anchors.rimTop[1] * height;
-const contactY = manifest.coordinateContract.anchors.contactBase[1] * height;
+const anchors = manifest.coordinateContract.anchors;
+const rimY = anchors.rimTop[1] * height;
+const cavityTopY = anchors.cavityTop[1] * height;
+const cavityBottomY = anchors.cavityBottom[1] * height;
+const contactY = anchors.contactBase[1] * height;
 if (!(clipTopY > rimY && clipTopY < topY && bottomY < clipBottomY && clipBottomY < contactY && topY < bottomY)) {
   throw new Error("graduation region must stay between the rim and contact base");
 }
@@ -65,13 +68,19 @@ ${graduationLines.match(/<text[^>]*>.*?<\/text>/g)?.map((line) => `    ${line}`)
 
 const interiorLeft = 0.23 * width;
 const interiorRight = 0.85 * width;
-const interiorTop = topY;
-const interiorBottom = bottomY;
+if (!(rimY < cavityTopY && cavityTopY < cavityBottomY && cavityBottomY < contactY)) {
+  throw new Error("cavity contract must stay between the rim and contact base");
+}
+if (!(cavityTopY < topY && bottomY < cavityBottomY)) {
+  throw new Error("graduation region must stay inside the cavity contract");
+}
+const interiorTop = cavityTopY;
+const interiorBottom = cavityBottomY;
 const radius = 32;
 const maskBody = `M ${interiorLeft.toFixed(2)} ${(interiorTop + radius).toFixed(2)} Q ${interiorLeft.toFixed(2)} ${interiorTop.toFixed(2)} ${(interiorLeft + radius).toFixed(2)} ${interiorTop.toFixed(2)} H ${(interiorRight - radius).toFixed(2)} Q ${interiorRight.toFixed(2)} ${interiorTop.toFixed(2)} ${interiorRight.toFixed(2)} ${(interiorTop + radius).toFixed(2)} V ${(interiorBottom - radius).toFixed(2)} Q ${interiorRight.toFixed(2)} ${interiorBottom.toFixed(2)} ${(interiorRight - radius).toFixed(2)} ${interiorBottom.toFixed(2)} H ${(interiorLeft + radius).toFixed(2)} Q ${interiorLeft.toFixed(2)} ${interiorBottom.toFixed(2)} ${interiorLeft.toFixed(2)} ${(interiorBottom - radius).toFixed(2)} Z`;
 
 const mask = (layer, description) => `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" data-asset-id="${manifest.assetId}" data-layer="${layer}" data-calibration-status="provisional-visual-calibration">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" data-asset-id="${manifest.assetId}" data-layer="${layer}" data-mask-source="cavity-contract" data-mask-top-y="${cavityTopY.toFixed(2)}" data-mask-bottom-y="${cavityBottomY.toFixed(2)}" data-calibration-status="provisional-visual-calibration">
   <title>${layer}</title>
   <desc>${description}</desc>
   <path d="${maskBody}" fill="#ffffff"/>

@@ -91,12 +91,20 @@ if (alphaMin !== 0 || alphaMax !== 255 || transparentPixelCount === 0) {
 
 for (const output of [
   manifest.runtimeLayers.graduations.generatedArtifact,
+  manifest.runtimeLayers.liquid.interiorMaskArtifact,
   manifest.runtimeLayers.liquid.maskArtifact,
 ]) {
   try {
     const content = await readFile(resolve(dirname(manifestPath), output), "utf8");
     if (!content.includes(`data-asset-id="${manifest.assetId}"`)) fail(`${output} has the wrong asset identity`);
     if (!content.includes("provisional-visual-calibration")) fail(`${output} must remain provisional until anchor review`);
+    if (output.endsWith("interior-mask.svg") || output.endsWith("liquid-mask.svg")) {
+      const cavityTopY = manifest.coordinateContract.anchors.cavityTop[1] * manifest.body.heightPx;
+      const cavityBottomY = manifest.coordinateContract.anchors.cavityBottom[1] * manifest.body.heightPx;
+      if (!content.includes('data-mask-source="cavity-contract"')) fail(`${output} must declare the cavity contract as its source`);
+      if (!content.includes(`data-mask-top-y="${cavityTopY.toFixed(2)}"`)) fail(`${output} must use the cavity top anchor, not the graduation region`);
+      if (!content.includes(`data-mask-bottom-y="${cavityBottomY.toFixed(2)}"`)) fail(`${output} must use the cavity bottom anchor, not the graduation region`);
+    }
   } catch {
     fail(`missing generated runtime layer: ${output}`);
   }
