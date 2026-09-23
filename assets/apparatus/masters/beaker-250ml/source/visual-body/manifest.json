@@ -53,9 +53,15 @@
       "spoutTip": [0.12, 0.16]
     },
     "graduationRegion": {
-      "xStart": 0.54,
-      "xEnd": 0.65,
-      "labelX": 0.67,
+      "xStart": 0.48,
+      "xEnd": 0.60,
+      "labelX": 0.62,
+      "topY": 0.25,
+      "bottomY": 0.78,
+      "clipTopY": 0.22,
+      "clipBottomY": 0.80,
+      "clipLeft": 0.35,
+      "clipRight": 0.77,
       "status": "provisional-visual-calibration"
     }
   },

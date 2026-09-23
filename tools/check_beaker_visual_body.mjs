@@ -117,6 +117,15 @@ for (const [name, point] of Object.entries(manifest.coordinateContract.anchors ?
     fail(`anchor ${name} must be a normalized [0,1] point`);
   }
 }
+const region = manifest.coordinateContract.graduationRegion;
+const rimY = manifest.coordinateContract.anchors.rimTop[1];
+const contactY = manifest.coordinateContract.anchors.contactBase[1];
+if (!(region.clipTopY > rimY && region.clipTopY < region.topY && region.bottomY < region.clipBottomY && region.clipBottomY < contactY && region.topY < region.bottomY)) {
+  fail("graduation region must leave endpoint-label clearance from rim and contact base");
+}
+if (!(region.clipLeft <= region.xStart && region.xEnd <= region.labelX && region.labelX < region.clipRight)) {
+  fail("graduation region clip box must contain ticks and labels");
+}
 
 if (failures.length > 0) {
   console.error(JSON.stringify({ status: "FAIL", checks: failures }, null, 2));

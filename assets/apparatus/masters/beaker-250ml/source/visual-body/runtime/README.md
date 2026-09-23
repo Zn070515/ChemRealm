@@ -37,6 +37,14 @@ manifest does not duplicate those values. The eventual runtime layer must use
 the existing `InstrumentMarking` contract and shared formatter/LOD policy. It
 must not parse or infer graduation values from pixels in `body.png`.
 
+The manifest also declares a per-specification normalized graduation box with
+independent horizontal/vertical placement and a larger endpoint-safe clip box.
+This is intentional: different vessel sizes and body artworks must not stretch
+marks to the mouth or base, and the top/bottom labels must not be clipped at
+the first or last graduation. The 250 mL candidate leaves a visible clearance
+below the rim and above the contact base; other specifications must publish
+their own scale and label-safe calibration box.
+
 ## Liquid ownership
 
 Liquid height must come from a validated `VolumeProfileSnapshot` through the

@@ -11,14 +11,24 @@ await mkdir(outputRoot, { recursive: true });
 
 const width = manifest.body.widthPx;
 const height = manifest.body.heightPx;
-const [, cavityTopY] = manifest.coordinateContract.anchors.cavityTop;
-const [, cavityBottomY] = manifest.coordinateContract.anchors.cavityBottom;
 const region = manifest.coordinateContract.graduationRegion;
-const topY = cavityTopY * height;
-const bottomY = cavityBottomY * height;
+const topY = region.topY * height;
+const bottomY = region.bottomY * height;
+const clipTopY = region.clipTopY * height;
+const clipBottomY = region.clipBottomY * height;
 const startX = region.xStart * width;
 const endX = region.xEnd * width;
 const labelX = region.labelX * width;
+const clipLeft = region.clipLeft * width;
+const clipRight = region.clipRight * width;
+const rimY = manifest.coordinateContract.anchors.rimTop[1] * height;
+const contactY = manifest.coordinateContract.anchors.contactBase[1] * height;
+if (!(clipTopY > rimY && clipTopY < topY && bottomY < clipBottomY && clipBottomY < contactY && topY < bottomY)) {
+  throw new Error("graduation region must stay between the rim and contact base");
+}
+if (!(clipLeft <= startX && endX <= labelX && labelX < clipRight)) {
+  throw new Error("graduation region must keep ticks and labels inside its clip box");
+}
 const beaker = construction.specifications.find((record) => record.specificationId === manifest.specificationId);
 const marking = beaker?.marking;
 if (marking?.kind !== "approximate-contained") throw new Error("beaker source marking must be approximate-contained");
@@ -40,12 +50,15 @@ const graduations = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" data-asset-id="${manifest.assetId}" data-layer="graduations" data-marking-kind="approximate-contained" data-calibration-status="provisional-visual-calibration" role="img" aria-label="Approximate contained-volume graduations; runtime layer only">
   <title>Approximate contained-volume graduations</title>
   <desc>Generated from the existing approximate-contained marking contract. This layer is not analytical measurement evidence.</desc>
-  <g fill="none" stroke="#304247" stroke-width="3" stroke-linecap="round">
+  <defs><clipPath id="graduation-region" data-label-clip="endpoint-safe"><rect x="${clipLeft.toFixed(2)}" y="${clipTopY.toFixed(2)}" width="${(clipRight - clipLeft).toFixed(2)}" height="${(clipBottomY - clipTopY).toFixed(2)}" rx="12"/></clipPath></defs>
+  <g clip-path="url(#graduation-region)">
+    <g fill="none" stroke="#304247" stroke-width="3" stroke-linecap="round">
 ${graduationLines.replaceAll(/<text[^>]*>.*?<\/text>/g, "")}
-  </g>
-  <g fill="#304247" font-family="system-ui, sans-serif" font-size="26" text-anchor="start">
+    </g>
+    <g fill="#304247" font-family="system-ui, sans-serif" font-size="26" text-anchor="start">
 ${graduationLines.match(/<text[^>]*>.*?<\/text>/g)?.map((line) => `    ${line}`).join("\n") ?? ""}
-    <text x="${(region.xStart * width).toFixed(2)}" y="${(topY - 18).toFixed(2)}" font-size="20">approx. mL</text>
+      <text x="${(region.xStart * width).toFixed(2)}" y="${(topY + 32).toFixed(2)}" font-size="20">approx. mL</text>
+    </g>
   </g>
 </svg>
 `;
