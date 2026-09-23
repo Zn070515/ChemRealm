@@ -1,0 +1,179 @@
+{
+  "schemaVersion": 1,
+  "assetId": "beaker-250ml",
+  "jobId": "m6-beaker-250ml-griffin-vertical-slice",
+  "blender": {
+    "version": "5.2.2",
+    "buildHash": "d13f752e3b9c",
+    "branch": "blender-v5.2-release"
+  },
+  "device": {
+    "requested": "CPU",
+    "effective": "CPU",
+    "devices": [
+      {
+        "name": "NVIDIA GeForce RTX 4090",
+        "type": "CUDA"
+      },
+      {
+        "name": "AMD Ryzen 9 9950X 16-Core Processor",
+        "type": "CPU"
+      },
+      {
+        "name": "NVIDIA GeForce RTX 4090",
+        "type": "OPTIX"
+      }
+    ]
+  },
+  "render": {
+    "engine": "CYCLES",
+    "devicePolicy": "selected-and-recorded",
+    "preferredDevice": "OPTIX",
+    "fallbackDevice": "CPU",
+    "cycles": {
+      "samples": 32,
+      "useDenoise": true,
+      "transparentFilm": false
+    },
+    "colorManagement": {
+      "viewTransform": "AgX",
+      "look": "None",
+      "exposure": 0,
+      "gamma": 1
+    },
+    "resolution": {
+      "front": [
+        1440,
+        900
+      ],
+      "thumbnail": [
+        256,
+        256
+      ],
+      "closeup": [
+        900,
+        900
+      ],
+      "alpha": [
+        1440,
+        900
+      ]
+    },
+    "outputFormat": "PNG",
+    "outputColor": "RGBA"
+  },
+  "outputs": [
+    {
+      "path": "assets/apparatus/masters/beaker-250ml/qa/blender-vertical-slice/renders-cpu-final-g/front-light.png",
+      "sha256": "sha256:d155e81133a1c51e7ffa61b45db5403a0c0ec5db641aae9b67d1e2fb48d8e34f",
+      "resolution": [
+        1440,
+        900
+      ],
+      "background": "light-neutral",
+      "transparent": false,
+      "targetMm": [
+        0,
+        0,
+        47.5
+      ],
+      "orthoScaleMm": 165
+    },
+    {
+      "path": "assets/apparatus/masters/beaker-250ml/qa/blender-vertical-slice/renders-cpu-final-g/front-dark.png",
+      "sha256": "sha256:b3cab7d96639714737e5ae8519ff6b9ea0ff0215116330ebcd2b775991f8211f",
+      "resolution": [
+        1440,
+        900
+      ],
+      "background": "dark-neutral",
+      "transparent": false,
+      "targetMm": [
+        0,
+        0,
+        47.5
+      ],
+      "orthoScaleMm": 165
+    },
+    {
+      "path": "assets/apparatus/masters/beaker-250ml/qa/blender-vertical-slice/renders-cpu-final-g/thumbnail-light.png",
+      "sha256": "sha256:6feaf82eb70ca62c788bcd258ea281df9f68479282f364fa0c08170679424ebb",
+      "resolution": [
+        256,
+        256
+      ],
+      "background": "light-neutral",
+      "transparent": false,
+      "targetMm": [
+        0,
+        0,
+        47.5
+      ],
+      "orthoScaleMm": 125
+    },
+    {
+      "path": "assets/apparatus/masters/beaker-250ml/qa/blender-vertical-slice/renders-cpu-final-g/thumbnail-dark.png",
+      "sha256": "sha256:bc30741ea2cb67423a2ba57da7a05f9883999618d1c5c4a92a225e43f6be6b3d",
+      "resolution": [
+        256,
+        256
+      ],
+      "background": "dark-neutral",
+      "transparent": false,
+      "targetMm": [
+        0,
+        0,
+        47.5
+      ],
+      "orthoScaleMm": 125
+    },
+    {
+      "path": "assets/apparatus/masters/beaker-250ml/qa/blender-vertical-slice/renders-cpu-final-g/closeup-rim.png",
+      "sha256": "sha256:2076fabbe3143ff40d504965105dd34d8884ceb6027c7b791870e0ce8d103b47",
+      "resolution": [
+        900,
+        900
+      ],
+      "background": "light-neutral",
+      "transparent": false,
+      "targetMm": [
+        0,
+        0,
+        87
+      ],
+      "orthoScaleMm": 46
+    },
+    {
+      "path": "assets/apparatus/masters/beaker-250ml/qa/blender-vertical-slice/renders-cpu-final-g/closeup-spout.png",
+      "sha256": "sha256:c0f175454d063c9cc8877ac810c8882bf7c262e1a1f9a0ec9387197c8b458b31",
+      "resolution": [
+        900,
+        900
+      ],
+      "background": "dark-neutral",
+      "transparent": false,
+      "targetMm": [
+        40,
+        0,
+        86
+      ],
+      "orthoScaleMm": 52
+    },
+    {
+      "path": "assets/apparatus/masters/beaker-250ml/qa/blender-vertical-slice/renders-cpu-final-g/alpha-check.png",
+      "sha256": "sha256:daab894f80bf5b5b0c641d6ec8da38eb8b9f5e7f05a96f3d855653d7317c3f74",
+      "resolution": [
+        1440,
+        900
+      ],
+      "background": "light-neutral",
+      "transparent": true,
+      "targetMm": [
+        0,
+        0,
+        47.5
+      ],
+      "orthoScaleMm": 165
+    }
+  ]
+}

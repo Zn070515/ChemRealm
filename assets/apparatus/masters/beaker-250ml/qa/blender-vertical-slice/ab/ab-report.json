@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "assetId": "beaker-250ml",
+  "rejectedSvg": "assets/apparatus/masters/beaker-250ml/master.svg",
+  "candidateDirectory": "assets/apparatus/masters/beaker-250ml/qa/blender-vertical-slice/renders-gpu-final-h",
+  "outputs": [
+    {
+      "name": "front-light",
+      "path": "assets/apparatus/masters/beaker-250ml/qa/blender-vertical-slice/ab/ab-front-light.png",
+      "background": "#e1e4e4"
+    },
+    {
+      "name": "front-dark",
+      "path": "assets/apparatus/masters/beaker-250ml/qa/blender-vertical-slice/ab/ab-front-dark.png",
+      "background": "#111820"
+    }
+  ],
+  "note": "A/B evidence is for human visual review; it is not an automatic Gold Master acceptance decision."
+}

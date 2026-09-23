@@ -1,0 +1,90 @@
+{
+  "left": "assets/apparatus/masters/beaker-250ml/qa/blender-vertical-slice/renders-gpu-final-h",
+  "right": "assets/apparatus/masters/beaker-250ml/qa/blender-vertical-slice/renders-gpu-final-i",
+  "images": {
+    "alpha-check.png": {
+      "resolution": [
+        1440,
+        900
+      ],
+      "pixelChannels": 5184000,
+      "changedChannels": 57,
+      "changedChannelRatio": 1.099537037037037e-05,
+      "maxAbsoluteChannelDifference": 0.003921598196029663,
+      "meanAbsoluteChannelDifference": 4.3119102670454685e-08,
+      "bitIdentical": false
+    },
+    "closeup-rim.png": {
+      "resolution": [
+        900,
+        900
+      ],
+      "pixelChannels": 3240000,
+      "changedChannels": 88,
+      "changedChannelRatio": 2.7160493827160493e-05,
+      "maxAbsoluteChannelDifference": 0.003921568393707275,
+      "meanAbsoluteChannelDifference": 1.0651173415007414e-07,
+      "bitIdentical": false
+    },
+    "closeup-spout.png": {
+      "resolution": [
+        900,
+        900
+      ],
+      "pixelChannels": 3240000,
+      "changedChannels": 115,
+      "changedChannelRatio": 3.549382716049383e-05,
+      "maxAbsoluteChannelDifference": 0.003921598196029663,
+      "meanAbsoluteChannelDifference": 1.3919147996254909e-07,
+      "bitIdentical": false
+    },
+    "front-dark.png": {
+      "resolution": [
+        1440,
+        900
+      ],
+      "pixelChannels": 5184000,
+      "changedChannels": 165,
+      "changedChannelRatio": 3.18287037037037e-05,
+      "maxAbsoluteChannelDifference": 0.003921598196029663,
+      "meanAbsoluteChannelDifference": 1.248184499549277e-07,
+      "bitIdentical": false
+    },
+    "front-light.png": {
+      "resolution": [
+        1440,
+        900
+      ],
+      "pixelChannels": 5184000,
+      "changedChannels": 152,
+      "changedChannelRatio": 2.932098765432099e-05,
+      "maxAbsoluteChannelDifference": 0.003921627998352051,
+      "meanAbsoluteChannelDifference": 1.1498426995527596e-07,
+      "bitIdentical": false
+    },
+    "thumbnail-dark.png": {
+      "resolution": [
+        256,
+        256
+      ],
+      "pixelChannels": 262144,
+      "changedChannels": 10,
+      "changedChannelRatio": 3.814697265625e-05,
+      "maxAbsoluteChannelDifference": 0.003921568393707275,
+      "meanAbsoluteChannelDifference": 1.4959596228436567e-07,
+      "bitIdentical": false
+    },
+    "thumbnail-light.png": {
+      "resolution": [
+        256,
+        256
+      ],
+      "pixelChannels": 262144,
+      "changedChannels": 10,
+      "changedChannelRatio": 3.814697265625e-05,
+      "maxAbsoluteChannelDifference": 0.003921568393707275,
+      "meanAbsoluteChannelDifference": 1.4959596228436567e-07,
+      "bitIdentical": false
+    }
+  }
+}

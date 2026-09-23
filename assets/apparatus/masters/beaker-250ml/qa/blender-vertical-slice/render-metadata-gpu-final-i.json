@@ -1,0 +1,179 @@
+{
+  "schemaVersion": 1,
+  "assetId": "beaker-250ml",
+  "jobId": "m6-beaker-250ml-griffin-vertical-slice",
+  "blender": {
+    "version": "5.2.2",
+    "buildHash": "d13f752e3b9c",
+    "branch": "blender-v5.2-release"
+  },
+  "device": {
+    "requested": "OPTIX",
+    "effective": "OPTIX",
+    "devices": [
+      {
+        "name": "NVIDIA GeForce RTX 4090",
+        "type": "CUDA"
+      },
+      {
+        "name": "AMD Ryzen 9 9950X 16-Core Processor",
+        "type": "CPU"
+      },
+      {
+        "name": "NVIDIA GeForce RTX 4090",
+        "type": "OPTIX"
+      }
+    ]
+  },
+  "render": {
+    "engine": "CYCLES",
+    "devicePolicy": "selected-and-recorded",
+    "preferredDevice": "OPTIX",
+    "fallbackDevice": "CPU",
+    "cycles": {
+      "samples": 32,
+      "useDenoise": true,
+      "transparentFilm": false
+    },
+    "colorManagement": {
+      "viewTransform": "AgX",
+      "look": "None",
+      "exposure": 0,
+      "gamma": 1
+    },
+    "resolution": {
+      "front": [
+        1440,
+        900
+      ],
+      "thumbnail": [
+        256,
+        256
+      ],
+      "closeup": [
+        900,
+        900
+      ],
+      "alpha": [
+        1440,
+        900
+      ]
+    },
+    "outputFormat": "PNG",
+    "outputColor": "RGBA"
+  },
+  "outputs": [
+    {
+      "path": "assets/apparatus/masters/beaker-250ml/qa/blender-vertical-slice/renders-gpu-final-i/front-light.png",
+      "sha256": "sha256:775579cfedd7b8a5ea029d4635515235ccc2a366f30e3e468d756aa488591598",
+      "resolution": [
+        1440,
+        900
+      ],
+      "background": "light-neutral",
+      "transparent": false,
+      "targetMm": [
+        0,
+        0,
+        47.5
+      ],
+      "orthoScaleMm": 165
+    },
+    {
+      "path": "assets/apparatus/masters/beaker-250ml/qa/blender-vertical-slice/renders-gpu-final-i/front-dark.png",
+      "sha256": "sha256:8b02ced49e0e210788ddda0b50b38a63bdc48e17cf302916683a37622bf992a0",
+      "resolution": [
+        1440,
+        900
+      ],
+      "background": "dark-neutral",
+      "transparent": false,
+      "targetMm": [
+        0,
+        0,
+        47.5
+      ],
+      "orthoScaleMm": 165
+    },
+    {
+      "path": "assets/apparatus/masters/beaker-250ml/qa/blender-vertical-slice/renders-gpu-final-i/thumbnail-light.png",
+      "sha256": "sha256:a1bd1962cc4d51141f194fca447ddd8611a4d096b45e171d321cba2773f1b950",
+      "resolution": [
+        256,
+        256
+      ],
+      "background": "light-neutral",
+      "transparent": false,
+      "targetMm": [
+        0,
+        0,
+        47.5
+      ],
+      "orthoScaleMm": 125
+    },
+    {
+      "path": "assets/apparatus/masters/beaker-250ml/qa/blender-vertical-slice/renders-gpu-final-i/thumbnail-dark.png",
+      "sha256": "sha256:0f1577756c6ce08ba93e2ea1f84e71adac944be22c7ee6d9be3f692a9b13d15b",
+      "resolution": [
+        256,
+        256
+      ],
+      "background": "dark-neutral",
+      "transparent": false,
+      "targetMm": [
+        0,
+        0,
+        47.5
+      ],
+      "orthoScaleMm": 125
+    },
+    {
+      "path": "assets/apparatus/masters/beaker-250ml/qa/blender-vertical-slice/renders-gpu-final-i/closeup-rim.png",
+      "sha256": "sha256:5724101d241c2c15e577adfed23526d65a1d369704451df3aebedc2286abc4f7",
+      "resolution": [
+        900,
+        900
+      ],
+      "background": "light-neutral",
+      "transparent": false,
+      "targetMm": [
+        0,
+        0,
+        87
+      ],
+      "orthoScaleMm": 46
+    },
+    {
+      "path": "assets/apparatus/masters/beaker-250ml/qa/blender-vertical-slice/renders-gpu-final-i/closeup-spout.png",
+      "sha256": "sha256:40630208218ddd8b58d2012ce857acb3abe44c1bf75fe52bee880c3a5d4fc3e2",
+      "resolution": [
+        900,
+        900
+      ],
+      "background": "dark-neutral",
+      "transparent": false,
+      "targetMm": [
+        40,
+        0,
+        86
+      ],
+      "orthoScaleMm": 52
+    },
+    {
+      "path": "assets/apparatus/masters/beaker-250ml/qa/blender-vertical-slice/renders-gpu-final-i/alpha-check.png",
+      "sha256": "sha256:cff58cefebde80aec761520fdbee5bf329b0afa91a625792db9c726dae9c4fb5",
+      "resolution": [
+        1440,
+        900
+      ],
+      "background": "light-neutral",
+      "transparent": true,
+      "targetMm": [
+        0,
+        0,
+        47.5
+      ],
+      "orthoScaleMm": 165
+    }
+  ]
+}

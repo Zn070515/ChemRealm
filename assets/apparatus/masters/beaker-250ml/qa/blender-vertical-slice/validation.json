@@ -1,0 +1,326 @@
+{
+  "schemaVersion": 1,
+  "assetId": "beaker-250ml",
+  "jobId": "m6-beaker-250ml-griffin-vertical-slice",
+  "status": "PASS_WITH_DEFERRED",
+  "candidateOnly": true,
+  "inputs": {
+    "job": {
+      "path": "tools/blender/jobs/beaker-250ml-griffin/job.json",
+      "sha256": "sha256:8173b1426f8a78819ea70f5b157975a714bae6408963908b48efa9bd225e31d3"
+    },
+    "constructionSource": {
+      "path": "packages/render/src/assets/gold-master-construction.json",
+      "sha256": "sha256:5a65994cfc0604aac6fd6b4e650c38d2f8546cef4d9a7a18464b7dcbfeabf3d3"
+    },
+    "measurementSheet": {
+      "path": "assets/apparatus/masters/beaker-250ml/measurement-sheet.json",
+      "sha256": "sha256:46ce02ef7b8bfd9512fc92332505d56486b49405fe71e564677fd775955655c3"
+    },
+    "blend": {
+      "path": "assets/apparatus/masters/beaker-250ml/source/blender/beaker-250ml.blend",
+      "sha256": "sha256:20fa4c336f56c6cf4637c91211035b3ad61090bddf04847bd6b15296e644282e"
+    }
+  },
+  "outputs": {
+    "assets/apparatus/masters/beaker-250ml/qa/blender-vertical-slice/renders-gpu-final-h/front-light.png": {
+      "sha256": "sha256:10592c13d5dde8f2b61a64f9f21c22dfd132c842f36047498ceccee5a2d6c8f4",
+      "bytes": 1264068
+    },
+    "assets/apparatus/masters/beaker-250ml/qa/blender-vertical-slice/renders-gpu-final-h/front-dark.png": {
+      "sha256": "sha256:53a495a4332f8d7bf3032b5007315a73a1b1c87c0385394b1cb629455194672a",
+      "bytes": 1285975
+    },
+    "assets/apparatus/masters/beaker-250ml/qa/blender-vertical-slice/renders-gpu-final-h/thumbnail-light.png": {
+      "sha256": "sha256:e149537936874d8be6417e561ddda51bb5a50ac33fe1a8831262120e3a22720b",
+      "bytes": 71966
+    },
+    "assets/apparatus/masters/beaker-250ml/qa/blender-vertical-slice/renders-gpu-final-h/thumbnail-dark.png": {
+      "sha256": "sha256:36770df4ce511cda0e48d878bc25ef0ab5950d591d48b8bd1eecc2b0fa2a2baf",
+      "bytes": 74410
+    },
+    "assets/apparatus/masters/beaker-250ml/qa/blender-vertical-slice/renders-gpu-final-h/closeup-rim.png": {
+      "sha256": "sha256:5331e0964c1d90be02b7fb311ab38adc95d54881d3ddbddb988001dbea0f2e23",
+      "bytes": 798761
+    },
+    "assets/apparatus/masters/beaker-250ml/qa/blender-vertical-slice/renders-gpu-final-h/closeup-spout.png": {
+      "sha256": "sha256:54048ae162e1c9efc14be6372024d9acec2b417ef07fd26aae55f59a77b21e57",
+      "bytes": 853770
+    },
+    "assets/apparatus/masters/beaker-250ml/qa/blender-vertical-slice/renders-gpu-final-h/alpha-check.png": {
+      "sha256": "sha256:356adf628276a15ee279e0f10055eb0913ee4e44734361c7d0a16a2fdd2e59b6",
+      "bytes": 1301254
+    }
+  },
+  "toolchain": {
+    "schemaVersion": 1,
+    "sourceManifest": "contracts/version-manifest.json#toolchains.blender",
+    "blender": {
+      "version": "5.2.2",
+      "buildHash": "d13f752e3b9c",
+      "branch": "blender-v5.2-release"
+    },
+    "render": {
+      "engine": "CYCLES",
+      "devicePolicy": "selected-and-recorded",
+      "preferredDevice": "OPTIX",
+      "fallbackDevice": "CPU",
+      "cycles": {
+        "samples": 32,
+        "useDenoise": true,
+        "transparentFilm": false
+      },
+      "colorManagement": {
+        "viewTransform": "AgX",
+        "look": "None",
+        "exposure": 0,
+        "gamma": 1
+      },
+      "resolution": {
+        "front": [
+          1440,
+          900
+        ],
+        "thumbnail": [
+          256,
+          256
+        ],
+        "closeup": [
+          900,
+          900
+        ],
+        "alpha": [
+          1440,
+          900
+        ]
+      },
+      "outputFormat": "PNG",
+      "outputColor": "RGBA"
+    }
+  },
+  "checks": [
+    {
+      "id": "M6-BLENDER-TOOLCHAIN",
+      "status": "PASS",
+      "severity": "P1",
+      "message": "Blender build matches central toolchain identity",
+      "evidence": {
+        "expected": {
+          "version": "5.2.2",
+          "buildHash": "d13f752e3b9c",
+          "branch": "blender-v5.2-release"
+        },
+        "actual": {
+          "version": "5.2.2",
+          "buildHash": "d13f752e3b9c"
+        }
+      }
+    },
+    {
+      "id": "M6-ASSET-ID",
+      "status": "PASS",
+      "severity": "P1",
+      "message": "scene asset identity matches the job",
+      "evidence": {}
+    },
+    {
+      "id": "M6-UNIT-SCALE",
+      "status": "PASS",
+      "severity": "P1",
+      "message": "scene uses metric millimetre display scale",
+      "evidence": {
+        "system": "METRIC",
+        "lengthUnit": "MILLIMETERS",
+        "scaleLength": 0.0010000000474974513
+      }
+    },
+    {
+      "id": "M6-OBJECTS",
+      "status": "PASS",
+      "severity": "P1",
+      "message": "required named objects exist",
+      "evidence": {
+        "missing": []
+      }
+    },
+    {
+      "id": "M6-SEMANTIC-IDS",
+      "status": "PASS",
+      "severity": "P1",
+      "message": "semantic part IDs are unique and complete",
+      "evidence": {
+        "duplicates": [],
+        "missing": []
+      }
+    },
+    {
+      "id": "M6-PHYSICAL-ENVELOPE",
+      "status": "PASS",
+      "severity": "P1",
+      "message": "mesh envelope stays within source-backed physical dimensions",
+      "evidence": {
+        "expectedMm": [
+          85,
+          95,
+          70
+        ],
+        "actualMm": [
+          85.76905354857445,
+          95.14235705137253,
+          71.09999656677246
+        ],
+        "axisAlignedBoundsMm": {
+          "min": [
+            -35.54999828338623,
+            -35.54999828338623,
+            0.0
+          ],
+          "max": [
+            50.21905526518822,
+            35.54999828338623,
+            95.14235705137253
+          ],
+          "size": [
+            85.76905354857445,
+            71.09999656677246,
+            95.14235705137253
+          ]
+        }
+      }
+    },
+    {
+      "id": "M6-CAPACITY-IDENTITY",
+      "status": "PASS",
+      "severity": "P1",
+      "message": "nominal capacity is read from existing ChemRealm source records",
+      "evidence": {
+        "capacityMl": 250,
+        "measurementAssetId": "beaker-250ml"
+      }
+    },
+    {
+      "id": "M6-MATERIALS",
+      "status": "PASS",
+      "severity": "P1",
+      "message": "renderable apparatus meshes have explicit materials",
+      "evidence": {
+        "missing": []
+      }
+    },
+    {
+      "id": "M6-EXTERNAL-DEPENDENCIES",
+      "status": "PASS",
+      "severity": "P1",
+      "message": "no unresolved external image dependencies",
+      "evidence": {
+        "unresolved": []
+      }
+    },
+    {
+      "id": "M6-SCRIPT-DRIVER-REVIEW",
+      "status": "PASS",
+      "severity": "P1",
+      "message": "source contains no embedded text scripts or drivers",
+      "evidence": {
+        "embeddedTexts": [],
+        "drivers": []
+      }
+    },
+    {
+      "id": "M6-MODIFIERS",
+      "status": "PASS",
+      "severity": "P2",
+      "message": "only declared controlled bevel modifiers remain unapplied",
+      "evidence": {
+        "modifiers": {
+          "part__vessel.body": [
+            "BEVEL"
+          ],
+          "part__vessel.spout": [
+            "BEVEL"
+          ],
+          "part__vessel.base": [
+            "BEVEL"
+          ]
+        },
+        "forbidden": {}
+      }
+    },
+    {
+      "id": "M6-ORTHOGRAPHIC-CAMERA",
+      "status": "PASS",
+      "severity": "P1",
+      "message": "experiment camera is orthographic",
+      "evidence": {}
+    },
+    {
+      "id": "M6-PROFILE-BOUNDARY",
+      "status": "DEFERRED",
+      "severity": "P2",
+      "message": "current beaker source has no frozen VolumeProfileSnapshot; Blender does not generate one",
+      "evidence": {
+        "owner": "ChemRealm World/Representation boundary"
+      }
+    },
+    {
+      "id": "M6-MARKING-BOUNDARY",
+      "status": "PASS",
+      "severity": "P1",
+      "message": "beaker graduations remain explicitly approximate-contained visual marks",
+      "evidence": {}
+    },
+    {
+      "id": "M6-RENDER-MATRIX",
+      "status": "PASS",
+      "severity": "P2",
+      "message": "required render outputs are present when render job has run",
+      "evidence": {
+        "missing": [],
+        "outputs": {
+          "assets/apparatus/masters/beaker-250ml/qa/blender-vertical-slice/renders-gpu-final-h/front-light.png": {
+            "sha256": "sha256:10592c13d5dde8f2b61a64f9f21c22dfd132c842f36047498ceccee5a2d6c8f4",
+            "bytes": 1264068
+          },
+          "assets/apparatus/masters/beaker-250ml/qa/blender-vertical-slice/renders-gpu-final-h/front-dark.png": {
+            "sha256": "sha256:53a495a4332f8d7bf3032b5007315a73a1b1c87c0385394b1cb629455194672a",
+            "bytes": 1285975
+          },
+          "assets/apparatus/masters/beaker-250ml/qa/blender-vertical-slice/renders-gpu-final-h/thumbnail-light.png": {
+            "sha256": "sha256:e149537936874d8be6417e561ddda51bb5a50ac33fe1a8831262120e3a22720b",
+            "bytes": 71966
+          },
+          "assets/apparatus/masters/beaker-250ml/qa/blender-vertical-slice/renders-gpu-final-h/thumbnail-dark.png": {
+            "sha256": "sha256:36770df4ce511cda0e48d878bc25ef0ab5950d591d48b8bd1eecc2b0fa2a2baf",
+            "bytes": 74410
+          },
+          "assets/apparatus/masters/beaker-250ml/qa/blender-vertical-slice/renders-gpu-final-h/closeup-rim.png": {
+            "sha256": "sha256:5331e0964c1d90be02b7fb311ab38adc95d54881d3ddbddb988001dbea0f2e23",
+            "bytes": 798761
+          },
+          "assets/apparatus/masters/beaker-250ml/qa/blender-vertical-slice/renders-gpu-final-h/closeup-spout.png": {
+            "sha256": "sha256:54048ae162e1c9efc14be6372024d9acec2b417ef07fd26aae55f59a77b21e57",
+            "bytes": 853770
+          },
+          "assets/apparatus/masters/beaker-250ml/qa/blender-vertical-slice/renders-gpu-final-h/alpha-check.png": {
+            "sha256": "sha256:356adf628276a15ee279e0f10055eb0913ee4e44734361c7d0a16a2fdd2e59b6",
+            "bytes": 1301254
+          }
+        }
+      }
+    },
+    {
+      "id": "M6-RENDER-BACKEND",
+      "status": "PASS",
+      "severity": "P1",
+      "message": "render backend is explicit and recorded",
+      "evidence": {
+        "requested": "OPTIX",
+        "effective": "OPTIX",
+        "accepted": [
+          "CPU",
+          "OPTIX"
+        ]
+      }
+    }
+  ]
+}

@@ -87,6 +87,10 @@ export function validateVersionManifest(value) {
   requireString(toolchains, "pnpm");
   requireString(toolchains, "python");
   requireString(toolchains, "rust");
+  const blender = requireObject(toolchains, "blender");
+  requireString(blender, "version");
+  requireString(blender, "buildHash");
+  requireString(blender, "branch");
 
   const schema = requireObject(value, "schema");
   for (const key of [
@@ -158,6 +162,7 @@ export function validateVersionManifest(value) {
   requireString(representation, "volumeProfile");
   requireString(representation, "indicatorOpticalProfile");
   requireString(representation, "opticalPath");
+  requirePositiveInteger(representation, "apparatusBlenderToolchain");
   const content = requireObject(value, "content");
   requirePositiveInteger(content, "current");
 
@@ -277,6 +282,9 @@ export function activeVersionLiterals(manifest) {
     manifest.toolchains.pnpm,
     manifest.toolchains.python,
     manifest.toolchains.rust,
+    manifest.toolchains.blender.version,
+    manifest.toolchains.blender.buildHash,
+    manifest.toolchains.blender.branch,
     acidBase.legacyVersion,
     acidBase.nativeVersion,
     acidBase.expressionProducerVersion,

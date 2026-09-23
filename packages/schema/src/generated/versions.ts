@@ -21,7 +21,12 @@ export const VERSION_MANIFEST = deepFreeze({
     "node": "22",
     "pnpm": "11.22.0",
     "python": "3.12",
-    "rust": "1.97.1"
+    "rust": "1.97.1",
+    "blender": {
+      "version": "5.2.2",
+      "buildHash": "d13f752e3b9c",
+      "branch": "blender-v5.2-release"
+    }
   },
   "schema": {
     "world": 5,
@@ -57,7 +62,8 @@ export const VERSION_MANIFEST = deepFreeze({
     "opticalPath": "1.0.0",
     "apparatusAsset": "2.0.0",
     "apparatusCatalog": "2.0.0",
-    "apparatusGoldMasterPackage": 4
+    "apparatusGoldMasterPackage": 4,
+    "apparatusBlenderToolchain": 1
   },
   "content": {
     "current": 1

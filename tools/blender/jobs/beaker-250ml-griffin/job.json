@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "assetId": "beaker-250ml",
+  "jobId": "m6-beaker-250ml-griffin-vertical-slice",
+  "packageRoot": "assets/apparatus/masters/beaker-250ml",
+  "constructionSource": "packages/render/src/assets/gold-master-construction.json",
+  "measurementSheet": "assets/apparatus/masters/beaker-250ml/measurement-sheet.json",
+  "sourceRecord": "assets/apparatus/masters/beaker-250ml/source-record.md",
+  "rejectedSvg": "assets/apparatus/masters/beaker-250ml/master.svg",
+  "blendOutput": "assets/apparatus/masters/beaker-250ml/source/blender/beaker-250ml.blend",
+  "qaRoot": "assets/apparatus/masters/beaker-250ml/qa/blender-vertical-slice",
+  "renderRoot": "assets/apparatus/masters/beaker-250ml/qa/blender-vertical-slice/renders",
+  "profileSnapshot": null,
+  "visualAssumptions": {
+    "baseHeightMm": 4,
+    "bottomThicknessMm": 2,
+    "spoutRiseMm": 2,
+    "spoutDepthMm": 10,
+    "markingBaselineMm": 26,
+    "markingTopMm": 72,
+    "markingIsApproximate": true
+  },
+  "requiredObjectNames": [
+    "asset__beaker-250ml",
+    "part__vessel.body",
+    "part__vessel.rim",
+    "part__vessel.spout",
+    "part__vessel.base",
+    "layer__scale",
+    "layer__labels",
+    "layer__glass-highlight",
+    "camera__experiment-world",
+    "camera__measurement",
+    "stage__background"
+  ],
+  "requiredPartIds": [
+    "vessel.body",
+    "vessel.rim",
+    "vessel.spout",
+    "vessel.base",
+    "vessel.scale",
+    "vessel.labels",
+    "vessel.glass-highlight"
+  ],
+  "renderOutputs": [
+    "front-light.png",
+    "front-dark.png",
+    "thumbnail-light.png",
+    "thumbnail-dark.png",
+    "closeup-rim.png",
+    "closeup-spout.png",
+    "alpha-check.png"
+  ]
+}
