@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1145 1374" data-asset-id="beaker-250ml" data-layer="liquid-visual-geometry-spike" data-status="prototype-only" data-calibration-status="provisional-visual-calibration" data-height-source="prototype-visual-fixture-not-scientific-profile">
+  <title>Upright liquid visual geometry spike</title>
+  <desc>Hand-authored cavity outline and perspective surface study. No scientific liquid colour or h(V) result is encoded.</desc>
+  <defs><clipPath id="authored-cavity-outline"><path d="M 246 260 C 328 216 818 216 899 260 C 910 280 914 320 914 360 L 914 1016 C 914 1072 806 1118 573 1122 C 340 1118 232 1072 232 1016 L 232 360 C 232 320 236 280 246 260 Z"/></clipPath></defs>
+  <g clip-path="url(#authored-cavity-outline)">
+  <g data-visual-volume-ml="25" data-height-source="prototype-visual-fixture-not-scientific-profile">
+    <path data-layer="liquid-body" d="M 299.66 1071.72 C 436.33 1066.72 709.67 1066.72 846.34 1071.72 L 846.00 1072.00 C 747.72 1098.00 398.28 1098.00 300.00 1072.00 L 299.66 1071.72 Z" fill="#1268a8" fill-opacity="0.76"/>
+    <path data-layer="rear-meniscus" d="M 299.66 1071.72 C 436.33 1066.72 709.67 1066.72 846.34 1071.72" fill="none" stroke="#b9e7ff" stroke-width="5" stroke-linecap="round" opacity="0.85"/>
+    <path data-layer="surface" d="M 299.66 1071.72 C 436.33 1066.72 709.67 1066.72 846.34 1071.72 C 709.67 1079.72 436.33 1079.72 299.66 1071.72 Z" fill="#62bce6" fill-opacity="0.28" stroke="#d1f3ff" stroke-width="2"/>
+    <path data-layer="front-meniscus" d="M 299.66 1071.72 C 436.33 1079.72 709.67 1079.72 846.34 1071.72" fill="none" stroke="#0b416d" stroke-width="4" stroke-linecap="round" opacity="0.65"/>
+    <text x="80.15" y="124.16" fill="#174e72" font-family="system-ui, sans-serif" font-size="24">25 mL visual fixture</text>
+    <title>25 mL visual geometry fixture at y=1071.72; not a scientific h(V) result</title>
+  </g>
+
+  <g data-visual-volume-ml="100" data-height-source="prototype-visual-fixture-not-scientific-profile">
+    <path data-layer="liquid-body" d="M 232.00 759.63 C 402.50 754.63 743.50 754.63 914.00 759.63 L 846.00 1072.00 C 747.72 1098.00 398.28 1098.00 300.00 1072.00 L 232.00 759.63 Z" fill="#1268a8" fill-opacity="0.76"/>
+    <path data-layer="rear-meniscus" d="M 232.00 759.63 C 402.50 754.63 743.50 754.63 914.00 759.63" fill="none" stroke="#b9e7ff" stroke-width="5" stroke-linecap="round" opacity="0.85"/>
+    <path data-layer="surface" d="M 232.00 759.63 C 402.50 754.63 743.50 754.63 914.00 759.63 C 743.50 767.63 402.50 767.63 232.00 759.63 Z" fill="#62bce6" fill-opacity="0.28" stroke="#d1f3ff" stroke-width="2"/>
+    <path data-layer="front-meniscus" d="M 232.00 759.63 C 402.50 767.63 743.50 767.63 914.00 759.63" fill="none" stroke="#0b416d" stroke-width="4" stroke-linecap="round" opacity="0.65"/>
+    <text x="80.15" y="125.66" fill="#174e72" font-family="system-ui, sans-serif" font-size="24">100 mL visual fixture</text>
+    <title>100 mL visual geometry fixture at y=759.63; not a scientific h(V) result</title>
+  </g>
+
+  <g data-visual-volume-ml="200" data-height-source="prototype-visual-fixture-not-scientific-profile">
+    <path data-layer="liquid-body" d="M 232.00 343.50 C 402.50 338.50 743.50 338.50 914.00 343.50 L 846.00 1072.00 C 747.72 1098.00 398.28 1098.00 300.00 1072.00 L 232.00 343.50 Z" fill="#1268a8" fill-opacity="0.76"/>
+    <path data-layer="rear-meniscus" d="M 232.00 343.50 C 402.50 338.50 743.50 338.50 914.00 343.50" fill="none" stroke="#b9e7ff" stroke-width="5" stroke-linecap="round" opacity="0.85"/>
+    <path data-layer="surface" d="M 232.00 343.50 C 402.50 338.50 743.50 338.50 914.00 343.50 C 743.50 351.50 402.50 351.50 232.00 343.50 Z" fill="#62bce6" fill-opacity="0.28" stroke="#d1f3ff" stroke-width="2"/>
+    <path data-layer="front-meniscus" d="M 232.00 343.50 C 402.50 351.50 743.50 351.50 914.00 343.50" fill="none" stroke="#0b416d" stroke-width="4" stroke-linecap="round" opacity="0.65"/>
+    <text x="80.15" y="127.66" fill="#174e72" font-family="system-ui, sans-serif" font-size="24">200 mL visual fixture</text>
+    <title>200 mL visual geometry fixture at y=343.50; not a scientific h(V) result</title>
+  </g>
+  </g>
+  <path data-layer="cavity-outline-review" d="M 246 260 C 328 216 818 216 899 260 C 910 280 914 320 914 360 L 914 1016 C 914 1072 806 1118 573 1122 C 340 1118 232 1072 232 1016 L 232 360 C 232 320 236 280 246 260 Z" fill="none" stroke="#8a3d2f" stroke-width="3" stroke-dasharray="10 8" opacity="0.8"/>
+</svg>

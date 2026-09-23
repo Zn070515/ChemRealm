@@ -44,6 +44,8 @@
     "generate:beaker-visual-body-layers": "node tools/generate_beaker_visual_body_layers.mjs",
     "preview:beaker-visual-body": "node tools/compose_beaker_visual_body_preview.mjs",
     "preview:beaker-glass-layer-spike": "node tools/compose_beaker_glass_layer_spike.mjs",
+    "generate:beaker-liquid-visual-geometry-spike": "node tools/generate_beaker_liquid_visual_geometry_spike.mjs",
+    "preview:beaker-liquid-geometry-spike": "node tools/compose_beaker_liquid_geometry_spike.mjs",
     "verify:world": "node tools/check_world_runtime_contract.mjs",
     "native:fmt": "cargo fmt --manifest-path native/sci-core/Cargo.toml -- --check",
     "native:test": "cargo test --manifest-path native/sci-core/Cargo.toml",

@@ -1,0 +1,13 @@
+{
+  "status": "PROTOTYPE_EVIDENCE_ONLY",
+  "assetId": "beaker-250ml",
+  "volumes": [
+    25,
+    100,
+    200
+  ],
+  "heightSource": "prototype-visual-fixture-not-scientific-profile",
+  "colourSource": "visual-fixture-only; not Observable optical output",
+  "productionAdmission": "not-admitted",
+  "output": "C:\\Users\\16275\\Desktop\\ChemRealm\\assets\\apparatus\\masters\\beaker-250ml\\qa\\visual-body\\liquid-geometry-spike-light-dark.png"
+}

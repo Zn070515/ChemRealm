@@ -93,6 +93,7 @@ for (const output of [
   manifest.runtimeLayers.graduations.generatedArtifact,
   manifest.runtimeLayers.liquid.interiorMaskArtifact,
   manifest.runtimeLayers.liquid.maskArtifact,
+  manifest.runtimeLayers.liquid.prototypeGeometryArtifact,
 ]) {
   try {
     const content = await readFile(resolve(dirname(manifestPath), output), "utf8");
@@ -104,6 +105,10 @@ for (const output of [
       if (!content.includes('data-mask-source="cavity-contract"')) fail(`${output} must declare the cavity contract as its source`);
       if (!content.includes(`data-mask-top-y="${cavityTopY.toFixed(2)}"`)) fail(`${output} must use the cavity top anchor, not the graduation region`);
       if (!content.includes(`data-mask-bottom-y="${cavityBottomY.toFixed(2)}"`)) fail(`${output} must use the cavity bottom anchor, not the graduation region`);
+    }
+    if (output.endsWith("liquid-visual-geometry.svg")) {
+      if (!content.includes('data-status="prototype-only"')) fail(`${output} must remain prototype-only`);
+      if (content.includes("<rect")) fail(`${output} must not use a rectangular liquid body`);
     }
   } catch {
     fail(`missing generated runtime layer: ${output}`);

@@ -65,6 +65,38 @@
       "status": "provisional-visual-calibration"
     }
   },
+  "liquidVisualGeometry": {
+    "status": "prototype-visual-calibration",
+    "heightSource": "prototype-visual-fixture-not-scientific-profile",
+    "coordinateUnit": "pixel",
+    "cavityOutline": {
+      "path": "M 246 260 C 328 216 818 216 899 260 C 910 280 914 320 914 360 L 914 1016 C 914 1072 806 1118 573 1122 C 340 1118 232 1072 232 1016 L 232 360 C 232 320 236 280 246 260 Z",
+      "source": "manual-authored-visual-boundary",
+      "measurementUse": "forbidden"
+    },
+    "sideBoundary": {
+      "left": [
+        { "x": 246, "y": 260 },
+        { "x": 232, "y": 330 },
+        { "x": 232, "y": 1016 },
+        { "x": 300, "y": 1072 }
+      ],
+      "right": [
+        { "x": 899, "y": 260 },
+        { "x": 914, "y": 330 },
+        { "x": 914, "y": 1016 },
+        { "x": 846, "y": 1072 }
+      ]
+    },
+    "surface": {
+      "kind": "perspective-ellipse",
+      "depthPx": 22,
+      "rearArcRisePx": 5,
+      "frontArcDropPx": 8,
+      "wallContactInsetPx": 0
+    },
+    "prototypeArtifact": "runtime/liquid-visual-geometry.svg"
+  },
   "runtimeLayers": {
     "graduations": {
       "owner": "Representation Engine",
@@ -82,7 +114,8 @@
       "bakedIntoBody": false,
       "profileGeneratedByThisAsset": false,
       "interiorMaskArtifact": "runtime/interior-mask.svg",
-      "maskArtifact": "runtime/liquid-mask.svg"
+      "maskArtifact": "runtime/liquid-mask.svg",
+      "prototypeGeometryArtifact": "runtime/liquid-visual-geometry.svg"
     },
     "stateEffects": {
       "owner": "ObservableModel",

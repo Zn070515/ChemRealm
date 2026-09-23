@@ -22,6 +22,11 @@ That spike is prototype evidence only. Production liquid composition remains
 deferred until an authored glass-back/liquid/glass-front representation is
 validated.
 
+The separate `liquid-visual-geometry.svg` is also prototype evidence only. It
+uses a hand-authored cavity outline, wall boundaries, and perspective-ellipse
+surface paths for 25/100/200 mL visual fixtures. Those fixture heights are not
+scientific `h(V)` results, and its blue fill is not an optical observation.
+
 The provisional candidate overlays can be regenerated with:
 
 ```text
